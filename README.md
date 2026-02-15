@@ -1,60 +1,107 @@
-# CodeIgniter 4 Framework
+# CI4 Admin Starter
 
-## What is CodeIgniter?
+Aplicacion web (frontend server-rendered) basada en CodeIgniter 4 para consumir [`ci4-api-starter`](https://github.com/dcardenasl/ci4-api-starter).
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+## Objetivo
 
-This repository holds the distributable version of the framework.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+Este repositorio sirve como base para un panel administrativo web que consume un API CI4 externo (autenticacion, perfil, archivos, usuarios, auditoria y metricas).
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+Arquitectura objetivo:
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+`Browser -> CI4 Admin Starter (este repo) -> ci4-api-starter`
 
-## Important Change with index.php
+## Estado actual del repositorio
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+- Base de proyecto CI4 inicial (scaffold).
+- Ruta activa por defecto: `/` (vista `welcome_message`).
+- Aun no estan implementados los modulos funcionales del panel (auth/dashboard/perfil/archivos/admin).
+- El plan de implementacion vive en `docs/plan/PLAN-CI4-CLIENT.md`.
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+## Requisitos
 
-**Please** read the user guide for a better explanation of how CI4 works!
+- PHP `^8.1`
+- Composer 2.x
+- Extensiones PHP minimas:
+  - `intl`
+  - `mbstring`
+- Extensiones recomendadas segun uso:
+  - `curl` (cliente HTTP hacia API)
+  - `json` (normalmente habilitada)
 
-## Repository Management
+## Instalacion
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
+```bash
+composer install
+```
 
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
+## Configuracion local
 
-## Contributing
+1. Crear archivo de entorno:
 
-We welcome contributions from the community.
+```bash
+cp env .env
+```
 
-Please read the [*Contributing to CodeIgniter*](https://github.com/codeigniter4/CodeIgniter4/blob/develop/CONTRIBUTING.md) section in the development repository.
+2. Ajustar valores clave en `.env`:
 
-## Server Requirements
+```dotenv
+CI_ENVIRONMENT = development
+app.baseURL = 'http://localhost:8081/'
+```
 
-PHP version 8.1 or higher is required, with the following extensions installed:
+3. Si vas a conectar contra [`ci4-api-starter`](https://github.com/dcardenasl/ci4-api-starter), define tambien su URL base en el punto donde implementes el cliente API (segun el plan de `docs/plan/PLAN-CI4-CLIENT.md`).
 
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
+## Ejecutar en desarrollo
 
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - If you are still using PHP 7.4 or 8.0, you should upgrade immediately.
-> - The end of life date for PHP 8.1 will be December 31, 2025.
+```bash
+php spark serve --port 8081
+```
 
-Additionally, make sure that the following extensions are enabled in your PHP:
+App disponible en: `http://localhost:8081`
 
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
+## Pruebas
+
+Ejecutar suite:
+
+```bash
+vendor/bin/phpunit
+```
+
+Con cobertura (opcional):
+
+```bash
+vendor/bin/phpunit --colors --coverage-text=tests/coverage.txt --coverage-html=tests/coverage/
+```
+
+## Estructura relevante
+
+- `app/` codigo de aplicacion (controladores, config, vistas, filtros).
+- `public/` front controller y assets publicos.
+- `writable/` logs, cache, sesiones y archivos temporales.
+- `tests/` pruebas unitarias e infraestructura de test.
+- `docs/plan/PLAN-CI4-CLIENT.md` roadmap funcional del admin starter.
+
+## Roadmap funcional
+
+El alcance definido incluye:
+
+1. Infraestructura core (ApiClient, filtros auth/admin, helpers UI).
+2. Modulo de autenticacion.
+3. Dashboard inicial.
+4. Perfil de usuario.
+5. Gestion de archivos.
+6. Modulos admin (usuarios, auditoria, metricas).
+
+Detalle completo: `docs/plan/PLAN-CI4-CLIENT.md`.
+
+## Notas de seguridad y despliegue
+
+- El `DocumentRoot` del servidor debe apuntar a `public/`, nunca a la raiz del repositorio.
+- No subir secretos (`.env`, tokens, credenciales).
+- `writable/` debe ser escribible por el usuario del servidor web.
+
+## Referencias
+
+- CodeIgniter 4 User Guide: <https://codeigniter.com/user_guide/>
+- CI4 API Starter: <https://github.com/dcardenasl/ci4-api-starter>
+- Testing en CI4: `tests/README.md`

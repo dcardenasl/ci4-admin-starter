@@ -1,0 +1,68 @@
+#-------------------------
+# Operating System Files
+#-------------------------
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.Trash-*
+.directory
+*~
+
+#-------------------------
+# Environment / Secrets
+#-------------------------
+.env
+.env.*
+!.env.example
+.vagrant
+Vagrantfile
+auth.json
+
+#-------------------------
+# Composer
+#-------------------------
+vendor/
+composer.phar
+
+#-------------------------
+# Runtime Files (CodeIgniter)
+#-------------------------
+php_errors.log
+writable/cache/*
+!writable/cache/index.html
+writable/debugbar/*
+!writable/debugbar/index.html
+writable/logs/*
+!writable/logs/index.html
+writable/session/*
+!writable/session/index.html
+writable/uploads/*
+!writable/uploads/index.html
+writable/database/*
+!writable/database/index.html
+!writable/database/.gitkeep
+
+#-------------------------
+# Test / Coverage Artifacts
+#-------------------------
+tests/coverage*
+phpunit
+.phpunit.result.cache
+.phpunit.cache/
+results/
+phpunit*.xml
+.php-cs-fixer.cache
+.phpintel
+
+#-------------------------
+# IDE / Editor
+#-------------------------
+.idea/
+*.iml
+.vscode/
+.php-version
