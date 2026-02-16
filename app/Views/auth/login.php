@@ -1,4 +1,4 @@
-<form method="post" action="/login" class="space-y-4">
+<form method="post" action="<?= site_url('login') ?>" class="space-y-4">
     <?= csrf_field() ?>
     <div>
         <label class="block text-sm font-medium text-gray-700" for="email">Correo</label>
@@ -14,6 +14,6 @@
 </form>
 
 <div class="mt-4 text-sm text-gray-600 flex items-center justify-between">
-    <a href="/forgot-password" class="text-brand-600 hover:text-brand-700">Olvide mi password</a>
-    <a href="/register" class="text-brand-600 hover:text-brand-700">Crear cuenta</a>
+    <a href="<?= site_url('forgot-password') ?>" class="text-brand-600 hover:text-brand-700">Olvide mi password</a>
+    <a href="<?= site_url('register') ?>" class="text-brand-600 hover:text-brand-700">Crear cuenta</a>
 </div>

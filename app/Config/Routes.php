@@ -5,7 +5,7 @@ use CodeIgniter\Router\RouteCollection;
 /**
  * @var RouteCollection $routes
  */
-$routes->get('/', static fn () => redirect()->to('/login'));
+$routes->get('/', static fn () => redirect()->to(site_url('login')));
 
 // Publicas
 $routes->get('/login', 'AuthController::login');
@@ -32,20 +32,20 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->post('/files/(:segment)/delete', 'FileController::delete/$1');
 });
 
-// Admin
-$routes->group('admin', ['filter' => 'auth,admin'], static function (RouteCollection $routes): void {
-    $routes->get('users', 'UserController::index');
-    $routes->get('users/create', 'UserController::create');
-    $routes->post('users', 'UserController::store');
-    $routes->get('users/(:segment)', 'UserController::show/$1');
-    $routes->get('users/(:segment)/edit', 'UserController::edit/$1');
-    $routes->post('users/(:segment)', 'UserController::update/$1');
-    $routes->post('users/(:segment)/delete', 'UserController::delete/$1');
-    $routes->post('users/(:segment)/approve', 'UserController::approve/$1');
-
-    $routes->get('audit', 'AuditController::index');
-    $routes->get('audit/(:segment)', 'AuditController::show/$1');
-    $routes->get('audit/entity/(:segment)/(:segment)', 'AuditController::byEntity/$1/$2');
-
-    $routes->get('metrics', 'MetricsController::index');
-});
+// Admin (uncomment when controllers are implemented in phases 6-8)
+// $routes->group('admin', ['filter' => 'auth,admin'], static function (RouteCollection $routes): void {
+//     $routes->get('users', 'UserController::index');
+//     $routes->get('users/create', 'UserController::create');
+//     $routes->post('users', 'UserController::store');
+//     $routes->get('users/(:segment)', 'UserController::show/$1');
+//     $routes->get('users/(:segment)/edit', 'UserController::edit/$1');
+//     $routes->post('users/(:segment)', 'UserController::update/$1');
+//     $routes->post('users/(:segment)/delete', 'UserController::delete/$1');
+//     $routes->post('users/(:segment)/approve', 'UserController::approve/$1');
+//
+//     $routes->get('audit', 'AuditController::index');
+//     $routes->get('audit/(:segment)', 'AuditController::show/$1');
+//     $routes->get('audit/entity/(:segment)/(:segment)', 'AuditController::byEntity/$1/$2');
+//
+//     $routes->get('metrics', 'MetricsController::index');
+// });

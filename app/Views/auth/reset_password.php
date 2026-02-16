@@ -1,4 +1,4 @@
-<form method="post" action="/reset-password" class="space-y-4">
+<form method="post" action="<?= site_url('reset-password') ?>" class="space-y-4">
     <?= csrf_field() ?>
     <input type="hidden" name="token" value="<?= esc($token ?? old('token')) ?>">
 

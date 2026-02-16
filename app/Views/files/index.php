@@ -1,6 +1,6 @@
 <section class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
     <h3 class="text-lg font-semibold text-gray-900">Subir archivo</h3>
-    <form method="post" action="/files/upload" enctype="multipart/form-data" class="mt-4 space-y-4" x-data="{ dragging: false }"
+    <form method="post" action="<?= site_url('files/upload') ?>" enctype="multipart/form-data" class="mt-4 space-y-4" x-data="{ dragging: false }"
         @dragover.prevent="dragging = true" @dragleave.prevent="dragging = false" @drop.prevent="dragging = false">
         <?= csrf_field() ?>
         <label class="block rounded-xl border-2 border-dashed p-6 text-center cursor-pointer"
@@ -22,7 +22,7 @@
 <section class="mt-6 bg-white border border-gray-200 rounded-xl shadow-sm p-5">
     <div class="flex items-center justify-between gap-3">
         <h3 class="text-lg font-semibold text-gray-900">Mis archivos</h3>
-        <form method="get" action="/files" class="flex gap-2">
+        <form method="get" action="<?= site_url('files') ?>" class="flex gap-2">
             <input type="text" name="search" value="<?= esc((string) request()->getGet('search')) ?>" placeholder="Buscar..."
                 class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
             <button type="submit" class="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Buscar</button>
@@ -55,8 +55,8 @@
                             <td class="py-3 pr-4 text-gray-600"><?= esc(format_date($file['created_at'] ?? null)) ?></td>
                             <td class="py-3 pr-4">
                                 <div class="flex items-center gap-2">
-                                    <a href="/files/<?= esc($id) ?>/download" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50">Descargar</a>
-                                    <form method="post" action="/files/<?= esc($id) ?>/delete" onsubmit="return confirm('Eliminar archivo?');">
+                                    <a href="<?= site_url('files/' . esc($id, 'url') . '/download') ?>" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50">Descargar</a>
+                                    <form method="post" action="<?= site_url('files/' . esc($id, 'url') . '/delete') ?>" onsubmit="return confirm('Eliminar archivo?');">
                                         <?= csrf_field() ?>
                                         <button type="submit" class="rounded-lg bg-red-600 px-3 py-1.5 text-xs text-white hover:bg-red-700">Eliminar</button>
                                     </form>

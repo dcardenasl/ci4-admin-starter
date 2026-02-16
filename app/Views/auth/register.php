@@ -1,4 +1,4 @@
-<form method="post" action="/register" class="space-y-4" x-data="{ password: '' }">
+<form method="post" action="<?= site_url('register') ?>" class="space-y-4" x-data="{ password: '' }">
     <?= csrf_field() ?>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -38,5 +38,5 @@
 </form>
 
 <div class="mt-4 text-sm text-gray-600 text-center">
-    <a href="/login" class="text-brand-600 hover:text-brand-700">Ya tengo cuenta</a>
+    <a href="<?= site_url('login') ?>" class="text-brand-600 hover:text-brand-700">Ya tengo cuenta</a>
 </div>

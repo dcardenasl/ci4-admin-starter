@@ -6,25 +6,25 @@
     </div>
 
     <nav class="p-3 space-y-1">
-        <a href="/dashboard" class="block rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('dashboard') ?>">
+        <a href="<?= site_url('dashboard') ?>" class="block rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('dashboard') ?>">
             Dashboard
         </a>
-        <a href="/profile" class="block rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('profile') ?>">
+        <a href="<?= site_url('profile') ?>" class="block rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('profile') ?>">
             Perfil
         </a>
-        <a href="/files" class="block rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('files') ?>">
+        <a href="<?= site_url('files') ?>" class="block rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('files') ?>">
             Archivos
         </a>
 
         <?php if ((session('user.role') ?? null) === 'admin'): ?>
             <div class="pt-3 mt-3 border-t border-gray-800 text-xs uppercase text-gray-500">Administracion</div>
-            <a href="/admin/users" class="block rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/users*') ?>">
+            <a href="<?= site_url('admin/users') ?>" class="block rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/users*') ?>">
                 Usuarios
             </a>
-            <a href="/admin/audit" class="block rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/audit*') ?>">
+            <a href="<?= site_url('admin/audit') ?>" class="block rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/audit*') ?>">
                 Auditoria
             </a>
-            <a href="/admin/metrics" class="block rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/metrics') ?>">
+            <a href="<?= site_url('admin/metrics') ?>" class="block rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/metrics') ?>">
                 Metricas
             </a>
         <?php endif; ?>

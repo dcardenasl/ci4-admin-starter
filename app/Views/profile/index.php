@@ -1,7 +1,7 @@
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <section class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
         <h3 class="text-lg font-semibold text-gray-900">Informacion personal</h3>
-        <form method="post" action="/profile" class="mt-4 space-y-4">
+        <form method="post" action="<?= site_url('profile') ?>" class="mt-4 space-y-4">
             <?= csrf_field() ?>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -26,7 +26,7 @@
 
     <section class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
         <h3 class="text-lg font-semibold text-gray-900">Seguridad</h3>
-        <form method="post" action="/profile/change-password" class="mt-4 space-y-4">
+        <form method="post" action="<?= site_url('profile/change-password') ?>" class="mt-4 space-y-4">
             <?= csrf_field() ?>
             <div>
                 <label class="block text-sm font-medium text-gray-700" for="current_password">Password actual</label>
@@ -55,7 +55,7 @@
                 </span>
             </p>
             <?php if (empty($user['email_verified_at'])): ?>
-                <form method="post" action="/profile/resend-verification" class="mt-3">
+                <form method="post" action="<?= site_url('profile/resend-verification') ?>" class="mt-3">
                     <?= csrf_field() ?>
                     <button type="submit" class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                         Reenviar verificacion

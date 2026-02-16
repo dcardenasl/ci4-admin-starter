@@ -11,7 +11,7 @@ class AuthFilter implements FilterInterface
     public function before(RequestInterface $request, $arguments = null)
     {
         if (! session()->has('access_token')) {
-            return redirect()->to('/login')->with('error', 'Tu sesion expiro. Inicia sesion.');
+            return redirect()->to(site_url('login'))->with('error', 'Tu sesion expiro. Inicia sesion.');
         }
     }
 

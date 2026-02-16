@@ -3,6 +3,7 @@
 namespace Config;
 
 use App\Libraries\ApiClient;
+use App\Libraries\ApiClientInterface;
 use App\Services\AuthApiService;
 use App\Services\FileApiService;
 use CodeIgniter\Config\BaseService;

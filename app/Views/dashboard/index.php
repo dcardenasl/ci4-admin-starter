@@ -17,8 +17,8 @@
     <div class="flex items-center justify-between">
         <h3 class="text-lg font-semibold text-gray-900">Acciones rapidas</h3>
         <div class="space-x-2">
-            <a href="/files" class="inline-block rounded-lg bg-brand-600 text-white px-4 py-2 text-sm hover:bg-brand-700">Gestionar archivos</a>
-            <a href="/profile" class="inline-block rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Editar perfil</a>
+            <a href="<?= site_url('files') ?>" class="inline-block rounded-lg bg-brand-600 text-white px-4 py-2 text-sm hover:bg-brand-700">Gestionar archivos</a>
+            <a href="<?= site_url('profile') ?>" class="inline-block rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Editar perfil</a>
         </div>
     </div>
 

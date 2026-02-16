@@ -14,7 +14,7 @@ class AdminFilter implements FilterInterface
         $role = is_array($user) ? ($user['role'] ?? null) : null;
 
         if ($role !== 'admin') {
-            return redirect()->to('/dashboard')->with('error', 'No tienes permisos para esta seccion.');
+            return redirect()->to(site_url('dashboard'))->with('error', 'No tienes permisos para esta seccion.');
         }
     }
 
