@@ -3,6 +3,8 @@
 namespace Config;
 
 use App\Libraries\ApiClient;
+use App\Services\AuthApiService;
+use App\Services\FileApiService;
 use CodeIgniter\Config\BaseService;
 
 /**
@@ -28,5 +30,25 @@ class Services extends BaseService
         }
 
         return new ApiClient(config('ApiClient'));
+    }
+
+    public static function authApiService(bool $getShared = true): AuthApiService
+    {
+        if ($getShared) {
+            /** @var AuthApiService */
+            return static::getSharedInstance('authApiService');
+        }
+
+        return new AuthApiService(static::apiClient());
+    }
+
+    public static function fileApiService(bool $getShared = true): FileApiService
+    {
+        if ($getShared) {
+            /** @var FileApiService */
+            return static::getSharedInstance('fileApiService');
+        }
+
+        return new FileApiService(static::apiClient());
     }
 }

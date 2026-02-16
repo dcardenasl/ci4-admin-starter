@@ -36,6 +36,11 @@ abstract class BaseWebController extends BaseController
         ]));
     }
 
+    protected function renderAuth(string $view, array $data = []): string
+    {
+        return $this->render($view, $data, 'layouts/auth');
+    }
+
     protected function withSuccess(string $message, string $redirectTo)
     {
         return redirect()->to($redirectTo)->with('success', $message);
