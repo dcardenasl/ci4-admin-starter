@@ -1,0 +1,28 @@
+<?php
+
+return [
+    'title'           => 'Archivos',
+    'uploadTitle'     => 'Subir archivo',
+    'dragDrop'        => 'Arrastra un archivo aqui o haz click para seleccionar',
+    'visibility'      => 'Visibilidad',
+    'private'         => 'Privado',
+    'public'          => 'Publico',
+    'uploadButton'    => 'Subir',
+    'myFiles'         => 'Mis archivos',
+    'searchPlaceholder' => 'Buscar...',
+    'noFiles'         => 'No hay archivos cargados.',
+    'fileName'        => 'Nombre',
+    'status'          => 'Estado',
+    'date'            => 'Fecha',
+    'actions'         => 'Acciones',
+    'download'        => 'Descargar',
+    'delete'          => 'Eliminar',
+    'confirmDelete'   => 'Eliminar archivo?',
+    'invalidFile'     => 'Selecciona un archivo valido.',
+    'uploadSuccess'   => 'Archivo subido correctamente.',
+    'uploadFailed'    => 'No fue posible subir el archivo.',
+    'downloadFailed'  => 'No fue posible obtener el enlace de descarga.',
+    'downloadInvalid' => 'No se recibio un enlace valido de descarga.',
+    'deleteSuccess'   => 'Archivo eliminado.',
+    'deleteFailed'    => 'No fue posible eliminar el archivo.',
+];

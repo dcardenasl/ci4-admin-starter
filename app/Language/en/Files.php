@@ -1,0 +1,28 @@
+<?php
+
+return [
+    'title'           => 'Files',
+    'uploadTitle'     => 'Upload file',
+    'dragDrop'        => 'Drag a file here or click to select',
+    'visibility'      => 'Visibility',
+    'private'         => 'Private',
+    'public'          => 'Public',
+    'uploadButton'    => 'Upload',
+    'myFiles'         => 'My files',
+    'searchPlaceholder' => 'Search...',
+    'noFiles'         => 'No files uploaded.',
+    'fileName'        => 'Name',
+    'status'          => 'Status',
+    'date'            => 'Date',
+    'actions'         => 'Actions',
+    'download'        => 'Download',
+    'delete'          => 'Delete',
+    'confirmDelete'   => 'Delete file?',
+    'invalidFile'     => 'Select a valid file.',
+    'uploadSuccess'   => 'File uploaded successfully.',
+    'uploadFailed'    => 'Could not upload the file.',
+    'downloadFailed'  => 'Could not get the download link.',
+    'downloadInvalid' => 'No valid download link received.',
+    'deleteSuccess'   => 'File deleted.',
+    'deleteFailed'    => 'Could not delete the file.',
+];

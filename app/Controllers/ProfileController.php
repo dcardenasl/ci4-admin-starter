@@ -21,7 +21,7 @@ class ProfileController extends BaseWebController
     public function index(): string
     {
         return $this->render('profile/index', [
-            'title' => 'Perfil',
+            'title' => lang('Profile.title'),
             'user'  => session('user') ?? [],
         ]);
     }
@@ -32,7 +32,7 @@ class ProfileController extends BaseWebController
             'first_name' => 'required|min_length[2]|max_length[100]',
             'last_name'  => 'required|min_length[2]|max_length[100]',
         ])) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            return redirect()->back()->withInput()->with('fieldErrors', $this->validator->getErrors());
         }
 
         $payload = [
@@ -44,12 +44,18 @@ class ProfileController extends BaseWebController
         $response = $this->safeApiCall(fn () => $this->authService->updateProfile($payload));
 
         if (! $response['ok']) {
-            return redirect()->back()->withInput()->with('error', $this->firstMessage($response, 'No se pudo actualizar el perfil.'));
+            $fieldErrors = $this->getFieldErrors($response);
+
+            if (! empty($fieldErrors)) {
+                return $this->withFieldErrors($fieldErrors);
+            }
+
+            return redirect()->back()->withInput()->with('error', $this->firstMessage($response, lang('Profile.updateFailed')));
         }
 
         $this->refreshUserSession();
 
-        return redirect()->to(site_url('profile'))->with('success', 'Perfil actualizado.');
+        return redirect()->to(site_url('profile'))->with('success', lang('Profile.updateSuccess'));
     }
 
     public function changePassword(): RedirectResponse
@@ -59,7 +65,7 @@ class ProfileController extends BaseWebController
             'password'              => 'required|min_length[8]',
             'password_confirmation' => 'required|matches[password]',
         ])) {
-            return redirect()->back()->with('errors', $this->validator->getErrors());
+            return redirect()->back()->with('fieldErrors', $this->validator->getErrors());
         }
 
         $payload = [
@@ -71,10 +77,16 @@ class ProfileController extends BaseWebController
         $response = $this->safeApiCall(fn () => $this->authService->changePassword($payload));
 
         if (! $response['ok']) {
-            return redirect()->back()->with('error', $this->firstMessage($response, 'No se pudo cambiar el password.'));
+            $fieldErrors = $this->getFieldErrors($response);
+
+            if (! empty($fieldErrors)) {
+                return $this->withFieldErrors($fieldErrors);
+            }
+
+            return redirect()->back()->with('error', $this->firstMessage($response, lang('Profile.passwordFailed')));
         }
 
-        return redirect()->to(site_url('profile'))->with('success', 'Password actualizado.');
+        return redirect()->to(site_url('profile'))->with('success', lang('Profile.passwordSuccess'));
     }
 
     public function resendVerification(): RedirectResponse
@@ -82,10 +94,10 @@ class ProfileController extends BaseWebController
         $response = $this->safeApiCall(fn () => $this->authService->resendVerification());
 
         if (! $response['ok']) {
-            return redirect()->to(site_url('profile'))->with('error', $this->firstMessage($response, 'No se pudo reenviar la verificacion.'));
+            return redirect()->to(site_url('profile'))->with('error', $this->firstMessage($response, lang('Profile.resendFailed')));
         }
 
-        return redirect()->to(site_url('profile'))->with('success', 'Te reenviamos el correo de verificacion.');
+        return redirect()->to(site_url('profile'))->with('success', lang('Profile.resendSuccess'));
     }
 
     protected function refreshUserSession(): void

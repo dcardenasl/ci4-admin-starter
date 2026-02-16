@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es">
+<html lang="<?= esc($currentLocale ?? 'es') ?>">
 <head>
     <?= $this->include('layouts/partials/head') ?>
 </head>

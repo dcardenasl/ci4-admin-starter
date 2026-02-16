@@ -109,11 +109,12 @@ class ApiClient implements ApiClientInterface
         $payload = json_decode($response->getBody(), true);
 
         return [
-            'ok'       => $status >= 200 && $status < 300,
-            'status'   => $status,
-            'data'     => is_array($payload) ? $payload : [],
-            'raw'      => $response->getBody(),
-            'messages' => $this->extractMessages($payload, $status),
+            'ok'          => $status >= 200 && $status < 300,
+            'status'      => $status,
+            'data'        => is_array($payload) ? $payload : [],
+            'raw'         => $response->getBody(),
+            'messages'    => $this->extractMessages($payload, $status),
+            'fieldErrors' => $this->extractFieldErrors($payload),
         ];
     }
 
@@ -202,14 +203,41 @@ class ApiClient implements ApiClientInterface
             return $status >= 400 ? ['Request failed.'] : [];
         }
 
-        if (isset($payload['messages']) && is_array($payload['messages'])) {
-            return array_values(array_filter($payload['messages'], 'is_scalar'));
-        }
-
         if (isset($payload['message']) && is_scalar($payload['message'])) {
             return [(string) $payload['message']];
         }
 
+        if (isset($payload['messages']) && is_array($payload['messages'])) {
+            return array_values(array_filter($payload['messages'], 'is_scalar'));
+        }
+
+        if (isset($payload['errors']['general']) && is_scalar($payload['errors']['general'])) {
+            return [(string) $payload['errors']['general']];
+        }
+
         return [];
+    }
+
+    protected function extractFieldErrors(mixed $payload): array
+    {
+        if (! is_array($payload)) {
+            return [];
+        }
+
+        $errors = $payload['errors'] ?? [];
+
+        if (! is_array($errors)) {
+            return [];
+        }
+
+        $fieldErrors = [];
+
+        foreach ($errors as $key => $value) {
+            if (is_string($key) && $key !== 'general' && is_scalar($value)) {
+                $fieldErrors[$key] = (string) $value;
+            }
+        }
+
+        return $fieldErrors;
     }
 }

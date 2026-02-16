@@ -25,8 +25,8 @@ class AuthController extends BaseWebController
         }
 
         return $this->renderAuth('auth/login', [
-            'title'    => 'Iniciar sesion',
-            'subtitle' => 'Accede a tu cuenta',
+            'title'    => lang('Auth.loginTitle'),
+            'subtitle' => lang('Auth.loginSubtitle'),
         ]);
     }
 
@@ -36,7 +36,7 @@ class AuthController extends BaseWebController
             'email'    => 'required|valid_email',
             'password' => 'required|min_length[6]',
         ])) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            return redirect()->back()->withInput()->with('fieldErrors', $this->validator->getErrors());
         }
 
         $payload = [
@@ -47,20 +47,26 @@ class AuthController extends BaseWebController
         $response = $this->safeApiCall(fn () => $this->authService->login($payload));
 
         if (! $response['ok']) {
-            return redirect()->back()->withInput()->with('error', $this->firstMessage($response, 'Credenciales invalidas.'));
+            $fieldErrors = $this->getFieldErrors($response);
+
+            if (! empty($fieldErrors)) {
+                return $this->withFieldErrors($fieldErrors);
+            }
+
+            return redirect()->back()->withInput()->with('error', $this->firstMessage($response, lang('Auth.loginFailed')));
         }
 
         $data = $this->extractData($response);
         $this->persistAuthSession($data);
 
-        return redirect()->to(site_url('dashboard'))->with('success', 'Sesion iniciada correctamente.');
+        return redirect()->to(site_url('dashboard'))->with('success', lang('Auth.loginSuccess'));
     }
 
     public function register(): string
     {
         return $this->renderAuth('auth/register', [
-            'title'    => 'Crear cuenta',
-            'subtitle' => 'Completa tu registro',
+            'title'    => lang('Auth.registerTitle'),
+            'subtitle' => lang('Auth.registerSubtitle'),
         ]);
     }
 
@@ -73,7 +79,7 @@ class AuthController extends BaseWebController
             'password'              => 'required|min_length[8]',
             'password_confirmation' => 'required|matches[password]',
         ])) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            return redirect()->back()->withInput()->with('fieldErrors', $this->validator->getErrors());
         }
 
         $payload = [
@@ -87,17 +93,23 @@ class AuthController extends BaseWebController
         $response = $this->safeApiCall(fn () => $this->authService->register($payload));
 
         if (! $response['ok']) {
-            return redirect()->back()->withInput()->with('error', $this->firstMessage($response, 'No fue posible completar el registro.'));
+            $fieldErrors = $this->getFieldErrors($response);
+
+            if (! empty($fieldErrors)) {
+                return $this->withFieldErrors($fieldErrors);
+            }
+
+            return redirect()->back()->withInput()->with('error', $this->firstMessage($response, lang('Auth.registerFailed')));
         }
 
-        return redirect()->to(site_url('login'))->with('success', 'Registro completado. Revisa tu correo para verificar tu cuenta.');
+        return redirect()->to(site_url('login'))->with('success', lang('Auth.registerSuccess'));
     }
 
     public function forgotPassword(): string
     {
         return $this->renderAuth('auth/forgot_password', [
-            'title'    => 'Recuperar password',
-            'subtitle' => 'Te enviaremos un enlace por correo',
+            'title'    => lang('Auth.forgotTitle'),
+            'subtitle' => lang('Auth.forgotSubtitle'),
         ]);
     }
 
@@ -106,24 +118,30 @@ class AuthController extends BaseWebController
         if (! $this->validate([
             'email' => 'required|valid_email',
         ])) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            return redirect()->back()->withInput()->with('fieldErrors', $this->validator->getErrors());
         }
 
         $email = (string) $this->request->getPost('email');
         $response = $this->safeApiCall(fn () => $this->authService->forgotPassword($email));
 
         if (! $response['ok']) {
-            return redirect()->back()->withInput()->with('error', $this->firstMessage($response, 'No fue posible procesar la solicitud.'));
+            $fieldErrors = $this->getFieldErrors($response);
+
+            if (! empty($fieldErrors)) {
+                return $this->withFieldErrors($fieldErrors);
+            }
+
+            return redirect()->back()->withInput()->with('error', $this->firstMessage($response, lang('Auth.forgotFailed')));
         }
 
-        return redirect()->to(site_url('login'))->with('success', 'Te enviamos instrucciones para recuperar tu password.');
+        return redirect()->to(site_url('login'))->with('success', lang('Auth.forgotSuccess'));
     }
 
     public function resetPassword(): string
     {
         return $this->renderAuth('auth/reset_password', [
-            'title'    => 'Restablecer password',
-            'subtitle' => 'Define una nueva credencial',
+            'title'    => lang('Auth.resetTitle'),
+            'subtitle' => lang('Auth.resetSubtitle'),
             'token'    => (string) $this->request->getGet('token'),
         ]);
     }
@@ -135,7 +153,7 @@ class AuthController extends BaseWebController
             'password'              => 'required|min_length[8]',
             'password_confirmation' => 'required|matches[password]',
         ])) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            return redirect()->back()->withInput()->with('fieldErrors', $this->validator->getErrors());
         }
 
         $payload = [
@@ -147,10 +165,16 @@ class AuthController extends BaseWebController
         $response = $this->safeApiCall(fn () => $this->authService->resetPassword($payload));
 
         if (! $response['ok']) {
-            return redirect()->back()->withInput()->with('error', $this->firstMessage($response, 'No fue posible cambiar tu password.'));
+            $fieldErrors = $this->getFieldErrors($response);
+
+            if (! empty($fieldErrors)) {
+                return $this->withFieldErrors($fieldErrors);
+            }
+
+            return redirect()->back()->withInput()->with('error', $this->firstMessage($response, lang('Auth.resetFailed')));
         }
 
-        return redirect()->to(site_url('login'))->with('success', 'Password actualizado correctamente.');
+        return redirect()->to(site_url('login'))->with('success', lang('Auth.resetSuccess'));
     }
 
     public function verifyEmail(): string
@@ -159,10 +183,10 @@ class AuthController extends BaseWebController
         $response = $this->safeApiCall(fn () => $this->authService->verifyEmail($token));
 
         return $this->renderAuth('auth/verify_email', [
-            'title'    => 'Verificacion de correo',
-            'subtitle' => 'Resultado de validacion',
+            'title'    => lang('Auth.verifyTitle'),
+            'subtitle' => lang('Auth.verifySubtitle'),
             'verified' => $response['ok'],
-            'message'  => $this->firstMessage($response, $response['ok'] ? 'Tu correo fue verificado.' : 'No se pudo verificar tu correo.'),
+            'message'  => $this->firstMessage($response, $response['ok'] ? lang('Auth.verifySuccess') : lang('Auth.verifyFailed')),
         ]);
     }
 
@@ -174,7 +198,7 @@ class AuthController extends BaseWebController
 
         $this->session->destroy();
 
-        return redirect()->to(site_url('login'))->with('success', 'Sesion finalizada.');
+        return redirect()->to(site_url('login'))->with('success', lang('Auth.logoutSuccess'));
     }
 
     protected function persistAuthSession(array $data): void

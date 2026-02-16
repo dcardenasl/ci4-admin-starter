@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'title'              => 'Perfil',
+    'personalInfo'       => 'Informacion personal',
+    'firstNameLabel'     => 'Nombre',
+    'lastNameLabel'      => 'Apellido',
+    'avatarUrlLabel'     => 'Avatar URL',
+    'saveChanges'        => 'Guardar cambios',
+    'security'           => 'Seguridad',
+    'currentPassword'    => 'Password actual',
+    'newPassword'        => 'Nuevo password',
+    'confirmPassword'    => 'Confirmar password',
+    'updatePassword'     => 'Actualizar password',
+    'emailVerification'  => 'Verificacion de correo',
+    'status'             => 'Estado',
+    'verified'           => 'Verificado',
+    'pending'            => 'Pendiente',
+    'resendVerification' => 'Reenviar verificacion',
+    'updateSuccess'      => 'Perfil actualizado.',
+    'updateFailed'       => 'No se pudo actualizar el perfil.',
+    'passwordSuccess'    => 'Password actualizado.',
+    'passwordFailed'     => 'No se pudo cambiar el password.',
+    'resendSuccess'      => 'Te reenviamos el correo de verificacion.',
+    'resendFailed'       => 'No se pudo reenviar la verificacion.',
+];

@@ -2,6 +2,9 @@
 
 namespace App\Libraries;
 
+/**
+ * @method array{ok: bool, status: int, data: array, raw: string, messages: string[], fieldErrors: array<string, string>}
+ */
 interface ApiClientInterface
 {
     public function get(string $path, array $query = []): array;

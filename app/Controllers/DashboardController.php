@@ -24,11 +24,11 @@ class DashboardController extends BaseWebController
         $user = session('user') ?? [];
 
         return $this->render('dashboard/index', [
-            'title' => 'Dashboard',
+            'title' => lang('Dashboard.title'),
             'stats' => [
                 'files'         => count($files),
                 'role'          => $user['role'] ?? 'user',
-                'emailVerified' => ! empty($user['email_verified_at']) ? 'Si' : 'No',
+                'emailVerified' => ! empty($user['email_verified_at']) ? lang('App.yes') : lang('App.no'),
             ],
             'recentFiles' => $files,
         ]);

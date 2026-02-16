@@ -6,6 +6,7 @@ use App\Libraries\ApiClient;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
+use Config\Services;
 use Psr\Log\LoggerInterface;
 
 abstract class BaseWebController extends BaseController
@@ -28,8 +29,10 @@ abstract class BaseWebController extends BaseController
         $apiConfig = config('ApiClient');
 
         $this->viewData = [
-            'appName' => $apiConfig->appName,
-            'user'    => $this->session->get('user'),
+            'appName'          => $apiConfig->appName,
+            'user'             => $this->session->get('user'),
+            'currentLocale'    => Services::language()->getLocale(),
+            'supportedLocales' => config('App')->supportedLocales,
         ];
     }
 
@@ -53,6 +56,16 @@ abstract class BaseWebController extends BaseController
     protected function withError(string $message, string $redirectTo): RedirectResponse
     {
         return redirect()->to($redirectTo)->with('error', $message);
+    }
+
+    protected function withFieldErrors(array $errors): RedirectResponse
+    {
+        return redirect()->back()->withInput()->with('fieldErrors', $errors);
+    }
+
+    protected function getFieldErrors(array $response): array
+    {
+        return $response['fieldErrors'] ?? [];
     }
 
     /**
@@ -111,11 +124,12 @@ abstract class BaseWebController extends BaseController
             log_message('error', 'API call failed: ' . $e->getMessage());
 
             return [
-                'ok'       => false,
-                'status'   => 0,
-                'data'     => [],
-                'raw'      => '',
-                'messages' => ['No se pudo conectar con el servicio. Intenta mas tarde.'],
+                'ok'          => false,
+                'status'      => 0,
+                'data'        => [],
+                'raw'         => '',
+                'messages'    => [lang('App.connectionError')],
+                'fieldErrors' => [],
             ];
         }
     }

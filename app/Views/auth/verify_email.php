@@ -4,6 +4,6 @@
     </div>
 
     <a href="<?= site_url('login') ?>" class="block w-full text-center rounded-lg bg-brand-600 text-white px-4 py-2 hover:bg-brand-700">
-        Ir al login
+        <?= lang('Auth.goToLogin') ?>
     </a>
 </div>

@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'title'              => 'Profile',
+    'personalInfo'       => 'Personal information',
+    'firstNameLabel'     => 'First name',
+    'lastNameLabel'      => 'Last name',
+    'avatarUrlLabel'     => 'Avatar URL',
+    'saveChanges'        => 'Save changes',
+    'security'           => 'Security',
+    'currentPassword'    => 'Current password',
+    'newPassword'        => 'New password',
+    'confirmPassword'    => 'Confirm password',
+    'updatePassword'     => 'Update password',
+    'emailVerification'  => 'Email verification',
+    'status'             => 'Status',
+    'verified'           => 'Verified',
+    'pending'            => 'Pending',
+    'resendVerification' => 'Resend verification',
+    'updateSuccess'      => 'Profile updated.',
+    'updateFailed'       => 'Could not update profile.',
+    'passwordSuccess'    => 'Password updated.',
+    'passwordFailed'     => 'Could not change password.',
+    'resendSuccess'      => 'Verification email resent.',
+    'resendFailed'       => 'Could not resend verification.',
+];

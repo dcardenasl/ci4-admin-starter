@@ -25,7 +25,7 @@ class FileController extends BaseWebController
         ]));
 
         return $this->render('files/index', [
-            'title' => 'Archivos',
+            'title' => lang('Files.title'),
             'files' => $this->extractItems($response),
         ]);
     }
@@ -35,13 +35,13 @@ class FileController extends BaseWebController
         if (! $this->validate([
             'file' => 'uploaded[file]|max_size[file,10240]',
         ])) {
-            return redirect()->to(site_url('files'))->with('errors', $this->validator->getErrors());
+            return redirect()->to(site_url('files'))->with('fieldErrors', $this->validator->getErrors());
         }
 
         $file = $this->request->getFile('file');
 
         if ($file === null || ! $file->isValid()) {
-            return redirect()->to(site_url('files'))->with('error', 'Selecciona un archivo valido.');
+            return redirect()->to(site_url('files'))->with('error', lang('Files.invalidFile'));
         }
 
         $uploadDir = WRITEPATH . 'uploads/';
@@ -59,10 +59,10 @@ class FileController extends BaseWebController
         @unlink($tempPath);
 
         if (! $response['ok']) {
-            return redirect()->to(site_url('files'))->with('error', $this->firstMessage($response, 'No fue posible subir el archivo.'));
+            return redirect()->to(site_url('files'))->with('error', $this->firstMessage($response, lang('Files.uploadFailed')));
         }
 
-        return redirect()->to(site_url('files'))->with('success', 'Archivo subido correctamente.');
+        return redirect()->to(site_url('files'))->with('success', lang('Files.uploadSuccess'));
     }
 
     public function download(string $id): RedirectResponse
@@ -70,14 +70,14 @@ class FileController extends BaseWebController
         $response = $this->safeApiCall(fn () => $this->fileService->getDownload($id));
 
         if (! $response['ok']) {
-            return redirect()->to(site_url('files'))->with('error', $this->firstMessage($response, 'No fue posible obtener el enlace de descarga.'));
+            return redirect()->to(site_url('files'))->with('error', $this->firstMessage($response, lang('Files.downloadFailed')));
         }
 
         $data = $this->extractData($response);
         $url = is_array($data) ? ($data['download_url'] ?? $data['url'] ?? null) : null;
 
         if (! is_string($url) || $url === '') {
-            return redirect()->to(site_url('files'))->with('error', 'No se recibio un enlace valido de descarga.');
+            return redirect()->to(site_url('files'))->with('error', lang('Files.downloadInvalid'));
         }
 
         return redirect()->to($url);
@@ -88,9 +88,9 @@ class FileController extends BaseWebController
         $response = $this->safeApiCall(fn () => $this->fileService->delete($id));
 
         if (! $response['ok']) {
-            return redirect()->to(site_url('files'))->with('error', $this->firstMessage($response, 'No fue posible eliminar el archivo.'));
+            return redirect()->to(site_url('files'))->with('error', $this->firstMessage($response, lang('Files.deleteFailed')));
         }
 
-        return redirect()->to(site_url('files'))->with('success', 'Archivo eliminado.');
+        return redirect()->to(site_url('files'))->with('success', lang('Files.deleteSuccess'));
     }
 }
