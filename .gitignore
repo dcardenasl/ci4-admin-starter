@@ -50,6 +50,7 @@ writable/database/*
 #-------------------------
 # Test / Coverage Artifacts
 #-------------------------
+build/
 tests/coverage*
 phpunit
 .phpunit.result.cache
@@ -58,6 +59,11 @@ results/
 phpunit*.xml
 .php-cs-fixer.cache
 .phpintel
+
+#-------------------------
+# Runtime (public)
+#-------------------------
+public/writable/
 
 #-------------------------
 # IDE / Editor
