@@ -7,7 +7,7 @@ use Config\ApiClient as ApiClientConfig;
 use Config\Services;
 use RuntimeException;
 
-class ApiClient
+class ApiClient implements ApiClientInterface
 {
     protected ApiClientConfig $config;
 
