@@ -27,6 +27,8 @@ class ApiClient implements ApiClientInterface
                 'http_errors'    => false,
                 'headers'        => ['Accept' => 'application/json'],
             ],
+            null,
+            null,
             false
         );
     }
