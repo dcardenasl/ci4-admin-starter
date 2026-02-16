@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Services\FileApiService;
+use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Psr\Log\LoggerInterface;
@@ -19,9 +20,9 @@ class FileController extends BaseWebController
 
     public function index(): string
     {
-        $response = $this->fileService->list([
+        $response = $this->safeApiCall(fn () => $this->fileService->list([
             'search' => (string) $this->request->getGet('search'),
-        ]);
+        ]));
 
         return $this->render('files/index', [
             'title' => 'Archivos',
@@ -29,79 +30,67 @@ class FileController extends BaseWebController
         ]);
     }
 
-    public function upload()
+    public function upload(): RedirectResponse
     {
+        if (! $this->validate([
+            'file' => 'uploaded[file]|max_size[file,10240]',
+        ])) {
+            return redirect()->to(site_url('files'))->with('errors', $this->validator->getErrors());
+        }
+
         $file = $this->request->getFile('file');
 
         if ($file === null || ! $file->isValid()) {
-            return redirect()->to('/files')->with('error', 'Selecciona un archivo valido.');
+            return redirect()->to(site_url('files'))->with('error', 'Selecciona un archivo valido.');
         }
 
-        $tempPath = WRITEPATH . 'uploads/' . uniqid('upload_', true) . '_' . $file->getName();
+        $uploadDir = WRITEPATH . 'uploads/';
+        if (! is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $tempPath = $uploadDir . uniqid('upload_', true) . '_' . $file->getName();
         $file->move(dirname($tempPath), basename($tempPath));
 
-        $response = $this->fileService->upload('file', $tempPath, [
+        $response = $this->safeApiCall(fn () => $this->fileService->upload('file', $tempPath, [
             'visibility' => (string) ($this->request->getPost('visibility') ?? 'private'),
-        ]);
+        ]));
 
         @unlink($tempPath);
 
         if (! $response['ok']) {
-            return redirect()->to('/files')->with('error', $this->firstMessage($response, 'No fue posible subir el archivo.'));
+            return redirect()->to(site_url('files'))->with('error', $this->firstMessage($response, 'No fue posible subir el archivo.'));
         }
 
-        return redirect()->to('/files')->with('success', 'Archivo subido correctamente.');
+        return redirect()->to(site_url('files'))->with('success', 'Archivo subido correctamente.');
     }
 
-    public function download(string $id)
+    public function download(string $id): RedirectResponse
     {
-        $response = $this->fileService->getDownload($id);
+        $response = $this->safeApiCall(fn () => $this->fileService->getDownload($id));
 
         if (! $response['ok']) {
-            return redirect()->to('/files')->with('error', $this->firstMessage($response, 'No fue posible obtener el enlace de descarga.'));
+            return redirect()->to(site_url('files'))->with('error', $this->firstMessage($response, 'No fue posible obtener el enlace de descarga.'));
         }
 
-        $payload = $response['data'] ?? [];
-        $data = $payload['data'] ?? $payload;
+        $data = $this->extractData($response);
         $url = is_array($data) ? ($data['download_url'] ?? $data['url'] ?? null) : null;
 
         if (! is_string($url) || $url === '') {
-            return redirect()->to('/files')->with('error', 'No se recibio un enlace valido de descarga.');
+            return redirect()->to(site_url('files'))->with('error', 'No se recibio un enlace valido de descarga.');
         }
 
         return redirect()->to($url);
     }
 
-    public function delete(string $id)
+    public function delete(string $id): RedirectResponse
     {
-        $response = $this->fileService->delete($id);
+        $response = $this->safeApiCall(fn () => $this->fileService->delete($id));
 
         if (! $response['ok']) {
-            return redirect()->to('/files')->with('error', $this->firstMessage($response, 'No fue posible eliminar el archivo.'));
+            return redirect()->to(site_url('files'))->with('error', $this->firstMessage($response, 'No fue posible eliminar el archivo.'));
         }
 
-        return redirect()->to('/files')->with('success', 'Archivo eliminado.');
-    }
-
-    protected function extractItems(array $response): array
-    {
-        $data = $response['data'] ?? [];
-
-        if (isset($data['data']) && is_array($data['data'])) {
-            return $data['data'];
-        }
-
-        return is_array($data) ? $data : [];
-    }
-
-    protected function firstMessage(array $response, string $fallback): string
-    {
-        $messages = $response['messages'] ?? [];
-
-        if (is_array($messages) && isset($messages[0])) {
-            return (string) $messages[0];
-        }
-
-        return $fallback;
+        return redirect()->to(site_url('files'))->with('success', 'Archivo eliminado.');
     }
 }

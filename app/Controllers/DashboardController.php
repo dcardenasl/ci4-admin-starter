@@ -19,7 +19,7 @@ class DashboardController extends BaseWebController
 
     public function index(): string
     {
-        $fileResponse = $this->fileService->list(['per_page' => 5]);
+        $fileResponse = $this->safeApiCall(fn () => $this->fileService->list(['per_page' => 5]));
         $files = $this->extractItems($fileResponse);
         $user = session('user') ?? [];
 
@@ -32,16 +32,5 @@ class DashboardController extends BaseWebController
             ],
             'recentFiles' => $files,
         ]);
-    }
-
-    protected function extractItems(array $response): array
-    {
-        $data = $response['data'] ?? [];
-
-        if (isset($data['data']) && is_array($data['data'])) {
-            return $data['data'];
-        }
-
-        return is_array($data) ? $data : [];
     }
 }
