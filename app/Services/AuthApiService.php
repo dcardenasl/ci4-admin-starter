@@ -2,14 +2,8 @@
 
 namespace App\Services;
 
-use App\Libraries\ApiClient;
-
-class AuthApiService
+class AuthApiService extends BaseApiService
 {
-    public function __construct(protected ApiClient $apiClient)
-    {
-    }
-
     public function login(array $credentials): array
     {
         return $this->apiClient->publicPost('/auth/login', $credentials);

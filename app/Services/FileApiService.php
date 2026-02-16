@@ -2,15 +2,10 @@
 
 namespace App\Services;
 
-use App\Libraries\ApiClient;
 use RuntimeException;
 
-class FileApiService
+class FileApiService extends BaseApiService
 {
-    public function __construct(protected ApiClient $apiClient)
-    {
-    }
-
     public function list(array $filters = []): array
     {
         return $this->apiClient->get('/files', $filters);
