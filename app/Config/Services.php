@@ -2,6 +2,7 @@
 
 namespace Config;
 
+use App\Libraries\ApiClient;
 use CodeIgniter\Config\BaseService;
 
 /**
@@ -19,14 +20,13 @@ use CodeIgniter\Config\BaseService;
  */
 class Services extends BaseService
 {
-    /*
-     * public static function example($getShared = true)
-     * {
-     *     if ($getShared) {
-     *         return static::getSharedInstance('example');
-     *     }
-     *
-     *     return new \CodeIgniter\Example();
-     * }
-     */
+    public static function apiClient(bool $getShared = true): ApiClient
+    {
+        if ($getShared) {
+            /** @var ApiClient */
+            return static::getSharedInstance('apiClient');
+        }
+
+        return new ApiClient(config('ApiClient'));
+    }
 }
