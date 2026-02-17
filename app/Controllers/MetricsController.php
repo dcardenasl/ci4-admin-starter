@@ -19,11 +19,28 @@ class MetricsController extends BaseWebController
 
     public function index(): string
     {
-        $response = $this->safeApiCall(fn() => $this->metricsService->get());
+        $dateRange = $this->resolveDateRange();
+        $groupBy = (string) ($this->request->getGet('group_by') ?: 'day');
+        if (! in_array($groupBy, ['day', 'week', 'month'], true)) {
+            $groupBy = 'day';
+        }
+
+        $filters = $dateRange + ['group_by' => $groupBy];
+        $summaryResponse = $this->safeApiCall(fn() => $this->metricsService->summary($filters));
+        $timeseriesResponse = $this->safeApiCall(fn() => $this->metricsService->timeseries($filters));
+
+        $metrics = $this->extractData($summaryResponse);
+        $timeseries = $this->extractItems($timeseriesResponse);
+
+        if ($timeseries === []) {
+            $timeseries = $this->extractData($timeseriesResponse)['timeseries'] ?? [];
+        }
 
         return $this->render('metrics/index', [
-            'title'   => lang('Metrics.title'),
-            'metrics' => $this->extractData($response),
+            'title'      => lang('Metrics.title'),
+            'metrics'    => $metrics,
+            'timeseries' => is_array($timeseries) ? $timeseries : [],
+            'filters'    => $filters,
         ]);
     }
 }
