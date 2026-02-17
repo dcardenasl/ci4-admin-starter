@@ -8,9 +8,13 @@ if (! function_exists('active_nav')) {
 }
 
 if (! function_exists('format_date')) {
-    function format_date(?string $date, string $format = 'd/m/Y H:i'): string
+    function format_date(mixed $date, string $format = 'd/m/Y H:i'): string
     {
-        if (empty($date)) {
+        if (is_array($date)) {
+            $date = $date['date'] ?? $date[0] ?? null;
+        }
+
+        if (empty($date) || ! is_string($date)) {
             return '-';
         }
 
@@ -32,6 +36,23 @@ if (! function_exists('status_badge')) {
             'pending', 'processing' => 'bg-yellow-100 text-yellow-800',
             'suspended', 'rejected', 'failed' => 'bg-red-100 text-red-800',
             default => 'bg-gray-100 text-gray-800',
+        };
+    }
+}
+
+if (! function_exists('audit_action_badge')) {
+    function audit_action_badge(?string $action): string
+    {
+        $action = strtolower((string) $action);
+
+        return match ($action) {
+            'create'          => 'bg-green-100 text-green-800',
+            'update'          => 'bg-blue-100 text-blue-800',
+            'delete'          => 'bg-red-100 text-red-800',
+            'login'           => 'bg-brand-100 text-brand-800',
+            'logout'          => 'bg-gray-100 text-gray-800',
+            'approve'         => 'bg-emerald-100 text-emerald-800',
+            default           => 'bg-gray-100 text-gray-700',
         };
     }
 }

@@ -4,8 +4,11 @@ namespace Config;
 
 use App\Libraries\ApiClient;
 use App\Libraries\ApiClientInterface;
+use App\Services\AuditApiService;
 use App\Services\AuthApiService;
 use App\Services\FileApiService;
+use App\Services\MetricsApiService;
+use App\Services\UserApiService;
 use CodeIgniter\Config\BaseService;
 
 /**
@@ -51,5 +54,35 @@ class Services extends BaseService
         }
 
         return new FileApiService(static::apiClient());
+    }
+
+    public static function userApiService(bool $getShared = true): UserApiService
+    {
+        if ($getShared) {
+            /** @var UserApiService */
+            return static::getSharedInstance('userApiService');
+        }
+
+        return new UserApiService(static::apiClient());
+    }
+
+    public static function auditApiService(bool $getShared = true): AuditApiService
+    {
+        if ($getShared) {
+            /** @var AuditApiService */
+            return static::getSharedInstance('auditApiService');
+        }
+
+        return new AuditApiService(static::apiClient());
+    }
+
+    public static function metricsApiService(bool $getShared = true): MetricsApiService
+    {
+        if ($getShared) {
+            /** @var MetricsApiService */
+            return static::getSharedInstance('metricsApiService');
+        }
+
+        return new MetricsApiService(static::apiClient());
     }
 }
