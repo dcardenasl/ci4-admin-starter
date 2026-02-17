@@ -37,6 +37,13 @@ return [
     // Global errors
     'errorsFound'      => 'Errors were found in the form.',
     'connectionError'  => 'Could not connect to the service. Please try again later.',
+    'error404Title'    => 'Page not found',
+    'error404Body'     => 'The requested URL does not exist or is no longer available.',
+    'error500Title'    => 'Internal server error',
+    'error500Body'     => 'We could not process your request right now. Please try again in a few minutes.',
+    'goDashboard'      => 'Go to dashboard',
+    'goLogin'          => 'Go to login',
+    'goBack'           => 'Go back',
 
     // Language
     'language'       => 'Language',

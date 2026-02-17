@@ -10,12 +10,12 @@
         </label>
         <div>
             <label class="block text-sm font-medium text-gray-700" for="visibility"><?= lang('Files.visibility') ?></label>
-            <select id="visibility" name="visibility" class="mt-1 w-full md:w-56 rounded-lg border border-gray-300 px-3 py-2">
+            <select id="visibility" name="visibility" class="mt-1 w-full md:w-56 rounded-lg border border-gray-300 px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
                 <option value="private"><?= lang('Files.private') ?></option>
                 <option value="public"><?= lang('Files.public') ?></option>
             </select>
         </div>
-        <button type="submit" class="rounded-lg bg-brand-600 text-white px-4 py-2 text-sm hover:bg-brand-700"><?= lang('Files.uploadButton') ?></button>
+        <button type="submit" class="rounded-lg bg-brand-600 text-white px-4 py-2 text-sm font-medium hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"><?= lang('Files.uploadButton') ?></button>
     </form>
 </section>
 
@@ -24,13 +24,16 @@
         <h3 class="text-lg font-semibold text-gray-900"><?= lang('Files.myFiles') ?></h3>
         <form method="get" action="<?= site_url('files') ?>" class="flex gap-2">
             <input type="text" name="search" value="<?= esc((string) request()->getGet('search')) ?>" placeholder="<?= lang('Files.searchPlaceholder') ?>"
-                class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
-            <button type="submit" class="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('App.search') ?></button>
+                class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
+            <button type="submit" class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"><?= lang('App.search') ?></button>
         </form>
     </div>
 
     <?php if (empty($files)): ?>
-        <p class="mt-4 text-sm text-gray-500"><?= lang('Files.noFiles') ?></p>
+        <div class="mt-4 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4">
+            <p class="text-sm text-gray-600"><?= lang('Files.noFiles') ?></p>
+            <p class="mt-1 text-xs text-gray-500"><?= lang('Files.dragDrop') ?></p>
+        </div>
     <?php else: ?>
         <div class="mt-4 overflow-x-auto">
             <table class="min-w-full text-sm">
@@ -55,10 +58,10 @@
                             <td class="py-3 pr-4 text-gray-600"><?= esc(format_date($file['created_at'] ?? null)) ?></td>
                             <td class="py-3 pr-4">
                                 <div class="flex items-center gap-2">
-                                    <a href="<?= site_url('files/' . esc($id, 'url') . '/download') ?>" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"><?= lang('Files.download') ?></a>
+                                    <a href="<?= site_url('files/' . esc($id, 'url') . '/download') ?>" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"><?= lang('Files.download') ?></a>
                                     <form method="post" action="<?= site_url('files/' . esc($id, 'url') . '/delete') ?>" onsubmit="return confirm('<?= lang('Files.confirmDelete') ?>');">
                                         <?= csrf_field() ?>
-                                        <button type="submit" class="rounded-lg bg-red-600 px-3 py-1.5 text-xs text-white hover:bg-red-700"><?= lang('Files.delete') ?></button>
+                                        <button type="submit" class="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"><?= lang('Files.delete') ?></button>
                                     </form>
                                 </div>
                             </td>

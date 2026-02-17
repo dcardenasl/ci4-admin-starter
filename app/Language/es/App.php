@@ -37,6 +37,13 @@ return [
     // Errores globales
     'errorsFound'      => 'Se encontraron errores en el formulario.',
     'connectionError'  => 'No se pudo conectar con el servicio. Intenta mas tarde.',
+    'error404Title'    => 'Pagina no encontrada',
+    'error404Body'     => 'La URL solicitada no existe o ya no esta disponible.',
+    'error500Title'    => 'Error interno del sistema',
+    'error500Body'     => 'Tuvimos un problema al procesar la solicitud. Intenta nuevamente en unos minutos.',
+    'goDashboard'      => 'Ir al dashboard',
+    'goLogin'          => 'Ir a login',
+    'goBack'           => 'Volver atras',
 
     // Idioma
     'language'       => 'Idioma',

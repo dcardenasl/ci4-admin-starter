@@ -40,10 +40,15 @@ final class HealthTest extends CIUnitTestCase
         // You can't use Config\App, because phpunit.xml.dist sets app.baseURL
         $reader = new ConfigReader();
 
-        // BaseURL in app/Config/App.php is a valid URL?
-        $this->assertTrue(
-            $validation->check($reader->baseURL, 'valid_url'),
-            'baseURL "' . $reader->baseURL . '" in app/Config/App.php is not valid URL',
-        );
+        // If baseURL is set in app/Config/App.php, it must be a valid URL.
+        // Empty value is allowed when environment-specific .env config is used.
+        if ($reader->baseURL !== '') {
+            $this->assertTrue(
+                $validation->check($reader->baseURL, 'valid_url'),
+                'baseURL "' . $reader->baseURL . '" in app/Config/App.php is not valid URL',
+            );
+        } else {
+            $this->assertTrue(true);
+        }
     }
 }

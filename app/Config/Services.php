@@ -7,6 +7,7 @@ use App\Libraries\ApiClientInterface;
 use App\Services\AuditApiService;
 use App\Services\AuthApiService;
 use App\Services\FileApiService;
+use App\Services\HealthApiService;
 use App\Services\MetricsApiService;
 use App\Services\UserApiService;
 use CodeIgniter\Config\BaseService;
@@ -84,5 +85,15 @@ class Services extends BaseService
         }
 
         return new MetricsApiService(static::apiClient());
+    }
+
+    public static function healthApiService(bool $getShared = true): HealthApiService
+    {
+        if ($getShared) {
+            /** @var HealthApiService */
+            return static::getSharedInstance('healthApiService');
+        }
+
+        return new HealthApiService(static::apiClient());
     }
 }

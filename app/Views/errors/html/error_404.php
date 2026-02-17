@@ -1,84 +1,33 @@
-<!DOCTYPE html>
-<html lang="en">
+<?php
+$isAuthed = (string) session('access_token') !== '';
+$primaryUrl = $isAuthed ? site_url('dashboard') : site_url('login');
+$primaryLabel = $isAuthed ? lang('App.goDashboard') : lang('App.goLogin');
+?>
+<!doctype html>
+<html lang="<?= esc(service('language')->getLocale()) ?>">
 <head>
     <meta charset="utf-8">
-    <title><?= lang('Errors.pageNotFound') ?></title>
-
-    <style>
-        div.logo {
-            height: 200px;
-            width: 155px;
-            display: inline-block;
-            opacity: 0.08;
-            position: absolute;
-            top: 2rem;
-            left: 50%;
-            margin-left: -73px;
-        }
-        body {
-            height: 100%;
-            background: #fafafa;
-            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-            color: #777;
-            font-weight: 300;
-        }
-        h1 {
-            font-weight: lighter;
-            letter-spacing: normal;
-            font-size: 3rem;
-            margin-top: 0;
-            margin-bottom: 0;
-            color: #222;
-        }
-        .wrap {
-            max-width: 1024px;
-            margin: 5rem auto;
-            padding: 2rem;
-            background: #fff;
-            text-align: center;
-            border: 1px solid #efefef;
-            border-radius: 0.5rem;
-            position: relative;
-        }
-        pre {
-            white-space: normal;
-            margin-top: 1.5rem;
-        }
-        code {
-            background: #fafafa;
-            border: 1px solid #efefef;
-            padding: 0.5rem 1rem;
-            border-radius: 5px;
-            display: block;
-        }
-        p {
-            margin-top: 1.5rem;
-        }
-        .footer {
-            margin-top: 2rem;
-            border-top: 1px solid #efefef;
-            padding: 1em 2em 0 2em;
-            font-size: 85%;
-            color: #999;
-        }
-        a:active,
-        a:link,
-        a:visited {
-            color: #dd4814;
-        }
-    </style>
+    <meta name="robots" content="noindex">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= esc(lang('App.error404Title')) ?></title>
+    <?php include __DIR__ . '/partials/error_theme.php'; ?>
 </head>
 <body>
-    <div class="wrap">
-        <h1>404</h1>
+<main class="error-wrap" data-error-page="404">
+    <section class="error-card" role="alert" aria-live="polite">
+        <p class="error-code">404</p>
+        <h1 class="error-title"><?= esc(lang('App.error404Title')) ?></h1>
+        <p class="error-copy"><?= esc(lang('App.error404Body')) ?></p>
 
-        <p>
-            <?php if (ENVIRONMENT !== 'production') : ?>
-                <?= nl2br(esc($message)) ?>
-            <?php else : ?>
-                <?= lang('Errors.sorryCannotFind') ?>
-            <?php endif; ?>
-        </p>
-    </div>
+        <?php if (ENVIRONMENT !== 'production' && ! empty($message)): ?>
+            <div class="error-debug"><?= nl2br(esc($message)) ?></div>
+        <?php endif; ?>
+
+        <div class="error-actions">
+            <a class="btn btn-primary" href="<?= esc($primaryUrl) ?>"><?= esc($primaryLabel) ?></a>
+            <button class="btn btn-secondary" type="button" onclick="history.back()"><?= esc(lang('App.goBack')) ?></button>
+        </div>
+    </section>
+</main>
 </body>
 </html>

@@ -16,6 +16,11 @@ class ApiClient extends BaseConfig
 
     public string $appName = 'API Client';
 
+    /**
+     * @var list<string>
+     */
+    public array $healthPaths = ['/health'];
+
     public function __construct()
     {
         parent::__construct();
@@ -31,6 +36,12 @@ class ApiClient extends BaseConfig
         }
         if ($val = env('APP_NAME')) {
             $this->appName = $val;
+        }
+        if ($val = env('API_HEALTH_PATHS')) {
+            $paths = array_values(array_filter(array_map('trim', explode(',', (string) $val))));
+            if ($paths !== []) {
+                $this->healthPaths = $paths;
+            }
         }
     }
 }

@@ -13,4 +13,10 @@ return [
     'fileName'        => 'Name',
     'status'          => 'Status',
     'date'            => 'Date',
+    'apiHealth'       => 'API health',
+    'up'              => 'Up',
+    'degraded'        => 'Degraded',
+    'down'            => 'Down',
+    'apiAvailable'    => 'API available',
+    'apiUnavailable'  => 'Could not connect to the API',
 ];

@@ -95,7 +95,10 @@ class ApiClient implements ApiClientInterface
 
     public function request(string $method, string $path, array $options = [], bool $authenticated = true): array
     {
-        $uri = $this->buildUri($path);
+        $skipPrefix = (bool) ($options['skip_prefix'] ?? false);
+        unset($options['skip_prefix']);
+
+        $uri = $this->buildUri($path, $skipPrefix);
 
         if ($authenticated) {
             $options = $this->withAuthorization($options);
@@ -165,9 +168,13 @@ class ApiClient implements ApiClientInterface
         return true;
     }
 
-    protected function buildUri(string $path): string
+    protected function buildUri(string $path, bool $skipPrefix = false): string
     {
         $path = '/' . ltrim($path, '/');
+
+        if ($skipPrefix) {
+            return $path;
+        }
 
         if (! str_starts_with($path, $this->config->apiPrefix)) {
             return rtrim($this->config->apiPrefix, '/') . $path;
