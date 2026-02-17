@@ -2,7 +2,13 @@
 
 ## Context
 
-El proyecto `ci4-api-starter` es un REST API completo con 35 endpoints que cubre: autenticacion (JWT), gestion de usuarios, archivos, auditoria y metricas. Actualmente no existe una interfaz grafica para probar estos flujos. Se necesita una **nueva aplicacion CI4 independiente** que consuma este API y proporcione una UI moderna para validar todos los flujos de negocio.
+`ci4-admin-starter` se usa como **template frontend administrativo** para levantar nuevos proyectos CI4.
+La comunicacion con base de datos y reglas de negocio se realiza en el backend (`ci-api-tester`), manteniendo compatibilidad de contrato con `ci4-api-starter`.
+
+Este documento conserva el roadmap y las decisiones de implementacion, pero debe leerse bajo esta separacion de responsabilidades:
+
+- Backend (`ci-api-tester` / contrato `ci4-api-starter`): dominio, persistencia y endpoints.
+- Frontend (`ci4-admin-starter`): UI, sesion JWT server-side, consumo y manejo robusto de respuestas JSON.
 
 ## Decisiones del Usuario
 
