@@ -16,6 +16,7 @@ return [
     'approve'          => 'Aprobar',
     'view'             => 'Ver',
     'suspended'        => 'Suspendido',
+    'pendingApproval'  => 'Pendiente de aprobacion',
     'password'         => 'Contrasena',
     'passwordOptional' => 'Contrasena (opcional)',
     'passwordHint'     => 'Dejar en blanco para mantener la contrasena actual.',

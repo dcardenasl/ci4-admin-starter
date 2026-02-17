@@ -28,6 +28,7 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->post('/profile/change-password', 'ProfileController::changePassword');
     $routes->post('/profile/resend-verification', 'ProfileController::resendVerification');
     $routes->get('/files', 'FileController::index');
+    $routes->get('/files/data', 'FileController::data');
     $routes->post('/files/upload', 'FileController::upload');
     $routes->get('/files/(:segment)/download', 'FileController::download/$1');
     $routes->post('/files/(:segment)/delete', 'FileController::delete/$1');
@@ -36,6 +37,7 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
 // Admin
 $routes->group('admin', ['filter' => ['auth', 'admin']], static function (RouteCollection $routes): void {
     $routes->get('users', 'UserController::index');
+    $routes->get('users/data', 'UserController::data');
     $routes->get('users/create', 'UserController::create');
     $routes->post('users', 'UserController::store');
     $routes->get('users/(:segment)', 'UserController::show/$1');
@@ -45,6 +47,7 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function (RouteC
     $routes->post('users/(:segment)/approve', 'UserController::approve/$1');
 
     $routes->get('audit', 'AuditController::index');
+    $routes->get('audit/data', 'AuditController::data');
     $routes->get('audit/(:segment)', 'AuditController::show/$1');
     $routes->get('audit/entity/(:segment)/(:segment)', 'AuditController::byEntity/$1/$2');
 

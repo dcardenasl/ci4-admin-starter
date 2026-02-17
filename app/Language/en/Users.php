@@ -16,6 +16,7 @@ return [
     'approve'          => 'Approve',
     'view'             => 'View',
     'suspended'        => 'Suspended',
+    'pendingApproval'  => 'Pending approval',
     'password'         => 'Password',
     'passwordOptional' => 'Password (optional)',
     'passwordHint'     => 'Leave blank to keep the current password.',

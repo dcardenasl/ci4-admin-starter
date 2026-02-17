@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Services\AuditApiService;
+use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Psr\Log\LoggerInterface;
@@ -19,26 +20,20 @@ class AuditController extends BaseWebController
 
     public function index(): string
     {
-        $filters = array_filter([
-            'search'  => (string) $this->request->getGet('search'),
-            'action'  => (string) $this->request->getGet('action'),
-            'user_id' => (string) $this->request->getGet('user_id'),
-            'page'    => (int) ($this->request->getGet('page') ?: 1),
-        ]);
-
-        $response = $this->safeApiCall(fn() => $this->auditService->list($filters));
-
-        $data = $response['data'] ?? [];
-
         return $this->render('audit/index', [
             'title'      => lang('Audit.title'),
-            'logs'       => $this->extractItems($response),
-            'pagination' => [
-                'current_page' => $data['current_page'] ?? 1,
-                'last_page'    => $data['last_page'] ?? 1,
-                'total'        => $data['total'] ?? 0,
-            ],
         ]);
+    }
+
+    public function data(): ResponseInterface
+    {
+        $tableState = $this->resolveTableState(
+            ['action', 'user_id'],
+            ['created_at', 'action', 'user_id', 'entity_type'],
+        );
+        $response = $this->safeApiCall(fn() => $this->auditService->list($this->buildTableApiParams($tableState)));
+
+        return $this->passthroughApiJsonResponse($response);
     }
 
     public function show(string $id): string
@@ -59,18 +54,11 @@ class AuditController extends BaseWebController
         ]);
     }
 
-    public function byEntity(string $type, string $id): string
+    public function byEntity(string $type, string $id): RedirectResponse
     {
-        $response = $this->safeApiCall(fn() => $this->auditService->byEntity($type, $id));
+        $search = rawurlencode(trim($type . ' ' . $id));
 
-        return $this->render('audit/index', [
-            'title'      => lang('Audit.entityHistory') . ': ' . esc($type) . ' #' . esc($id),
-            'logs'       => $this->extractItems($response),
-            'pagination' => [
-                'current_page' => 1,
-                'last_page'    => 1,
-                'total'        => count($this->extractItems($response)),
-            ],
-        ]);
+        return redirect()->to(site_url('admin/audit?search=' . $search));
     }
+
 }

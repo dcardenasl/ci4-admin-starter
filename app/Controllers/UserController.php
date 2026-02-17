@@ -20,26 +20,21 @@ class UserController extends BaseWebController
 
     public function index(): string
     {
-        $filters = [
-            'search' => (string) $this->request->getGet('search'),
-            'status' => (string) $this->request->getGet('status'),
-            'role'   => (string) $this->request->getGet('role'),
-            'page'   => (int) ($this->request->getGet('page') ?: 1),
-        ];
-
-        $response = $this->safeApiCall(fn() => $this->userService->list(array_filter($filters)));
-
-        $data = $response['data'] ?? [];
-
         return $this->render('users/index', [
             'title'      => lang('Users.title'),
-            'users'      => $this->extractItems($response),
-            'pagination' => [
-                'current_page' => $data['current_page'] ?? 1,
-                'last_page'    => $data['last_page'] ?? 1,
-                'total'        => $data['total'] ?? 0,
-            ],
         ]);
+    }
+
+    public function data(): ResponseInterface
+    {
+        $tableState = $this->resolveTableState(
+            ['status', 'role'],
+            ['created_at', 'email', 'role', 'status', 'first_name', 'last_name'],
+        );
+
+        $response = $this->safeApiCall(fn() => $this->userService->list($this->buildTableApiParams($tableState)));
+
+        return $this->passthroughApiJsonResponse($response);
     }
 
     public function show(string $id): string
@@ -171,4 +166,5 @@ class UserController extends BaseWebController
 
         return redirect()->to(site_url('admin/users/' . $id))->with('success', lang('Users.approveSuccess'));
     }
+
 }

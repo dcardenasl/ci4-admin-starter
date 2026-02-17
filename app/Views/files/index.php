@@ -15,60 +15,10 @@
                 <option value="public"><?= lang('Files.public') ?></option>
             </select>
         </div>
-        <button type="submit" class="rounded-lg bg-brand-600 text-white px-4 py-2 text-sm font-medium hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"><?= lang('Files.uploadButton') ?></button>
+        <button type="submit" class="<?= esc(action_button_class('primary')) ?>">
+            <?= ui_icon('plus', 'h-3.5 w-3.5') ?><?= lang('Files.uploadButton') ?>
+        </button>
     </form>
 </section>
 
-<section class="mt-6 bg-white border border-gray-200 rounded-xl shadow-sm p-5">
-    <div class="flex items-center justify-between gap-3">
-        <h3 class="text-lg font-semibold text-gray-900"><?= lang('Files.myFiles') ?></h3>
-        <form method="get" action="<?= site_url('files') ?>" class="flex gap-2">
-            <input type="text" name="search" value="<?= esc((string) request()->getGet('search')) ?>" placeholder="<?= lang('Files.searchPlaceholder') ?>"
-                class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
-            <button type="submit" class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"><?= lang('App.search') ?></button>
-        </form>
-    </div>
-
-    <?php if (empty($files)): ?>
-        <div class="mt-4 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4">
-            <p class="text-sm text-gray-600"><?= lang('Files.noFiles') ?></p>
-            <p class="mt-1 text-xs text-gray-500"><?= lang('Files.dragDrop') ?></p>
-        </div>
-    <?php else: ?>
-        <div class="mt-4 overflow-x-auto">
-            <table class="min-w-full text-sm">
-                <thead class="text-left text-gray-500">
-                    <tr>
-                        <th class="py-2 pr-4"><?= lang('Files.fileName') ?></th>
-                        <th class="py-2 pr-4"><?= lang('Files.status') ?></th>
-                        <th class="py-2 pr-4"><?= lang('Files.date') ?></th>
-                        <th class="py-2 pr-4"><?= lang('Files.actions') ?></th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                    <?php foreach ($files as $file): ?>
-                        <?php $id = (string) ($file['id'] ?? ''); ?>
-                        <tr>
-                            <td class="py-3 pr-4 text-gray-800"><?= esc((string) ($file['name'] ?? $file['filename'] ?? '-')) ?></td>
-                            <td class="py-3 pr-4">
-                                <span class="inline-flex rounded-full px-2 py-1 text-xs <?= status_badge($file['status'] ?? 'active') ?>">
-                                    <?= esc((string) ($file['status'] ?? 'active')) ?>
-                                </span>
-                            </td>
-                            <td class="py-3 pr-4 text-gray-600"><?= esc(format_date($file['created_at'] ?? null)) ?></td>
-                            <td class="py-3 pr-4">
-                                <div class="flex items-center gap-2">
-                                    <a href="<?= site_url('files/' . esc($id, 'url') . '/download') ?>" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"><?= lang('Files.download') ?></a>
-                                    <form method="post" action="<?= site_url('files/' . esc($id, 'url') . '/delete') ?>" onsubmit="return confirm('<?= lang('Files.confirmDelete') ?>');">
-                                        <?= csrf_field() ?>
-                                        <button type="submit" class="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"><?= lang('Files.delete') ?></button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-    <?php endif; ?>
-</section>
+<?= view('files/partials/list_section') ?>

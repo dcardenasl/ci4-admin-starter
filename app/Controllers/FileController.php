@@ -20,14 +20,17 @@ class FileController extends BaseWebController
 
     public function index(): string
     {
-        $response = $this->safeApiCall(fn() => $this->fileService->list([
-            'search' => (string) $this->request->getGet('search'),
-        ]));
-
         return $this->render('files/index', [
             'title' => lang('Files.title'),
-            'files' => $this->extractItems($response),
         ]);
+    }
+
+    public function data(): ResponseInterface
+    {
+        $tableState = $this->resolveTableState(['status'], ['created_at', 'name', 'status']);
+        $response = $this->safeApiCall(fn() => $this->fileService->list($this->buildTableApiParams($tableState)));
+
+        return $this->passthroughApiJsonResponse($response);
     }
 
     public function upload(): RedirectResponse
