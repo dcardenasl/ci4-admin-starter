@@ -7,6 +7,8 @@ return [
     'delete'         => 'Delete',
     'edit'           => 'Edit',
     'search'         => 'Search',
+    'filters'        => 'Filters',
+    'clearFilters'   => 'Clear filters',
     'upload'         => 'Upload',
     'download'       => 'Download',
     'back'           => 'Back',
@@ -17,6 +19,8 @@ return [
     'active'         => 'Active',
     'inactive'       => 'Inactive',
     'pending'        => 'Pending',
+    'approved'       => 'Approved',
+    'rejected'       => 'Rejected',
     'verified'       => 'Verified',
     'yes'            => 'Yes',
     'no'             => 'No',
@@ -32,6 +36,7 @@ return [
     'users'          => 'Users',
     'audit'          => 'Audit',
     'metrics'        => 'Metrics',
+    'reports'        => 'Reports',
     'panel'          => 'Panel',
 
     // Global errors

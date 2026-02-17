@@ -1,3 +1,217 @@
+const renderLucideIcons = () => {
+    if (!window.lucide || typeof window.lucide.createIcons !== 'function') {
+        return false;
+    }
+
+    window.lucide.createIcons({
+        attrs: {
+            'stroke-width': 1.8
+        }
+    });
+
+    return true;
+};
+
+const bootLucideIcons = () => {
+    if (renderLucideIcons()) {
+        return;
+    }
+
+    let attempts = 0;
+    const interval = setInterval(() => {
+        attempts += 1;
+        if (renderLucideIcons() || attempts >= 20) {
+            clearInterval(interval);
+        }
+    }, 150);
+};
+
+const queryToObject = (search) => {
+    const params = new URLSearchParams(search);
+    const query = {};
+
+    params.forEach((value, key) => {
+        const trimmed = value.trim();
+        if (trimmed !== '') {
+            query[key] = trimmed;
+        }
+    });
+
+    return query;
+};
+
+const objectToQueryString = (query) => {
+    const params = new URLSearchParams();
+
+    Object.entries(query || {}).forEach(([key, value]) => {
+        if (typeof value === 'string' && value.trim() !== '') {
+            params.append(key, value.trim());
+        }
+    });
+
+    return params.toString();
+};
+
+const formToQuery = (form) => {
+    const formData = new FormData(form);
+    const query = {};
+
+    formData.forEach((value, key) => {
+        if (typeof value !== 'string') {
+            return;
+        }
+
+        const trimmed = value.trim();
+        if (trimmed !== '') {
+            query[key] = trimmed;
+        }
+    });
+
+    return query;
+};
+
+const isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
+
+const tablePayloadRoot = (payload) => {
+    if (!isObject(payload)) {
+        return {};
+    }
+
+    const nested = payload.data;
+    if (!isObject(nested)) {
+        return payload;
+    }
+
+    if (Array.isArray(nested.data) || isObject(nested.meta) || nested.current_page !== undefined || nested.last_page !== undefined || nested.total !== undefined || isObject(nested.summary)) {
+        return nested;
+    }
+
+    return payload;
+};
+
+const statusBadgeClass = (status) => {
+    const val = String(status || '').toLowerCase();
+
+    if (['active', 'approved', 'success'].includes(val)) {
+        return 'bg-green-100 text-green-800';
+    }
+    if (['pending', 'pending_approval', 'processing'].includes(val)) {
+        return 'bg-yellow-100 text-yellow-800';
+    }
+    if (['suspended', 'rejected', 'failed'].includes(val)) {
+        return 'bg-red-100 text-red-800';
+    }
+
+    return 'bg-gray-100 text-gray-800';
+};
+
+const roleBadgeClass = (role) => String(role || '').toLowerCase() === 'admin'
+    ? 'bg-brand-100 text-brand-800'
+    : 'bg-gray-100 text-gray-700';
+
+const auditActionBadgeClass = (action) => {
+    const val = String(action || '').toLowerCase();
+
+    if (val === 'create') return 'bg-green-100 text-green-800';
+    if (val === 'update') return 'bg-blue-100 text-blue-800';
+    if (val === 'delete') return 'bg-red-100 text-red-800';
+    if (val === 'login') return 'bg-brand-100 text-brand-800';
+    if (val === 'logout') return 'bg-gray-100 text-gray-800';
+    if (val === 'approve') return 'bg-emerald-100 text-emerald-800';
+
+    return 'bg-gray-100 text-gray-700';
+};
+
+const localePrefix = () => String(document.documentElement?.lang || 'es').toLowerCase().startsWith('en') ? 'en' : 'es';
+
+const statusLabels = {
+    es: {
+        active: 'Activo',
+        pending: 'Pendiente',
+        pending_approval: 'Pendiente de aprobacion',
+        suspended: 'Suspendido',
+        approved: 'Aprobado',
+        rejected: 'Rechazado',
+        processing: 'Procesando',
+        success: 'Exitoso',
+        failed: 'Fallido'
+    },
+    en: {
+        active: 'Active',
+        pending: 'Pending',
+        pending_approval: 'Pending approval',
+        suspended: 'Suspended',
+        approved: 'Approved',
+        rejected: 'Rejected',
+        processing: 'Processing',
+        success: 'Success',
+        failed: 'Failed'
+    }
+};
+
+const statusLabel = (status) => {
+    const value = String(status || '').trim();
+    if (value === '') {
+        return '-';
+    }
+
+    const key = value.toLowerCase();
+    const locale = localePrefix();
+
+    return statusLabels[locale]?.[key] || value;
+};
+
+const toDateInput = (value) => {
+    if (value === null || value === undefined) {
+        return null;
+    }
+
+    if (typeof value === 'string' || typeof value === 'number') {
+        return value;
+    }
+
+    if (Array.isArray(value)) {
+        return value.length > 0 ? toDateInput(value[0]) : null;
+    }
+
+    if (typeof value === 'object') {
+        if (typeof value.date === 'string' || typeof value.date === 'number') {
+            return value.date;
+        }
+        if (typeof value.datetime === 'string' || typeof value.datetime === 'number') {
+            return value.datetime;
+        }
+        if (typeof value.created_at === 'string' || typeof value.created_at === 'number') {
+            return value.created_at;
+        }
+        if (typeof value.value === 'string' || typeof value.value === 'number') {
+            return value.value;
+        }
+    }
+
+    return null;
+};
+
+const formatDate = (value) => {
+    const candidate = toDateInput(value);
+    if (candidate === null || candidate === '') {
+        return '-';
+    }
+
+    const date = new Date(candidate);
+    if (Number.isNaN(date.getTime())) {
+        return String(candidate);
+    }
+
+    return new Intl.DateTimeFormat('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    }).format(date);
+};
+
 document.addEventListener('alpine:init', () => {
     Alpine.store('confirm', {
         open: false,
@@ -40,4 +254,393 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('appShell', () => ({
         sidebarOpen: window.innerWidth >= 768
     }));
+
+    Alpine.data('remoteTable', (config = {}) => ({
+        apiUrl: config.apiUrl || window.location.pathname,
+        pageUrl: config.pageUrl || window.location.pathname,
+        mode: config.mode || 'generic',
+        routes: config.routes || {},
+        csrf: config.csrf || { name: '', hash: '' },
+        confirmDelete: config.confirmDelete || 'Confirmar',
+        loading: false,
+        error: false,
+        errorMessage: '',
+        rows: [],
+        summary: {},
+        pagination: {
+            mode: 'page',
+            currentPage: 1,
+            lastPage: 1,
+            total: 0,
+            nextCursor: '',
+            prevCursor: ''
+        },
+        query: {},
+        requestId: 0,
+        debounceTimers: new WeakMap(),
+        form: null,
+
+        init() {
+            this.form = this.$el.querySelector('form[data-table-filter-form="1"]');
+            const fromUrl = queryToObject(window.location.search);
+            this.query = Object.keys(fromUrl).length > 0 || !this.form ? fromUrl : formToQuery(this.form);
+            this.applyQueryToForm();
+            this.bindFormEvents();
+            this.fetchData(false);
+            window.addEventListener('popstate', () => {
+                this.query = queryToObject(window.location.search);
+                this.applyQueryToForm();
+                this.fetchData(false);
+            });
+        },
+
+        bindFormEvents() {
+            if (!this.form) {
+                return;
+            }
+
+            this.form.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const activeSort = typeof this.query.sort === 'string' ? this.query.sort : '';
+                this.query = formToQuery(this.form);
+                if (activeSort !== '') {
+                    this.query.sort = activeSort;
+                }
+                delete this.query.page;
+                delete this.query.cursor;
+                this.fetchData(true);
+            });
+
+            this.form.querySelectorAll('[data-table-debounce]').forEach((input) => {
+                input.addEventListener('input', () => {
+                    const previousTimer = this.debounceTimers.get(input);
+                    if (previousTimer) {
+                        clearTimeout(previousTimer);
+                    }
+
+                    const wait = Number.parseInt(input.dataset.tableDebounce || '350', 10);
+                    const timer = setTimeout(() => {
+                        const activeSort = typeof this.query.sort === 'string' ? this.query.sort : '';
+                        this.query = formToQuery(this.form);
+                        if (activeSort !== '') {
+                            this.query.sort = activeSort;
+                        }
+                        delete this.query.page;
+                        delete this.query.cursor;
+                        this.fetchData(true);
+                    }, Number.isFinite(wait) ? wait : 350);
+                    this.debounceTimers.set(input, timer);
+                });
+            });
+        },
+
+        applyQueryToForm() {
+            if (!this.form) {
+                return;
+            }
+
+            const elements = this.form.querySelectorAll('input[name], select[name], textarea[name]');
+            elements.forEach((el) => {
+                const name = el.getAttribute('name');
+                if (!name) {
+                    return;
+                }
+                const value = this.query[name] ?? '';
+                if (el.type === 'checkbox' || el.type === 'radio') {
+                    el.checked = String(el.value) === value;
+                } else {
+                    el.value = value;
+                }
+            });
+        },
+
+        buildUrl(base, query) {
+            const url = new URL(base, window.location.origin);
+            const qs = objectToQueryString(query);
+            url.search = qs;
+
+            return url.toString();
+        },
+
+        async fetchData(pushHistory = true) {
+            this.loading = true;
+            this.error = false;
+            this.errorMessage = '';
+            this.requestId += 1;
+            const requestId = this.requestId;
+
+            const apiUrl = this.buildUrl(this.apiUrl, this.query);
+            const pageUrl = this.buildUrl(this.pageUrl, this.query);
+
+            try {
+                const response = await fetch(apiUrl, {
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const text = await response.text();
+                let payload = {};
+                if (text.trim() !== '') {
+                    payload = JSON.parse(text);
+                }
+
+                if (requestId !== this.requestId) {
+                    return;
+                }
+
+                if (!response.ok) {
+                    this.rows = [];
+                    this.summary = {};
+                    this.pagination = {
+                        mode: 'page',
+                        currentPage: 1,
+                        lastPage: 1,
+                        total: 0,
+                        nextCursor: '',
+                        prevCursor: ''
+                    };
+                    this.error = true;
+                    this.errorMessage = this.resolveErrorMessage(payload, response.status);
+                    return;
+                }
+
+                const root = tablePayloadRoot(payload);
+                this.rows = this.extractRows(root);
+                this.summary = this.extractSummary(root);
+                this.pagination = this.extractPagination(root, this.rows.length);
+
+                if (pushHistory) {
+                    window.history.pushState({}, '', pageUrl);
+                }
+            } catch (_error) {
+                if (requestId !== this.requestId) {
+                    return;
+                }
+                this.rows = [];
+                this.summary = {};
+                this.error = true;
+                this.errorMessage = 'No se pudo cargar la informacion. Intenta nuevamente.';
+            } finally {
+                if (requestId === this.requestId) {
+                    this.loading = false;
+                }
+            }
+        },
+
+        extractRows(root) {
+            if (Array.isArray(root.data)) {
+                return root.data;
+            }
+
+            if (isObject(root.data) && Array.isArray(root.data.data)) {
+                return root.data.data;
+            }
+
+            if (Array.isArray(root.items)) {
+                return root.items;
+            }
+
+            return [];
+        },
+
+        extractSummary(root) {
+            if (isObject(root.summary)) {
+                return root.summary;
+            }
+
+            if (isObject(root.data) && isObject(root.data.summary)) {
+                return root.data.summary;
+            }
+
+            return {};
+        },
+
+        extractPagination(root, visibleCount) {
+            const meta = isObject(root.meta) ? root.meta : {};
+            const nextCursor = String(meta.next_cursor ?? root.next_cursor ?? '');
+            const prevCursor = String(meta.prev_cursor ?? root.prev_cursor ?? '');
+            const hasCursor = nextCursor !== '' || prevCursor !== '' || String(this.query.cursor || '') !== '';
+            const currentPage = Number(root.current_page ?? meta.current_page ?? this.query.page ?? 1) || 1;
+            const lastPage = Number(root.last_page ?? meta.last_page ?? currentPage) || 1;
+            const total = Number(root.total ?? meta.total ?? meta.total_estimate ?? visibleCount) || visibleCount;
+
+            return {
+                mode: hasCursor ? 'cursor' : 'page',
+                currentPage: Math.max(1, currentPage),
+                lastPage: Math.max(1, lastPage),
+                total: Math.max(0, total),
+                nextCursor,
+                prevCursor
+            };
+        },
+
+        resolveErrorMessage(payload, status) {
+            if (isObject(payload)) {
+                if (typeof payload.message === 'string' && payload.message.trim() !== '') {
+                    return payload.message;
+                }
+
+                if (Array.isArray(payload.messages) && payload.messages.length > 0) {
+                    return String(payload.messages[0]);
+                }
+            }
+
+            return `La solicitud fallo (HTTP ${status}).`;
+        },
+
+        isCursorMode() {
+            return this.pagination.mode === 'cursor';
+        },
+
+        hasPagination() {
+            if (this.isCursorMode()) {
+                return this.pagination.prevCursor !== '' || this.pagination.nextCursor !== '';
+            }
+
+            return this.pagination.lastPage > 1;
+        },
+
+        pageWindow() {
+            const start = Math.max(1, this.pagination.currentPage - 2);
+            const end = Math.min(this.pagination.lastPage, this.pagination.currentPage + 2);
+            const pages = [];
+            for (let page = start; page <= end; page += 1) {
+                pages.push(page);
+            }
+
+            return pages;
+        },
+
+        paginationLabel() {
+            if (this.isCursorMode()) {
+                return `Resultados visibles: ${this.pagination.total}`;
+            }
+
+            return `Pagina ${this.pagination.currentPage} de ${this.pagination.lastPage} (${this.pagination.total} resultados)`;
+        },
+
+        currentSort(field) {
+            const sort = String(this.query.sort || '');
+            if (sort === field) {
+                return 'asc';
+            }
+            if (sort === `-${field}`) {
+                return 'desc';
+            }
+
+            return '';
+        },
+
+        sortAria(field) {
+            const direction = this.currentSort(field);
+            if (direction === 'asc') {
+                return 'ascending';
+            }
+            if (direction === 'desc') {
+                return 'descending';
+            }
+
+            return 'none';
+        },
+
+        sortIcon(field) {
+            const direction = this.currentSort(field);
+            if (direction === 'asc') {
+                return '↑';
+            }
+            if (direction === 'desc') {
+                return '↓';
+            }
+
+            return '↕';
+        },
+
+        toggleSort(field) {
+            const current = this.currentSort(field);
+            if (current === 'asc') {
+                this.query.sort = `-${field}`;
+            } else if (current === 'desc') {
+                delete this.query.sort;
+            } else {
+                this.query.sort = field;
+            }
+
+            delete this.query.page;
+            delete this.query.cursor;
+            this.fetchData(true);
+        },
+
+        goToPage(page) {
+            this.query.page = String(Math.max(1, page));
+            delete this.query.cursor;
+            this.fetchData(true);
+        },
+
+        goToCursor(cursor) {
+            if (!cursor) {
+                return;
+            }
+            this.query.cursor = String(cursor);
+            delete this.query.page;
+            this.fetchData(true);
+        },
+
+        fullName(row) {
+            const firstName = String(row.first_name ?? '').trim();
+            const lastName = String(row.last_name ?? '').trim();
+            const fullName = `${firstName} ${lastName}`.trim();
+
+            return fullName === '' ? '-' : fullName;
+        },
+
+        statusBadgeClass,
+        statusLabel,
+        roleBadgeClass,
+        auditActionBadgeClass,
+        formatDate,
+
+        userShowUrl(id) {
+            return `${this.routes.showBase}/${encodeURIComponent(String(id ?? ''))}`;
+        },
+
+        userEditUrl(id) {
+            return `${this.routes.editBase}/${encodeURIComponent(String(id ?? ''))}/edit`;
+        },
+
+        auditShowUrl(id) {
+            return `${this.routes.showBase}/${encodeURIComponent(String(id ?? ''))}`;
+        },
+
+        fileDownloadUrl(id) {
+            return `${this.routes.downloadBase}/${encodeURIComponent(String(id ?? ''))}/download`;
+        },
+
+        fileDeleteUrl(id) {
+            return `${this.routes.deleteBase}/${encodeURIComponent(String(id ?? ''))}/delete`;
+        },
+
+        currentReportType() {
+            return this.query.report_type || 'users';
+        },
+
+        reportExportUrl(format) {
+            const base = format === 'pdf' ? this.routes.exportPdf : this.routes.exportCsv;
+            const exportQuery = { ...this.query };
+            delete exportQuery.page;
+            delete exportQuery.cursor;
+            delete exportQuery.limit;
+
+            return this.buildUrl(base, exportQuery);
+        }
+    }));
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    bootLucideIcons();
+});
+
+window.addEventListener('load', () => {
+    bootLucideIcons();
 });

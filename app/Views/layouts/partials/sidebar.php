@@ -6,26 +6,36 @@
     </div>
 
     <nav class="p-3 space-y-1">
-        <a href="<?= site_url('dashboard') ?>" class="block rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('dashboard') ?>">
-            <?= lang('App.dashboard') ?>
+        <a href="<?= site_url('dashboard') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('dashboard') ?>">
+            <?= ui_icon('dashboard') ?>
+            <span><?= lang('App.dashboard') ?></span>
         </a>
-        <a href="<?= site_url('profile') ?>" class="block rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('profile') ?>">
-            <?= lang('App.profile') ?>
+        <a href="<?= site_url('profile') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('profile') ?>">
+            <?= ui_icon('profile') ?>
+            <span><?= lang('App.profile') ?></span>
         </a>
-        <a href="<?= site_url('files') ?>" class="block rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('files') ?>">
-            <?= lang('App.files') ?>
+        <a href="<?= site_url('files') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('files') ?>">
+            <?= ui_icon('files') ?>
+            <span><?= lang('App.files') ?></span>
         </a>
 
         <?php if ((session('user.role') ?? null) === 'admin'): ?>
             <div class="pt-3 mt-3 border-t border-gray-800 text-xs uppercase text-gray-500"><?= lang('App.administration') ?></div>
-            <a href="<?= site_url('admin/users') ?>" class="block rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/users*') ?>">
-                <?= lang('App.users') ?>
+            <a href="<?= site_url('admin/users') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/users*') ?>">
+                <?= ui_icon('users') ?>
+                <span><?= lang('App.users') ?></span>
             </a>
-            <a href="<?= site_url('admin/audit') ?>" class="block rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/audit*') ?>">
-                <?= lang('App.audit') ?>
+            <a href="<?= site_url('admin/audit') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/audit*') ?>">
+                <?= ui_icon('audit') ?>
+                <span><?= lang('App.audit') ?></span>
             </a>
-            <a href="<?= site_url('admin/metrics') ?>" class="block rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/metrics') ?>">
-                <?= lang('App.metrics') ?>
+            <a href="<?= site_url('admin/metrics') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/metrics') ?>">
+                <?= ui_icon('metrics') ?>
+                <span><?= lang('App.metrics') ?></span>
+            </a>
+            <a href="<?= site_url('admin/reports') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/reports*') ?>">
+                <?= ui_icon('reports') ?>
+                <span><?= lang('App.reports') ?></span>
             </a>
         <?php endif; ?>
     </nav>

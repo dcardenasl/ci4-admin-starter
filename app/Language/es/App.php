@@ -7,6 +7,8 @@ return [
     'delete'         => 'Eliminar',
     'edit'           => 'Editar',
     'search'         => 'Buscar',
+    'filters'        => 'Filtros',
+    'clearFilters'   => 'Limpiar filtros',
     'upload'         => 'Subir',
     'download'       => 'Descargar',
     'back'           => 'Volver',
@@ -17,6 +19,8 @@ return [
     'active'         => 'Activo',
     'inactive'       => 'Inactivo',
     'pending'        => 'Pendiente',
+    'approved'       => 'Aprobado',
+    'rejected'       => 'Rechazado',
     'verified'       => 'Verificado',
     'yes'            => 'Si',
     'no'             => 'No',
@@ -32,6 +36,7 @@ return [
     'users'          => 'Usuarios',
     'audit'          => 'Auditoria',
     'metrics'        => 'Metricas',
+    'reports'        => 'Reportes',
     'panel'          => 'Panel',
 
     // Errores globales
