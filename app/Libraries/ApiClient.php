@@ -3,8 +3,10 @@
 namespace App\Libraries;
 
 use CodeIgniter\HTTP\CURLRequest;
+use CodeIgniter\HTTP\Response;
+use CodeIgniter\HTTP\URI;
 use Config\ApiClient as ApiClientConfig;
-use Config\Services;
+use Config\App;
 use RuntimeException;
 
 class ApiClient implements ApiClientInterface
@@ -19,17 +21,19 @@ class ApiClient implements ApiClientInterface
     {
         $this->config = $config ?? config('ApiClient');
         $this->session = session();
-        $this->http = Services::curlrequest(
-            [
-                'baseURI'        => rtrim($this->config->baseUrl, '/'),
-                'timeout'        => $this->config->timeout,
-                'connect_timeout'=> $this->config->connectTimeout,
-                'http_errors'    => false,
-                'headers'        => ['Accept' => 'application/json'],
-            ],
-            null,
-            null,
-            false
+        $appConfig = config(App::class);
+        $options = [
+            'baseURI'         => rtrim($this->config->baseUrl, '/'),
+            'timeout'         => $this->config->timeout,
+            'connect_timeout' => $this->config->connectTimeout,
+            'http_errors'     => false,
+            'headers'         => ['Accept' => 'application/json'],
+        ];
+        $this->http = new CURLRequest(
+            $appConfig,
+            new URI($options['baseURI']),
+            new Response($appConfig),
+            $options,
         );
     }
 
@@ -40,12 +44,12 @@ class ApiClient implements ApiClientInterface
 
     public function post(string $path, array $data = []): array
     {
-        return $this->request('POST', $path, ['json' => $data], true);
+        return $this->request('POST', $path, ['form_params' => $data], true);
     }
 
     public function put(string $path, array $data = []): array
     {
-        return $this->request('PUT', $path, ['json' => $data], true);
+        return $this->request('PUT', $path, ['form_params' => $data], true);
     }
 
     public function delete(string $path): array
@@ -55,7 +59,7 @@ class ApiClient implements ApiClientInterface
 
     public function publicPost(string $path, array $data = []): array
     {
-        return $this->request('POST', $path, ['json' => $data], false);
+        return $this->request('POST', $path, ['form_params' => $data], false);
     }
 
     public function publicGet(string $path, array $query = []): array

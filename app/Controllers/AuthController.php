@@ -47,7 +47,8 @@ class AuthController extends BaseWebController
         $response = $this->safeApiCall(fn () => $this->authService->login($payload));
 
         if (! $response['ok']) {
-            $fieldErrors = $this->getFieldErrors($response);
+            $formFields = ['email', 'password'];
+            $fieldErrors = array_intersect_key($this->getFieldErrors($response), array_flip($formFields));
 
             if (! empty($fieldErrors)) {
                 return $this->withFieldErrors($fieldErrors);
@@ -93,7 +94,8 @@ class AuthController extends BaseWebController
         $response = $this->safeApiCall(fn () => $this->authService->register($payload));
 
         if (! $response['ok']) {
-            $fieldErrors = $this->getFieldErrors($response);
+            $formFields = ['first_name', 'last_name', 'email', 'password', 'password_confirmation'];
+            $fieldErrors = array_intersect_key($this->getFieldErrors($response), array_flip($formFields));
 
             if (! empty($fieldErrors)) {
                 return $this->withFieldErrors($fieldErrors);
@@ -125,7 +127,8 @@ class AuthController extends BaseWebController
         $response = $this->safeApiCall(fn () => $this->authService->forgotPassword($email));
 
         if (! $response['ok']) {
-            $fieldErrors = $this->getFieldErrors($response);
+            $formFields = ['email'];
+            $fieldErrors = array_intersect_key($this->getFieldErrors($response), array_flip($formFields));
 
             if (! empty($fieldErrors)) {
                 return $this->withFieldErrors($fieldErrors);
@@ -165,7 +168,8 @@ class AuthController extends BaseWebController
         $response = $this->safeApiCall(fn () => $this->authService->resetPassword($payload));
 
         if (! $response['ok']) {
-            $fieldErrors = $this->getFieldErrors($response);
+            $formFields = ['token', 'password', 'password_confirmation'];
+            $fieldErrors = array_intersect_key($this->getFieldErrors($response), array_flip($formFields));
 
             if (! empty($fieldErrors)) {
                 return $this->withFieldErrors($fieldErrors);
