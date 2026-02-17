@@ -20,6 +20,7 @@ class MetricsController extends BaseWebController
     public function index(): string
     {
         $dateRange = $this->resolveDateRange();
+        $defaultFilters = $this->defaultFilters();
         $groupBy = (string) ($this->request->getGet('group_by') ?: 'day');
         if (! in_array($groupBy, ['day', 'week', 'month'], true)) {
             $groupBy = 'day';
@@ -37,10 +38,28 @@ class MetricsController extends BaseWebController
         }
 
         return $this->render('metrics/index', [
-            'title'      => lang('Metrics.title'),
-            'metrics'    => $metrics,
-            'timeseries' => is_array($timeseries) ? $timeseries : [],
-            'filters'    => $filters,
+            'title'          => lang('Metrics.title'),
+            'metrics'        => $metrics,
+            'timeseries'     => is_array($timeseries) ? $timeseries : [],
+            'filters'        => $filters,
+            'defaultFilters' => $defaultFilters,
+            'hasFilters'     => has_active_filters($this->request->getGet(), $defaultFilters),
         ]);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function defaultFilters(): array
+    {
+        $today = new \DateTimeImmutable('today');
+        $dateTo = $today->format('Y-m-d');
+        $dateFrom = $today->sub(new \DateInterval('P29D'))->format('Y-m-d');
+
+        return [
+            'date_from' => $dateFrom,
+            'date_to'   => $dateTo,
+            'group_by'  => 'day',
+        ];
     }
 }

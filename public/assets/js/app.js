@@ -276,22 +276,122 @@ document.addEventListener('alpine:init', () => {
             prevCursor: ''
         },
         query: {},
+        filterDefaults: {},
+        filterFields: new Set(),
+        ignoredFilterKeys: new Set(['sort', 'page', 'cursor']),
         requestId: 0,
         debounceTimers: new WeakMap(),
         form: null,
 
         init() {
             this.form = this.$el.querySelector('form[data-table-filter-form="1"]');
+            this.loadFilterConfig();
             const fromUrl = queryToObject(window.location.search);
-            this.query = Object.keys(fromUrl).length > 0 || !this.form ? fromUrl : formToQuery(this.form);
+            this.query = { ...this.defaultFilterQuery(), ...fromUrl };
             this.applyQueryToForm();
             this.bindFormEvents();
             this.fetchData(false);
             window.addEventListener('popstate', () => {
-                this.query = queryToObject(window.location.search);
+                this.query = { ...this.defaultFilterQuery(), ...queryToObject(window.location.search) };
                 this.applyQueryToForm();
                 this.fetchData(false);
             });
+        },
+
+        loadFilterConfig() {
+            this.filterDefaults = {};
+            this.filterFields = new Set();
+            this.ignoredFilterKeys = new Set(['sort', 'page', 'cursor']);
+
+            if (!this.form) {
+                return;
+            }
+
+            const fieldElements = this.form.querySelectorAll('input[name], select[name], textarea[name]');
+            fieldElements.forEach((el) => {
+                const name = el.getAttribute('name');
+                if (!name) {
+                    return;
+                }
+                this.filterFields.add(name);
+                if (this.filterDefaults[name] === undefined) {
+                    this.filterDefaults[name] = '';
+                }
+            });
+
+            const defaultsRaw = String(this.form.dataset.filterDefaults || '').trim();
+            if (defaultsRaw !== '') {
+                try {
+                    const parsed = JSON.parse(defaultsRaw);
+                    if (isObject(parsed)) {
+                        Object.entries(parsed).forEach(([key, value]) => {
+                            if (typeof key !== 'string' || key.trim() === '') {
+                                return;
+                            }
+                            this.filterFields.add(key);
+                            this.filterDefaults[key] = String(value ?? '').trim();
+                        });
+                    }
+                } catch (_error) {}
+            }
+
+            const ignoredRaw = String(this.form.dataset.filterIgnored || '').trim();
+            if (ignoredRaw !== '') {
+                try {
+                    const parsed = JSON.parse(ignoredRaw);
+                    if (Array.isArray(parsed)) {
+                        parsed.forEach((key) => {
+                            if (typeof key === 'string' && key.trim() !== '') {
+                                this.ignoredFilterKeys.add(key);
+                            }
+                        });
+                    }
+                } catch (_error) {}
+            }
+        },
+
+        hasActiveFilters() {
+            if (!this.form || this.form.dataset.reactiveHasFilters !== '1') {
+                return false;
+            }
+
+            const keys = new Set([
+                ...Array.from(this.filterFields),
+                ...Object.keys(this.query || {})
+            ]);
+
+            for (const key of keys) {
+                if (this.ignoredFilterKeys.has(key)) {
+                    continue;
+                }
+                if (!this.filterFields.has(key) && this.filterDefaults[key] === undefined) {
+                    continue;
+                }
+
+                const defaultValue = String(this.filterDefaults[key] ?? '').trim();
+                const currentValue = Object.prototype.hasOwnProperty.call(this.query, key)
+                    ? String(this.query[key] ?? '').trim()
+                    : '';
+
+                if (currentValue !== defaultValue) {
+                    return true;
+                }
+            }
+
+            return false;
+        },
+
+        defaultFilterQuery() {
+            const query = {};
+
+            Object.entries(this.filterDefaults || {}).forEach(([key, value]) => {
+                const normalized = String(value ?? '').trim();
+                if (normalized !== '') {
+                    query[key] = normalized;
+                }
+            });
+
+            return query;
         },
 
         bindFormEvents() {

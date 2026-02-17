@@ -20,7 +20,8 @@
     <?= view('layouts/partials/filter_panel', [
         'actionUrl' => site_url('files'),
         'clearUrl' => site_url('files'),
-        'hasFilters' => request()->getGet() !== [],
+        'hasFilters' => has_active_filters(),
+        'reactiveHasFilters' => true,
         'fieldsView' => 'files/partials/filters',
         'submitLabel' => lang('App.search'),
     ]) ?>

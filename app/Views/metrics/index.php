@@ -6,7 +6,8 @@
     <?= view('layouts/partials/filter_panel', [
         'actionUrl' => site_url('admin/metrics'),
         'clearUrl' => site_url('admin/metrics'),
-        'hasFilters' => request()->getGet() !== [],
+        'hasFilters' => $hasFilters ?? false,
+        'filterDefaults' => $defaultFilters ?? [],
         'fieldsView' => 'metrics/partials/filters',
         'fieldsData' => ['filters' => $filters],
         'submitLabel' => lang('Metrics.applyFilters'),

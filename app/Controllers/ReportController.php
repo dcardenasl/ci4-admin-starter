@@ -21,9 +21,12 @@ class ReportController extends BaseWebController
     public function index(): string
     {
         $filters = $this->collectFilters();
+        $defaultFilters = $this->defaultFilters();
+
         return $this->render('reports/index', [
-            'title'      => lang('Reports.title'),
-            'filters'    => $filters,
+            'title'          => lang('Reports.title'),
+            'filters'        => $filters,
+            'defaultFilters' => $defaultFilters,
         ]);
     }
 
@@ -136,4 +139,25 @@ class ReportController extends BaseWebController
         return redirect()->back()->with('success', lang('Reports.exportReady'));
     }
 
+    /**
+     * @return array<string, string>
+     */
+    private function defaultFilters(): array
+    {
+        $today = new \DateTimeImmutable('today');
+        $dateTo = $today->format('Y-m-d');
+        $dateFrom = $today->sub(new \DateInterval('P29D'))->format('Y-m-d');
+
+        return [
+            'date_from'   => $dateFrom,
+            'date_to'     => $dateTo,
+            'report_type' => 'users',
+            'group_by'    => 'day',
+            'limit'       => '25',
+            'search'      => '',
+            'status'      => '',
+            'role'        => '',
+            'action'      => '',
+        ];
+    }
 }

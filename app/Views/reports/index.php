@@ -21,7 +21,9 @@
     <?= view('layouts/partials/filter_panel', [
         'actionUrl' => site_url('admin/reports'),
         'clearUrl' => site_url('admin/reports'),
-        'hasFilters' => request()->getGet() !== [],
+        'hasFilters' => has_active_filters(request()->getGet(), $defaultFilters ?? []),
+        'reactiveHasFilters' => true,
+        'filterDefaults' => $defaultFilters ?? [],
         'fieldsView' => 'reports/partials/filters_form',
         'fieldsData' => ['filters' => $filters],
         'submitLabel' => lang('App.search'),

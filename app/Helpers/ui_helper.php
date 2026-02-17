@@ -116,6 +116,66 @@ if (! function_exists('query_without_page')) {
     }
 }
 
+if (! function_exists('has_active_filters')) {
+    /**
+     * Determine whether there are active filter values in a query payload.
+     *
+     * @param array<string, mixed>|null $query
+     * @param array<string, scalar|null> $defaults
+     * @param array<int, string> $ignoredKeys
+     */
+    function has_active_filters(?array $query = null, array $defaults = [], array $ignoredKeys = ['sort', 'page', 'cursor']): bool
+    {
+        if ($query === null) {
+            $currentQuery = request()->getGet();
+            $query = is_array($currentQuery) ? $currentQuery : [];
+        }
+
+        $ignored = [];
+        foreach ($ignoredKeys as $key) {
+            if (is_string($key) && $key !== '') {
+                $ignored[$key] = true;
+            }
+        }
+
+        $keys = [];
+        foreach (array_keys($defaults) as $key) {
+            if (is_string($key) && $key !== '') {
+                $keys[$key] = true;
+            }
+        }
+        foreach (array_keys($query) as $key) {
+            if (is_string($key) && $key !== '') {
+                $keys[$key] = true;
+            }
+        }
+
+        foreach (array_keys($keys) as $key) {
+            if (isset($ignored[$key])) {
+                continue;
+            }
+
+            $default = array_key_exists($key, $defaults) ? trim((string) $defaults[$key]) : '';
+            $current = $default;
+
+            if (array_key_exists($key, $query)) {
+                $value = $query[$key];
+                if (is_scalar($value) || $value === null) {
+                    $current = trim((string) $value);
+                } else {
+                    continue;
+                }
+            }
+
+            if ($current !== $default) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}
+
 if (! function_exists('table_wrapper_class')) {
     function table_wrapper_class(): string
     {

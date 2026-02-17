@@ -16,7 +16,8 @@
     <?= view('layouts/partials/filter_panel', [
         'actionUrl' => site_url('admin/users'),
         'clearUrl' => site_url('admin/users'),
-        'hasFilters' => request()->getGet() !== [],
+        'hasFilters' => has_active_filters(),
+        'reactiveHasFilters' => true,
         'fieldsView' => 'users/partials/filters',
         'submitLabel' => lang('App.search'),
     ]) ?>
