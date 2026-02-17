@@ -19,7 +19,7 @@ class DashboardController extends BaseWebController
 
     public function index(): string
     {
-        $fileResponse = $this->safeApiCall(fn () => $this->fileService->list(['per_page' => 5]));
+        $fileResponse = $this->safeApiCall(fn() => $this->fileService->list(['per_page' => 5]));
         $files = $this->extractItems($fileResponse);
         $user = session('user') ?? [];
 

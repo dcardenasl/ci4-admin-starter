@@ -21,7 +21,5 @@ class LocaleFilter implements FilterInterface
         Services::language()->setLocale($locale);
     }
 
-    public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
-    {
-    }
+    public function after(RequestInterface $request, ResponseInterface $response, $arguments = null) {}
 }

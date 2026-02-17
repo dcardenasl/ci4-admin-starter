@@ -44,7 +44,7 @@ class AuthController extends BaseWebController
             'password' => (string) $this->request->getPost('password'),
         ];
 
-        $response = $this->safeApiCall(fn () => $this->authService->login($payload));
+        $response = $this->safeApiCall(fn() => $this->authService->login($payload));
 
         if (! $response['ok']) {
             $formFields = ['email', 'password'];
@@ -91,7 +91,7 @@ class AuthController extends BaseWebController
             'password_confirmation' => (string) $this->request->getPost('password_confirmation'),
         ];
 
-        $response = $this->safeApiCall(fn () => $this->authService->register($payload));
+        $response = $this->safeApiCall(fn() => $this->authService->register($payload));
 
         if (! $response['ok']) {
             $formFields = ['first_name', 'last_name', 'email', 'password', 'password_confirmation'];
@@ -124,7 +124,7 @@ class AuthController extends BaseWebController
         }
 
         $email = (string) $this->request->getPost('email');
-        $response = $this->safeApiCall(fn () => $this->authService->forgotPassword($email));
+        $response = $this->safeApiCall(fn() => $this->authService->forgotPassword($email));
 
         if (! $response['ok']) {
             $formFields = ['email'];
@@ -165,7 +165,7 @@ class AuthController extends BaseWebController
             'password_confirmation' => (string) $this->request->getPost('password_confirmation'),
         ];
 
-        $response = $this->safeApiCall(fn () => $this->authService->resetPassword($payload));
+        $response = $this->safeApiCall(fn() => $this->authService->resetPassword($payload));
 
         if (! $response['ok']) {
             $formFields = ['token', 'password', 'password_confirmation'];
@@ -184,7 +184,7 @@ class AuthController extends BaseWebController
     public function verifyEmail(): string
     {
         $token = (string) $this->request->getGet('token');
-        $response = $this->safeApiCall(fn () => $this->authService->verifyEmail($token));
+        $response = $this->safeApiCall(fn() => $this->authService->verifyEmail($token));
 
         return $this->renderAuth('auth/verify_email', [
             'title'    => lang('Auth.verifyTitle'),
@@ -197,7 +197,7 @@ class AuthController extends BaseWebController
     public function logout(): RedirectResponse
     {
         if ($this->session->has('access_token')) {
-            $this->safeApiCall(fn () => $this->authService->logout());
+            $this->safeApiCall(fn() => $this->authService->logout());
         }
 
         $this->session->destroy();

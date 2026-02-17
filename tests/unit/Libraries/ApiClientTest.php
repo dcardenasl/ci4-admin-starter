@@ -22,7 +22,7 @@ final class ApiClientTest extends CIUnitTestCase
     {
         $reflection = new \ReflectionClass(ApiClientInterface::class);
         $methods = array_map(
-            static fn (\ReflectionMethod $m) => $m->getName(),
+            static fn(\ReflectionMethod $m) => $m->getName(),
             $reflection->getMethods()
         );
 

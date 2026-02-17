@@ -13,7 +13,5 @@ use Config\App;
  */
 class ConfigReader extends App
 {
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 }

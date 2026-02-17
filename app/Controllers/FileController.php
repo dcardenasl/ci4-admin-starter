@@ -20,7 +20,7 @@ class FileController extends BaseWebController
 
     public function index(): string
     {
-        $response = $this->safeApiCall(fn () => $this->fileService->list([
+        $response = $this->safeApiCall(fn() => $this->fileService->list([
             'search' => (string) $this->request->getGet('search'),
         ]));
 
@@ -46,13 +46,13 @@ class FileController extends BaseWebController
 
         $uploadDir = WRITEPATH . 'uploads/';
         if (! is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
+            mkdir($uploadDir, 0o755, true);
         }
 
         $tempPath = $uploadDir . uniqid('upload_', true) . '_' . $file->getName();
         $file->move(dirname($tempPath), basename($tempPath));
 
-        $response = $this->safeApiCall(fn () => $this->fileService->upload('file', $tempPath, [
+        $response = $this->safeApiCall(fn() => $this->fileService->upload('file', $tempPath, [
             'visibility' => (string) ($this->request->getPost('visibility') ?? 'private'),
         ]));
 
@@ -67,7 +67,7 @@ class FileController extends BaseWebController
 
     public function download(string $id): RedirectResponse
     {
-        $response = $this->safeApiCall(fn () => $this->fileService->getDownload($id));
+        $response = $this->safeApiCall(fn() => $this->fileService->getDownload($id));
 
         if (! $response['ok']) {
             return redirect()->to(site_url('files'))->with('error', $this->firstMessage($response, lang('Files.downloadFailed')));
@@ -85,7 +85,7 @@ class FileController extends BaseWebController
 
     public function delete(string $id): RedirectResponse
     {
-        $response = $this->safeApiCall(fn () => $this->fileService->delete($id));
+        $response = $this->safeApiCall(fn() => $this->fileService->delete($id));
 
         if (! $response['ok']) {
             return redirect()->to(site_url('files'))->with('error', $this->firstMessage($response, lang('Files.deleteFailed')));

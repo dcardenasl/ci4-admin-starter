@@ -41,7 +41,7 @@ class ProfileController extends BaseWebController
             'avatar_url' => (string) $this->request->getPost('avatar_url'),
         ];
 
-        $response = $this->safeApiCall(fn () => $this->authService->updateProfile($payload));
+        $response = $this->safeApiCall(fn() => $this->authService->updateProfile($payload));
 
         if (! $response['ok']) {
             $fieldErrors = $this->getFieldErrors($response);
@@ -74,7 +74,7 @@ class ProfileController extends BaseWebController
             'password_confirmation' => (string) $this->request->getPost('password_confirmation'),
         ];
 
-        $response = $this->safeApiCall(fn () => $this->authService->changePassword($payload));
+        $response = $this->safeApiCall(fn() => $this->authService->changePassword($payload));
 
         if (! $response['ok']) {
             $fieldErrors = $this->getFieldErrors($response);
@@ -91,7 +91,7 @@ class ProfileController extends BaseWebController
 
     public function resendVerification(): RedirectResponse
     {
-        $response = $this->safeApiCall(fn () => $this->authService->resendVerification());
+        $response = $this->safeApiCall(fn() => $this->authService->resendVerification());
 
         if (! $response['ok']) {
             return redirect()->to(site_url('profile'))->with('error', $this->firstMessage($response, lang('Profile.resendFailed')));
@@ -102,7 +102,7 @@ class ProfileController extends BaseWebController
 
     protected function refreshUserSession(): void
     {
-        $me = $this->safeApiCall(fn () => $this->authService->me());
+        $me = $this->safeApiCall(fn() => $this->authService->me());
 
         if (! $me['ok']) {
             return;
