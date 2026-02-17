@@ -83,4 +83,38 @@ final class FileFiltersFallbackTest extends CIUnitTestCase
 
         $result->assertStatus(200);
     }
+
+    public function testLimitAndPageAreForwardedToApiListQuery(): void
+    {
+        $mock = $this->createMock(FileApiService::class);
+        $mock->expects($this->once())
+            ->method('list')
+            ->with($this->callback(static function (array $params): bool {
+                return (int) ($params['limit'] ?? 0) === 25
+                    && (int) ($params['page'] ?? 0) === 4
+                    && ! array_key_exists('cursor', $params);
+            }))
+            ->willReturn([
+                'ok'          => true,
+                'status'      => 200,
+                'data'        => [
+                    'data'         => [],
+                    'current_page' => 4,
+                    'last_page'    => 10,
+                    'total'        => 250,
+                ],
+                'raw'         => '',
+                'messages'    => [],
+                'fieldErrors' => [],
+            ]);
+
+        Services::injectMock('fileApiService', $mock);
+
+        $result = $this->withSession([
+            'access_token' => 'token',
+            'user'         => ['role' => 'user'],
+        ])->get('/files/data?limit=25&page=4');
+
+        $result->assertStatus(200);
+    }
 }

@@ -87,4 +87,38 @@ final class AuditFiltersFallbackTest extends CIUnitTestCase
 
         $result->assertStatus(200);
     }
+
+    public function testLimitAndPageAreForwardedToApiListQuery(): void
+    {
+        $mock = $this->createMock(AuditApiService::class);
+        $mock->expects($this->once())
+            ->method('list')
+            ->with($this->callback(static function (array $params): bool {
+                return (int) ($params['limit'] ?? 0) === 100
+                    && (int) ($params['page'] ?? 0) === 2
+                    && ! array_key_exists('cursor', $params);
+            }))
+            ->willReturn([
+                'ok'          => true,
+                'status'      => 200,
+                'data'        => [
+                    'data'         => [],
+                    'current_page' => 2,
+                    'last_page'    => 3,
+                    'total'        => 250,
+                ],
+                'raw'         => '',
+                'messages'    => [],
+                'fieldErrors' => [],
+            ]);
+
+        Services::injectMock('auditApiService', $mock);
+
+        $result = $this->withSession([
+            'access_token' => 'token',
+            'user'         => ['role' => 'admin'],
+        ])->get('/admin/audit/data?limit=100&page=2');
+
+        $result->assertStatus(200);
+    }
 }

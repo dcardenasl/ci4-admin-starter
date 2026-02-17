@@ -20,8 +20,9 @@
     <?= view('layouts/partials/filter_panel', [
         'actionUrl' => site_url('files'),
         'clearUrl' => site_url('files'),
-        'hasFilters' => has_active_filters(),
+        'hasFilters' => has_active_filters(request()->getGet(), ['limit' => '25']),
         'reactiveHasFilters' => true,
+        'filterDefaults' => ['limit' => '25'],
         'fieldsView' => 'files/partials/filters',
         'submitLabel' => lang('App.search'),
     ]) ?>
@@ -89,23 +90,5 @@
         </div>
     </template>
 
-    <div class="mt-6 flex items-center justify-between border-t border-gray-200 pt-4 text-sm text-gray-600" x-show="!loading && !error && rows.length > 0 && hasPagination()">
-        <span x-text="paginationLabel()"></span>
-        <nav class="flex items-center gap-1">
-            <button type="button" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs hover:bg-gray-50 disabled:opacity-40"
-                x-show="isCursorMode() ? (pagination.prevCursor !== '') : (pagination.currentPage > 1)"
-                @click="isCursorMode() ? goToCursor(pagination.prevCursor) : goToPage(pagination.currentPage - 1)" :disabled="loading">Anterior</button>
-            <template x-if="!isCursorMode()">
-                <div class="flex items-center gap-1">
-                    <template x-for="page in pageWindow()" :key="'p-' + page">
-                        <button type="button" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs hover:bg-gray-50" :class="page === pagination.currentPage ? 'bg-brand-600 text-white border-brand-600' : ''"
-                            @click="goToPage(page)" :disabled="loading" x-text="page"></button>
-                    </template>
-                </div>
-            </template>
-            <button type="button" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs hover:bg-gray-50 disabled:opacity-40"
-                x-show="isCursorMode() ? (pagination.nextCursor !== '') : (pagination.currentPage < pagination.lastPage)"
-                @click="isCursorMode() ? goToCursor(pagination.nextCursor) : goToPage(pagination.currentPage + 1)" :disabled="loading">Siguiente</button>
-        </nav>
-    </div>
+    <?= view('layouts/partials/remote_pagination') ?>
 </section>

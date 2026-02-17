@@ -149,6 +149,19 @@ const statusLabels = {
     }
 };
 
+const paginationLabels = {
+    es: {
+        visibleResults: 'Resultados visibles',
+        showing: 'Mostrando',
+        of: 'de'
+    },
+    en: {
+        visibleResults: 'Visible results',
+        showing: 'Showing',
+        of: 'of'
+    }
+};
+
 const statusLabel = (status) => {
     const value = String(status || '').trim();
     if (value === '') {
@@ -272,9 +285,13 @@ document.addEventListener('alpine:init', () => {
             currentPage: 1,
             lastPage: 1,
             total: 0,
+            limit: 25,
+            from: 0,
+            to: 0,
             nextCursor: '',
             prevCursor: ''
         },
+        pageInput: '1',
         query: {},
         filterDefaults: {},
         filterFields: new Set(),
@@ -498,9 +515,13 @@ document.addEventListener('alpine:init', () => {
                         currentPage: 1,
                         lastPage: 1,
                         total: 0,
+                        limit: 25,
+                        from: 0,
+                        to: 0,
                         nextCursor: '',
                         prevCursor: ''
                     };
+                    this.pageInput = '1';
                     this.error = true;
                     this.errorMessage = this.resolveErrorMessage(payload, response.status);
                     return;
@@ -510,6 +531,7 @@ document.addEventListener('alpine:init', () => {
                 this.rows = this.extractRows(root);
                 this.summary = this.extractSummary(root);
                 this.pagination = this.extractPagination(root, this.rows.length);
+                this.pageInput = String(this.pagination.currentPage);
 
                 if (pushHistory) {
                     window.history.pushState({}, '', pageUrl);
@@ -522,6 +544,7 @@ document.addEventListener('alpine:init', () => {
                 this.summary = {};
                 this.error = true;
                 this.errorMessage = 'No se pudo cargar la informacion. Intenta nuevamente.';
+                this.pageInput = '1';
             } finally {
                 if (requestId === this.requestId) {
                     this.loading = false;
@@ -562,15 +585,31 @@ document.addEventListener('alpine:init', () => {
             const nextCursor = String(meta.next_cursor ?? root.next_cursor ?? '');
             const prevCursor = String(meta.prev_cursor ?? root.prev_cursor ?? '');
             const hasCursor = nextCursor !== '' || prevCursor !== '' || String(this.query.cursor || '') !== '';
-            const currentPage = Number(root.current_page ?? meta.current_page ?? this.query.page ?? 1) || 1;
-            const lastPage = Number(root.last_page ?? meta.last_page ?? currentPage) || 1;
+            const limit = Number(root.per_page ?? meta.per_page ?? meta.limit ?? this.query.limit ?? 25) || 25;
+            const safeLimit = Math.max(1, limit);
             const total = Number(root.total ?? meta.total ?? meta.total_estimate ?? visibleCount) || visibleCount;
+            const currentPage = Number(root.current_page ?? meta.current_page ?? meta.page ?? this.query.page ?? 1) || 1;
+            const derivedLastPage = Math.max(1, Math.ceil(Math.max(0, total) / safeLimit));
+            const lastPage = Number(root.last_page ?? meta.last_page ?? derivedLastPage) || derivedLastPage;
+            const normalizedCurrentPage = Math.max(1, Math.min(currentPage, Math.max(1, lastPage)));
+            const from = total <= 0 ? 0 : ((normalizedCurrentPage - 1) * safeLimit) + 1;
+            let to = 0;
+            if (total > 0) {
+                if (visibleCount > 0) {
+                    to = Math.min(total, from + visibleCount - 1);
+                } else {
+                    to = Math.min(total, normalizedCurrentPage * safeLimit);
+                }
+            }
 
             return {
                 mode: hasCursor ? 'cursor' : 'page',
-                currentPage: Math.max(1, currentPage),
+                currentPage: normalizedCurrentPage,
                 lastPage: Math.max(1, lastPage),
                 total: Math.max(0, total),
+                limit: safeLimit,
+                from: Math.max(0, from),
+                to: Math.max(0, to),
                 nextCursor,
                 prevCursor
             };
@@ -614,11 +653,17 @@ document.addEventListener('alpine:init', () => {
         },
 
         paginationLabel() {
+            const locale = localePrefix();
+            const labels = paginationLabels[locale] || paginationLabels.es;
             if (this.isCursorMode()) {
-                return `Resultados visibles: ${this.pagination.total}`;
+                return `${labels.visibleResults}: ${this.pagination.total}`;
             }
 
-            return `Pagina ${this.pagination.currentPage} de ${this.pagination.lastPage} (${this.pagination.total} resultados)`;
+            if (this.pagination.total <= 0 || this.pagination.from <= 0) {
+                return `${labels.showing} 0 ${labels.of} ${this.pagination.total}`;
+            }
+
+            return `${labels.showing} ${this.pagination.from}-${this.pagination.to} ${labels.of} ${this.pagination.total}`;
         },
 
         currentSort(field) {
@@ -673,9 +718,39 @@ document.addEventListener('alpine:init', () => {
         },
 
         goToPage(page) {
-            this.query.page = String(Math.max(1, page));
+            const boundedPage = Math.max(1, Math.min(this.pagination.lastPage || 1, page));
+            this.query.page = String(boundedPage);
             delete this.query.cursor;
+            this.pageInput = String(boundedPage);
             this.fetchData(true);
+        },
+
+        goToFirstPage() {
+            if (this.isCursorMode() || this.pagination.currentPage <= 1) {
+                return;
+            }
+            this.goToPage(1);
+        },
+
+        goToLastPage() {
+            if (this.isCursorMode() || this.pagination.currentPage >= this.pagination.lastPage) {
+                return;
+            }
+            this.goToPage(this.pagination.lastPage);
+        },
+
+        goToPageFromInput() {
+            if (this.isCursorMode()) {
+                return;
+            }
+
+            const page = Number.parseInt(String(this.pageInput || ''), 10);
+            if (!Number.isFinite(page) || page <= 0) {
+                this.pageInput = String(this.pagination.currentPage);
+                return;
+            }
+
+            this.goToPage(page);
         },
 
         goToCursor(cursor) {
@@ -684,6 +759,20 @@ document.addEventListener('alpine:init', () => {
             }
             this.query.cursor = String(cursor);
             delete this.query.page;
+            this.fetchData(true);
+        },
+
+        onLimitChange(limit) {
+            const parsed = Number.parseInt(String(limit || ''), 10);
+            if (!Number.isFinite(parsed) || parsed <= 0) {
+                delete this.query.limit;
+            } else {
+                this.query.limit = String(Math.min(100, Math.max(1, parsed)));
+            }
+
+            delete this.query.page;
+            delete this.query.cursor;
+            this.pageInput = '1';
             this.fetchData(true);
         },
 

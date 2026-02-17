@@ -119,4 +119,38 @@ final class UserFiltersFallbackTest extends CIUnitTestCase
 
         $result->assertStatus(200);
     }
+
+    public function testLimitAndPageAreForwardedToApiListQuery(): void
+    {
+        $mock = $this->createMock(UserApiService::class);
+        $mock->expects($this->once())
+            ->method('list')
+            ->with($this->callback(static function (array $params): bool {
+                return (int) ($params['limit'] ?? 0) === 50
+                    && (int) ($params['page'] ?? 0) === 3
+                    && ! array_key_exists('cursor', $params);
+            }))
+            ->willReturn([
+                'ok'          => true,
+                'status'      => 200,
+                'data'        => [
+                    'data'         => [],
+                    'current_page' => 3,
+                    'last_page'    => 5,
+                    'total'        => 250,
+                ],
+                'raw'         => '',
+                'messages'    => [],
+                'fieldErrors' => [],
+            ]);
+
+        Services::injectMock('userApiService', $mock);
+
+        $result = $this->withSession([
+            'access_token' => 'token',
+            'user'         => ['role' => 'admin'],
+        ])->get('/admin/users/data?limit=50&page=3');
+
+        $result->assertStatus(200);
+    }
 }
