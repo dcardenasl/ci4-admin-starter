@@ -43,7 +43,6 @@ return [
     'users'          => 'Users',
     'audit'          => 'Audit',
     'metrics'        => 'Metrics',
-    'reports'        => 'Reports',
     'panel'          => 'Panel',
 
     // Global errors

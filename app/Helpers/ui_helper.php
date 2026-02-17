@@ -262,7 +262,6 @@ if (! function_exists('ui_icon')) {
             'users'     => 'users',
             'audit'     => 'clipboard-list',
             'metrics'   => 'bar-chart-3',
-            'reports'   => 'file-text',
             'search'    => 'search',
             'plus'      => 'plus',
             'eye'       => 'eye',

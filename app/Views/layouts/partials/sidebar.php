@@ -33,10 +33,6 @@
                 <?= ui_icon('metrics') ?>
                 <span><?= lang('App.metrics') ?></span>
             </a>
-            <a href="<?= site_url('admin/reports') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/reports*') ?>">
-                <?= ui_icon('reports') ?>
-                <span><?= lang('App.reports') ?></span>
-            </a>
         <?php endif; ?>
     </nav>
 </aside>

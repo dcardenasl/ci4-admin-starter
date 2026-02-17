@@ -43,7 +43,6 @@ return [
     'users'          => 'Usuarios',
     'audit'          => 'Auditoria',
     'metrics'        => 'Metricas',
-    'reports'        => 'Reportes',
     'panel'          => 'Panel',
 
     // Errores globales

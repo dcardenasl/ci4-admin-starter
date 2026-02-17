@@ -808,20 +808,6 @@ document.addEventListener('alpine:init', () => {
 
         fileDeleteUrl(id) {
             return `${this.routes.deleteBase}/${encodeURIComponent(String(id ?? ''))}/delete`;
-        },
-
-        currentReportType() {
-            return this.query.report_type || 'users';
-        },
-
-        reportExportUrl(format) {
-            const base = format === 'pdf' ? this.routes.exportPdf : this.routes.exportCsv;
-            const exportQuery = { ...this.query };
-            delete exportQuery.page;
-            delete exportQuery.cursor;
-            delete exportQuery.limit;
-
-            return this.buildUrl(base, exportQuery);
         }
     }));
 });

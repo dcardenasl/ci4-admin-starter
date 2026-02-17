@@ -31,15 +31,13 @@ final class UiHelperTest extends CIUnitTestCase
     public function testHasActiveFiltersUsesDefaultsAsBaseline(): void
     {
         $defaults = [
-            'report_type' => 'users',
-            'group_by'    => 'day',
-            'limit'       => '25',
+            'status' => 'active',
+            'limit'  => '25',
         ];
 
         $this->assertFalse(has_active_filters([], $defaults));
-        $this->assertFalse(has_active_filters(['report_type' => 'users', 'group_by' => 'day', 'limit' => '25'], $defaults));
-        $this->assertTrue(has_active_filters(['report_type' => 'files'], $defaults));
-        $this->assertTrue(has_active_filters(['group_by' => ''], $defaults));
+        $this->assertFalse(has_active_filters(['status' => 'active', 'limit' => '25'], $defaults));
+        $this->assertTrue(has_active_filters(['status' => 'inactive'], $defaults));
+        $this->assertTrue(has_active_filters(['status' => ''], $defaults));
     }
 }
-

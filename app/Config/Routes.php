@@ -52,8 +52,4 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function (RouteC
     $routes->get('audit/entity/(:segment)/(:segment)', 'AuditController::byEntity/$1/$2');
 
     $routes->get('metrics', 'MetricsController::index');
-    $routes->get('reports', 'ReportController::index');
-    $routes->get('reports/data', 'ReportController::data');
-    $routes->get('reports/export/csv', 'ReportController::exportCsv');
-    $routes->get('reports/export/pdf', 'ReportController::exportPdf');
 });
