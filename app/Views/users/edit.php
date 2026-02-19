@@ -9,6 +9,7 @@
 
     <form method="post" action="<?= site_url('admin/users/' . esc($uid, 'url')) ?>" class="mt-4 space-y-4">
         <?= csrf_field() ?>
+        <input type="hidden" name="original_email" value="<?= esc(old('original_email', $editUser['email'] ?? '')) ?>">
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -30,14 +31,6 @@
             <input id="email" name="email" type="email" value="<?= esc(old('email', $editUser['email'] ?? '')) ?>" required
                 class="mt-1 w-full rounded-lg border px-3 py-2 <?= has_field_error('email') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand-500 focus:ring-brand-500' ?>">
             <?= render_field_error('email') ?>
-        </div>
-
-        <div>
-            <label class="block text-sm font-medium text-gray-700" for="password"><?= lang('Users.passwordOptional') ?></label>
-            <input id="password" name="password" type="password"
-                class="mt-1 w-full rounded-lg border px-3 py-2 <?= has_field_error('password') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand-500 focus:ring-brand-500' ?>">
-            <p class="mt-1 text-xs text-gray-500"><?= lang('Users.passwordHint') ?></p>
-            <?= render_field_error('password') ?>
         </div>
 
         <div>

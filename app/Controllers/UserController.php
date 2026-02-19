@@ -68,7 +68,6 @@ class UserController extends BaseWebController
             'first_name' => 'required|min_length[2]|max_length[100]',
             'last_name'  => 'required|min_length[2]|max_length[100]',
             'email'      => 'required|valid_email',
-            'password'   => 'required|min_length[8]',
             'role'       => 'required|in_list[user,admin]',
         ])) {
             return redirect()->back()->withInput()->with('fieldErrors', $this->validator->getErrors());
@@ -78,8 +77,8 @@ class UserController extends BaseWebController
             'first_name' => (string) $this->request->getPost('first_name'),
             'last_name'  => (string) $this->request->getPost('last_name'),
             'email'      => (string) $this->request->getPost('email'),
-            'password'   => (string) $this->request->getPost('password'),
             'role'       => (string) $this->request->getPost('role'),
+            'client_base_url' => $this->clientBaseUrl(),
         ];
 
         $response = $this->safeApiCall(fn() => $this->userService->create($payload));
@@ -121,13 +120,14 @@ class UserController extends BaseWebController
         $payload = [
             'first_name' => (string) $this->request->getPost('first_name'),
             'last_name'  => (string) $this->request->getPost('last_name'),
-            'email'      => (string) $this->request->getPost('email'),
             'role'       => (string) $this->request->getPost('role'),
         ];
 
-        $password = (string) $this->request->getPost('password');
-        if ($password !== '') {
-            $payload['password'] = $password;
+        $email = trim((string) $this->request->getPost('email'));
+        $originalEmail = trim((string) $this->request->getPost('original_email'));
+
+        if ($originalEmail === '' || mb_strtolower($email) !== mb_strtolower($originalEmail)) {
+            $payload['email'] = $email;
         }
 
         $response = $this->safeApiCall(fn() => $this->userService->update($id, $payload));

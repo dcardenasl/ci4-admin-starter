@@ -31,13 +31,6 @@
         </div>
 
         <div>
-            <label class="block text-sm font-medium text-gray-700" for="password"><?= lang('Users.password') ?></label>
-            <input id="password" name="password" type="password" required
-                class="mt-1 w-full rounded-lg border px-3 py-2 <?= has_field_error('password') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand-500 focus:ring-brand-500' ?>">
-            <?= render_field_error('password') ?>
-        </div>
-
-        <div>
             <label class="block text-sm font-medium text-gray-700" for="role"><?= lang('Users.role') ?></label>
             <select id="role" name="role" required
                 class="mt-1 w-full rounded-lg border px-3 py-2 <?= has_field_error('role') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand-500 focus:ring-brand-500' ?>">
