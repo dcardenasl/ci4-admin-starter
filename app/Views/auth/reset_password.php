@@ -1,6 +1,7 @@
 <form method="post" action="<?= site_url('reset-password') ?>" class="space-y-4">
     <?= csrf_field() ?>
     <input type="hidden" name="token" value="<?= esc($token ?? old('token')) ?>">
+    <input type="hidden" name="email" value="<?= esc($email ?? old('email')) ?>">
 
     <div>
         <label class="block text-sm font-medium text-gray-700" for="password"><?= lang('Auth.newPassword') ?></label>

@@ -14,9 +14,14 @@ class AuthApiService extends BaseApiService
         return $this->apiClient->publicPost('/auth/register', $payload);
     }
 
-    public function forgotPassword(string $email): array
+    public function forgotPassword(string $email, ?string $clientBaseUrl = null): array
     {
-        return $this->apiClient->publicPost('/auth/forgot-password', ['email' => $email]);
+        $payload = ['email' => $email];
+        if ($clientBaseUrl !== null && $clientBaseUrl !== '') {
+            $payload['client_base_url'] = $clientBaseUrl;
+        }
+
+        return $this->apiClient->publicPost('/auth/forgot-password', $payload);
     }
 
     public function resetPassword(array $payload): array
@@ -39,9 +44,9 @@ class AuthApiService extends BaseApiService
         return $this->apiClient->get('/auth/me');
     }
 
-    public function resendVerification(): array
+    public function resendVerification(array $payload = []): array
     {
-        return $this->apiClient->post('/auth/resend-verification');
+        return $this->apiClient->post('/auth/resend-verification', $payload);
     }
 
     public function updateProfile(array $payload): array

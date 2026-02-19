@@ -76,4 +76,57 @@ final class AuthApiServiceTest extends CIUnitTestCase
         $this->assertTrue($result['ok']);
         $this->assertSame('test@example.com', $result['data']['data']['email']);
     }
+
+    public function testForgotPasswordIncludesClientBaseUrlWhenProvided(): void
+    {
+        $expected = [
+            'ok'       => true,
+            'status'   => 200,
+            'data'     => [],
+            'raw'      => '',
+            'messages' => [],
+        ];
+
+        $mock = $this->createMock(ApiClientInterface::class);
+        $mock->expects($this->once())
+            ->method('publicPost')
+            ->with('/auth/forgot-password', [
+                'email' => 'test@example.com',
+                'client_base_url' => 'https://admin.example.com',
+            ])
+            ->willReturn($expected);
+
+        $service = new AuthApiService($mock);
+        $result = $service->forgotPassword('test@example.com', 'https://admin.example.com');
+
+        $this->assertTrue($result['ok']);
+        $this->assertSame(200, $result['status']);
+    }
+
+    public function testResendVerificationIncludesPayload(): void
+    {
+        $expected = [
+            'ok'       => true,
+            'status'   => 200,
+            'data'     => [],
+            'raw'      => '',
+            'messages' => [],
+        ];
+
+        $mock = $this->createMock(ApiClientInterface::class);
+        $mock->expects($this->once())
+            ->method('post')
+            ->with('/auth/resend-verification', [
+                'client_base_url' => 'https://admin.example.com',
+            ])
+            ->willReturn($expected);
+
+        $service = new AuthApiService($mock);
+        $result = $service->resendVerification([
+            'client_base_url' => 'https://admin.example.com',
+        ]);
+
+        $this->assertTrue($result['ok']);
+        $this->assertSame(200, $result['status']);
+    }
 }

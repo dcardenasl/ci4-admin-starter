@@ -63,6 +63,24 @@ abstract class BaseWebController extends BaseController
         return redirect()->back()->withInput()->with('fieldErrors', $errors);
     }
 
+    /**
+     * Resolve the canonical public web URL used in API emails.
+     */
+    protected function clientBaseUrl(): string
+    {
+        $configured = trim((string) env('WEBAPP_BASE_URL', ''));
+        if ($configured !== '') {
+            return rtrim($configured, '/');
+        }
+
+        $appBaseUrl = trim((string) config('App')->baseURL);
+        if ($appBaseUrl !== '') {
+            return rtrim($appBaseUrl, '/');
+        }
+
+        return rtrim(site_url('/'), '/');
+    }
+
     protected function getFieldErrors(array $response): array
     {
         return $response['fieldErrors'] ?? [];

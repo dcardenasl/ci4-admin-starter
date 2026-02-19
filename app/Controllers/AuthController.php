@@ -89,6 +89,7 @@ class AuthController extends BaseWebController
             'email'                 => (string) $this->request->getPost('email'),
             'password'              => (string) $this->request->getPost('password'),
             'password_confirmation' => (string) $this->request->getPost('password_confirmation'),
+            'client_base_url'       => $this->clientBaseUrl(),
         ];
 
         $response = $this->safeApiCall(fn() => $this->authService->register($payload));
@@ -124,7 +125,10 @@ class AuthController extends BaseWebController
         }
 
         $email = (string) $this->request->getPost('email');
-        $response = $this->safeApiCall(fn() => $this->authService->forgotPassword($email));
+        $response = $this->safeApiCall(fn() => $this->authService->forgotPassword(
+            $email,
+            $this->clientBaseUrl()
+        ));
 
         if (! $response['ok']) {
             $formFields = ['email'];
@@ -146,6 +150,7 @@ class AuthController extends BaseWebController
             'title'    => lang('Auth.resetTitle'),
             'subtitle' => lang('Auth.resetSubtitle'),
             'token'    => (string) $this->request->getGet('token'),
+            'email'    => (string) $this->request->getGet('email'),
         ]);
     }
 
@@ -153,6 +158,7 @@ class AuthController extends BaseWebController
     {
         if (! $this->validate([
             'token'                 => 'required',
+            'email'                 => 'required|valid_email',
             'password'              => 'required|min_length[8]',
             'password_confirmation' => 'required|matches[password]',
         ])) {
@@ -161,6 +167,7 @@ class AuthController extends BaseWebController
 
         $payload = [
             'token'                 => (string) $this->request->getPost('token'),
+            'email'                 => (string) $this->request->getPost('email'),
             'password'              => (string) $this->request->getPost('password'),
             'password_confirmation' => (string) $this->request->getPost('password_confirmation'),
         ];

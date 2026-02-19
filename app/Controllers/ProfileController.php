@@ -91,7 +91,9 @@ class ProfileController extends BaseWebController
 
     public function resendVerification(): RedirectResponse
     {
-        $response = $this->safeApiCall(fn() => $this->authService->resendVerification());
+        $response = $this->safeApiCall(fn() => $this->authService->resendVerification([
+            'client_base_url' => $this->clientBaseUrl(),
+        ]));
 
         if (! $response['ok']) {
             return redirect()->to(site_url('profile'))->with('error', $this->firstMessage($response, lang('Profile.resendFailed')));

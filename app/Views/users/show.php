@@ -71,7 +71,7 @@
         <section class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
             <h3 class="text-lg font-semibold text-gray-900"><?= lang('Users.quickActions') ?></h3>
             <div class="mt-4 space-y-3">
-                <?php if (($user['status'] ?? '') === 'pending'): ?>
+                <?php if (($user['status'] ?? '') === 'pending_approval'): ?>
                     <form method="post" action="<?= site_url('admin/users/' . esc($uid, 'url') . '/approve') ?>">
                         <?= csrf_field() ?>
                         <button type="submit" class="w-full rounded-lg bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700"><?= lang('Users.approve') ?></button>
