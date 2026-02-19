@@ -51,5 +51,14 @@ $routes->group('admin', ['filter' => ['auth', 'admin']], static function (RouteC
     $routes->get('audit/(:segment)', 'AuditController::show/$1');
     $routes->get('audit/entity/(:segment)/(:segment)', 'AuditController::byEntity/$1/$2');
 
+    $routes->get('api-keys', 'ApiKeyController::index');
+    $routes->get('api-keys/data', 'ApiKeyController::data');
+    $routes->get('api-keys/create', 'ApiKeyController::create');
+    $routes->post('api-keys', 'ApiKeyController::store');
+    $routes->get('api-keys/(:segment)', 'ApiKeyController::show/$1');
+    $routes->get('api-keys/(:segment)/edit', 'ApiKeyController::edit/$1');
+    $routes->post('api-keys/(:segment)', 'ApiKeyController::update/$1');
+    $routes->post('api-keys/(:segment)/delete', 'ApiKeyController::delete/$1');
+
     $routes->get('metrics', 'MetricsController::index');
 });

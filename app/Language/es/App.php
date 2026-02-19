@@ -42,6 +42,7 @@ return [
     'administration' => 'Administracion',
     'users'          => 'Usuarios',
     'audit'          => 'Auditoria',
+    'apiKeys'        => 'API Keys',
     'metrics'        => 'Metricas',
     'panel'          => 'Panel',
 

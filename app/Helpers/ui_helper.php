@@ -261,6 +261,7 @@ if (! function_exists('ui_icon')) {
             'files'     => 'files',
             'users'     => 'users',
             'audit'     => 'clipboard-list',
+            'apiKeys'   => 'key-round',
             'metrics'   => 'bar-chart-3',
             'search'    => 'search',
             'plus'      => 'plus',

@@ -29,6 +29,10 @@
                 <?= ui_icon('audit') ?>
                 <span><?= lang('App.audit') ?></span>
             </a>
+            <a href="<?= site_url('admin/api-keys') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/api-keys*') ?>">
+                <?= ui_icon('apiKeys') ?>
+                <span><?= lang('App.apiKeys') ?></span>
+            </a>
             <a href="<?= site_url('admin/metrics') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/metrics') ?>">
                 <?= ui_icon('metrics') ?>
                 <span><?= lang('App.metrics') ?></span>
