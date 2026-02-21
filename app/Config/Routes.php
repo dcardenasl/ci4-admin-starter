@@ -25,7 +25,7 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->get('/dashboard', 'DashboardController::index');
     $routes->get('/profile', 'ProfileController::index');
     $routes->post('/profile', 'ProfileController::update');
-    $routes->post('/profile/change-password', 'ProfileController::changePassword');
+    $routes->post('/profile/request-password-reset', 'ProfileController::requestPasswordReset');
     $routes->post('/profile/resend-verification', 'ProfileController::resendVerification');
     $routes->get('/files', 'FileController::index');
     $routes->get('/files/data', 'FileController::data');

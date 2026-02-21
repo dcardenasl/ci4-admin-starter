@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Services\AuthApiService;
+use App\Services\UserApiService;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -11,23 +12,36 @@ use Psr\Log\LoggerInterface;
 class ProfileController extends BaseWebController
 {
     protected AuthApiService $authService;
+    protected UserApiService $userService;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
         parent::initController($request, $response, $logger);
         $this->authService = service('authApiService');
+        $this->userService = service('userApiService');
     }
 
     public function index(): string
     {
+        $user = session('user') ?? [];
+        $isAdmin = ($user['role'] ?? null) === 'admin';
+
         return $this->render('profile/index', [
-            'title' => lang('Profile.title'),
-            'user'  => session('user') ?? [],
+            'title'   => lang('Profile.title'),
+            'user'    => $user,
+            'isAdmin' => $isAdmin,
         ]);
     }
 
     public function update(): RedirectResponse
     {
+        $sessionUser = session('user') ?? [];
+        $isAdmin = ($sessionUser['role'] ?? null) === 'admin';
+
+        if (! $isAdmin) {
+            return redirect()->to(site_url('profile'))->with('error', lang('Profile.updateNotAllowed'));
+        }
+
         if (! $this->validate([
             'first_name' => 'required|min_length[2]|max_length[100]',
             'last_name'  => 'required|min_length[2]|max_length[100]',
@@ -38,10 +52,14 @@ class ProfileController extends BaseWebController
         $payload = [
             'first_name' => (string) $this->request->getPost('first_name'),
             'last_name'  => (string) $this->request->getPost('last_name'),
-            'avatar_url' => (string) $this->request->getPost('avatar_url'),
         ];
 
-        $response = $this->safeApiCall(fn() => $this->authService->updateProfile($payload));
+        $userId = $sessionUser['id'] ?? null;
+        if (! is_scalar($userId) || (string) $userId === '') {
+            return redirect()->to(site_url('profile'))->with('error', lang('Profile.updateFailed'));
+        }
+
+        $response = $this->safeApiCall(fn() => $this->userService->update((string) $userId, $payload));
 
         if (! $response['ok']) {
             $fieldErrors = $this->getFieldErrors($response);
@@ -58,35 +76,23 @@ class ProfileController extends BaseWebController
         return redirect()->to(site_url('profile'))->with('success', lang('Profile.updateSuccess'));
     }
 
-    public function changePassword(): RedirectResponse
+    public function requestPasswordReset(): RedirectResponse
     {
-        if (! $this->validate([
-            'current_password'      => 'required',
-            'password'              => 'required|min_length[8]',
-            'password_confirmation' => 'required|matches[password]',
-        ])) {
-            return redirect()->back()->with('fieldErrors', $this->validator->getErrors());
+        $email = trim((string) (session('user.email') ?? ''));
+        if ($email === '') {
+            return redirect()->to(site_url('profile'))->with('error', lang('Profile.passwordResetFailed'));
         }
 
-        $payload = [
-            'current_password'      => (string) $this->request->getPost('current_password'),
-            'password'              => (string) $this->request->getPost('password'),
-            'password_confirmation' => (string) $this->request->getPost('password_confirmation'),
-        ];
-
-        $response = $this->safeApiCall(fn() => $this->authService->changePassword($payload));
+        $response = $this->safeApiCall(fn() => $this->authService->forgotPassword(
+            $email,
+            $this->clientBaseUrl(),
+        ));
 
         if (! $response['ok']) {
-            $fieldErrors = $this->getFieldErrors($response);
-
-            if (! empty($fieldErrors)) {
-                return $this->withFieldErrors($fieldErrors);
-            }
-
-            return redirect()->back()->with('error', $this->firstMessage($response, lang('Profile.passwordFailed')));
+            return redirect()->to(site_url('profile'))->with('error', $this->firstMessage($response, lang('Profile.passwordResetFailed')));
         }
 
-        return redirect()->to(site_url('profile'))->with('success', lang('Profile.passwordSuccess'));
+        return redirect()->to(site_url('profile'))->with('success', lang('Profile.passwordResetSent'));
     }
 
     public function resendVerification(): RedirectResponse
