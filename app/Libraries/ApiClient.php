@@ -262,15 +262,10 @@ class ApiClient implements ApiClientInterface
      */
     protected function extractResponseHeaders(\CodeIgniter\HTTP\ResponseInterface $response): array
     {
-        $headers = [];
-        foreach ($response->headers() as $name => $header) {
-            if (! is_string($name)) {
-                continue;
-            }
-
-            $headers[strtolower($name)] = $response->getHeaderLine($name);
-        }
-
-        return $headers;
+        return [
+            'content-type'        => $response->getHeaderLine('Content-Type'),
+            'content-disposition' => $response->getHeaderLine('Content-Disposition'),
+            'content-length'      => $response->getHeaderLine('Content-Length'),
+        ];
     }
 }
