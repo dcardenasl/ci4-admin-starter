@@ -21,13 +21,18 @@ return [
     'go'             => 'Ir',
     'confirm'        => 'Confirmar',
     'close'          => 'Cerrar',
+    'id'             => 'ID',
 
     // Estados
     'active'         => 'Activo',
     'inactive'       => 'Inactivo',
     'pending'        => 'Pendiente',
+    'processing'     => 'Procesando',
     'approved'       => 'Aprobado',
+    'success'        => 'Exitoso',
     'rejected'       => 'Rechazado',
+    'failed'         => 'Fallido',
+    'suspended'      => 'Suspendido',
     'verified'       => 'Verificado',
     'yes'            => 'Si',
     'no'             => 'No',
@@ -56,6 +61,12 @@ return [
     'goDashboard'      => 'Ir al dashboard',
     'goLogin'          => 'Ir a login',
     'goBack'           => 'Volver atras',
+    'pageSummary'      => 'Pagina {0} de {1} ({2} resultados)',
+    'visibleResults'   => 'Resultados visibles',
+    'loadingData'      => 'Cargando datos...',
+    'sortBy'           => 'Ordenar por {0}',
+    'requestFailed'    => 'La solicitud fallo (HTTP {0}).',
+    'loadRetry'        => 'No se pudo cargar la informacion. Intenta nuevamente.',
 
     // Idioma
     'language'       => 'Idioma',

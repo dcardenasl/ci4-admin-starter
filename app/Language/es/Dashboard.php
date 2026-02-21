@@ -14,6 +14,8 @@ return [
     'status'          => 'Estado',
     'date'            => 'Fecha',
     'apiHealth'       => 'Salud del API',
+    'endpoint'        => 'Endpoint',
+    'latency'         => 'Latencia',
     'up'              => 'Disponible',
     'degraded'        => 'Degradado',
     'down'            => 'No disponible',

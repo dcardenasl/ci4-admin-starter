@@ -24,6 +24,7 @@ return [
     'quickActions'        => 'Acciones rapidas',
     'backToList'          => 'Volver a la lista',
     'backToDetails'       => 'Volver al detalle',
+    'loading'             => 'Cargando API keys...',
     'noApiKeys'           => 'No se encontraron API keys.',
     'notFound'            => 'API key no encontrada.',
     'confirmDelete'       => 'Esta seguro de que desea eliminar esta API key?',

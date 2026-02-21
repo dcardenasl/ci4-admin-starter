@@ -40,6 +40,28 @@ if (! function_exists('status_badge')) {
     }
 }
 
+if (! function_exists('localized_status')) {
+    function localized_status(?string $status): string
+    {
+        $raw = (string) $status;
+        $status = strtolower($raw);
+
+        return match ($status) {
+            'active'           => lang('App.active'),
+            'inactive'         => lang('App.inactive'),
+            'pending'          => lang('App.pending'),
+            'pending_approval' => lang('Users.pendingApproval'),
+            'processing'       => lang('App.processing'),
+            'approved'         => lang('App.approved'),
+            'rejected'         => lang('App.rejected'),
+            'suspended'        => lang('App.suspended'),
+            'success'          => lang('App.success'),
+            'failed'           => lang('App.failed'),
+            default            => $raw,
+        };
+    }
+}
+
 if (! function_exists('audit_action_badge')) {
     function audit_action_badge(?string $action): string
     {
@@ -57,12 +79,44 @@ if (! function_exists('audit_action_badge')) {
     }
 }
 
+if (! function_exists('localized_audit_action')) {
+    function localized_audit_action(?string $action): string
+    {
+        $raw = (string) $action;
+        $action = strtolower($raw);
+
+        return match ($action) {
+            'create'  => lang('Audit.actionCreate'),
+            'update'  => lang('Audit.actionUpdate'),
+            'delete'  => lang('Audit.actionDelete'),
+            'login'   => lang('Audit.actionLogin'),
+            'logout'  => lang('Audit.actionLogout'),
+            'approve' => lang('Audit.actionApprove'),
+            default   => $raw,
+        };
+    }
+}
+
 if (! function_exists('role_badge')) {
     function role_badge(?string $role): string
     {
         return strtolower((string) $role) === 'admin'
             ? 'bg-brand-100 text-brand-800'
             : 'bg-gray-100 text-gray-700';
+    }
+}
+
+if (! function_exists('localized_role')) {
+    function localized_role(?string $role): string
+    {
+        $raw = (string) $role;
+        $role = strtolower($raw);
+
+        return match ($role) {
+            'admin' => lang('Users.adminRole'),
+            'user'  => lang('Users.userRole'),
+            default => $raw,
+        };
     }
 }
 

@@ -14,6 +14,8 @@ return [
     'status'          => 'Status',
     'date'            => 'Date',
     'apiHealth'       => 'API health',
+    'endpoint'        => 'Endpoint',
+    'latency'         => 'Latency',
     'up'              => 'Up',
     'degraded'        => 'Degraded',
     'down'            => 'Down',

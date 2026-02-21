@@ -21,13 +21,18 @@ return [
     'go'             => 'Go',
     'confirm'        => 'Confirm',
     'close'          => 'Close',
+    'id'             => 'ID',
 
     // States
     'active'         => 'Active',
     'inactive'       => 'Inactive',
     'pending'        => 'Pending',
+    'processing'     => 'Processing',
     'approved'       => 'Approved',
+    'success'        => 'Success',
     'rejected'       => 'Rejected',
+    'failed'         => 'Failed',
+    'suspended'      => 'Suspended',
     'verified'       => 'Verified',
     'yes'            => 'Yes',
     'no'             => 'No',
@@ -56,6 +61,12 @@ return [
     'goDashboard'      => 'Go to dashboard',
     'goLogin'          => 'Go to login',
     'goBack'           => 'Go back',
+    'pageSummary'      => 'Page {0} of {1} ({2} results)',
+    'visibleResults'   => 'Visible results',
+    'loadingData'      => 'Loading data...',
+    'sortBy'           => 'Sort by {0}',
+    'requestFailed'    => 'Request failed (HTTP {0}).',
+    'loadRetry'        => 'Could not load the information. Please try again.',
 
     // Language
     'language'       => 'Language',
