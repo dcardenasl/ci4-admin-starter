@@ -92,8 +92,9 @@ final class FileUploadFlowTest extends CIUnitTestCase
             ->willReturn([
                 'ok'          => true,
                 'status'      => 200,
-                'data'        => ['data' => ['download_url' => 'https://cdn.example.com/files/abc-123.pdf']],
+                'data'        => ['data' => ['url' => 'https://cdn.example.com/files/abc-123.pdf']],
                 'raw'         => '',
+                'headers'     => [],
                 'messages'    => [],
                 'fieldErrors' => [],
             ]);
@@ -116,6 +117,7 @@ final class FileUploadFlowTest extends CIUnitTestCase
                 'status'      => 200,
                 'data'        => ['data' => ['url' => 'https://cdn.example.com/files/xyz-789.pdf']],
                 'raw'         => '',
+                'headers'     => [],
                 'messages'    => [],
                 'fieldErrors' => [],
             ]);
@@ -138,6 +140,7 @@ final class FileUploadFlowTest extends CIUnitTestCase
                 'status'      => 404,
                 'data'        => [],
                 'raw'         => '',
+                'headers'     => [],
                 'messages'    => ['File not found.'],
                 'fieldErrors' => [],
             ]);
@@ -160,6 +163,7 @@ final class FileUploadFlowTest extends CIUnitTestCase
                 'status'      => 200,
                 'data'        => ['data' => []],
                 'raw'         => '',
+                'headers'     => [],
                 'messages'    => [],
                 'fieldErrors' => [],
             ]);
@@ -170,6 +174,33 @@ final class FileUploadFlowTest extends CIUnitTestCase
 
         $result->assertRedirectTo(site_url('files'));
         $result->assertSessionHas('error');
+    }
+
+    public function testDownloadReturnsBinaryResponseWhenApiReturnsRawFile(): void
+    {
+        $mock = $this->createMock(FileApiService::class);
+        $mock->expects($this->once())
+            ->method('getDownload')
+            ->with('binary-file')
+            ->willReturn([
+                'ok'          => true,
+                'status'      => 200,
+                'data'        => [],
+                'raw'         => '%PDF-1.7',
+                'headers'     => [
+                    'content-type'        => 'application/pdf',
+                    'content-disposition' => 'attachment; filename="invoice.pdf"',
+                ],
+                'messages'    => [],
+                'fieldErrors' => [],
+            ]);
+
+        Services::injectMock('fileApiService', $mock);
+
+        $result = $this->withSession($this->authSession)->get('/files/binary-file/download');
+
+        $result->assertStatus(200);
+        $this->assertStringContainsString('%PDF-1.7', $result->getBody());
     }
 
     public function testDownloadRedirectsToLoginWithoutSession(): void
@@ -374,29 +405,29 @@ final class FileUploadFlowTest extends CIUnitTestCase
 
     public function testFileApiServiceGetDownloadCallsApiClientGet(): void
     {
-        $expected = $this->apiOkResponse(['data' => ['download_url' => 'https://cdn.example.com/f.pdf']]);
+        $expected = $this->apiOkResponse(['data' => ['url' => 'https://cdn.example.com/f.pdf']]);
 
         $mockClient = $this->createMock(\App\Libraries\ApiClientInterface::class);
         $mockClient->expects($this->once())
             ->method('get')
-            ->with('/files/55/download')
+            ->with('/files/55')
             ->willReturn($expected);
 
         $service = new FileApiService($mockClient);
         $result = $service->getDownload(55);
 
         $this->assertTrue($result['ok']);
-        $this->assertSame('https://cdn.example.com/f.pdf', $result['data']['data']['download_url']);
+        $this->assertSame('https://cdn.example.com/f.pdf', $result['data']['data']['url']);
     }
 
     public function testFileApiServiceGetDownloadWithStringId(): void
     {
-        $expected = $this->apiOkResponse(['data' => ['download_url' => 'https://cdn.example.com/uuid.pdf']]);
+        $expected = $this->apiOkResponse(['data' => ['url' => 'https://cdn.example.com/uuid.pdf']]);
 
         $mockClient = $this->createMock(\App\Libraries\ApiClientInterface::class);
         $mockClient->expects($this->once())
             ->method('get')
-            ->with('/files/a1b2c3/download')
+            ->with('/files/a1b2c3')
             ->willReturn($expected);
 
         $service = new FileApiService($mockClient);
@@ -427,6 +458,7 @@ final class FileUploadFlowTest extends CIUnitTestCase
             'status'      => $status,
             'data'        => $data,
             'raw'         => '',
+            'headers'     => [],
             'messages'    => [],
             'fieldErrors' => [],
         ];

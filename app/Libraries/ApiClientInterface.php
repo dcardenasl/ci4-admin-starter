@@ -3,7 +3,15 @@
 namespace App\Libraries;
 
 /**
- * @method array{ok: bool, status: int, data: array, raw: string, messages: string[], fieldErrors: array<string, string>}
+ * @method array{
+ *   ok: bool,
+ *   status: int,
+ *   data: array,
+ *   raw: string,
+ *   headers: array<string, string>,
+ *   messages: string[],
+ *   fieldErrors: array<string, string>
+ * }
  */
 interface ApiClientInterface
 {

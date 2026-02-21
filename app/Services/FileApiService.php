@@ -22,7 +22,7 @@ class FileApiService extends BaseApiService
 
     public function getDownload(int|string $id): array
     {
-        return $this->apiClient->get('/files/' . $id . '/download');
+        return $this->apiClient->get('/files/' . $id);
     }
 
     public function delete(int|string $id): array

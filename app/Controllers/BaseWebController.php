@@ -146,6 +146,7 @@ abstract class BaseWebController extends BaseController
                 'status'      => 0,
                 'data'        => [],
                 'raw'         => '',
+                'headers'     => [],
                 'messages'    => [lang('App.connectionError')],
                 'fieldErrors' => [],
             ];

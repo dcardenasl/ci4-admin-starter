@@ -68,7 +68,7 @@ class FileController extends BaseWebController
         return redirect()->to(site_url('files'))->with('success', lang('Files.uploadSuccess'));
     }
 
-    public function download(string $id): RedirectResponse
+    public function download(string $id): ResponseInterface
     {
         $response = $this->safeApiCall(fn() => $this->fileService->getDownload($id));
 
@@ -80,7 +80,30 @@ class FileController extends BaseWebController
         $url = is_array($data) ? ($data['download_url'] ?? $data['url'] ?? null) : null;
 
         if (! is_string($url) || $url === '') {
-            return redirect()->to(site_url('files'))->with('error', lang('Files.downloadInvalid'));
+            $raw = (string) ($response['raw'] ?? '');
+            if ($raw === '') {
+                return redirect()->to(site_url('files'))->with('error', lang('Files.downloadInvalid'));
+            }
+
+            $headers = is_array($response['headers'] ?? null) ? $response['headers'] : [];
+            $contentType = (string) ($headers['content-type'] ?? 'application/octet-stream');
+            $contentDisposition = (string) ($headers['content-disposition'] ?? '');
+            $contentLength = (string) ($headers['content-length'] ?? '');
+
+            $result = $this->response
+                ->setStatusCode((int) ($response['status'] ?? 200))
+                ->setHeader('Content-Type', $contentType)
+                ->setBody($raw);
+
+            if ($contentDisposition !== '') {
+                $result->setHeader('Content-Disposition', $contentDisposition);
+            }
+
+            if ($contentLength !== '') {
+                $result->setHeader('Content-Length', $contentLength);
+            }
+
+            return $result;
         }
 
         return redirect()->to($url);

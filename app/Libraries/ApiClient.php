@@ -124,6 +124,7 @@ class ApiClient implements ApiClientInterface
             'status'      => $status,
             'data'        => is_array($payload) ? $payload : [],
             'raw'         => $response->getBody(),
+            'headers'     => $this->extractResponseHeaders($response),
             'messages'    => $this->extractMessages($payload, $status),
             'fieldErrors' => $this->extractFieldErrors($payload),
         ];
@@ -254,5 +255,22 @@ class ApiClient implements ApiClientInterface
         }
 
         return $fieldErrors;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function extractResponseHeaders(\CodeIgniter\HTTP\ResponseInterface $response): array
+    {
+        $headers = [];
+        foreach ($response->headers() as $name => $header) {
+            if (! is_string($name)) {
+                continue;
+            }
+
+            $headers[strtolower($name)] = $response->getHeaderLine($name);
+        }
+
+        return $headers;
     }
 }
