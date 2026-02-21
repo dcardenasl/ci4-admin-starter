@@ -36,7 +36,7 @@ class AuthApiService extends BaseApiService
 
     public function logout(): array
     {
-        return $this->apiClient->post('/auth/logout');
+        return $this->apiClient->post('/auth/revoke');
     }
 
     public function me(): array
@@ -47,15 +47,5 @@ class AuthApiService extends BaseApiService
     public function resendVerification(array $payload = []): array
     {
         return $this->apiClient->post('/auth/resend-verification', $payload);
-    }
-
-    public function updateProfile(array $payload): array
-    {
-        return $this->apiClient->put('/auth/profile', $payload);
-    }
-
-    public function changePassword(array $payload): array
-    {
-        return $this->apiClient->post('/auth/change-password', $payload);
     }
 }

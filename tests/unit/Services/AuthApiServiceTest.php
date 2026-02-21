@@ -129,4 +129,27 @@ final class AuthApiServiceTest extends CIUnitTestCase
         $this->assertTrue($result['ok']);
         $this->assertSame(200, $result['status']);
     }
+
+    public function testLogoutUsesRevokeEndpoint(): void
+    {
+        $expected = [
+            'ok'       => true,
+            'status'   => 200,
+            'data'     => [],
+            'raw'      => '',
+            'messages' => [],
+        ];
+
+        $mock = $this->createMock(ApiClientInterface::class);
+        $mock->expects($this->once())
+            ->method('post')
+            ->with('/auth/revoke')
+            ->willReturn($expected);
+
+        $service = new AuthApiService($mock);
+        $result = $service->logout();
+
+        $this->assertTrue($result['ok']);
+        $this->assertSame(200, $result['status']);
+    }
 }

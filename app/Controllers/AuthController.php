@@ -207,6 +207,12 @@ class AuthController extends BaseWebController
             $this->safeApiCall(fn() => $this->authService->logout());
         }
 
+        $this->session->remove([
+            'access_token',
+            'refresh_token',
+            'token_expires_at',
+            'user',
+        ]);
         $this->session->destroy();
 
         return redirect()->to(site_url('login'))->with('success', lang('Auth.logoutSuccess'));
