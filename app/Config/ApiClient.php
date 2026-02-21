@@ -16,6 +16,8 @@ class ApiClient extends BaseConfig
 
     public string $appName = 'API Client';
 
+    public string $appKey = '';
+
     /**
      * @var list<string>
      */
@@ -36,6 +38,9 @@ class ApiClient extends BaseConfig
         }
         if ($val = env('APP_NAME')) {
             $this->appName = $val;
+        }
+        if ($val = env('API_APP_KEY')) {
+            $this->appKey = $val;
         }
         if ($val = env('API_HEALTH_PATHS')) {
             $paths = array_values(array_filter(array_map('trim', explode(',', (string) $val))));

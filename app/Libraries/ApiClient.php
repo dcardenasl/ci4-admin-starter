@@ -22,12 +22,16 @@ class ApiClient implements ApiClientInterface
         $this->config = $config ?? config('ApiClient');
         $this->session = session();
         $appConfig = config(App::class);
+        $headers = ['Accept' => 'application/json'];
+        if (! empty($this->config->appKey)) {
+            $headers['X-App-Key'] = $this->config->appKey;
+        }
         $options = [
             'baseURI'         => rtrim($this->config->baseUrl, '/'),
             'timeout'         => $this->config->timeout,
             'connect_timeout' => $this->config->connectTimeout,
             'http_errors'     => false,
-            'headers'         => ['Accept' => 'application/json'],
+            'headers'         => $headers,
         ];
         $this->http = new CURLRequest(
             $appConfig,
@@ -44,12 +48,12 @@ class ApiClient implements ApiClientInterface
 
     public function post(string $path, array $data = []): array
     {
-        return $this->request('POST', $path, ['form_params' => $data], true);
+        return $this->request('POST', $path, ['json' => $data], true);
     }
 
     public function put(string $path, array $data = []): array
     {
-        return $this->request('PUT', $path, ['form_params' => $data], true);
+        return $this->request('PUT', $path, ['json' => $data], true);
     }
 
     public function delete(string $path): array
@@ -59,7 +63,7 @@ class ApiClient implements ApiClientInterface
 
     public function publicPost(string $path, array $data = []): array
     {
-        return $this->request('POST', $path, ['form_params' => $data], false);
+        return $this->request('POST', $path, ['json' => $data], false);
     }
 
     public function publicGet(string $path, array $query = []): array
