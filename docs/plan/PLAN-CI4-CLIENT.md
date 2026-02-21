@@ -45,7 +45,7 @@ ci4-admin-starter/
 │   │   ├── BaseWebController.php      # Base: ApiClient, viewData, helpers, table utils
 │   │   ├── AuthController.php         # Login, register, forgot/reset password, verify email
 │   │   ├── DashboardController.php    # Dashboard con stats y health del API
-│   │   ├── ProfileController.php      # Ver/editar perfil, cambiar password, reenviar verificacion
+│   │   ├── ProfileController.php      # Perfil (edicion admin), reset password por email, reenviar verificacion
 │   │   ├── FileController.php         # Gestion de archivos (upload, list, download, delete)
 │   │   ├── UserController.php         # CRUD usuarios + aprobar (admin)
 │   │   ├── AuditController.php        # Logs de auditoria (admin)
@@ -106,7 +106,7 @@ ci4-admin-starter/
 │       │   └── index.php              # Stats cards + archivos recientes + health del API
 │       │
 │       ├── profile/
-│       │   └── index.php              # Perfil + cambiar password + reenviar verificacion
+│       │   └── index.php              # Perfil + reset password por email + reenviar verificacion
 │       │
 │       ├── files/
 │       │   ├── index.php              # File manager: upload drag-and-drop + tabla server-driven
@@ -176,7 +176,7 @@ ApiClient
 $session->set('access_token', $data['access_token']);
 $session->set('refresh_token', $data['refresh_token']);
 $session->set('token_expires_at', time() + $data['expires_in']);
-$session->set('user', $data['user']); // {id, email, first_name, last_name, avatar_url, role}
+$session->set('user', $data['user']); // {id, email, first_name, last_name, role}
 ```
 
 - Tokens NUNCA se exponen al browser (solo en session PHP server-side)
@@ -207,12 +207,12 @@ GET  /logout                   → AuthController::logout
 GET  /dashboard                → DashboardController::index
 GET  /profile                  → ProfileController::index
 POST /profile                  → ProfileController::update
-POST /profile/change-password  → ProfileController::changePassword
+POST /profile/request-password-reset → ProfileController::requestPasswordReset
 POST /profile/resend-verification → ProfileController::resendVerification
 GET  /files                    → FileController::index
 GET  /files/data               → FileController::data       // JSON para tabla server-driven
 POST /files/upload             → FileController::upload
-GET  /files/{id}/download      → FileController::download
+GET  /files/{id}/download      → FileController::download (usa GET /api/v1/files/{id})
 POST /files/{id}/delete        → FileController::delete
 
 // --- Admin (filter: auth + admin) ---
@@ -275,14 +275,14 @@ Todas las fases fueron completadas. El siguiente desglose conserva el historial 
 - `app/Language/en/` y `app/Language/es/` — 10 archivos de idioma cada uno
 
 ### ✅ Fase 4: Autenticacion
-- `app/Controllers/AuthController.php` — login, register, forgot/reset password, verify email, logout
+- `app/Controllers/AuthController.php` — login, register, forgot/reset password, verify email, logout (revoca token via /auth/revoke)
 - `app/Controllers/LanguageController.php` — cambio de idioma via session
 - Vistas: `auth/login.php`, `register.php`, `forgot_password.php`, `reset_password.php`, `verify_email.php`
 - `app/Config/Routes.php` — todas las rutas configuradas
 
 ### ✅ Fase 5: Dashboard, perfil y archivos
 - `app/Controllers/DashboardController.php` — stats + health check del API
-- `app/Controllers/ProfileController.php` — perfil, cambiar password, reenviar verificacion
+- `app/Controllers/ProfileController.php` — perfil (edicion admin), reset password por email, reenviar verificacion
 - `app/Controllers/FileController.php` — upload, list (data endpoint), download, delete
 - Vistas correspondientes con tablas server-driven y filtros
 
