@@ -28,7 +28,7 @@
     ]) ?>
 
     <div class="mt-6 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600" x-show="loading">
-        Cargando archivos...
+        <?= lang('Files.loading') ?>
     </div>
     <div class="mt-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700" x-show="error" x-text="errorMessage"></div>
 
@@ -45,19 +45,19 @@
                 <thead class="<?= esc(table_head_class()) ?>">
                     <tr>
                         <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('name')">
-                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('name')" :aria-label="'Ordenar por nombre de archivo'">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('name')" aria-label="<?= esc(lang('Files.sortByFileName')) ?>">
                                 <span><?= lang('Files.fileName') ?></span>
                                 <span aria-hidden="true" x-text="sortIcon('name')"></span>
                             </button>
                         </th>
                         <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('status')">
-                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('status')" :aria-label="'Ordenar por estado'">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('status')" aria-label="<?= esc(lang('Files.sortByStatus')) ?>">
                                 <span><?= lang('Files.status') ?></span>
                                 <span aria-hidden="true" x-text="sortIcon('status')"></span>
                             </button>
                         </th>
                         <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('created_at')">
-                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('created_at')" :aria-label="'Ordenar por fecha'">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('created_at')" aria-label="<?= esc(lang('Files.sortByDate')) ?>">
                                 <span><?= lang('Files.date') ?></span>
                                 <span aria-hidden="true" x-text="sortIcon('created_at')"></span>
                             </button>
@@ -70,7 +70,7 @@
                         <tr class="<?= esc(table_row_class()) ?>">
                             <td class="<?= esc(table_td_class('primary')) ?>" x-text="String(row.name ?? row.filename ?? '-')"></td>
                             <td class="<?= esc(table_td_class()) ?>">
-                                <span class="inline-flex rounded-full px-2 py-1 text-xs" :class="statusBadgeClass(row.status)" x-text="String(row.status ?? 'active')"></span>
+                                <span class="inline-flex rounded-full px-2 py-1 text-xs" :class="statusBadgeClass(row.status)" x-text="statusLabel(row.status)"></span>
                             </td>
                             <td class="<?= esc(table_td_class('muted')) ?>" x-text="formatDate(row.created_at)"></td>
                             <td class="<?= esc(table_td_class()) ?>">

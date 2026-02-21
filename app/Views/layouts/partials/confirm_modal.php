@@ -6,11 +6,11 @@
         <div class="mt-6 flex justify-end gap-2">
             <button type="button" class="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50"
                 @click="$store.confirm.close()">
-                Cancelar
+                <?= lang('App.cancel') ?>
             </button>
             <button type="button" class="px-4 py-2 rounded-lg bg-red-600 text-sm text-white hover:bg-red-700"
                 @click="$store.confirm.accept()">
-                Confirmar
+                <?= lang('App.confirm') ?>
             </button>
         </div>
     </div>

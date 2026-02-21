@@ -1,6 +1,6 @@
 <header class="h-16 bg-white border-b border-gray-200 px-4 md:px-6 flex items-center justify-between">
     <div class="flex items-center gap-3">
-        <button class="md:hidden text-gray-600 hover:text-gray-900" @click="sidebarOpen = true">menu</button>
+        <button class="md:hidden text-gray-600 hover:text-gray-900" @click="sidebarOpen = true"><?= lang('App.menu') ?></button>
         <h2 class="text-sm text-gray-500"><?= esc($title ?? lang('App.panel')) ?></h2>
     </div>
 

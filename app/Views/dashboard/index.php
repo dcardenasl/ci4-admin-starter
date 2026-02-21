@@ -1,11 +1,14 @@
 <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+    <?php
+    $roleValue = (string) ($stats['role'] ?? 'user');
+    ?>
     <article class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
         <p class="text-sm text-gray-500"><?= lang('Dashboard.recentFiles') ?></p>
         <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($stats['files'] ?? 0)) ?></p>
     </article>
     <article class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
         <p class="text-sm text-gray-500"><?= lang('Dashboard.role') ?></p>
-        <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($stats['role'] ?? 'user')) ?></p>
+        <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc(localized_role($roleValue)) ?></p>
     </article>
     <article class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
         <p class="text-sm text-gray-500"><?= lang('Dashboard.emailVerified') ?></p>
@@ -47,11 +50,11 @@
 
         <div class="mt-4 grid grid-cols-2 gap-2 text-xs text-gray-600">
             <div class="rounded-md border border-gray-200 bg-gray-50 px-2.5 py-2">
-                <p class="text-[11px] uppercase tracking-wide text-gray-500">Endpoint</p>
+                <p class="text-[11px] uppercase tracking-wide text-gray-500"><?= lang('Dashboard.endpoint') ?></p>
                 <p class="mt-0.5 font-medium text-gray-700"><?= esc((string) ($apiHealth['path'] ?? '/health')) ?></p>
             </div>
             <div class="rounded-md border border-gray-200 bg-gray-50 px-2.5 py-2">
-                <p class="text-[11px] uppercase tracking-wide text-gray-500">Latency</p>
+                <p class="text-[11px] uppercase tracking-wide text-gray-500"><?= lang('Dashboard.latency') ?></p>
                 <p class="mt-0.5 font-medium text-gray-700"><?= esc((string) (($apiHealth['latency_ms'] ?? 0) > 0 ? $apiHealth['latency_ms'] . ' ms' : '-')) ?></p>
             </div>
         </div>
@@ -96,7 +99,7 @@
                                 <td class="py-2 pr-4 text-gray-800"><?= esc((string) ($file['name'] ?? $file['filename'] ?? '-')) ?></td>
                                 <td class="py-2 pr-4">
                                     <span class="inline-flex rounded-full px-2 py-1 text-xs <?= status_badge($file['status'] ?? 'active') ?>">
-                                        <?= esc((string) ($file['status'] ?? 'active')) ?>
+                                        <?= esc(localized_status((string) ($file['status'] ?? 'active'))) ?>
                                     </span>
                                 </td>
                                 <td class="py-2 pr-4 text-gray-600"><?= esc(format_date($file['created_at'] ?? null)) ?></td>

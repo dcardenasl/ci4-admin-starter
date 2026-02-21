@@ -24,7 +24,7 @@
     ]) ?>
 
     <div class="mt-6 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600" x-show="loading">
-        Cargando usuarios...
+        <?= lang('Users.loading') ?>
     </div>
     <div class="mt-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700" x-show="error" x-text="errorMessage"></div>
 
@@ -38,31 +38,31 @@
                 <thead class="<?= esc(table_head_class()) ?>">
                     <tr>
                         <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('first_name')">
-                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('first_name')" :aria-label="'Ordenar por nombre'">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('first_name')" aria-label="<?= esc(lang('Users.sortByName')) ?>">
                                 <span><?= lang('Users.name') ?></span>
                                 <span aria-hidden="true" x-text="sortIcon('first_name')"></span>
                             </button>
                         </th>
                         <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('email')">
-                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('email')" :aria-label="'Ordenar por correo'">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('email')" aria-label="<?= esc(lang('Users.sortByEmail')) ?>">
                                 <span><?= lang('Users.email') ?></span>
                                 <span aria-hidden="true" x-text="sortIcon('email')"></span>
                             </button>
                         </th>
                         <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('role')">
-                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('role')" :aria-label="'Ordenar por rol'">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('role')" aria-label="<?= esc(lang('Users.sortByRole')) ?>">
                                 <span><?= lang('Users.role') ?></span>
                                 <span aria-hidden="true" x-text="sortIcon('role')"></span>
                             </button>
                         </th>
                         <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('status')">
-                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('status')" :aria-label="'Ordenar por estado'">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('status')" aria-label="<?= esc(lang('Users.sortByStatus')) ?>">
                                 <span><?= lang('Users.status') ?></span>
                                 <span aria-hidden="true" x-text="sortIcon('status')"></span>
                             </button>
                         </th>
                         <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('created_at')">
-                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('created_at')" :aria-label="'Ordenar por fecha'">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('created_at')" aria-label="<?= esc(lang('Users.sortByDate')) ?>">
                                 <span><?= lang('Users.date') ?></span>
                                 <span aria-hidden="true" x-text="sortIcon('created_at')"></span>
                             </button>
@@ -76,7 +76,7 @@
                             <td class="<?= esc(table_td_class('primary')) ?>" x-text="fullName(row)"></td>
                             <td class="<?= esc(table_td_class('muted')) ?>" x-text="String(row.email ?? '-')"></td>
                             <td class="<?= esc(table_td_class()) ?>">
-                                <span class="inline-flex rounded-full px-2 py-1 text-xs" :class="roleBadgeClass(row.role)" x-text="String(row.role ?? '-')"></span>
+                                <span class="inline-flex rounded-full px-2 py-1 text-xs" :class="roleBadgeClass(row.role)" x-text="roleLabel(row.role)"></span>
                             </td>
                             <td class="<?= esc(table_td_class()) ?>">
                                 <span class="inline-flex rounded-full px-2 py-1 text-xs" :class="statusBadgeClass(row.status)" x-text="statusLabel(row.status)"></span>

@@ -123,6 +123,22 @@ const auditActionBadgeClass = (action) => {
 };
 
 const localePrefix = () => String(document.documentElement?.lang || 'es').toLowerCase().startsWith('en') ? 'en' : 'es';
+const localeTag = () => (localePrefix() === 'en' ? 'en-US' : 'es-ES');
+
+const uiLabels = {
+    es: {
+        confirmAction: 'Confirmar accion',
+        confirm: 'Confirmar',
+        requestFailed: 'La solicitud fallo (HTTP {status}).',
+        loadRetry: 'No se pudo cargar la informacion. Intenta nuevamente.'
+    },
+    en: {
+        confirmAction: 'Confirm action',
+        confirm: 'Confirm',
+        requestFailed: 'Request failed (HTTP {status}).',
+        loadRetry: 'Could not load the information. Please try again.'
+    }
+};
 
 const statusLabels = {
     es: {
@@ -149,6 +165,36 @@ const statusLabels = {
     }
 };
 
+const roleLabels = {
+    es: {
+        admin: 'Administrador',
+        user: 'Usuario'
+    },
+    en: {
+        admin: 'Admin',
+        user: 'User'
+    }
+};
+
+const auditActionLabels = {
+    es: {
+        create: 'Crear',
+        update: 'Actualizar',
+        delete: 'Eliminar',
+        login: 'Iniciar sesion',
+        logout: 'Cerrar sesion',
+        approve: 'Aprobar'
+    },
+    en: {
+        create: 'Create',
+        update: 'Update',
+        delete: 'Delete',
+        login: 'Login',
+        logout: 'Logout',
+        approve: 'Approve'
+    }
+};
+
 const paginationLabels = {
     es: {
         visibleResults: 'Resultados visibles',
@@ -172,6 +218,30 @@ const statusLabel = (status) => {
     const locale = localePrefix();
 
     return statusLabels[locale]?.[key] || value;
+};
+
+const roleLabel = (role) => {
+    const value = String(role || '').trim();
+    if (value === '') {
+        return '-';
+    }
+
+    const key = value.toLowerCase();
+    const locale = localePrefix();
+
+    return roleLabels[locale]?.[key] || value;
+};
+
+const auditActionLabel = (action) => {
+    const value = String(action || '').trim();
+    if (value === '') {
+        return '-';
+    }
+
+    const key = value.toLowerCase();
+    const locale = localePrefix();
+
+    return auditActionLabels[locale]?.[key] || value;
 };
 
 const toDateInput = (value) => {
@@ -216,7 +286,7 @@ const formatDate = (value) => {
         return String(candidate);
     }
 
-    return new Intl.DateTimeFormat('es-ES', {
+    return new Intl.DateTimeFormat(localeTag(), {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
@@ -226,12 +296,15 @@ const formatDate = (value) => {
 };
 
 document.addEventListener('alpine:init', () => {
+    const locale = localePrefix();
+    const text = uiLabels[locale] || uiLabels.es;
+
     Alpine.store('confirm', {
         open: false,
-        title: 'Confirmar accion',
+        title: text.confirmAction,
         message: '',
         onAccept: null,
-        show(message, onAccept, title = 'Confirmar accion') {
+        show(message, onAccept, title = text.confirmAction) {
             this.open = true;
             this.message = message;
             this.title = title;
@@ -274,7 +347,7 @@ document.addEventListener('alpine:init', () => {
         mode: config.mode || 'generic',
         routes: config.routes || {},
         csrf: config.csrf || { name: '', hash: '' },
-        confirmDelete: config.confirmDelete || 'Confirmar',
+        confirmDelete: config.confirmDelete || text.confirm,
         loading: false,
         error: false,
         errorMessage: '',
@@ -543,7 +616,7 @@ document.addEventListener('alpine:init', () => {
                 this.rows = [];
                 this.summary = {};
                 this.error = true;
-                this.errorMessage = 'No se pudo cargar la informacion. Intenta nuevamente.';
+                this.errorMessage = text.loadRetry;
                 this.pageInput = '1';
             } finally {
                 if (requestId === this.requestId) {
@@ -626,7 +699,7 @@ document.addEventListener('alpine:init', () => {
                 }
             }
 
-            return `La solicitud fallo (HTTP ${status}).`;
+            return text.requestFailed.replace('{status}', String(status));
         },
 
         isCursorMode() {
@@ -786,8 +859,10 @@ document.addEventListener('alpine:init', () => {
 
         statusBadgeClass,
         statusLabel,
+        roleLabel,
         roleBadgeClass,
         auditActionBadgeClass,
+        auditActionLabel,
         formatDate,
 
         userShowUrl(id) {

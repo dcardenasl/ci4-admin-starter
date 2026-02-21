@@ -13,7 +13,7 @@
 
             <dl class="mt-4 space-y-4 text-sm">
                 <div>
-                    <dt class="text-gray-500">ID</dt>
+                    <dt class="text-gray-500"><?= lang('App.id') ?></dt>
                     <dd class="mt-1 text-gray-900"><?= esc((string) ($log['id'] ?? '-')) ?></dd>
                 </div>
                 <div>
@@ -29,7 +29,7 @@
                     <dt class="text-gray-500"><?= lang('Audit.action') ?></dt>
                     <dd class="mt-1">
                         <span class="inline-flex rounded-full px-2 py-1 text-xs <?= audit_action_badge($log['action'] ?? '') ?>">
-                            <?= esc((string) ($log['action'] ?? '-')) ?>
+                            <?= esc(localized_audit_action((string) ($log['action'] ?? '-'))) ?>
                         </span>
                     </dd>
                 </div>

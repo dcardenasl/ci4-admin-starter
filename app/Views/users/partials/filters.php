@@ -18,8 +18,8 @@
         <select name="role" class="<?= esc(filter_input_class()) ?>">
             <option value=""><?= lang('Users.allRoles') ?></option>
             <?php $role = (string) request()->getGet('role'); ?>
-            <option value="admin" <?= $role === 'admin' ? 'selected' : '' ?>>Admin</option>
-            <option value="user" <?= $role === 'user' ? 'selected' : '' ?>>User</option>
+            <option value="admin" <?= $role === 'admin' ? 'selected' : '' ?>><?= lang('Users.adminRole') ?></option>
+            <option value="user" <?= $role === 'user' ? 'selected' : '' ?>><?= lang('Users.userRole') ?></option>
         </select>
     </div>
     <div>

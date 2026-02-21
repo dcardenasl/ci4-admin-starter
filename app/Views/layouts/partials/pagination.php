@@ -34,26 +34,26 @@ $buildCursorUrl = static function (string $cursor) use ($baseUrl, $queryParams):
 <div class="mt-6 flex items-center justify-between border-t border-gray-200 pt-4 text-sm text-gray-600">
     <span>
         <?php if ($mode === 'cursor'): ?>
-            <?= esc("Resultados visibles: {$total}") ?>
+            <?= esc(lang('App.visibleResults') . ': ' . $total) ?>
         <?php else: ?>
-            <?= esc("Pagina {$currentPage} de {$lastPage} ({$total} resultados)") ?>
+            <?= esc(lang('App.pageSummary', [$currentPage, $lastPage, $total])) ?>
         <?php endif; ?>
     </span>
     <nav class="flex items-center gap-1">
         <?php if ($mode === 'cursor'): ?>
             <?php if ($prevCursor !== ''): ?>
                 <a href="<?= esc($buildCursorUrl($prevCursor)) ?>" data-table-nav="1"
-                   class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs hover:bg-gray-50">Anterior</a>
+                   class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs hover:bg-gray-50"><?= lang('App.previous') ?></a>
             <?php endif; ?>
 
             <?php if ($nextCursor !== ''): ?>
                 <a href="<?= esc($buildCursorUrl($nextCursor)) ?>" data-table-nav="1"
-                   class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs hover:bg-gray-50">Siguiente</a>
+                   class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs hover:bg-gray-50"><?= lang('App.next') ?></a>
             <?php endif; ?>
         <?php else: ?>
             <?php if ($currentPage > 1): ?>
                 <a href="<?= esc($buildPageUrl($currentPage - 1)) ?>" data-table-nav="1"
-               class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs hover:bg-gray-50">Anterior</a>
+               class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs hover:bg-gray-50"><?= lang('App.previous') ?></a>
             <?php endif; ?>
 
             <?php
@@ -71,7 +71,7 @@ $buildCursorUrl = static function (string $cursor) use ($baseUrl, $queryParams):
 
             <?php if ($currentPage < $lastPage): ?>
                 <a href="<?= esc($buildPageUrl($currentPage + 1)) ?>" data-table-nav="1"
-               class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs hover:bg-gray-50">Siguiente</a>
+               class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs hover:bg-gray-50"><?= lang('App.next') ?></a>
             <?php endif; ?>
         <?php endif; ?>
     </nav>

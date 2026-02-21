@@ -22,7 +22,7 @@
     ]) ?>
 
     <div class="mt-6 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600" x-show="loading">
-        Cargando auditoria...
+        <?= lang('Audit.loading') ?>
     </div>
     <div class="mt-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700" x-show="error" x-text="errorMessage"></div>
 
@@ -35,28 +35,28 @@
             <table class="<?= esc(table_class()) ?>">
                 <thead class="<?= esc(table_head_class()) ?>">
                     <tr>
-                        <th class="<?= esc(table_th_class()) ?>">ID</th>
+                        <th class="<?= esc(table_th_class()) ?>"><?= lang('App.id') ?></th>
                         <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('user_id')">
-                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('user_id')" :aria-label="'Ordenar por usuario'">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('user_id')" aria-label="<?= esc(lang('Audit.sortByUser')) ?>">
                                 <span><?= lang('Audit.user') ?></span>
                                 <span aria-hidden="true" x-text="sortIcon('user_id')"></span>
                             </button>
                         </th>
                         <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('action')">
-                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('action')" :aria-label="'Ordenar por accion'">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('action')" aria-label="<?= esc(lang('Audit.sortByAction')) ?>">
                                 <span><?= lang('Audit.action') ?></span>
                                 <span aria-hidden="true" x-text="sortIcon('action')"></span>
                             </button>
                         </th>
                         <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('entity_type')">
-                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('entity_type')" :aria-label="'Ordenar por entidad'">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('entity_type')" aria-label="<?= esc(lang('Audit.sortByEntity')) ?>">
                                 <span><?= lang('Audit.entity') ?></span>
                                 <span aria-hidden="true" x-text="sortIcon('entity_type')"></span>
                             </button>
                         </th>
                         <th class="<?= esc(table_th_class()) ?>"><?= lang('Audit.ipAddress') ?></th>
                         <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('created_at')">
-                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('created_at')" :aria-label="'Ordenar por fecha'">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('created_at')" aria-label="<?= esc(lang('Audit.sortByDate')) ?>">
                                 <span><?= lang('Audit.date') ?></span>
                                 <span aria-hidden="true" x-text="sortIcon('created_at')"></span>
                             </button>
@@ -70,7 +70,7 @@
                             <td class="<?= esc(table_td_class('muted')) ?>" x-text="String(row.id ?? '-')"></td>
                             <td class="<?= esc(table_td_class('primary')) ?>" x-text="String(row.user_email ?? row.user_id ?? '-')"></td>
                             <td class="<?= esc(table_td_class()) ?>">
-                                <span class="inline-flex rounded-full px-2 py-1 text-xs" :class="auditActionBadgeClass(row.action)" x-text="String(row.action ?? '-')"></span>
+                                <span class="inline-flex rounded-full px-2 py-1 text-xs" :class="auditActionBadgeClass(row.action)" x-text="auditActionLabel(row.action)"></span>
                             </td>
                             <td class="<?= esc(table_td_class('muted')) ?>">
                                 <span x-text="String(row.entity_type ?? '-')"></span>

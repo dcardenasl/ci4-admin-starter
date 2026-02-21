@@ -39,7 +39,7 @@
                     <dt class="text-gray-500"><?= lang('Users.role') ?></dt>
                     <dd class="mt-1">
                         <span class="inline-flex rounded-full px-2 py-1 text-xs <?= role_badge($user['role'] ?? 'user') ?>">
-                            <?= esc((string) ($user['role'] ?? 'user')) ?>
+                            <?= esc(localized_role((string) ($user['role'] ?? 'user'))) ?>
                         </span>
                     </dd>
                 </div>
@@ -47,7 +47,7 @@
                     <dt class="text-gray-500"><?= lang('Users.status') ?></dt>
                     <dd class="mt-1">
                         <span class="inline-flex rounded-full px-2 py-1 text-xs <?= status_badge($user['status'] ?? '') ?>">
-                            <?= esc((string) ($user['status'] ?? '-')) ?>
+                            <?= esc(localized_status((string) ($user['status'] ?? '-'))) ?>
                         </span>
                     </dd>
                 </div>

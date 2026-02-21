@@ -37,8 +37,8 @@
             <label class="block text-sm font-medium text-gray-700" for="role"><?= lang('Users.role') ?></label>
             <select id="role" name="role" required
                 class="mt-1 w-full rounded-lg border px-3 py-2 <?= has_field_error('role') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand-500 focus:ring-brand-500' ?>">
-                <option value="user" <?= old('role', $editUser['role'] ?? 'user') === 'user' ? 'selected' : '' ?>>User</option>
-                <option value="admin" <?= old('role', $editUser['role'] ?? 'user') === 'admin' ? 'selected' : '' ?>>Admin</option>
+                <option value="user" <?= old('role', $editUser['role'] ?? 'user') === 'user' ? 'selected' : '' ?>><?= lang('Users.userRole') ?></option>
+                <option value="admin" <?= old('role', $editUser['role'] ?? 'user') === 'admin' ? 'selected' : '' ?>><?= lang('Users.adminRole') ?></option>
             </select>
             <?= render_field_error('role') ?>
         </div>
