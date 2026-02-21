@@ -82,17 +82,20 @@ Configurar en `.env`:
 
 ```dotenv
 CI_ENVIRONMENT = development
-app.baseURL = 'http://localhost:8081/'
-API_BASE_URL = 'http://localhost:8080'
+app.baseURL = 'http://localhost:8082/'
+apiClient.baseUrl = 'http://localhost:8080'
+# Opcional: API key para rate limit elevado (600 req/min vs 60 req/min por IP)
+# Crear una via /admin/api-keys o POST /api/v1/api-keys
+# apiClient.appKey = apk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 ## Desarrollo
 
 ```bash
-php spark serve --port 8081
+php spark serve --port 8082
 ```
 
-Aplicacion disponible en `http://localhost:8081`.
+Aplicacion disponible en `http://localhost:8082`.
 
 ## Pruebas
 
@@ -109,11 +112,16 @@ vendor/bin/phpunit --colors --coverage-text=tests/coverage.txt --coverage-html=t
 ## Estructura relevante
 
 - `app/Controllers`: flujo web y coordinacion de llamadas al API.
-- `app/Services`: servicios por dominio para encapsular endpoints.
-- `app/Libraries/ApiClient.php`: cliente HTTP con auth/refresh y normalizacion de respuestas JSON.
+- `app/Services`: servicios por dominio para encapsular endpoints (extienden `BaseApiService`).
+- `app/Libraries/ApiClient.php`: cliente HTTP con auth/refresh, header `X-App-Key` y normalizacion de respuestas JSON.
+- `app/Libraries/ApiClientInterface.php`: contrato del cliente HTTP.
+- `app/Filters`: `AuthFilter`, `AdminFilter`, `LocaleFilter`.
+- `app/Helpers`: `ui_helper.php` (utilidades de vista), `form_helper.php` (errores de campo).
+- `app/Language/en/`, `app/Language/es/`: archivos de idioma (i18n).
 - `app/Views`: interfaz administrativa server-rendered.
-- `app/Config/ApiClient.php`: configuracion del backend API.
-- `docs/plan/PLAN-CI4-CLIENT.md`: roadmap funcional.
+- `app/Config/ApiClient.php`: configuracion del backend API (baseUrl, timeouts, apiPrefix, appKey).
+- `app/Config/Services.php`: factory de servicios compartidos.
+- `docs/plan/PLAN-CI4-CLIENT.md`: historial de implementacion y referencia de arquitectura.
 - `docs/COMPATIBILIDAD-API.md`: lineamientos de compatibilidad backend/frontend.
 
 ## Regla para nuevos proyectos basados en este template

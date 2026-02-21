@@ -19,7 +19,7 @@ Este documento conserva el roadmap y las decisiones de implementacion, pero debe
 ## Arquitectura General
 
 ```
-Browser → CI4 Frontend App (port 8081) → CI4 API (port 8080)
+Browser → CI4 Frontend App (port 8082) → CI4 API (port 8080)
 ```
 
 - **Server-side rendering** con views de CI4
@@ -35,49 +35,65 @@ Browser → CI4 Frontend App (port 8081) → CI4 API (port 8080)
 ci4-admin-starter/
 ├── app/
 │   ├── Config/
-│   │   ├── ApiClient.php              # Config: API_BASE_URL, timeouts
+│   │   ├── ApiClient.php              # Config: baseUrl, timeout, connectTimeout, apiPrefix, appName, appKey
+│   │   ├── Services.php               # Factory de servicios compartidos (apiClient, *ApiService)
 │   │   ├── Routes.php                 # Todas las rutas web
-│   │   ├── Filters.php                # Registrar AuthFilter, AdminFilter
-│   │   └── Autoload.php              # Autoload ui_helper
+│   │   ├── Filters.php                # Registrar AuthFilter, AdminFilter, LocaleFilter
+│   │   └── Autoload.php               # Autoload ui_helper + form_helper
 │   │
 │   ├── Controllers/
-│   │   ├── BaseWebController.php      # Base: acceso a ApiClient, viewData, helpers
+│   │   ├── BaseWebController.php      # Base: ApiClient, viewData, helpers, table utils
 │   │   ├── AuthController.php         # Login, register, forgot/reset password, verify email
-│   │   ├── DashboardController.php    # Dashboard con stats
-│   │   ├── ProfileController.php      # Ver/editar perfil, cambiar password
-│   │   ├── UserController.php         # CRUD usuarios (admin)
-│   │   ├── FileController.php         # Gestion de archivos
+│   │   ├── DashboardController.php    # Dashboard con stats y health del API
+│   │   ├── ProfileController.php      # Ver/editar perfil, cambiar password, reenviar verificacion
+│   │   ├── FileController.php         # Gestion de archivos (upload, list, download, delete)
+│   │   ├── UserController.php         # CRUD usuarios + aprobar (admin)
 │   │   ├── AuditController.php        # Logs de auditoria (admin)
-│   │   └── MetricsController.php      # Dashboard metricas (admin)
+│   │   ├── ApiKeyController.php       # Gestion de API keys (admin)
+│   │   ├── MetricsController.php      # Dashboard metricas (admin)
+│   │   └── LanguageController.php     # Cambio de idioma via session
 │   │
 │   ├── Filters/
 │   │   ├── AuthFilter.php             # Verifica session JWT, redirige a /login
-│   │   └── AdminFilter.php            # Verifica role=admin
+│   │   ├── AdminFilter.php            # Verifica role=admin, redirige a /dashboard si no
+│   │   └── LocaleFilter.php           # Establece locale desde session en cada request
 │   │
 │   ├── Libraries/
-│   │   └── ApiClient.php             # HTTP client central con auto-refresh JWT
+│   │   ├── ApiClient.php              # HTTP client central con auto-refresh JWT y X-App-Key
+│   │   └── ApiClientInterface.php     # Contrato de metodos del ApiClient
 │   │
 │   ├── Services/
+│   │   ├── BaseApiService.php         # Clase base: inyecta ApiClientInterface
 │   │   ├── AuthApiService.php         # Llamadas auth al API
 │   │   ├── UserApiService.php         # Llamadas users al API
 │   │   ├── FileApiService.php         # Llamadas files al API
 │   │   ├── AuditApiService.php        # Llamadas audit al API
-│   │   └── MetricsApiService.php      # Llamadas metrics al API
+│   │   ├── ApiKeyApiService.php       # Llamadas api-keys al API (admin)
+│   │   ├── MetricsApiService.php      # Llamadas metrics al API (con fallback)
+│   │   └── HealthApiService.php       # Health check del API (up/degraded/down)
 │   │
 │   ├── Helpers/
-│   │   └── ui_helper.php             # active_nav, format_date, status_badge, role_badge
+│   │   ├── ui_helper.php              # active_nav, format_date, status_badge, table classes, ui_icon
+│   │   └── form_helper.php            # get_field_error, has_field_error, render_field_error
+│   │
+│   ├── Language/
+│   │   ├── en/                        # App, Auth, Dashboard, Files, Users, Audit, ApiKeys, Metrics, Profile, Validation
+│   │   └── es/                        # Mismo set de archivos en español
 │   │
 │   └── Views/
 │       ├── layouts/
 │       │   ├── app.php                # Layout autenticado (sidebar + navbar)
 │       │   ├── auth.php               # Layout publico (card centrado)
 │       │   └── partials/
-│       │       ├── head.php           # <head> comun: Tailwind CDN, Alpine CDN, theme
+│       │       ├── head.php           # <head>: Tailwind CDN, Alpine CDN, Lucide CDN, theme
 │       │       ├── sidebar.php        # Navegacion lateral colapsable
-│       │       ├── navbar.php         # Barra superior con menu usuario
+│       │       ├── navbar.php         # Barra superior con dropdown usuario y selector de idioma
 │       │       ├── flash_messages.php # Toasts de notificacion
 │       │       ├── confirm_modal.php  # Modal de confirmacion reutilizable
-│       │       └── pagination.php     # Componente paginacion
+│       │       ├── pagination.php     # Paginacion por pagina
+│       │       ├── remote_pagination.php  # Paginacion cursor/pagina para tablas server-driven
+│       │       ├── filter_panel.php   # Panel de filtros colapsable reutilizable
+│       │       └── table_toolbar.php  # Toolbar de tabla con busqueda y acciones
 │       │
 │       ├── auth/
 │       │   ├── login.php              # Formulario login
@@ -87,35 +103,42 @@ ci4-admin-starter/
 │       │   └── verify_email.php       # Resultado de verificacion
 │       │
 │       ├── dashboard/
-│       │   └── index.php              # Overview con stats cards
+│       │   └── index.php              # Stats cards + archivos recientes + health del API
 │       │
 │       ├── profile/
-│       │   └── index.php              # Ver/editar perfil + cambiar password
-│       │
-│       ├── users/
-│       │   ├── index.php              # Tabla con search/filter/pagination
-│       │   ├── show.php               # Detalle de usuario + historial audit
-│       │   ├── create.php             # Formulario crear usuario
-│       │   └── edit.php               # Formulario editar usuario
+│       │   └── index.php              # Perfil + cambiar password + reenviar verificacion
 │       │
 │       ├── files/
-│       │   └── index.php              # File manager: upload + listado
+│       │   ├── index.php              # File manager: upload drag-and-drop + tabla server-driven
+│       │   └── partials/              # filters.php, list_section.php
+│       │
+│       ├── users/
+│       │   ├── index.php, show.php, create.php, edit.php
+│       │   └── partials/              # filters.php, toolbar_actions.php
 │       │
 │       ├── audit/
-│       │   ├── index.php              # Tabla logs con filtros
-│       │   └── show.php               # Detalle con diff old/new values
+│       │   ├── index.php, show.php
+│       │   └── partials/              # filters.php
 │       │
-│       └── metrics/
-│           └── index.php              # Dashboard metricas con graficos
+│       ├── api_keys/
+│       │   ├── index.php, show.php, create.php, edit.php
+│       │   └── partials/              # filters.php, toolbar_actions.php
+│       │
+│       ├── metrics/
+│       │   ├── index.php
+│       │   └── partials/              # filters.php
+│       │
+│       └── errors/
+│           └── html/                  # error_404.php, error_400.php, production.php
 │
 ├── public/
 │   └── assets/js/
 │       └── app.js                     # Alpine.js stores: toasts, confirm modal
 │
-└── .env                               # API_BASE_URL, session config
+└── .env                               # apiClient.baseUrl, apiClient.appKey (opcional), session config
 ```
 
-**Total: ~50 archivos nuevos**
+**Total: ~80 archivos implementados**
 
 ---
 
@@ -135,6 +158,8 @@ ApiClient
 ├── request(method, path, options, authenticated)  # Core: auto-refresh en 401
 └── attemptTokenRefresh()     # POST /api/v1/auth/refresh → actualiza session
 ```
+
+> El ApiClient tambien inyecta el header `X-App-Key` en cada request (publico y autenticado) cuando `apiClient.appKey` esta configurado en `.env`. Cuando esta ausente, el header no se envia y aplican los limites de rate por IP (60 req/min). Con una key valida, el limite sube a 600 req/min.
 
 **Flujo auto-refresh:**
 1. Request falla con 401
@@ -163,6 +188,9 @@ $session->set('user', $data['user']); // {id, email, first_name, last_name, avat
 ## Rutas
 
 ```php
+// --- Utilitarias ---
+GET  /language/set             → LanguageController::set
+
 // --- Publicas ---
 GET  /login                    → AuthController::login
 POST /login                    → AuthController::attemptLogin
@@ -182,12 +210,14 @@ POST /profile                  → ProfileController::update
 POST /profile/change-password  → ProfileController::changePassword
 POST /profile/resend-verification → ProfileController::resendVerification
 GET  /files                    → FileController::index
+GET  /files/data               → FileController::data       // JSON para tabla server-driven
 POST /files/upload             → FileController::upload
 GET  /files/{id}/download      → FileController::download
 POST /files/{id}/delete        → FileController::delete
 
 // --- Admin (filter: auth + admin) ---
 GET  /admin/users              → UserController::index
+GET  /admin/users/data         → UserController::data       // JSON para tabla server-driven
 GET  /admin/users/create       → UserController::create
 POST /admin/users              → UserController::store
 GET  /admin/users/{id}         → UserController::show
@@ -196,65 +226,84 @@ POST /admin/users/{id}         → UserController::update
 POST /admin/users/{id}/delete  → UserController::delete
 POST /admin/users/{id}/approve → UserController::approve
 GET  /admin/audit              → AuditController::index
+GET  /admin/audit/data         → AuditController::data      // JSON para tabla server-driven
 GET  /admin/audit/{id}         → AuditController::show
 GET  /admin/audit/entity/{type}/{id} → AuditController::byEntity
+GET  /admin/api-keys           → ApiKeyController::index
+GET  /admin/api-keys/data      → ApiKeyController::data     // JSON para tabla server-driven
+GET  /admin/api-keys/create    → ApiKeyController::create
+POST /admin/api-keys           → ApiKeyController::store
+GET  /admin/api-keys/{id}      → ApiKeyController::show
+GET  /admin/api-keys/{id}/edit → ApiKeyController::edit
+POST /admin/api-keys/{id}      → ApiKeyController::update
+POST /admin/api-keys/{id}/delete → ApiKeyController::delete
 GET  /admin/metrics            → MetricsController::index
 ```
 
 ---
 
-## Fases de Implementacion (Core - Alcance Inicial)
+## Estado de Implementacion
 
-### Fase 1: Setup del proyecto e infraestructura core
-1. `composer create-project codeigniter4/appstarter ci4-admin-starter` en `/Users/davidcardenas/Developer/PHP/`
-2. Configurar `.env` (API_BASE_URL=http://localhost:8080, session, app.baseURL=http://localhost:8081)
-3. Crear `app/Config/ApiClient.php` - configuracion del cliente HTTP
-4. Crear `app/Libraries/ApiClient.php` - cliente HTTP con auto-refresh JWT
-5. Crear `app/Controllers/BaseWebController.php` - controller base
-6. Crear `app/Filters/AuthFilter.php` y `app/Filters/AdminFilter.php`
-7. Modificar `app/Config/Filters.php` - registrar filtros
-8. Crear `app/Helpers/ui_helper.php` - helpers de vista
-9. Modificar `app/Config/Autoload.php` - cargar ui_helper
+Todas las fases fueron completadas. El siguiente desglose conserva el historial de lo que se implemento en cada fase.
 
-### Fase 2: Capa de servicios API (solo los necesarios para core)
-10. Crear `app/Services/AuthApiService.php`
-11. Crear `app/Services/FileApiService.php`
+### ✅ Fase 1: Infraestructura core
+- `app/Config/ApiClient.php` — configuracion del cliente HTTP (baseUrl, timeout, apiPrefix, appKey)
+- `app/Libraries/ApiClient.php` — HTTP client con auto-refresh JWT y header `X-App-Key`
+- `app/Libraries/ApiClientInterface.php` — contrato de metodos
+- `app/Controllers/BaseWebController.php` — base con ApiClient, viewData, table utils, flash helpers
+- `app/Filters/AuthFilter.php`, `AdminFilter.php`, `LocaleFilter.php` — filtros de acceso e idioma
+- `app/Config/Filters.php` — registro de filtros
+- `app/Config/Services.php` — factory de servicios compartidos
+- `app/Helpers/ui_helper.php`, `form_helper.php` — helpers de vista y formulario
+- `app/Config/Autoload.php` — carga global de helpers
+- `.env` — `apiClient.baseUrl`, `apiClient.appKey` (opcional), session config
 
-### Fase 3: Layouts y componentes compartidos
-12. Crear `app/Views/layouts/partials/head.php` - Tailwind CDN + Alpine CDN + tema
-13. Crear `app/Views/layouts/auth.php` - layout publico (card centrado en gradiente)
-14. Crear `app/Views/layouts/app.php` - layout autenticado (sidebar + navbar)
-15. Crear `app/Views/layouts/partials/sidebar.php` - navegacion lateral colapsable
-16. Crear `app/Views/layouts/partials/navbar.php` - barra superior con dropdown usuario
-17. Crear `app/Views/layouts/partials/flash_messages.php` - toasts notificacion
-18. Crear `app/Views/layouts/partials/confirm_modal.php` - modal confirmacion
-19. Crear `app/Views/layouts/partials/pagination.php` - componente paginacion
-20. Crear `public/assets/js/app.js` - Alpine stores (toasts, confirm)
+### ✅ Fase 2: Capa de servicios API
+- `app/Services/BaseApiService.php` — clase base con inyeccion de ApiClientInterface
+- `app/Services/AuthApiService.php`, `FileApiService.php`, `UserApiService.php`
+- `app/Services/AuditApiService.php`, `ApiKeyApiService.php`
+- `app/Services/MetricsApiService.php` (con fallback `/metrics/timeseries` → `/metrics`)
+- `app/Services/HealthApiService.php` (estados up/degraded/down con latencia)
 
-### Fase 4: Autenticacion (flujo completo)
-21. Crear `app/Controllers/AuthController.php` - login, register, forgot/reset, verify, logout
-22. Crear `app/Views/auth/login.php` - email + password + links
-23. Crear `app/Views/auth/register.php` - con indicador fuerza password (Alpine.js)
-24. Crear `app/Views/auth/forgot_password.php` - email input
-25. Crear `app/Views/auth/reset_password.php` - nuevo password con token
-26. Crear `app/Views/auth/verify_email.php` - resultado verificacion
-27. Configurar `app/Config/Routes.php` - todas las rutas
+### ✅ Fase 3: Layouts y componentes compartidos
+- `app/Views/layouts/partials/head.php` — Tailwind CDN + Alpine CDN + Lucide CDN + tema
+- `app/Views/layouts/auth.php`, `app.php` — layouts publico y autenticado
+- Partials: `sidebar.php`, `navbar.php` (con selector de idioma), `flash_messages.php`
+- Partials: `confirm_modal.php`, `pagination.php`, `remote_pagination.php`
+- Partials: `filter_panel.php`, `table_toolbar.php`
+- `public/assets/js/app.js` — Alpine stores (toasts, confirm modal)
+- `app/Language/en/` y `app/Language/es/` — 10 archivos de idioma cada uno
 
-### Fase 5: Dashboard, perfil y archivos
-28. Crear `app/Controllers/DashboardController.php`
-29. Crear `app/Views/dashboard/index.php` - welcome card, stats, acciones rapidas
-30. Crear `app/Controllers/ProfileController.php` - ver/editar + cambiar password
-31. Crear `app/Views/profile/index.php` - perfil + cambiar password + verificacion email
-32. Crear `app/Controllers/FileController.php` - upload, list, download, delete
-33. Crear `app/Views/files/index.php` - drag-and-drop upload + grid archivos
+### ✅ Fase 4: Autenticacion
+- `app/Controllers/AuthController.php` — login, register, forgot/reset password, verify email, logout
+- `app/Controllers/LanguageController.php` — cambio de idioma via session
+- Vistas: `auth/login.php`, `register.php`, `forgot_password.php`, `reset_password.php`, `verify_email.php`
+- `app/Config/Routes.php` — todas las rutas configuradas
 
-**Total fase core: ~33 archivos nuevos/modificados**
+### ✅ Fase 5: Dashboard, perfil y archivos
+- `app/Controllers/DashboardController.php` — stats + health check del API
+- `app/Controllers/ProfileController.php` — perfil, cambiar password, reenviar verificacion
+- `app/Controllers/FileController.php` — upload, list (data endpoint), download, delete
+- Vistas correspondientes con tablas server-driven y filtros
 
-### Fases Futuras (no incluidas en este alcance)
-- Fase 6: Gestion de usuarios admin (UserController + 4 vistas)
-- Fase 7: Auditoria admin (AuditController + 2 vistas)
-- Fase 8: Metricas admin (MetricsController + 1 vista)
-- Fase 9: Error pages y polish final
+### ✅ Fase 6: Gestion de usuarios admin
+- `app/Controllers/UserController.php` — CRUD completo + aprobar usuarios
+- Flujo invitation-based (sin campo password en create/update)
+- Vistas: `users/index.php`, `show.php`, `create.php`, `edit.php` + partials
+
+### ✅ Fase 7: Auditoria admin
+- `app/Controllers/AuditController.php` — listado, detalle, por entidad
+- Vistas: `audit/index.php`, `show.php` + partials
+
+### ✅ Fase 8: API Keys y Metricas admin
+- `app/Controllers/ApiKeyController.php` — CRUD completo; muestra key generada una sola vez via session flash
+- `app/Controllers/MetricsController.php` — summary + timeseries con resolucion de rango de fechas
+- Vistas: `api_keys/` (4 vistas + partials), `metrics/index.php` + partials
+
+### ✅ Fase 9: Error pages y polish
+- `app/Views/errors/html/error_404.php`, `error_400.php`, `production.php`
+- Soporte i18n completo en todas las vistas
+- Cobertura de tests: unit (Libraries, Filters, Helpers, Services, Views) + feature (controller flows, filter enforcement)
 
 ---
 
@@ -353,14 +402,16 @@ tailwind.config = {
 ## Verificacion
 
 1. Iniciar el API: `cd ci4-api-starter && php spark serve` (port 8080)
-2. Iniciar el frontend: `cd ci4-admin-starter && php spark serve --port 8081`
-3. Probar flujos:
+2. Iniciar el frontend: `cd ci4-admin-starter && php spark serve --port 8082`
+3. (Opcional) Configurar API Key en `.env`: `apiClient.appKey = apk_...`
+4. Probar flujos:
    - Registrar nuevo usuario en /register
    - Verificar que muestra estado "pending approval"
    - Login con credenciales validas/invalidas
    - Navegar dashboard, perfil, archivos
-   - (Admin) Aprobar usuarios, CRUD usuarios, ver audit, metricas
+   - (Admin) Aprobar usuarios, CRUD usuarios, ver audit, metricas, gestionar API keys
    - Forgot password + reset password flow
    - Upload/download/delete archivos
    - Verificar auto-refresh de tokens (esperar >1hr o reducir TTL)
    - Verificar que rutas admin son inaccesibles para usuarios normales
+5. Ejecutar tests: `vendor/bin/phpunit`

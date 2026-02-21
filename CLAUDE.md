@@ -8,19 +8,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Architecture flow:**
 ```
-Browser → CI4 Admin Starter (port 8081) → ci4-api-starter API (port 8080)
+Browser → CI4 Admin Starter (port 8082) → ci4-api-starter API (port 8080)
 ```
 
-**Current state:** Fresh CodeIgniter 4 scaffold. Only the default `/` route is active. Core modules (auth, dashboard, profile, files, admin) are NOT yet implemented. See `docs/plan/PLAN-CI4-CLIENT.md` for the complete implementation roadmap.
+**Current state:** Fully implemented. All modules are active: authentication, dashboard, profile, file management, and admin panel (users, audit logs, API keys, metrics). See `docs/plan/PLAN-CI4-CLIENT.md` for the original implementation roadmap.
 
 ## Technology Stack
 
 - **Framework:** CodeIgniter 4 (PHP 8.1+)
 - **Rendering:** Server-side PHP views
 - **Styling:** Tailwind CSS (CDN-based)
+- **Icons:** Lucide Icons (CDN-based)
 - **Interactivity:** Alpine.js (CDN-based)
 - **Authentication:** JWT tokens stored in PHP sessions (server-side only)
 - **HTTP Client:** Custom ApiClient library with automatic token refresh
+- **i18n:** CodeIgniter 4 Language files (`en` / `es`)
 
 ## Development Commands
 
@@ -34,8 +36,9 @@ cp env .env
 
 # Edit .env to configure:
 # - CI_ENVIRONMENT = development
-# - app.baseURL = 'http://localhost:8081/'
-# - API_BASE_URL (when ApiClient is implemented)
+# - app.baseURL = 'http://localhost:8082/'
+# - apiClient.baseUrl = 'http://localhost:8080'
+# - apiClient.appKey = apk_... (optional, see API App Key section)
 ```
 
 ### Running the Application
@@ -44,10 +47,10 @@ cp env .env
 php spark serve
 
 # Start on specific port (recommended for this project)
-php spark serve --port 8081
+php spark serve --port 8082
 ```
 
-Application will be available at: `http://localhost:8081`
+Application will be available at: `http://localhost:8082`
 
 ### Testing
 ```bash
@@ -59,6 +62,7 @@ vendor/bin/phpunit --colors --coverage-text=tests/coverage.txt --coverage-html=t
 
 # Run specific test directory
 vendor/bin/phpunit tests/unit
+vendor/bin/phpunit tests/feature
 
 # Run with memory limit (for large test suites)
 vendor/bin/phpunit -d memory_limit=1024m
@@ -83,6 +87,7 @@ The `app/Libraries/ApiClient.php` class is the heart of all API communication. I
 - **Public endpoints:** `publicGet()`, `publicPost()` (no authentication)
 - **Automatic token refresh:** On 401 responses, attempts to refresh JWT tokens transparently
 - **Session-based token storage:** Tokens never exposed to browser
+- **App identification:** Sends `X-App-Key` header on every request when `apiClient.appKey` is configured (raises API rate limit from 60 to 600 req/min)
 
 **Auto-refresh flow:**
 1. API request returns 401 (token expired)
@@ -102,51 +107,77 @@ $session->set('user', $data['user']); // {id, email, first_name, last_name, avat
 
 **Filters:**
 - `AuthFilter` (`app/Filters/AuthFilter.php`): Verifies presence of `access_token` in session, redirects to `/login` if missing
-- `AdminFilter` (`app/Filters/AdminFilter.php`): Checks `session('user.role') === 'admin'`, returns 403 if not admin
+- `AdminFilter` (`app/Filters/AdminFilter.php`): Checks `session('user.role') === 'admin'`, redirects to `/dashboard` with error flash if not admin
+- `LocaleFilter` (`app/Filters/LocaleFilter.php`): Reads `session('locale')`, validates against supported locales, sets the language for the current request
 
-Both filters are registered in `app/Config/Filters.php` and applied via route configuration.
+All filters are registered in `app/Config/Filters.php`. `csrf` and `locale` run globally on every request; `auth` and `admin` are applied per route group.
 
 ### Controllers & Base Classes
 
 - **BaseWebController** (`app/Controllers/BaseWebController.php`): Base for all web controllers
-  - Provides access to ApiClient instance
-  - Common view data setup
-  - Helper method loading
+  - Provides access to ApiClient instance (`$this->apiClient`)
+  - Common view data setup (`appName`, `user`, `currentLocale`, `supportedLocales`)
+  - Render helpers: `render(view, data, layout)`, `renderAuth(view, data)`
+  - Flash redirect helpers: `withSuccess()`, `withError()`, `withFieldErrors()`
+  - Table utilities: `resolveTableState()`, `buildTableApiParams()`, `resolveTablePagination()`
+  - API response utilities: `safeApiCall()`, `extractItems()`, `extractData()`, `firstMessage()`
+  - Query utilities: `resolveDateRange()`, `positiveIntFromQuery()`
 
 All feature controllers extend BaseWebController, not the framework's BaseController.
 
 ### Service Layer Pattern
 
-API communication is abstracted into service classes in `app/Services/`:
-- `AuthApiService.php` - Authentication endpoints
-- `UserApiService.php` - User management endpoints
-- `FileApiService.php` - File operations endpoints
-- `AuditApiService.php` - Audit log endpoints
-- `MetricsApiService.php` - Metrics endpoints
+API communication is abstracted into service classes in `app/Services/`. All services extend `BaseApiService`, which injects `ApiClientInterface` via its constructor.
 
-Each service uses the ApiClient library internally and provides domain-specific methods.
+- `AuthApiService.php` — Authentication endpoints (login, register, forgot/reset password, verify email, profile update, me, resend verification)
+- `UserApiService.php` — User management (list, get, create, update, delete, approve)
+- `FileApiService.php` — File operations (list, upload, getDownload, delete)
+- `AuditApiService.php` — Audit log endpoints (list, get, byEntity)
+- `ApiKeyApiService.php` — Admin API key management (list, get, create, update, delete)
+- `MetricsApiService.php` — Metrics (summary, timeseries with `/metrics/timeseries` → `/metrics` fallback)
+- `HealthApiService.php` — API health check across configured paths; returns `up` / `degraded` / `down` state with latency
+
+Services are registered in `app/Config/Services.php` as shared singletons. Access via `service('authApiService')`, `service('apiClient')`, etc.
+
+### Language / i18n
+
+The app supports English (`en`) and Spanish (`es`). Language files live in `app/Language/{en,es}/`:
+`App.php`, `Auth.php`, `Dashboard.php`, `Files.php`, `Users.php`, `Audit.php`, `ApiKeys.php`, `Metrics.php`, `Profile.php`, `Validation.php`
+
+`LocaleFilter` sets the locale per-request from `session('locale')`. Users switch language via `GET /language/set?locale=en` (`LanguageController::set`).
 
 ### View Organization
 
 ```
 app/Views/
 ├── layouts/
-│   ├── app.php              # Authenticated layout (sidebar + navbar)
-│   ├── auth.php             # Public layout (centered card)
+│   ├── app.php                    # Authenticated layout (sidebar + navbar)
+│   ├── auth.php                   # Public layout (centered card)
 │   └── partials/
-│       ├── head.php         # Common <head>: Tailwind CDN, Alpine CDN, theme config
-│       ├── sidebar.php      # Collapsible navigation sidebar
-│       ├── navbar.php       # Top bar with user dropdown
-│       ├── flash_messages.php  # Toast notifications
-│       ├── confirm_modal.php   # Reusable confirmation modal
-│       └── pagination.php      # Pagination component
-├── auth/                    # Login, register, password reset, email verification
-├── dashboard/               # Dashboard views
-├── profile/                 # User profile management
-├── files/                   # File manager interface
-├── users/                   # Admin: user CRUD
-├── audit/                   # Admin: audit logs
-└── metrics/                 # Admin: metrics dashboard
+│       ├── head.php               # Common <head>: Tailwind CDN, Alpine CDN, Lucide CDN, theme config
+│       ├── sidebar.php            # Collapsible navigation sidebar
+│       ├── navbar.php             # Top bar with user dropdown and language switcher
+│       ├── flash_messages.php     # Toast notifications
+│       ├── confirm_modal.php      # Reusable confirmation modal
+│       ├── pagination.php         # Page-based pagination component
+│       ├── remote_pagination.php  # Cursor/page pagination for server-driven tables
+│       ├── filter_panel.php       # Reusable collapsible filter panel wrapper
+│       └── table_toolbar.php      # Table toolbar with search and action buttons
+├── auth/                          # Login, register, password reset, email verification
+├── dashboard/                     # Stats cards, recent files, API health indicator
+├── profile/                       # Profile form, change password, resend verification
+├── files/                         # File manager: drag-and-drop upload + server-driven table
+│   └── partials/                  # filters.php, list_section.php
+├── users/                         # Admin: user CRUD (index, show, create, edit)
+│   └── partials/                  # filters.php, toolbar_actions.php
+├── audit/                         # Admin: audit log (index, show)
+│   └── partials/                  # filters.php
+├── api_keys/                      # Admin: API key management (index, show, create, edit)
+│   └── partials/                  # filters.php, toolbar_actions.php
+├── metrics/                       # Admin: metrics dashboard
+│   └── partials/                  # filters.php
+└── errors/
+    └── html/                      # Custom 404, 400, 500 error pages
 ```
 
 ### UI/UX Design System
@@ -183,39 +214,53 @@ app/Views/
 
 ## Configuration Files
 
-- `app/Config/Routes.php` - All web routes (public, authenticated, admin)
-- `app/Config/Filters.php` - Filter registration and aliases
-- `app/Config/Autoload.php` - Helper auto-loading (e.g., `ui_helper`)
-- `app/Config/ApiClient.php` - API base URL, timeouts, HTTP client settings (when implemented)
+- `app/Config/Routes.php` — All web routes (public, authenticated, admin)
+- `app/Config/Filters.php` — Filter registration and aliases (`auth`, `admin`, `locale`)
+- `app/Config/Autoload.php` — Helper auto-loading (`ui`, `form` loaded globally)
+- `app/Config/ApiClient.php` — API base URL, timeouts, API prefix, app name, `appKey` (reads `API_APP_KEY` env var)
+- `app/Config/Services.php` — Shared service factory for `apiClient`, `authApiService`, `fileApiService`, `userApiService`, `auditApiService`, `apiKeyApiService`, `metricsApiService`, `healthApiService`
 
-## Planned Implementation Phases
+## API App Key (`X-App-Key`)
 
-See `docs/plan/PLAN-CI4-CLIENT.md` for detailed breakdown. Summary:
+The API supports an optional `X-App-Key` header that identifies the admin app as a trusted client and raises the rate limit from 60 to 600 req/min. Configure it in `.env`:
 
-**Core phases (initial scope):**
-1. Infrastructure core: ApiClient, filters, base controller, helpers
-2. API service layer: AuthApiService, FileApiService
-3. Layouts and shared components
-4. Authentication module: login, register, password reset, email verification
-5. Dashboard, profile, and file management
+```dotenv
+# Create a key via the admin panel at /admin/api-keys
+# or via POST /api/v1/api-keys (requires admin JWT).
+# Omit to use IP-based rate limiting (60 req/min) — safe default.
+# apiClient.appKey = apk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
 
-**Future phases:**
-6. Admin: User management CRUD
-7. Admin: Audit log viewer
-8. Admin: Metrics dashboard
-9. Error pages and polish
+When present, `ApiClient` injects `X-App-Key` on every request (public and authenticated). When absent, the header is not sent. Configuring an invalid key causes every request to return `401` from the API — a misconfiguration that is caught immediately.
+
+## Implemented Modules
+
+All modules are fully implemented:
+
+| Module | Controller | Key Routes |
+|--------|-----------|------------|
+| Auth | `AuthController` | `GET/POST /login`, `/register`, `/forgot-password`, `/reset-password`, `GET /verify-email`, `/logout` |
+| Dashboard | `DashboardController` | `GET /dashboard` |
+| Profile | `ProfileController` | `GET/POST /profile`, `POST /profile/change-password`, `POST /profile/resend-verification` |
+| Files | `FileController` | `GET /files`, `/files/data`, `POST /files/upload`, `GET /files/{id}/download`, `POST /files/{id}/delete` |
+| Users (admin) | `UserController` | Full CRUD + approve under `/admin/users` |
+| Audit (admin) | `AuditController` | `GET /admin/audit`, `/admin/audit/{id}`, `/admin/audit/entity/{type}/{id}` |
+| API Keys (admin) | `ApiKeyController` | Full CRUD under `/admin/api-keys` |
+| Metrics (admin) | `MetricsController` | `GET /admin/metrics` |
+| Language | `LanguageController` | `GET /language/set` |
 
 ## File Locations & Patterns
 
 - Controllers: `app/Controllers/` (extend BaseWebController)
-- Models: `app/Models/` (not heavily used; API is external)
+- Models: `app/Models/` (not used; all data comes from external API)
 - Views: `app/Views/` (organized by feature module)
-- Libraries: `app/Libraries/` (e.g., ApiClient)
-- Services: `app/Services/` (API communication abstraction)
-- Filters: `app/Filters/` (auth, admin, etc.)
-- Helpers: `app/Helpers/` (e.g., `ui_helper.php` for view utilities)
-- Config: `app/Config/`
-- Tests: `tests/` (unit, database, session subdirectories)
+- Libraries: `app/Libraries/` (`ApiClient.php`, `ApiClientInterface.php`)
+- Services: `app/Services/` (`BaseApiService.php` + one file per domain)
+- Filters: `app/Filters/` (`AuthFilter`, `AdminFilter`, `LocaleFilter`)
+- Helpers: `app/Helpers/` (`ui_helper.php` for view utilities, `form_helper.php` for field error rendering)
+- Language: `app/Language/en/` and `app/Language/es/`
+- Config: `app/Config/` (`Routes.php`, `Filters.php`, `Autoload.php`, `ApiClient.php`, `Services.php`)
+- Tests: `tests/unit/` (libraries, filters, helpers, services, views) and `tests/feature/` (controller flows)
 
 ## Security Considerations
 
@@ -223,22 +268,32 @@ See `docs/plan/PLAN-CI4-CLIENT.md` for detailed breakdown. Summary:
 - CSRF protection enabled by default in CodeIgniter 4
 - Input validation required on all form submissions
 - Admin routes MUST use both `auth` and `admin` filters
-- File uploads require validation (type, size, etc.)
+- File uploads validated by size (max 10 MB) before being passed to API
+- API app key stored only in `.env`; never exposed to client-side code
 - Never commit `.env` files or expose API URLs/secrets in client-side code
 
 ## External API Reference
 
 This app consumes **ci4-api-starter** (https://github.com/dcardenasl/ci4-api-starter) which provides:
-- 35 REST API endpoints
+- REST API endpoints for auth, users, files, audit logs, metrics, and API keys
 - JWT-based authentication (access + refresh tokens)
-- User management, file storage, audit logs, metrics
+- Optional `X-App-Key` header for app-level rate limiting (600 req/min vs 60 req/min)
 - Runs on `http://localhost:8080` by default
 
 ## Testing Strategy
 
-- Unit tests in `tests/unit/`
-- Database tests in `tests/database/` (use migrations/seeds if needed)
-- Session tests in `tests/session/`
+- **Unit tests** in `tests/unit/`:
+  - `Libraries/ApiClientTest.php` — interface contract and config defaults
+  - `Filters/AuthFilterTest.php` — redirect when no token / allow when token present
+  - `Helpers/UiHelperTest.php` — `has_active_filters()` logic
+  - `Services/AuthApiServiceTest.php`, `ApiKeyApiServiceTest.php`, `HealthApiServiceTest.php`, `MetricsApiServiceTest.php`
+  - `Views/ErrorViewsSmokeTest.php` — 404/500 error page rendering
+- **Feature tests** in `tests/feature/`:
+  - `FileUploadFlowTest.php` — upload, download, delete, auth protection, data endpoint
+  - `UserCreationInvitationFlowTest.php` — invitation-based create/update (no password field)
+  - `ApiKeyFlowTest.php` — admin CRUD flow, auth/admin filter enforcement
+  - `ApiKeyFiltersFallbackTest.php`, `AuditFiltersFallbackTest.php`, `FileFiltersFallbackTest.php`, `UserFiltersFallbackTest.php` — table filter/sort/pagination forwarding
+  - `ErrorPagesTest.php` — 404 (guest and authenticated) and 500 page rendering
 - Coverage reports generated in `tests/coverage/`
 - Test configuration: `phpunit.xml.dist` (copy to `phpunit.xml` to customize)
 
@@ -249,10 +304,12 @@ This app consumes **ci4-api-starter** (https://github.com/dcardenasl/ci4-api-sta
 - Session configuration required for JWT token storage
 - CORS may need configuration if API and frontend are on different origins
 - Ensure both ci4-api-starter and ci4-admin-starter are running on different ports during development
+- Configuring an invalid `apiClient.appKey` causes every API request to return `401` — omit the key rather than use a wrong value
 
 ## References
 
 - [CodeIgniter 4 User Guide](https://codeigniter.com/user_guide/)
 - [CI4 API Starter Repository](https://github.com/dcardenasl/ci4-api-starter)
 - Implementation Plan: `docs/plan/PLAN-CI4-CLIENT.md`
+- API Compatibility Contract: `docs/COMPATIBILIDAD-API.md`
 - Testing Guide: `tests/README.md`
