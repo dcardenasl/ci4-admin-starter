@@ -23,6 +23,7 @@ class ProfileController extends BaseWebController
 
     public function index(): string
     {
+        $this->refreshUserSession();
         $user = session('user') ?? [];
         $isAdmin = ($user['role'] ?? null) === 'admin';
 
