@@ -22,14 +22,5 @@
             <option value="user" <?= $role === 'user' ? 'selected' : '' ?>><?= lang('Users.userRole') ?></option>
         </select>
     </div>
-    <div>
-        <label class="<?= esc(filter_label_class()) ?>"><?= lang('App.perPage') ?></label>
-        <?php $limit = (string) (request()->getGet('limit') ?: '25'); ?>
-        <select name="limit" class="<?= esc(filter_input_class()) ?>">
-            <option value="10" <?= $limit === '10' ? 'selected' : '' ?>>10</option>
-            <option value="25" <?= $limit === '25' ? 'selected' : '' ?>>25</option>
-            <option value="50" <?= $limit === '50' ? 'selected' : '' ?>>50</option>
-            <option value="100" <?= $limit === '100' ? 'selected' : '' ?>>100</option>
-        </select>
-    </div>
+    <?= view('layouts/partials/filter_limit') ?>
 </div>
