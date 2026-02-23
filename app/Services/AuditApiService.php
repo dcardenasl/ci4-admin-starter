@@ -2,16 +2,11 @@
 
 namespace App\Services;
 
-class AuditApiService extends BaseApiService
+class AuditApiService extends ResourceApiService
 {
-    public function list(array $filters = []): array
+    protected function resourcePath(): string
     {
-        return $this->apiClient->get('/audit', $filters);
-    }
-
-    public function get(int|string $id): array
-    {
-        return $this->apiClient->get('/audit/' . $id);
+        return '/audit';
     }
 
     public function byEntity(string $type, int|string $id): array

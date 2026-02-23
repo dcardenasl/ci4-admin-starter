@@ -4,11 +4,11 @@ namespace App\Services;
 
 use RuntimeException;
 
-class FileApiService extends BaseApiService
+class FileApiService extends ResourceApiService
 {
-    public function list(array $filters = []): array
+    protected function resourcePath(): string
     {
-        return $this->apiClient->get('/files', $filters);
+        return '/files';
     }
 
     public function upload(string $inputName, string $filePath, array $meta = []): array
@@ -22,11 +22,6 @@ class FileApiService extends BaseApiService
 
     public function getDownload(int|string $id): array
     {
-        return $this->apiClient->get('/files/' . $id);
-    }
-
-    public function delete(int|string $id): array
-    {
-        return $this->apiClient->delete('/files/' . $id);
+        return $this->get($id);
     }
 }
