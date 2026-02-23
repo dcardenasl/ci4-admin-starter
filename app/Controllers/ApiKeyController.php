@@ -27,32 +27,18 @@ class ApiKeyController extends BaseWebController
 
     public function data(): ResponseInterface
     {
-        $tableState = $this->resolveTableState(
+        return $this->tableDataResponse(
             ['name', 'is_active'],
             ['id', 'name', 'is_active', 'created_at'],
+            fn(array $params) => $this->apiKeyService->list($params),
         );
-
-        $response = $this->safeApiCall(fn() => $this->apiKeyService->list($this->buildTableApiParams($tableState)));
-
-        return $this->passthroughApiJsonResponse($response);
     }
 
     public function show(string $id): string
     {
         $response = $this->safeApiCall(fn() => $this->apiKeyService->get($id));
 
-        if (! $response['ok']) {
-            return $this->render('api_keys/show', [
-                'title'  => lang('ApiKeys.details'),
-                'apiKey' => [],
-                'error'  => $this->firstMessage($response, lang('ApiKeys.notFound')),
-            ]);
-        }
-
-        return $this->render('api_keys/show', [
-            'title'  => lang('ApiKeys.details'),
-            'apiKey' => $this->extractData($response),
-        ]);
+        return $this->renderResourceShow('api_keys/show', lang('ApiKeys.details'), 'apiKey', $response, lang('ApiKeys.notFound'));
     }
 
     public function create(): string
@@ -65,20 +51,14 @@ class ApiKeyController extends BaseWebController
     public function store(): RedirectResponse
     {
         if (! $this->validate($this->rulesForCreate())) {
-            return redirect()->back()->withInput()->with('fieldErrors', $this->validator->getErrors());
+            return $this->failValidation();
         }
 
         $payload = $this->payloadFromRequest();
         $response = $this->safeApiCall(fn() => $this->apiKeyService->create($payload));
 
         if (! $response['ok']) {
-            $fieldErrors = $this->getFieldErrors($response);
-
-            if (! empty($fieldErrors)) {
-                return $this->withFieldErrors($fieldErrors);
-            }
-
-            return redirect()->back()->withInput()->with('error', $this->firstMessage($response, lang('ApiKeys.createFailed')));
+            return $this->failApi($response, lang('ApiKeys.createFailed'));
         }
 
         $created = $this->extractData($response);
@@ -112,7 +92,7 @@ class ApiKeyController extends BaseWebController
     public function update(string $id): RedirectResponse
     {
         if (! $this->validate($this->rulesForUpdate())) {
-            return redirect()->back()->withInput()->with('fieldErrors', $this->validator->getErrors());
+            return $this->failValidation();
         }
 
         $payload = $this->payloadFromRequest();
@@ -124,13 +104,7 @@ class ApiKeyController extends BaseWebController
         $response = $this->safeApiCall(fn() => $this->apiKeyService->update($id, $payload));
 
         if (! $response['ok']) {
-            $fieldErrors = $this->getFieldErrors($response);
-
-            if (! empty($fieldErrors)) {
-                return $this->withFieldErrors($fieldErrors);
-            }
-
-            return redirect()->back()->withInput()->with('error', $this->firstMessage($response, lang('ApiKeys.updateFailed')));
+            return $this->failApi($response, lang('ApiKeys.updateFailed'));
         }
 
         return redirect()->to(site_url('admin/api-keys/' . rawurlencode($id)))->with('success', lang('ApiKeys.updateSuccess'));
@@ -141,7 +115,7 @@ class ApiKeyController extends BaseWebController
         $response = $this->safeApiCall(fn() => $this->apiKeyService->delete($id));
 
         if (! $response['ok']) {
-            return redirect()->to(site_url('admin/api-keys'))->with('error', $this->firstMessage($response, lang('ApiKeys.deleteFailed')));
+            return $this->failApi($response, lang('ApiKeys.deleteFailed'), site_url('admin/api-keys'), false);
         }
 
         return redirect()->to(site_url('admin/api-keys'))->with('success', lang('ApiKeys.deleteSuccess'));

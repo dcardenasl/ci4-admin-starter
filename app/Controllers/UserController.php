@@ -27,32 +27,18 @@ class UserController extends BaseWebController
 
     public function data(): ResponseInterface
     {
-        $tableState = $this->resolveTableState(
+        return $this->tableDataResponse(
             ['status', 'role'],
             ['created_at', 'email', 'role', 'status', 'first_name', 'last_name'],
+            fn(array $params) => $this->userService->list($params),
         );
-
-        $response = $this->safeApiCall(fn() => $this->userService->list($this->buildTableApiParams($tableState)));
-
-        return $this->passthroughApiJsonResponse($response);
     }
 
     public function show(string $id): string
     {
         $response = $this->safeApiCall(fn() => $this->userService->get($id));
 
-        if (! $response['ok']) {
-            return $this->render('users/show', [
-                'title' => lang('Users.details'),
-                'user'  => [],
-                'error' => $this->firstMessage($response, lang('Users.notFound')),
-            ]);
-        }
-
-        return $this->render('users/show', [
-            'title' => lang('Users.details'),
-            'user'  => $this->extractData($response),
-        ]);
+        return $this->renderResourceShow('users/show', lang('Users.details'), 'user', $response, lang('Users.notFound'));
     }
 
     public function create(): string
@@ -70,7 +56,7 @@ class UserController extends BaseWebController
             'email'      => 'required|valid_email',
             'role'       => 'required|in_list[user,admin]',
         ])) {
-            return redirect()->back()->withInput()->with('fieldErrors', $this->validator->getErrors());
+            return $this->failValidation();
         }
 
         $payload = [
@@ -84,13 +70,7 @@ class UserController extends BaseWebController
         $response = $this->safeApiCall(fn() => $this->userService->create($payload));
 
         if (! $response['ok']) {
-            $fieldErrors = $this->getFieldErrors($response);
-
-            if (! empty($fieldErrors)) {
-                return $this->withFieldErrors($fieldErrors);
-            }
-
-            return redirect()->back()->withInput()->with('error', $this->firstMessage($response, lang('Users.createFailed')));
+            return $this->failApi($response, lang('Users.createFailed'));
         }
 
         return redirect()->to(site_url('admin/users'))->with('success', lang('Users.createSuccess'));
@@ -114,7 +94,7 @@ class UserController extends BaseWebController
             'email'      => 'required|valid_email',
             'role'       => 'required|in_list[user,admin]',
         ])) {
-            return redirect()->back()->withInput()->with('fieldErrors', $this->validator->getErrors());
+            return $this->failValidation();
         }
 
         $payload = [
@@ -133,13 +113,7 @@ class UserController extends BaseWebController
         $response = $this->safeApiCall(fn() => $this->userService->update($id, $payload));
 
         if (! $response['ok']) {
-            $fieldErrors = $this->getFieldErrors($response);
-
-            if (! empty($fieldErrors)) {
-                return $this->withFieldErrors($fieldErrors);
-            }
-
-            return redirect()->back()->withInput()->with('error', $this->firstMessage($response, lang('Users.updateFailed')));
+            return $this->failApi($response, lang('Users.updateFailed'));
         }
 
         return redirect()->to(site_url('admin/users/' . $id))->with('success', lang('Users.updateSuccess'));
@@ -150,7 +124,7 @@ class UserController extends BaseWebController
         $response = $this->safeApiCall(fn() => $this->userService->delete($id));
 
         if (! $response['ok']) {
-            return redirect()->to(site_url('admin/users'))->with('error', $this->firstMessage($response, lang('Users.deleteFailed')));
+            return $this->failApi($response, lang('Users.deleteFailed'), site_url('admin/users'), false);
         }
 
         return redirect()->to(site_url('admin/users'))->with('success', lang('Users.deleteSuccess'));
@@ -161,7 +135,7 @@ class UserController extends BaseWebController
         $response = $this->safeApiCall(fn() => $this->userService->approve($id));
 
         if (! $response['ok']) {
-            return redirect()->to(site_url('admin/users/' . $id))->with('error', $this->firstMessage($response, lang('Users.approveFailed')));
+            return $this->failApi($response, lang('Users.approveFailed'), site_url('admin/users/' . $id), false);
         }
 
         return redirect()->to(site_url('admin/users/' . $id))->with('success', lang('Users.approveSuccess'));

@@ -27,31 +27,18 @@ class AuditController extends BaseWebController
 
     public function data(): ResponseInterface
     {
-        $tableState = $this->resolveTableState(
+        return $this->tableDataResponse(
             ['action', 'user_id'],
             ['created_at', 'action', 'user_id', 'entity_type'],
+            fn(array $params) => $this->auditService->list($params),
         );
-        $response = $this->safeApiCall(fn() => $this->auditService->list($this->buildTableApiParams($tableState)));
-
-        return $this->passthroughApiJsonResponse($response);
     }
 
     public function show(string $id): string
     {
         $response = $this->safeApiCall(fn() => $this->auditService->get($id));
 
-        if (! $response['ok']) {
-            return $this->render('audit/show', [
-                'title' => lang('Audit.details'),
-                'log'   => [],
-                'error' => $this->firstMessage($response, lang('Audit.notFound')),
-            ]);
-        }
-
-        return $this->render('audit/show', [
-            'title' => lang('Audit.details'),
-            'log'   => $this->extractData($response),
-        ]);
+        return $this->renderResourceShow('audit/show', lang('Audit.details'), 'log', $response, lang('Audit.notFound'));
     }
 
     public function byEntity(string $type, string $id): RedirectResponse

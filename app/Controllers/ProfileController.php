@@ -47,7 +47,7 @@ class ProfileController extends BaseWebController
             'first_name' => 'required|min_length[2]|max_length[100]',
             'last_name'  => 'required|min_length[2]|max_length[100]',
         ])) {
-            return redirect()->back()->withInput()->with('fieldErrors', $this->validator->getErrors());
+            return $this->failValidation();
         }
 
         $payload = [
@@ -63,13 +63,7 @@ class ProfileController extends BaseWebController
         $response = $this->safeApiCall(fn() => $this->userService->update((string) $userId, $payload));
 
         if (! $response['ok']) {
-            $fieldErrors = $this->getFieldErrors($response);
-
-            if (! empty($fieldErrors)) {
-                return $this->withFieldErrors($fieldErrors);
-            }
-
-            return redirect()->back()->withInput()->with('error', $this->firstMessage($response, lang('Profile.updateFailed')));
+            return $this->failApi($response, lang('Profile.updateFailed'));
         }
 
         $this->refreshUserSession();
@@ -90,7 +84,7 @@ class ProfileController extends BaseWebController
         ));
 
         if (! $response['ok']) {
-            return redirect()->to(site_url('profile'))->with('error', $this->firstMessage($response, lang('Profile.passwordResetFailed')));
+            return $this->failApi($response, lang('Profile.passwordResetFailed'), site_url('profile'), false);
         }
 
         return redirect()->to(site_url('profile'))->with('success', lang('Profile.passwordResetSent'));
@@ -103,7 +97,7 @@ class ProfileController extends BaseWebController
         ]));
 
         if (! $response['ok']) {
-            return redirect()->to(site_url('profile'))->with('error', $this->firstMessage($response, lang('Profile.resendFailed')));
+            return $this->failApi($response, lang('Profile.resendFailed'), site_url('profile'), false);
         }
 
         return redirect()->to(site_url('profile'))->with('success', lang('Profile.resendSuccess'));

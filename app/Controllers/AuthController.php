@@ -36,7 +36,7 @@ class AuthController extends BaseWebController
             'email'    => 'required|valid_email',
             'password' => 'required|min_length[6]',
         ])) {
-            return redirect()->back()->withInput()->with('fieldErrors', $this->validator->getErrors());
+            return $this->failValidation();
         }
 
         $payload = [
@@ -47,14 +47,7 @@ class AuthController extends BaseWebController
         $response = $this->safeApiCall(fn() => $this->authService->login($payload));
 
         if (! $response['ok']) {
-            $formFields = ['email', 'password'];
-            $fieldErrors = array_intersect_key($this->getFieldErrors($response), array_flip($formFields));
-
-            if (! empty($fieldErrors)) {
-                return $this->withFieldErrors($fieldErrors);
-            }
-
-            return redirect()->back()->withInput()->with('error', $this->firstMessage($response, lang('Auth.loginFailed')));
+            return $this->failApi($response, lang('Auth.loginFailed'), null, true, ['email', 'password']);
         }
 
         $data = $this->extractData($response);
@@ -80,7 +73,7 @@ class AuthController extends BaseWebController
             'password'              => 'required|min_length[8]',
             'password_confirmation' => 'required|matches[password]',
         ])) {
-            return redirect()->back()->withInput()->with('fieldErrors', $this->validator->getErrors());
+            return $this->failValidation();
         }
 
         $payload = [
@@ -95,14 +88,13 @@ class AuthController extends BaseWebController
         $response = $this->safeApiCall(fn() => $this->authService->register($payload));
 
         if (! $response['ok']) {
-            $formFields = ['first_name', 'last_name', 'email', 'password', 'password_confirmation'];
-            $fieldErrors = array_intersect_key($this->getFieldErrors($response), array_flip($formFields));
-
-            if (! empty($fieldErrors)) {
-                return $this->withFieldErrors($fieldErrors);
-            }
-
-            return redirect()->back()->withInput()->with('error', $this->firstMessage($response, lang('Auth.registerFailed')));
+            return $this->failApi(
+                $response,
+                lang('Auth.registerFailed'),
+                null,
+                true,
+                ['first_name', 'last_name', 'email', 'password', 'password_confirmation'],
+            );
         }
 
         return redirect()->to(site_url('login'))->with('success', lang('Auth.registerSuccess'));
@@ -121,7 +113,7 @@ class AuthController extends BaseWebController
         if (! $this->validate([
             'email' => 'required|valid_email',
         ])) {
-            return redirect()->back()->withInput()->with('fieldErrors', $this->validator->getErrors());
+            return $this->failValidation();
         }
 
         $email = (string) $this->request->getPost('email');
@@ -131,14 +123,7 @@ class AuthController extends BaseWebController
         ));
 
         if (! $response['ok']) {
-            $formFields = ['email'];
-            $fieldErrors = array_intersect_key($this->getFieldErrors($response), array_flip($formFields));
-
-            if (! empty($fieldErrors)) {
-                return $this->withFieldErrors($fieldErrors);
-            }
-
-            return redirect()->back()->withInput()->with('error', $this->firstMessage($response, lang('Auth.forgotFailed')));
+            return $this->failApi($response, lang('Auth.forgotFailed'), null, true, ['email']);
         }
 
         return redirect()->to(site_url('login'))->with('success', lang('Auth.forgotSuccess'));
@@ -162,7 +147,7 @@ class AuthController extends BaseWebController
             'password'              => 'required|min_length[8]',
             'password_confirmation' => 'required|matches[password]',
         ])) {
-            return redirect()->back()->withInput()->with('fieldErrors', $this->validator->getErrors());
+            return $this->failValidation();
         }
 
         $payload = [
@@ -175,14 +160,7 @@ class AuthController extends BaseWebController
         $response = $this->safeApiCall(fn() => $this->authService->resetPassword($payload));
 
         if (! $response['ok']) {
-            $formFields = ['token', 'password', 'password_confirmation'];
-            $fieldErrors = array_intersect_key($this->getFieldErrors($response), array_flip($formFields));
-
-            if (! empty($fieldErrors)) {
-                return $this->withFieldErrors($fieldErrors);
-            }
-
-            return redirect()->back()->withInput()->with('error', $this->firstMessage($response, lang('Auth.resetFailed')));
+            return $this->failApi($response, lang('Auth.resetFailed'), null, true, ['token', 'password', 'password_confirmation']);
         }
 
         return redirect()->to(site_url('login'))->with('success', lang('Auth.resetSuccess'));

@@ -63,6 +63,53 @@ abstract class BaseWebController extends BaseController
         return redirect()->back()->withInput()->with('fieldErrors', $errors);
     }
 
+    protected function failValidation(): RedirectResponse
+    {
+        $errors = [];
+        if (isset($this->validator) && $this->validator !== null) {
+            $errors = $this->validator->getErrors();
+        }
+
+        return $this->withFieldErrors($errors);
+    }
+
+    /**
+     * Build a consistent redirect response for failed API calls.
+     *
+     * @param array<int, string> $allowedFieldErrors
+     */
+    protected function failApi(
+        array $response,
+        string $fallbackMessage,
+        ?string $redirectTo = null,
+        bool $withInput = true,
+        array $allowedFieldErrors = [],
+    ): RedirectResponse {
+        $fieldErrors = $this->getFieldErrors($response);
+
+        if ($allowedFieldErrors !== []) {
+            $fieldErrors = array_intersect_key($fieldErrors, array_flip($allowedFieldErrors));
+        }
+
+        if ($fieldErrors !== []) {
+            return $this->withFieldErrors($fieldErrors);
+        }
+
+        $message = $this->firstMessage($response, $fallbackMessage);
+
+        if ($redirectTo !== null && $redirectTo !== '') {
+            return $this->withError($message, $redirectTo);
+        }
+
+        $redirect = redirect()->back();
+
+        if ($withInput) {
+            $redirect = $redirect->withInput();
+        }
+
+        return $redirect->with('error', $message);
+    }
+
     /**
      * Resolve the canonical public web URL used in API emails.
      */
@@ -221,6 +268,53 @@ abstract class BaseWebController extends BaseController
         return $this->response
             ->setStatusCode($status)
             ->setJSON(is_array($payload) ? $payload : ['message' => lang('App.connectionError')]);
+    }
+
+    /**
+     * Resolve table state, execute API list request and return passthrough JSON response.
+     *
+     * @param array<int, string> $allowedFilters
+     * @param array<int, string> $allowedSorts
+     * @param callable $listRequest Receives normalized API params and returns API response array.
+     */
+    protected function tableDataResponse(
+        array $allowedFilters,
+        array $allowedSorts,
+        callable $listRequest,
+        int $defaultLimit = 25,
+        int $maxLimit = 100,
+    ): ResponseInterface {
+        $tableState = $this->resolveTableState($allowedFilters, $allowedSorts, $defaultLimit, $maxLimit);
+        $params = $this->buildTableApiParams($tableState);
+        $response = $this->safeApiCall(fn() => $listRequest($params));
+
+        return $this->passthroughApiJsonResponse($response);
+    }
+
+    /**
+     * Render a resource detail view with a consistent not-found fallback.
+     */
+    protected function renderResourceShow(
+        string $view,
+        string $title,
+        string $dataKey,
+        array $response,
+        string $notFoundMessage,
+    ): string {
+        $data = [
+            'title' => $title,
+            $dataKey => [],
+        ];
+
+        if (! ($response['ok'] ?? false)) {
+            $data['error'] = $this->firstMessage($response, $notFoundMessage);
+
+            return $this->render($view, $data);
+        }
+
+        $data[$dataKey] = $this->extractData($response);
+
+        return $this->render($view, $data);
     }
 
     /**

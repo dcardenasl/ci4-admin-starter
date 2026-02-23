@@ -27,10 +27,11 @@ class FileController extends BaseWebController
 
     public function data(): ResponseInterface
     {
-        $tableState = $this->resolveTableState(['status'], ['created_at', 'name', 'status']);
-        $response = $this->safeApiCall(fn() => $this->fileService->list($this->buildTableApiParams($tableState)));
-
-        return $this->passthroughApiJsonResponse($response);
+        return $this->tableDataResponse(
+            ['status'],
+            ['created_at', 'name', 'status'],
+            fn(array $params) => $this->fileService->list($params),
+        );
     }
 
     public function upload(): RedirectResponse
@@ -62,7 +63,7 @@ class FileController extends BaseWebController
         @unlink($tempPath);
 
         if (! $response['ok']) {
-            return redirect()->to(site_url('files'))->with('error', $this->firstMessage($response, lang('Files.uploadFailed')));
+            return $this->failApi($response, lang('Files.uploadFailed'), site_url('files'), false);
         }
 
         return redirect()->to(site_url('files'))->with('success', lang('Files.uploadSuccess'));
@@ -73,7 +74,7 @@ class FileController extends BaseWebController
         $response = $this->safeApiCall(fn() => $this->fileService->getDownload($id));
 
         if (! $response['ok']) {
-            return redirect()->to(site_url('files'))->with('error', $this->firstMessage($response, lang('Files.downloadFailed')));
+            return $this->failApi($response, lang('Files.downloadFailed'), site_url('files'), false);
         }
 
         $data = $this->extractData($response);
@@ -114,7 +115,7 @@ class FileController extends BaseWebController
         $response = $this->safeApiCall(fn() => $this->fileService->delete($id));
 
         if (! $response['ok']) {
-            return redirect()->to(site_url('files'))->with('error', $this->firstMessage($response, lang('Files.deleteFailed')));
+            return $this->failApi($response, lang('Files.deleteFailed'), site_url('files'), false);
         }
 
         return redirect()->to(site_url('files'))->with('success', lang('Files.deleteSuccess'));
