@@ -22,16 +22,11 @@ class ApiClient implements ApiClientInterface
         $this->config = $config ?? config('ApiClient');
         $this->session = session();
         $appConfig = config(App::class);
-        $headers = ['Accept' => 'application/json'];
-        if (! empty($this->config->appKey)) {
-            $headers['X-App-Key'] = $this->config->appKey;
-        }
         $options = [
             'baseURI'         => rtrim($this->config->baseUrl, '/'),
             'timeout'         => $this->config->timeout,
             'connect_timeout' => $this->config->connectTimeout,
             'http_errors'     => false,
-            'headers'         => $headers,
         ];
         $this->http = new CURLRequest(
             $appConfig,
@@ -103,6 +98,7 @@ class ApiClient implements ApiClientInterface
         unset($options['skip_prefix']);
 
         $uri = $this->buildUri($path, $skipPrefix);
+        $options = $this->withBaseHeaders($options);
 
         if ($authenticated) {
             $options = $this->withAuthorization($options);
@@ -139,6 +135,7 @@ class ApiClient implements ApiClientInterface
         }
 
         $response = $this->http->request('POST', $this->buildUri('/auth/refresh'), [
+            'headers' => $this->baseHeaders(),
             'json' => ['refresh_token' => $refreshToken],
         ]);
 
@@ -200,6 +197,31 @@ class ApiClient implements ApiClientInterface
         $options['headers'] = $headers;
 
         return $options;
+    }
+
+    protected function withBaseHeaders(array $options): array
+    {
+        $headers = $options['headers'] ?? [];
+        $options['headers'] = array_merge($this->baseHeaders(), $headers);
+
+        return $options;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function baseHeaders(): array
+    {
+        $headers = ['Accept' => 'application/json'];
+        $appKey = trim((string) $this->config->appKey);
+
+        if ($appKey !== '') {
+            $headers['X-App-Key'] = $appKey;
+            // Backend compatibility: some gateways use X-API-Key naming.
+            $headers['X-API-Key'] = $appKey;
+        }
+
+        return $headers;
     }
 
     protected function clearSessionAuth(): void

@@ -27,22 +27,35 @@ class ApiClient extends BaseConfig
     {
         parent::__construct();
 
-        if ($val = env('API_BASE_URL')) {
-            $this->baseUrl = $val;
+        // Support both CodeIgniter dotted .env keys (apiClient.*)
+        // and uppercase env vars (API_*) for compatibility across deployments.
+        $baseUrl = env('apiClient.baseUrl') ?: env('API_BASE_URL');
+        if (is_string($baseUrl) && trim($baseUrl) !== '') {
+            $this->baseUrl = $baseUrl;
         }
-        if ($val = env('API_TIMEOUT')) {
-            $this->timeout = (int) $val;
+
+        $timeout = env('apiClient.timeout') ?: env('API_TIMEOUT');
+        if ($timeout !== false && $timeout !== null && $timeout !== '') {
+            $this->timeout = (int) $timeout;
         }
-        if ($val = env('API_CONNECT_TIMEOUT')) {
-            $this->connectTimeout = (int) $val;
+
+        $connectTimeout = env('apiClient.connectTimeout') ?: env('API_CONNECT_TIMEOUT');
+        if ($connectTimeout !== false && $connectTimeout !== null && $connectTimeout !== '') {
+            $this->connectTimeout = (int) $connectTimeout;
         }
-        if ($val = env('APP_NAME')) {
-            $this->appName = $val;
+
+        $appName = env('apiClient.appName') ?: env('APP_NAME');
+        if (is_string($appName) && trim($appName) !== '') {
+            $this->appName = $appName;
         }
-        if ($val = env('API_APP_KEY')) {
-            $this->appKey = $val;
+
+        $appKey = env('apiClient.appKey') ?: env('API_APP_KEY');
+        if (is_string($appKey) && trim($appKey) !== '') {
+            $this->appKey = $appKey;
         }
-        if ($val = env('API_HEALTH_PATHS')) {
+
+        $val = env('apiClient.healthPaths') ?: env('API_HEALTH_PATHS');
+        if ($val) {
             $paths = array_values(array_filter(array_map('trim', explode(',', (string) $val))));
             if ($paths !== []) {
                 $this->healthPaths = $paths;
