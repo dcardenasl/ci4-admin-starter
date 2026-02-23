@@ -32,7 +32,7 @@ class DashboardController extends BaseWebController
             'stats' => [
                 'files'         => count($files),
                 'role'          => $user['role'] ?? 'user',
-                'emailVerified' => ! empty($user['email_verified_at']) ? lang('App.yes') : lang('App.no'),
+                'emailVerified' => is_email_verified(is_array($user) ? $user : []) ? lang('App.yes') : lang('App.no'),
                 'apiHealth'     => match ($health['state'] ?? 'down') {
                     'up'       => lang('Dashboard.up'),
                     'degraded' => lang('Dashboard.degraded'),

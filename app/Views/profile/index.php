@@ -46,13 +46,14 @@
 
         <div class="mt-6 pt-6 border-t border-gray-200">
             <h4 class="font-medium text-gray-900"><?= lang('Profile.emailVerification') ?></h4>
+            <?php $emailVerified = is_email_verified(is_array($user) ? $user : []); ?>
             <p class="mt-1 text-sm text-gray-600">
                 <?= lang('Profile.status') ?>:
-                <span class="inline-flex rounded-full px-2 py-1 text-xs <?= !empty($user['email_verified_at']) ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700' ?>">
-                    <?= !empty($user['email_verified_at']) ? lang('Profile.verified') : lang('Profile.pending') ?>
+                <span class="inline-flex rounded-full px-2 py-1 text-xs <?= $emailVerified ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700' ?>">
+                    <?= $emailVerified ? lang('Profile.verified') : lang('Profile.pending') ?>
                 </span>
             </p>
-            <?php if (empty($user['email_verified_at'])): ?>
+            <?php if (! $emailVerified): ?>
                 <form method="post" action="<?= site_url('profile/resend-verification') ?>" class="mt-3">
                     <?= csrf_field() ?>
                     <button type="submit" class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
