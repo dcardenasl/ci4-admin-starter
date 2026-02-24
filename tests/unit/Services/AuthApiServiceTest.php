@@ -60,6 +60,36 @@ final class AuthApiServiceTest extends CIUnitTestCase
         $this->assertSame('Invalid credentials.', $result['messages'][0]);
     }
 
+    public function testGoogleLoginUsesGoogleEndpoint(): void
+    {
+        $expected = [
+            'ok'       => true,
+            'status'   => 200,
+            'data'     => ['access_token' => 'google-token'],
+            'raw'      => '',
+            'messages' => [],
+        ];
+
+        $mock = $this->createMock(ApiClientInterface::class);
+        $mock->expects($this->once())
+            ->method('publicPost')
+            ->with('/auth/google-login', [
+                'id_token' => 'google.id.token',
+                'client_base_url' => 'https://admin.example.com',
+            ])
+            ->willReturn($expected);
+
+        $service = new AuthApiService($mock);
+        $result = $service->googleLogin([
+            'id_token' => 'google.id.token',
+            'client_base_url' => 'https://admin.example.com',
+        ]);
+
+        $this->assertTrue($result['ok']);
+        $this->assertSame(200, $result['status']);
+        $this->assertSame('google-token', $result['data']['access_token']);
+    }
+
     public function testMeReturnsUserData(): void
     {
         $expected = [
