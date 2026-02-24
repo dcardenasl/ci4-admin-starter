@@ -22,6 +22,7 @@ return [
     'hasAccount'       => 'Ya tengo cuenta',
     'registerSuccess'  => 'Registro completado. Revisa tu correo para verificar tu cuenta.',
     'registerFailed'   => 'No fue posible completar el registro.',
+    'emailAlreadyRegistered' => 'Este email ya esta registrado.',
 
     // Password strength
     'passwordStrong'   => 'Password fuerte',

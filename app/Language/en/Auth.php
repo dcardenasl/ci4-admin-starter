@@ -22,6 +22,7 @@ return [
     'hasAccount'       => 'I already have an account',
     'registerSuccess'  => 'Registration complete. Check your email to verify your account.',
     'registerFailed'   => 'Could not complete registration.',
+    'emailAlreadyRegistered' => 'This email is already registered',
 
     // Password strength
     'passwordStrong'   => 'Strong password',

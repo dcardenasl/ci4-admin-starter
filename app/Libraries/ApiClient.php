@@ -7,6 +7,7 @@ use CodeIgniter\HTTP\Response;
 use CodeIgniter\HTTP\URI;
 use Config\ApiClient as ApiClientConfig;
 use Config\App;
+use Config\Services;
 use RuntimeException;
 
 class ApiClient implements ApiClientInterface
@@ -212,7 +213,10 @@ class ApiClient implements ApiClientInterface
      */
     protected function baseHeaders(): array
     {
-        $headers = ['Accept' => 'application/json'];
+        $headers = [
+            'Accept'          => 'application/json',
+            'Accept-Language' => $this->resolveLocaleForHeader(),
+        ];
         $appKey = trim((string) $this->config->appKey);
 
         if ($appKey !== '') {
@@ -222,6 +226,50 @@ class ApiClient implements ApiClientInterface
         }
 
         return $headers;
+    }
+
+    protected function resolveLocaleForHeader(): string
+    {
+        $appConfig = config(App::class);
+        $supportedLocales = $appConfig->supportedLocales;
+
+        $currentLocale = Services::language()->getLocale();
+        $matchedCurrentLocale = $this->matchSupportedLocale($currentLocale, $supportedLocales);
+        if ($matchedCurrentLocale !== null) {
+            return $matchedCurrentLocale;
+        }
+
+        $sessionLocale = $this->session->get('locale');
+        if (is_string($sessionLocale)) {
+            $matchedSessionLocale = $this->matchSupportedLocale($sessionLocale, $supportedLocales);
+            if ($matchedSessionLocale !== null) {
+                return $matchedSessionLocale;
+            }
+        }
+
+        return $appConfig->defaultLocale;
+    }
+
+    /**
+     * @param list<string> $supportedLocales
+     */
+    protected function matchSupportedLocale(string $locale, array $supportedLocales): ?string
+    {
+        $locale = strtolower(trim($locale));
+        if ($locale === '') {
+            return null;
+        }
+
+        if (in_array($locale, $supportedLocales, true)) {
+            return $locale;
+        }
+
+        $baseLocale = explode('-', $locale)[0];
+        if (in_array($baseLocale, $supportedLocales, true)) {
+            return $baseLocale;
+        }
+
+        return null;
     }
 
     protected function clearSessionAuth(): void
