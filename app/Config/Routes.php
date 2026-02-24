@@ -11,6 +11,7 @@ $routes->get('/language/set', 'LanguageController::set');
 // Publicas
 $routes->get('/login', 'AuthController::login');
 $routes->post('/login', 'AuthController::attemptLogin');
+$routes->post('/login/google', 'AuthController::attemptGoogleLogin');
 $routes->get('/register', 'AuthController::register');
 $routes->post('/register', 'AuthController::attemptRegister');
 $routes->get('/forgot-password', 'AuthController::forgotPassword');

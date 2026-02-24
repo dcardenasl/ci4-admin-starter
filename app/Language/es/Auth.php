@@ -11,6 +11,10 @@ return [
     'createAccount'    => 'Crear cuenta',
     'loginSuccess'     => 'Sesion iniciada correctamente.',
     'loginFailed'      => 'Credenciales invalidas.',
+    'googleOrDivider'  => 'o continuar con',
+    'googleLoginFailed' => 'No fue posible iniciar sesion con Google.',
+    'googleLoginPendingApproval' => 'Inicio de sesion con Google recibido. Tu cuenta esta pendiente de aprobacion.',
+    'googleLoginUnavailable' => 'El acceso con Google no esta disponible en este entorno.',
 
     // Register
     'registerTitle'    => 'Crear cuenta',

@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Requests\Auth\ForgotPasswordRequest;
+use App\Requests\Auth\GoogleLoginRequest;
 use App\Requests\Auth\LoginRequest;
 use App\Requests\Auth\RegisterRequest;
 use App\Requests\Auth\ResetPasswordRequest;
@@ -29,8 +30,10 @@ class AuthController extends BaseWebController
         }
 
         return $this->renderAuth('auth/login', [
-            'title'    => lang('Auth.loginTitle'),
-            'subtitle' => lang('Auth.loginSubtitle'),
+            'title'          => lang('Auth.loginTitle'),
+            'subtitle'       => lang('Auth.loginSubtitle'),
+            'googleEnabled'  => $this->isGoogleLoginEnabled(),
+            'googleClientId' => trim((string) env('GOOGLE_CLIENT_ID', '')),
         ]);
     }
 
@@ -52,6 +55,44 @@ class AuthController extends BaseWebController
         }
 
         $data = $this->extractData($response);
+        $this->persistAuthSession($data);
+
+        return redirect()->to(site_url('dashboard'))->with('success', lang('Auth.loginSuccess'));
+    }
+
+    public function attemptGoogleLogin(): RedirectResponse
+    {
+        if ($this->session->has('access_token')) {
+            return redirect()->to(site_url('dashboard'));
+        }
+
+        if (! $this->isGoogleLoginEnabled()) {
+            return redirect()->to(site_url('login'))->with('error', lang('Auth.googleLoginUnavailable'));
+        }
+
+        /** @var GoogleLoginRequest $request */
+        $request = service('formRequest', GoogleLoginRequest::class, false);
+        $invalid = $this->validateRequest($request);
+        if ($invalid !== null) {
+            return redirect()->to(site_url('login'))->with('error', lang('Auth.googleLoginFailed'));
+        }
+
+        $payload = $request->payload();
+        $payload['client_base_url'] = $this->clientBaseUrl();
+
+        $response = $this->safeApiCall(fn() => $this->authService->googleLogin($payload));
+
+        if (! $response['ok']) {
+            return redirect()->to(site_url('login'))
+                ->with('error', $this->firstMessage($response, lang('Auth.googleLoginFailed')));
+        }
+
+        $data = $this->extractData($response);
+        if (! isset($data['access_token']) || ! isset($data['refresh_token'])) {
+            return redirect()->to(site_url('login'))
+                ->with('error', $this->firstMessage($response, lang('Auth.googleLoginPendingApproval')));
+        }
+
         $this->persistAuthSession($data);
 
         return redirect()->to(site_url('dashboard'))->with('success', lang('Auth.loginSuccess'));
@@ -188,5 +229,10 @@ class AuthController extends BaseWebController
         $this->session->set('refresh_token', $data['refresh_token'] ?? null);
         $this->session->set('token_expires_at', time() + (int) ($data['expires_in'] ?? 3600));
         $this->session->set('user', $data['user'] ?? []);
+    }
+
+    protected function isGoogleLoginEnabled(): bool
+    {
+        return trim((string) env('GOOGLE_CLIENT_ID', '')) !== '';
     }
 }

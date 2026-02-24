@@ -11,6 +11,10 @@ return [
     'createAccount'    => 'Create account',
     'loginSuccess'     => 'Session started successfully.',
     'loginFailed'      => 'Invalid credentials.',
+    'googleOrDivider'  => 'or continue with',
+    'googleLoginFailed' => 'Could not sign in with Google.',
+    'googleLoginPendingApproval' => 'Google sign-in received. Your account is pending approval.',
+    'googleLoginUnavailable' => 'Google sign-in is not available in this environment.',
 
     // Register
     'registerTitle'    => 'Create account',

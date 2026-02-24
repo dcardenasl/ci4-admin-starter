@@ -9,6 +9,11 @@ class AuthApiService extends BaseApiService
         return $this->apiClient->publicPost('/auth/login', $credentials);
     }
 
+    public function googleLogin(array $payload): array
+    {
+        return $this->apiClient->publicPost('/auth/google-login', $payload);
+    }
+
     public function register(array $payload): array
     {
         return $this->apiClient->publicPost('/auth/register', $payload);
