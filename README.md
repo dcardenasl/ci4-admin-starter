@@ -129,10 +129,13 @@ Configurar en `.env`:
 CI_ENVIRONMENT = development
 app.baseURL = 'http://localhost:8082/'
 apiClient.baseUrl = 'http://localhost:8080'
+GOOGLE_CLIENT_ID = 'your-google-oauth-client-id.apps.googleusercontent.com'
 # Opcional: API key para rate limit elevado (600 req/min vs 60 req/min por IP)
 # Crear una via /admin/api-keys o POST /api/v1/api-keys
 # apiClient.appKey = apk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
+
+`GOOGLE_CLIENT_ID` habilita el boton "Continuar con Google" en la pantalla de login y debe coincidir con el client ID configurado en `ci4-api-starter`.
 
 ## Desarrollo
 
@@ -170,6 +173,7 @@ vendor/bin/phpunit --colors --coverage-text=tests/coverage.txt --coverage-html=t
 - `docs/plan/PLAN-CI4-CLIENT.md`: historial de implementacion y referencia de arquitectura.
 - `docs/COMPATIBILIDAD-API.md`: lineamientos de compatibilidad backend/frontend.
 - `docs/VALIDATION-LAYER.md`: guia de la capa de validaciones (`FormRequest`) y convenciones.
+- `docs/GOOGLE-LOGIN-SETUP.md`: pasos de Google Cloud + `.env` para activar login con Google.
 
 ## Regla para nuevos proyectos basados en este template
 
