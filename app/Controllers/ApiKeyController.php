@@ -2,6 +2,8 @@
 
 namespace App\Controllers;
 
+use App\Requests\ApiKey\ApiKeyStoreRequest;
+use App\Requests\ApiKey\ApiKeyUpdateRequest;
 use App\Services\ApiKeyApiService;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;
@@ -50,11 +52,14 @@ class ApiKeyController extends BaseWebController
 
     public function store(): RedirectResponse
     {
-        if (! $this->validate($this->rulesForCreate())) {
-            return $this->failValidation();
+        /** @var ApiKeyStoreRequest $request */
+        $request = service('formRequest', ApiKeyStoreRequest::class, false);
+        $invalid = $this->validateRequest($request);
+        if ($invalid !== null) {
+            return $invalid;
         }
 
-        $payload = $this->payloadFromRequest();
+        $payload = $request->payload();
         $response = $this->safeApiCall(fn() => $this->apiKeyService->create($payload));
 
         if (! $response['ok']) {
@@ -91,11 +96,14 @@ class ApiKeyController extends BaseWebController
 
     public function update(string $id): RedirectResponse
     {
-        if (! $this->validate($this->rulesForUpdate())) {
-            return $this->failValidation();
+        /** @var ApiKeyUpdateRequest $request */
+        $request = service('formRequest', ApiKeyUpdateRequest::class, false);
+        $invalid = $this->validateRequest($request);
+        if ($invalid !== null) {
+            return $invalid;
         }
 
-        $payload = $this->payloadFromRequest();
+        $payload = $request->payload();
 
         if ($payload === []) {
             return redirect()->back()->withInput()->with('error', lang('ApiKeys.atLeastOneField'));
@@ -121,66 +129,4 @@ class ApiKeyController extends BaseWebController
         return redirect()->to(site_url('admin/api-keys'))->with('success', lang('ApiKeys.deleteSuccess'));
     }
 
-    /**
-     * @return array<string, string>
-     */
-    protected function rulesForCreate(): array
-    {
-        return [
-            'name'                => 'required|max_length[100]',
-            'rate_limit_requests' => 'permit_empty|is_natural_no_zero',
-            'rate_limit_window'   => 'permit_empty|is_natural_no_zero',
-            'user_rate_limit'     => 'permit_empty|is_natural_no_zero',
-            'ip_rate_limit'       => 'permit_empty|is_natural_no_zero',
-        ];
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    protected function rulesForUpdate(): array
-    {
-        return [
-            'name'                => 'permit_empty|max_length[100]',
-            'is_active'           => 'permit_empty|in_list[0,1]',
-            'rate_limit_requests' => 'permit_empty|is_natural_no_zero',
-            'rate_limit_window'   => 'permit_empty|is_natural_no_zero',
-            'user_rate_limit'     => 'permit_empty|is_natural_no_zero',
-            'ip_rate_limit'       => 'permit_empty|is_natural_no_zero',
-        ];
-    }
-
-    /**
-     * @return array<string, int|string|bool>
-     */
-    protected function payloadFromRequest(): array
-    {
-        $payload = [];
-
-        $name = trim((string) $this->request->getPost('name'));
-        if ($name !== '') {
-            $payload['name'] = $name;
-        }
-
-        $isActive = $this->request->getPost('is_active');
-        if ($isActive !== null && $isActive !== '') {
-            $payload['is_active'] = $isActive === '1' || $isActive === 1 || $isActive === true || $isActive === 'true';
-        }
-
-        $numericFields = [
-            'rate_limit_requests',
-            'rate_limit_window',
-            'user_rate_limit',
-            'ip_rate_limit',
-        ];
-
-        foreach ($numericFields as $field) {
-            $value = trim((string) $this->request->getPost($field));
-            if ($value !== '') {
-                $payload[$field] = (int) $value;
-            }
-        }
-
-        return $payload;
-    }
 }

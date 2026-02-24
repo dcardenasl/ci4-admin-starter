@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Requests\File\FileUploadRequest;
 use App\Services\FileApiService;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;
@@ -36,10 +37,10 @@ class FileController extends BaseWebController
 
     public function upload(): RedirectResponse
     {
-        if (! $this->validate([
-            'file' => 'uploaded[file]|max_size[file,10240]',
-        ])) {
-            return redirect()->to(site_url('files'))->with('fieldErrors', $this->validator->getErrors());
+        /** @var FileUploadRequest $request */
+        $request = service('formRequest', FileUploadRequest::class, false);
+        if (! $request->validate()) {
+            return redirect()->to(site_url('files'))->with('fieldErrors', $request->errors());
         }
 
         $file = $this->request->getFile('file');
@@ -57,7 +58,7 @@ class FileController extends BaseWebController
         $file->move(dirname($tempPath), basename($tempPath));
 
         $response = $this->safeApiCall(fn() => $this->fileService->upload('file', $tempPath, [
-            'visibility' => (string) ($this->request->getPost('visibility') ?? 'private'),
+            'visibility' => (string) ($request->payload()['visibility'] ?? 'private'),
         ]));
 
         @unlink($tempPath);

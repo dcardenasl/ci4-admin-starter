@@ -60,6 +60,51 @@ Reglas clave:
 - `fieldErrors` se extrae desde `errors.<campo>`.
 - En endpoints `data` para tablas/listados (`/files/data`, `/admin/users/data`, etc.), el frontend puede reenviar el JSON crudo del backend para mantener contrato intacto.
 
+## Capa de validaciones (FormRequest)
+
+La validacion web se centraliza en `app/Requests` para mantener controladores delgados y consistentes.
+
+Objetivo de esta capa:
+
+- Evitar reglas inline en controladores.
+- Reutilizar reglas y normalizacion de payload por caso de uso.
+- Mantener separacion de responsabilidades: validacion UI/sintaxis en frontend, reglas de negocio en backend.
+
+Componentes:
+
+- `app/Requests/FormRequestInterface.php`: contrato comun (`rules()`, `data()`, `payload()`, `validate()`, `errors()`).
+- `app/Requests/BaseFormRequest.php`: implementacion base con integracion a `ValidationInterface`.
+- `app/Config/Services.php`: `formRequest(string $class, bool $getShared = true)` para instanciar requests tipados.
+- `app/Controllers/BaseWebController.php`: helper `validateRequest()` para respuesta de error uniforme.
+
+Flujo estandar en controladores:
+
+1. Resolver request class via `service('formRequest', <RequestClass>::class, false)`.
+2. Validar con `validateRequest()` o `request->validate()`.
+3. Construir payload final con `request->payload()`.
+4. Delegar llamada HTTP en `app/Services/*ApiService.php`.
+5. Resolver errores del backend con `failApi()` y errores de formulario con `fieldErrors`.
+
+Ejemplo corto:
+
+```php
+/** @var \App\Requests\Auth\LoginRequest $request */
+$request = service('formRequest', \App\Requests\Auth\LoginRequest::class, false);
+$invalid = $this->validateRequest($request);
+if ($invalid !== null) {
+    return $invalid;
+}
+
+$response = $this->safeApiCall(fn() => $this->authService->login($request->payload()));
+```
+
+Convenciones importantes:
+
+- `rules()` define solo validaciones sintacticas/UI (`required`, `valid_email`, `max_length`, `in_list`, etc.).
+- `payload()` debe normalizar tipos y omitir campos vacios cuando aplique.
+- Los mensajes de UI deben usar `lang('...')`.
+- No duplicar validaciones de dominio que pertenecen al backend.
+
 ## Requisitos
 
 - PHP `^8.1`
@@ -112,6 +157,7 @@ vendor/bin/phpunit --colors --coverage-text=tests/coverage.txt --coverage-html=t
 ## Estructura relevante
 
 - `app/Controllers`: flujo web y coordinacion de llamadas al API.
+- `app/Requests`: validacion de formularios y normalizacion de payload por caso de uso.
 - `app/Services`: servicios por dominio para encapsular endpoints (extienden `BaseApiService`).
 - `app/Libraries/ApiClient.php`: cliente HTTP con auth/refresh, header `X-App-Key` y normalizacion de respuestas JSON.
 - `app/Libraries/ApiClientInterface.php`: contrato del cliente HTTP.
@@ -120,9 +166,10 @@ vendor/bin/phpunit --colors --coverage-text=tests/coverage.txt --coverage-html=t
 - `app/Language/en/`, `app/Language/es/`: archivos de idioma (i18n).
 - `app/Views`: interfaz administrativa server-rendered.
 - `app/Config/ApiClient.php`: configuracion del backend API (baseUrl, timeouts, apiPrefix, appKey).
-- `app/Config/Services.php`: factory de servicios compartidos.
+- `app/Config/Services.php`: factory de servicios compartidos y constructor de `FormRequest`.
 - `docs/plan/PLAN-CI4-CLIENT.md`: historial de implementacion y referencia de arquitectura.
 - `docs/COMPATIBILIDAD-API.md`: lineamientos de compatibilidad backend/frontend.
+- `docs/VALIDATION-LAYER.md`: guia de la capa de validaciones (`FormRequest`) y convenciones.
 
 ## Regla para nuevos proyectos basados en este template
 
@@ -131,7 +178,8 @@ Si creas un nuevo proyecto desde este repositorio:
 1. Mantener el frontend desacoplado de DB y reglas de negocio.
 2. Implementar funcionalidades consumiendo endpoints existentes del backend.
 3. Conservar y validar compatibilidad JSON/HTTP con `ci4-api-starter`.
-4. Evitar cambios que rompan contratos sin versionamiento coordinado.
+4. Mantener validaciones de formularios en `app/Requests` (no inline en controllers).
+5. Evitar cambios que rompan contratos sin versionamiento coordinado.
 
 ## Seguridad y despliegue
 
@@ -144,3 +192,4 @@ Si creas un nuevo proyecto desde este repositorio:
 - CodeIgniter 4 User Guide: <https://codeigniter.com/user_guide/>
 - CI4 API Starter: <https://github.com/dcardenasl/ci4-api-starter>
 - Plan del cliente admin: `docs/plan/PLAN-CI4-CLIENT.md`
+- Guia de validaciones: `docs/VALIDATION-LAYER.md`

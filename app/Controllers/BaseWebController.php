@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Libraries\ApiClient;
+use App\Requests\FormRequestInterface;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -73,6 +74,15 @@ abstract class BaseWebController extends BaseController
         return $this->withFieldErrors($errors);
     }
 
+    protected function validateRequest(FormRequestInterface $request): ?RedirectResponse
+    {
+        if ($request->validate()) {
+            return null;
+        }
+
+        return $this->withFieldErrors($request->errors());
+    }
+
     /**
      * Build a consistent redirect response for failed API calls.
      *
@@ -130,7 +140,19 @@ abstract class BaseWebController extends BaseController
 
     protected function getFieldErrors(array $response): array
     {
-        return $response['fieldErrors'] ?? [];
+        $fieldErrors = $response['fieldErrors'] ?? [];
+
+        if (! is_array($fieldErrors)) {
+            return [];
+        }
+
+        foreach ($fieldErrors as $key => $value) {
+            if (is_string($key) && is_scalar($value)) {
+                $fieldErrors[$key] = $this->localizeApiMessage((string) $value);
+            }
+        }
+
+        return $fieldErrors;
     }
 
     /**
@@ -141,10 +163,21 @@ abstract class BaseWebController extends BaseController
         $messages = $response['messages'] ?? [];
 
         if (is_array($messages) && isset($messages[0])) {
-            return (string) $messages[0];
+            return $this->localizeApiMessage((string) $messages[0]);
         }
 
         return $fallback;
+    }
+
+    protected function localizeApiMessage(string $message): string
+    {
+        $normalized = trim($message);
+
+        $knownTranslations = [
+            'This email is already registered' => lang('Auth.emailAlreadyRegistered'),
+        ];
+
+        return $knownTranslations[$normalized] ?? $message;
     }
 
     /**

@@ -4,6 +4,7 @@ namespace Config;
 
 use App\Libraries\ApiClient;
 use App\Libraries\ApiClientInterface;
+use App\Requests\FormRequestInterface;
 use App\Services\AuditApiService;
 use App\Services\AuthApiService;
 use App\Services\FileApiService;
@@ -12,6 +13,7 @@ use App\Services\ApiKeyApiService;
 use App\Services\MetricsApiService;
 use App\Services\UserApiService;
 use CodeIgniter\Config\BaseService;
+use InvalidArgumentException;
 
 /**
  * Services Configuration file.
@@ -28,6 +30,26 @@ use CodeIgniter\Config\BaseService;
  */
 class Services extends BaseService
 {
+    public static function formRequest(string $class, bool $getShared = true): FormRequestInterface
+    {
+        if ($getShared) {
+            /** @var FormRequestInterface */
+            return static::getSharedInstance('formRequest', $class);
+        }
+
+        if (! class_exists($class)) {
+            throw new InvalidArgumentException('Form request class does not exist: ' . $class);
+        }
+
+        $request = new $class(service('request'), service('validation'));
+
+        if (! $request instanceof FormRequestInterface) {
+            throw new InvalidArgumentException('Form request must implement FormRequestInterface: ' . $class);
+        }
+
+        return $request;
+    }
+
     public static function apiClient(bool $getShared = true): ApiClient
     {
         if ($getShared) {

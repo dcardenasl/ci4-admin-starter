@@ -9,6 +9,7 @@ Definir reglas obligatorias para garantizar compatibilidad total entre este fron
 - Este proyecto es un **frontend administrativo template**.
 - La base de datos y reglas de negocio pertenecen al backend.
 - El frontend no debe duplicar ni reinterpretar reglas de dominio.
+- La validacion de formularios en frontend se implementa en `app/Requests` y debe limitarse a reglas de UI/sintaxis.
 
 ## Backend esperado
 
@@ -113,11 +114,25 @@ Regla de implementacion:
 
 ## Guía para nuevas implementaciones
 
-1. Agregar endpoint en servicio (`app/Services/*ApiService.php`).
-2. Consumir desde controller via `safeApiCall()`.
-3. Reutilizar `extractData()`, `extractItems()`, `firstMessage()` para consistencia.
-4. No hardcodear estructuras ad-hoc por modulo si ya existe un patron comun.
-5. Agregar/actualizar tests para codigos HTTP y parseo de JSON.
+1. Definir o reutilizar una request class en `app/Requests/*` con `rules()` + `payload()`.
+2. Agregar endpoint en servicio (`app/Services/*ApiService.php`).
+3. Consumir desde controller via `service('formRequest', ...)`, `validateRequest()` y `safeApiCall()`.
+4. Reutilizar `extractData()`, `extractItems()`, `firstMessage()` para consistencia.
+5. No hardcodear estructuras ad-hoc por modulo si ya existe un patron comun.
+6. Agregar/actualizar tests para codigos HTTP, parseo JSON y payload normalizado.
+
+## Frontera de validacion frontend vs backend
+
+Regla obligatoria para evitar drift de contrato:
+
+- Frontend (`app/Requests`): validaciones de presentacion/sintaxis (required, formato, longitud, enums basicos).
+- Backend (`ci-api-tester`): validaciones de negocio y persistencia.
+
+Implicaciones:
+
+- No duplicar reglas de dominio complejas en frontend.
+- Ante error de negocio, priorizar `messages`/`fieldErrors` retornados por backend.
+- Mantener experiencia de formulario con `fieldErrors` en session sin alterar estructura del error API.
 
 ## Criterios de aceptacion para cambios de contrato
 
@@ -136,5 +151,8 @@ Este contrato reemplaza aliases legacy de query y debe tratarse como cambio mayo
 
 - `app/Libraries/ApiClient.php`
 - `app/Controllers/BaseWebController.php`
+- `app/Requests/BaseFormRequest.php`
+- `app/Requests/FormRequestInterface.php`
 - `app/Config/ApiClient.php`
+- `app/Config/Services.php`
 - `tests/unit/Libraries/ApiClientTest.php`

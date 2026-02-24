@@ -2,6 +2,10 @@
 
 namespace App\Controllers;
 
+use App\Requests\Auth\ForgotPasswordRequest;
+use App\Requests\Auth\LoginRequest;
+use App\Requests\Auth\RegisterRequest;
+use App\Requests\Auth\ResetPasswordRequest;
 use App\Services\AuthApiService;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;
@@ -32,17 +36,14 @@ class AuthController extends BaseWebController
 
     public function attemptLogin(): RedirectResponse
     {
-        if (! $this->validate([
-            'email'    => 'required|valid_email',
-            'password' => 'required|min_length[6]',
-        ])) {
-            return $this->failValidation();
+        /** @var LoginRequest $request */
+        $request = service('formRequest', LoginRequest::class, false);
+        $invalid = $this->validateRequest($request);
+        if ($invalid !== null) {
+            return $invalid;
         }
 
-        $payload = [
-            'email'    => (string) $this->request->getPost('email'),
-            'password' => (string) $this->request->getPost('password'),
-        ];
+        $payload = $request->payload();
 
         $response = $this->safeApiCall(fn() => $this->authService->login($payload));
 
@@ -66,24 +67,15 @@ class AuthController extends BaseWebController
 
     public function attemptRegister(): RedirectResponse
     {
-        if (! $this->validate([
-            'first_name'            => 'required|min_length[2]|max_length[100]',
-            'last_name'             => 'required|min_length[2]|max_length[100]',
-            'email'                 => 'required|valid_email',
-            'password'              => 'required|min_length[8]',
-            'password_confirmation' => 'required|matches[password]',
-        ])) {
-            return $this->failValidation();
+        /** @var RegisterRequest $request */
+        $request = service('formRequest', RegisterRequest::class, false);
+        $invalid = $this->validateRequest($request);
+        if ($invalid !== null) {
+            return $invalid;
         }
 
-        $payload = [
-            'first_name'            => (string) $this->request->getPost('first_name'),
-            'last_name'             => (string) $this->request->getPost('last_name'),
-            'email'                 => (string) $this->request->getPost('email'),
-            'password'              => (string) $this->request->getPost('password'),
-            'password_confirmation' => (string) $this->request->getPost('password_confirmation'),
-            'client_base_url'       => $this->clientBaseUrl(),
-        ];
+        $payload = $request->payload();
+        $payload['client_base_url'] = $this->clientBaseUrl();
 
         $response = $this->safeApiCall(fn() => $this->authService->register($payload));
 
@@ -110,13 +102,14 @@ class AuthController extends BaseWebController
 
     public function attemptForgotPassword(): RedirectResponse
     {
-        if (! $this->validate([
-            'email' => 'required|valid_email',
-        ])) {
-            return $this->failValidation();
+        /** @var ForgotPasswordRequest $request */
+        $request = service('formRequest', ForgotPasswordRequest::class, false);
+        $invalid = $this->validateRequest($request);
+        if ($invalid !== null) {
+            return $invalid;
         }
 
-        $email = (string) $this->request->getPost('email');
+        $email = (string) ($request->payload()['email'] ?? '');
         $response = $this->safeApiCall(fn() => $this->authService->forgotPassword(
             $email,
             $this->clientBaseUrl()
@@ -141,21 +134,14 @@ class AuthController extends BaseWebController
 
     public function attemptResetPassword(): RedirectResponse
     {
-        if (! $this->validate([
-            'token'                 => 'required',
-            'email'                 => 'required|valid_email',
-            'password'              => 'required|min_length[8]',
-            'password_confirmation' => 'required|matches[password]',
-        ])) {
-            return $this->failValidation();
+        /** @var ResetPasswordRequest $request */
+        $request = service('formRequest', ResetPasswordRequest::class, false);
+        $invalid = $this->validateRequest($request);
+        if ($invalid !== null) {
+            return $invalid;
         }
 
-        $payload = [
-            'token'                 => (string) $this->request->getPost('token'),
-            'email'                 => (string) $this->request->getPost('email'),
-            'password'              => (string) $this->request->getPost('password'),
-            'password_confirmation' => (string) $this->request->getPost('password_confirmation'),
-        ];
+        $payload = $request->payload();
 
         $response = $this->safeApiCall(fn() => $this->authService->resetPassword($payload));
 

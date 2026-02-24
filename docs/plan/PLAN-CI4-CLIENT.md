@@ -72,6 +72,15 @@ ci4-admin-starter/
 │   │   ├── MetricsApiService.php      # Llamadas metrics al API (con fallback)
 │   │   └── HealthApiService.php       # Health check del API (up/degraded/down)
 │   │
+│   ├── Requests/
+│   │   ├── FormRequestInterface.php   # Contrato de validacion web por caso de uso
+│   │   ├── BaseFormRequest.php        # Integracion base con ValidationInterface
+│   │   ├── Auth/                      # Login, register, forgot/reset
+│   │   ├── User/                      # Store/update users
+│   │   ├── ApiKey/                    # Store/update api-keys
+│   │   ├── Profile/                   # Update profile
+│   │   └── File/                      # Upload file
+│   │
 │   ├── Helpers/
 │   │   ├── ui_helper.php              # active_nav, format_date, status_badge, table classes, ui_icon
 │   │   └── form_helper.php            # get_field_error, has_field_error, render_field_error
@@ -264,6 +273,14 @@ Todas las fases fueron completadas. El siguiente desglose conserva el historial 
 - `app/Services/AuditApiService.php`, `ApiKeyApiService.php`
 - `app/Services/MetricsApiService.php` (con fallback `/metrics/timeseries` → `/metrics`)
 - `app/Services/HealthApiService.php` (estados up/degraded/down con latencia)
+
+### ✅ Fase 2.5: Capa de validacion de formularios
+- `app/Requests/FormRequestInterface.php` + `app/Requests/BaseFormRequest.php`
+- Requests por dominio (`Auth`, `User`, `ApiKey`, `Profile`, `File`)
+- `app/Config/Services.php` con factory `formRequest(...)`
+- Controllers consumen `service('formRequest', ..., false)` en lugar de reglas inline
+- `app/Controllers/BaseWebController.php` con helper `validateRequest()`
+- Tests unitarios de normalizacion en `tests/unit/Requests/*`
 
 ### ✅ Fase 3: Layouts y componentes compartidos
 - `app/Views/layouts/partials/head.php` — Tailwind CDN + Alpine CDN + Lucide CDN + tema

@@ -17,6 +17,7 @@ This repository is a CodeIgniter 4 web app starter for an admin frontend. All mo
 - `writable/`: runtime files (logs, cache, sessions, uploads).
 - `docs/plan/PLAN-CI4-CLIENT.md`: implementation history and architecture reference.
 - `docs/COMPATIBILIDAD-API.md`: API compatibility contract (JSON shapes, pagination, filter conventions).
+- `docs/VALIDATION-LAYER.md`: FormRequest validation layer guide (rules, payload normalization, testing).
 
 ## Build, Test, and Development Commands
 - `composer install`: installs PHP dependencies.
@@ -38,6 +39,7 @@ Run all commands from the repository root.
 - Methods/variables: `camelCase`.
 - Config files stay in `app/Config`; route definitions in `app/Config/Routes.php`.
 - Keep controllers thin; move API/data logic to service/library classes.
+- Keep form validation in `app/Requests` (FormRequest pattern), not inline in controllers.
 
 ## Testing Guidelines
 - Framework: PHPUnit (configured via `phpunit.xml.dist`).
