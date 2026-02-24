@@ -18,6 +18,7 @@ return [
     'suspended'        => 'Suspendido',
     'pendingApproval'  => 'Pendiente de aprobacion',
     'adminRole'        => 'Administrador',
+    'superAdminRole'   => 'Superadministrador',
     'userRole'         => 'Usuario',
     'emailVerified'    => 'Email verificado',
     'createdAt'        => 'Fecha de creacion',

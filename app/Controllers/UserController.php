@@ -2,6 +2,8 @@
 
 namespace App\Controllers;
 
+use App\Requests\User\UserStoreRequest;
+use App\Requests\User\UserUpdateRequest;
 use App\Services\UserApiService;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;
@@ -50,22 +52,15 @@ class UserController extends BaseWebController
 
     public function store(): RedirectResponse
     {
-        if (! $this->validate([
-            'first_name' => 'required|min_length[2]|max_length[100]',
-            'last_name'  => 'required|min_length[2]|max_length[100]',
-            'email'      => 'required|valid_email',
-            'role'       => 'required|in_list[user,admin]',
-        ])) {
-            return $this->failValidation();
+        /** @var UserStoreRequest $request */
+        $request = service('formRequest', UserStoreRequest::class, false);
+        $invalid = $this->validateRequest($request);
+        if ($invalid !== null) {
+            return $invalid;
         }
 
-        $payload = [
-            'first_name' => (string) $this->request->getPost('first_name'),
-            'last_name'  => (string) $this->request->getPost('last_name'),
-            'email'      => (string) $this->request->getPost('email'),
-            'role'       => (string) $this->request->getPost('role'),
-            'client_base_url' => $this->clientBaseUrl(),
-        ];
+        $payload = $request->payload();
+        $payload['client_base_url'] = $this->clientBaseUrl();
 
         $response = $this->safeApiCall(fn() => $this->userService->create($payload));
 
@@ -88,27 +83,14 @@ class UserController extends BaseWebController
 
     public function update(string $id): RedirectResponse
     {
-        if (! $this->validate([
-            'first_name' => 'required|min_length[2]|max_length[100]',
-            'last_name'  => 'required|min_length[2]|max_length[100]',
-            'email'      => 'required|valid_email',
-            'role'       => 'required|in_list[user,admin]',
-        ])) {
-            return $this->failValidation();
+        /** @var UserUpdateRequest $request */
+        $request = service('formRequest', UserUpdateRequest::class, false);
+        $invalid = $this->validateRequest($request);
+        if ($invalid !== null) {
+            return $invalid;
         }
 
-        $payload = [
-            'first_name' => (string) $this->request->getPost('first_name'),
-            'last_name'  => (string) $this->request->getPost('last_name'),
-            'role'       => (string) $this->request->getPost('role'),
-        ];
-
-        $email = trim((string) $this->request->getPost('email'));
-        $originalEmail = trim((string) $this->request->getPost('original_email'));
-
-        if ($originalEmail === '' || mb_strtolower($email) !== mb_strtolower($originalEmail)) {
-            $payload['email'] = $email;
-        }
+        $payload = $request->payload();
 
         $response = $this->safeApiCall(fn() => $this->userService->update($id, $payload));
 

@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Requests\Profile\ProfileUpdateRequest;
 use App\Services\AuthApiService;
 use App\Services\UserApiService;
 use CodeIgniter\HTTP\RedirectResponse;
@@ -25,7 +26,7 @@ class ProfileController extends BaseWebController
     {
         $this->refreshUserSession();
         $user = session('user') ?? [];
-        $isAdmin = ($user['role'] ?? null) === 'admin';
+        $isAdmin = has_admin_access(is_scalar($user['role'] ?? null) ? (string) $user['role'] : null);
 
         return $this->render('profile/index', [
             'title'   => lang('Profile.title'),
@@ -37,23 +38,20 @@ class ProfileController extends BaseWebController
     public function update(): RedirectResponse
     {
         $sessionUser = session('user') ?? [];
-        $isAdmin = ($sessionUser['role'] ?? null) === 'admin';
+        $isAdmin = has_admin_access(is_scalar($sessionUser['role'] ?? null) ? (string) $sessionUser['role'] : null);
 
         if (! $isAdmin) {
             return redirect()->to(site_url('profile'))->with('error', lang('Profile.updateNotAllowed'));
         }
 
-        if (! $this->validate([
-            'first_name' => 'required|min_length[2]|max_length[100]',
-            'last_name'  => 'required|min_length[2]|max_length[100]',
-        ])) {
-            return $this->failValidation();
+        /** @var ProfileUpdateRequest $request */
+        $request = service('formRequest', ProfileUpdateRequest::class, false);
+        $invalid = $this->validateRequest($request);
+        if ($invalid !== null) {
+            return $invalid;
         }
 
-        $payload = [
-            'first_name' => (string) $this->request->getPost('first_name'),
-            'last_name'  => (string) $this->request->getPost('last_name'),
-        ];
+        $payload = $request->payload();
 
         $userId = $sessionUser['id'] ?? null;
         if (! is_scalar($userId) || (string) $userId === '') {

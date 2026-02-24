@@ -141,10 +141,17 @@ if (! function_exists('localized_audit_action')) {
     }
 }
 
+if (! function_exists('has_admin_access')) {
+    function has_admin_access(?string $role): bool
+    {
+        return in_array(strtolower((string) $role), ['admin', 'superadmin'], true);
+    }
+}
+
 if (! function_exists('role_badge')) {
     function role_badge(?string $role): string
     {
-        return strtolower((string) $role) === 'admin'
+        return has_admin_access($role)
             ? 'bg-brand-100 text-brand-800'
             : 'bg-gray-100 text-gray-700';
     }
@@ -158,6 +165,7 @@ if (! function_exists('localized_role')) {
 
         return match ($role) {
             'admin' => lang('Users.adminRole'),
+            'superadmin' => lang('Users.superAdminRole'),
             'user'  => lang('Users.userRole'),
             default => $raw,
         };

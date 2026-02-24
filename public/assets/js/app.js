@@ -105,7 +105,7 @@ const statusBadgeClass = (status) => {
     return 'bg-gray-100 text-gray-800';
 };
 
-const roleBadgeClass = (role) => String(role || '').toLowerCase() === 'admin'
+const roleBadgeClass = (role) => ['admin', 'superadmin'].includes(String(role || '').toLowerCase())
     ? 'bg-brand-100 text-brand-800'
     : 'bg-gray-100 text-gray-700';
 
@@ -168,10 +168,12 @@ const statusLabels = {
 const roleLabels = {
     es: {
         admin: 'Administrador',
+        superadmin: 'Superadministrador',
         user: 'Usuario'
     },
     en: {
         admin: 'Admin',
+        superadmin: 'Superadmin',
         user: 'User'
     }
 };

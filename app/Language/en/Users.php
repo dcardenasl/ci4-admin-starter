@@ -18,6 +18,7 @@ return [
     'suspended'        => 'Suspended',
     'pendingApproval'  => 'Pending approval',
     'adminRole'        => 'Admin',
+    'superAdminRole'   => 'Superadmin',
     'userRole'         => 'User',
     'emailVerified'    => 'Email verified',
     'createdAt'        => 'Created at',

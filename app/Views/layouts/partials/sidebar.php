@@ -19,7 +19,7 @@
             <span><?= lang('App.files') ?></span>
         </a>
 
-        <?php if ((session('user.role') ?? null) === 'admin'): ?>
+        <?php if (has_admin_access((string) (session('user.role') ?? ''))): ?>
             <div class="pt-3 mt-3 border-t border-gray-800 text-xs uppercase text-gray-500"><?= lang('App.administration') ?></div>
             <a href="<?= site_url('admin/users') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/users*') ?>">
                 <?= ui_icon('users') ?>
