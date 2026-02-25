@@ -84,8 +84,8 @@ class ApiClient implements ApiClientInterface
             $payload[(string) $name] = "data:{$mimeType};base64,{$base64Data}";
             
             // Aseguramos que el nombre original también se envíe
-            if (! isset($payload['name'])) {
-                $payload['name'] = basename($file);
+            if (! isset($payload['filename'])) {
+                $payload['filename'] = basename($file);
             }
         }
 

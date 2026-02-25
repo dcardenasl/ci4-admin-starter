@@ -13,8 +13,24 @@ class FileUploadRequest extends BaseFormRequest
 
     public function rules(): array
     {
+        $maxBytes = config('Validation')->maxFileSizeBytes ?? 10485760;
+        $maxKb    = ceil($maxBytes / 1024);
+
         return [
-            'file' => 'uploaded[file]|max_size[file,10240]',
+            'file' => "uploaded[file]|max_size[file,{$maxKb}]",
+        ];
+    }
+
+    public function messages(): array
+    {
+        $maxBytes  = config('Validation')->maxFileSizeBytes ?? 10485760;
+        $maxSizeMb = round($maxBytes / 1024 / 1024, 1);
+
+        return [
+            'file' => [
+                'uploaded' => lang('Files.invalidFile'),
+                'max_size' => lang('Files.fileTooLarge', [$maxSizeMb]),
+            ],
         ];
     }
 

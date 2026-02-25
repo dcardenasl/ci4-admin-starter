@@ -5,7 +5,7 @@ return [
     'uploadTitle'     => 'Subir archivo',
     'dragDrop'        => 'Arrastra un archivo aqui o haz click para seleccionar',
     'fileReady'       => 'Archivo listo para subir',
-    'fileTooLarge'    => 'El archivo supera el limite de 10 MB.',
+    'fileTooLarge'    => 'El archivo supera el limite de {0} MB.',
     'visibility'      => 'Visibilidad',
     'private'         => 'Privado',
     'public'          => 'Publico',
