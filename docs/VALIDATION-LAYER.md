@@ -116,11 +116,13 @@ Request:
 
 Reglas clave:
 
-- `uploaded[file]` + `max_size[file,10240]`.
+- `uploaded[file]` + `max_size[file,X]` (donde `X` se calcula desde `config('Validation')->maxFileSizeBytes`).
+- Soporte para validación AJAX con respuesta JSON (`ok: false, fieldErrors: [...]`).
 
 Normalización clave:
 
 - `payload()` devuelve `visibility` con default `private`.
+- Mensajes de error dinámicos que incluyen el tamaño máximo permitido en MB.
 
 ## Cómo agregar un nuevo FormRequest
 

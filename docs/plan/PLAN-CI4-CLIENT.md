@@ -300,8 +300,8 @@ Todas las fases fueron completadas. El siguiente desglose conserva el historial 
 ### ✅ Fase 5: Dashboard, perfil y archivos
 - `app/Controllers/DashboardController.php` — stats + health check del API
 - `app/Controllers/ProfileController.php` — perfil (edicion admin), reset password por email, reenviar verificacion
-- `app/Controllers/FileController.php` — upload, list (data endpoint), download, delete
-- Vistas correspondientes con tablas server-driven y filtros
+- `app/Controllers/FileController.php` — upload (AJAX + progreso), list (data endpoint), download/view, delete
+- Vistas correspondientes con tablas server-driven, filtros y previsualización de imágenes (Lightbox)
 
 ### ✅ Fase 6: Gestion de usuarios admin
 - `app/Controllers/UserController.php` — CRUD completo + aprobar usuarios

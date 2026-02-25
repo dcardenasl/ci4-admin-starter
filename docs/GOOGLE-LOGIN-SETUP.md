@@ -95,7 +95,21 @@ CORS_ALLOWED_ORIGINS='http://localhost:8082,https://admin.tudominio.com'
 - **Falla por CORS en produccion**:
   - API no incluye el origen del admin en `CORS_ALLOWED_ORIGINS`.
 
-## 8) Contrato funcional esperado
+## 8) Configuración de Seguridad (CSRF)
+
+Como el callback de Google se realiza mediante un POST desde un origen externo (google.com) hacia la ruta `/login/google` de la aplicación, es necesario exceptuar esta ruta de la protección CSRF en `app/Config/Filters.php`:
+
+```php
+public array $globals = [
+    'before' => [
+        // ...
+        'csrf' => ['except' => ['login/google']],
+        // ...
+    ],
+];
+```
+
+## 9) Contrato funcional esperado
 
 Endpoint backend usado por admin:
 

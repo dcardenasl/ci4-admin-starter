@@ -112,6 +112,24 @@ Regla de implementacion:
 
 - Endpoints puente como `/files/data`, `/admin/users/data`, `/admin/audit/data` deben priorizar passthrough del JSON del backend para evitar divergencias de contrato.
 
+## Compatibilidad de Archivos (Upload/Download)
+
+### Subida de archivos (Base64)
+Para maximizar la compatibilidad con el backend `ci4-api-starter`, el frontend convierte los archivos a Base64 Data URI y los envía en un payload JSON:
+- Campo de datos: `file` (Data URI).
+- Campo de metadatos: `filename` (nombre original del archivo).
+- Campos adicionales: `visibility` (`public`|`private`), `name`.
+
+### Descarga y Previsualización
+El frontend soporta dos modos de obtención de archivos:
+1. **Download**: Cabecera `Content-Disposition: attachment`.
+2. **View**: Cabecera `Content-Disposition: inline` (usado para previsualización de imágenes).
+
+El frontend intentará determinar el nombre del archivo en este orden:
+1. Campo `original_name` en el cuerpo de la respuesta JSON.
+2. Atributo `filename` en la cabecera `Content-Disposition` del API.
+3. Generación automática basada en el ID y `Content-Type`.
+
 ## Guía para nuevas implementaciones
 
 1. Definir o reutilizar una request class en `app/Requests/*` con `rules()` + `payload()`.
