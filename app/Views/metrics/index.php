@@ -15,52 +15,155 @@
 </section>
 
 <section class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-    <article class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
-        <p class="text-sm text-gray-500"><?= lang('Metrics.totalUsers') ?></p>
-        <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($metrics['total_users'] ?? $metrics['users'] ?? 0)) ?></p>
-    </article>
-    <article class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
-        <p class="text-sm text-gray-500"><?= lang('Metrics.activeUsers') ?></p>
-        <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($metrics['active_users'] ?? 0)) ?></p>
-    </article>
-    <article class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
-        <p class="text-sm text-gray-500"><?= lang('Metrics.totalFiles') ?></p>
-        <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($metrics['total_files'] ?? $metrics['files'] ?? 0)) ?></p>
-    </article>
-    <article class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
-        <p class="text-sm text-gray-500"><?= lang('Metrics.storageUsed') ?></p>
-        <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($metrics['storage_used'] ?? $metrics['storage'] ?? '0 B')) ?></p>
-    </article>
+    <?php if (isset($metrics['request_stats'])): ?>
+        <article class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+            <p class="text-sm text-gray-500"><?= lang('Metrics.totalRequests') ?></p>
+            <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($metrics['request_stats']['total_requests'] ?? 0)) ?></p>
+        </article>
+        <article class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+            <p class="text-sm text-gray-500"><?= lang('Metrics.avgResponseTime') ?></p>
+            <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($metrics['request_stats']['avg_response_time_ms'] ?? 0)) ?> ms</p>
+        </article>
+        <article class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+            <p class="text-sm text-gray-500"><?= lang('Metrics.availability') ?></p>
+            <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($metrics['request_stats']['availability_percent'] ?? 0)) ?>%</p>
+        </article>
+        <article class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+            <p class="text-sm text-gray-500"><?= lang('Metrics.successRequests') ?></p>
+            <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($metrics['request_stats']['successful_requests'] ?? 0)) ?></p>
+        </article>
+    <?php else: ?>
+        <article class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+            <p class="text-sm text-gray-500"><?= lang('Metrics.totalUsers') ?></p>
+            <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($metrics['total_users'] ?? $metrics['users'] ?? 0)) ?></p>
+        </article>
+        <article class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+            <p class="text-sm text-gray-500"><?= lang('Metrics.activeUsers') ?></p>
+            <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($metrics['active_users'] ?? 0)) ?></p>
+        </article>
+        <article class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+            <p class="text-sm text-gray-500"><?= lang('Metrics.totalFiles') ?></p>
+            <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($metrics['total_files'] ?? $metrics['files'] ?? 0)) ?></p>
+        </article>
+        <article class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+            <p class="text-sm text-gray-500"><?= lang('Metrics.storageUsed') ?></p>
+            <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($metrics['storage_used'] ?? $metrics['storage'] ?? $metrics['total_size'] ?? $metrics['disk_usage'] ?? '0 B')) ?></p>
+        </article>
+    <?php endif; ?>
 </section>
 
-<section class="mt-6 bg-white border border-gray-200 rounded-xl shadow-sm p-5">
-    <h3 class="text-lg font-semibold text-gray-900"><?= lang('Metrics.trends') ?></h3>
-    <?php if (empty($timeseries)): ?>
-        <p class="mt-3 text-sm text-gray-500"><?= lang('Metrics.noTrendData') ?></p>
-    <?php else: ?>
+<?php if (! empty($metrics['slow_requests'])): ?>
+    <section class="mt-6 bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+        <h3 class="text-lg font-semibold text-gray-900"><?= lang('Metrics.slowRequests') ?></h3>
         <div class="<?= esc(table_wrapper_class()) ?>">
             <div class="<?= esc(table_scroll_class()) ?>">
             <table class="<?= esc(table_class()) ?>">
                 <thead class="<?= esc(table_head_class()) ?>">
                     <tr>
-                        <th class="<?= esc(table_th_class()) ?>"><?= lang('Metrics.period') ?></th>
-                        <th class="<?= esc(table_th_class()) ?>"><?= lang('Metrics.value') ?></th>
+                        <th class="<?= esc(table_th_class()) ?>"><?= lang('Metrics.method') ?></th>
+                        <th class="<?= esc(table_th_class()) ?>"><?= lang('Metrics.path') ?></th>
+                        <th class="<?= esc(table_th_class()) ?>"><?= lang('Metrics.duration') ?></th>
                     </tr>
                 </thead>
                 <tbody class="<?= esc(table_body_class()) ?>">
-                    <?php foreach ($timeseries as $point): ?>
+                    <?php foreach ($metrics['slow_requests'] as $req): ?>
                         <tr class="<?= esc(table_row_class()) ?>">
-                            <td class="<?= esc(table_td_class()) ?>"><?= esc((string) ($point['period'] ?? $point['date'] ?? $point['label'] ?? '-')) ?></td>
-                            <td class="<?= esc(table_td_class('primary')) ?>"><?= esc((string) ($point['value'] ?? $point['count'] ?? '-')) ?></td>
+                            <td class="<?= esc(table_td_class()) ?>"><?= esc($req['method'] ?? '-') ?></td>
+                            <td class="<?= esc(table_td_class()) ?>"><?= esc($req['path'] ?? '-') ?></td>
+                            <td class="<?= esc(table_td_class('primary')) ?>"><?= esc($req['duration_ms'] ?? 0) ?> ms</td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
             </div>
         </div>
-    <?php endif; ?>
-</section>
+    </section>
+<?php endif; ?>
 
+
+<?php if (! empty($timeseries)): ?>
+<section class="mt-6 bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+    <h3 class="text-lg font-semibold text-gray-900"><?= lang('Metrics.trends') ?></h3>
+    <div class="<?= esc(table_wrapper_class()) ?>">
+        <div class="<?= esc(table_scroll_class()) ?>">
+        <table class="<?= esc(table_class()) ?>">
+            <thead class="<?= esc(table_head_class()) ?>">
+                <tr>
+                    <th class="<?= esc(table_th_class()) ?>"><?= lang('Metrics.period') ?></th>
+                    <th class="<?= esc(table_th_class()) ?>"><?= lang('Metrics.value') ?></th>
+                </tr>
+            </thead>
+            <tbody class="<?= esc(table_body_class()) ?>">
+                <?php foreach ($timeseries as $point): ?>
+                    <tr class="<?= esc(table_row_class()) ?>">
+                                                    <td class="<?= esc(table_td_class()) ?>">
+                                                        <?= esc((string) ($point['period'] ?? $point['date'] ?? $point['label'] ?? $point['timestamp'] ?? $point['group_by'] ?? '-')) ?>
+                                                    </td>
+                                                    <td class="<?= esc(table_td_class('primary')) ?>">
+                                                        <?= esc((string) ($point['value'] ?? $point['count'] ?? $point['total'] ?? $point['avg'] ?? '-')) ?>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                    </div>
+                                </div>
+                            </section>
+                        <?php endif; ?>
+                        
+                        <?php if (! empty($metrics['slo'])): ?>
+                            <section class="mt-6 bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+                                <h3 class="text-lg font-semibold text-gray-900"><?= lang('Metrics.slo') ?></h3>
+                                <div class="<?= esc(table_wrapper_class()) ?>">
+                                    <div class="<?= esc(table_scroll_class()) ?>">
+                                    <table class="<?= esc(table_class()) ?>">
+                                        <thead class="<?= esc(table_head_class()) ?>">
+                                            <tr>
+                                                <th class="<?= esc(table_th_class()) ?>"><?= lang('Metrics.sloMetric') ?></th>
+                                                <th class="<?= esc(table_th_class()) ?>"><?= lang('Metrics.sloTarget') ?></th>
+                                                <th class="<?= esc(table_th_class()) ?>"><?= lang('Metrics.sloCurrent') ?></th>
+                                                <th class="<?= esc(table_th_class()) ?>"><?= lang('Metrics.errorBudget') ?></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="<?= esc(table_body_class()) ?>">
+                                            <?php 
+                                                $slos = [];
+                                                if (isset($metrics['slo']['availability'])) $slos['Availability'] = $metrics['slo']['availability'];
+                                                if (isset($metrics['slo']['uptime'])) $slos['Uptime'] = $metrics['slo']['uptime'];
+                                                if (isset($metrics['slo']['latency'])) $slos['Latency'] = $metrics['slo']['latency'];
+                                                
+                                                if (empty($slos)) {
+                                                    foreach ($metrics['slo'] as $k => $v) {
+                                                        if (is_array($v)) $slos[ucfirst((string)$k)] = $v;
+                                                    }
+                                                }
+                                            ?>
+                                            <?php foreach ($slos as $name => $slo): ?>
+                                                <tr class="<?= esc(table_row_class()) ?>">
+                                                    <td class="<?= esc(table_td_class()) ?>"><?= esc($name) ?></td>
+                                                    <td class="<?= esc(table_td_class()) ?>"><?= esc((string)($slo['target'] ?? $slo['goal'] ?? '-')) ?>%</td>
+                                                    <td class="<?= esc(table_td_class('primary')) ?>"><?= esc((string)($slo['current'] ?? $slo['value'] ?? '-')) ?>%</td>
+                                                    <td class="<?= esc(table_td_class()) ?>">
+                                                        <?php 
+                                                            $remaining = $slo['remaining'] ?? $slo['error_budget'] ?? $slo['budget'] ?? null;
+                                                        ?>
+                                                        <?php if ($remaining !== null): ?>
+                                                            <span class="px-2 py-1 rounded text-xs <?= (float)$remaining > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' ?>">
+                                                                <?= esc((string)$remaining) ?>%
+                                                            </span>
+                                                        <?php else: ?>
+                                                            -
+                                                        <?php endif; ?>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                    </div>
+                                </div>
+                            </section>
+                        <?php endif; ?>
+                        
 <?php if (! empty($metrics['users_by_role'])): ?>
     <section class="mt-6 bg-white border border-gray-200 rounded-xl shadow-sm p-5">
         <h3 class="text-lg font-semibold text-gray-900"><?= lang('Metrics.usersByRole') ?></h3>
