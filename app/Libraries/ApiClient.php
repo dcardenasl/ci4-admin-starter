@@ -69,17 +69,27 @@ class ApiClient implements ApiClientInterface
 
     public function upload(string $path, array $files = [], array $fields = []): array
     {
-        $multipart = $fields;
+        $payload = $fields;
 
         foreach ($files as $name => $file) {
             if (! is_file($file)) {
                 throw new RuntimeException("File not found: {$file}");
             }
 
-            $multipart[(string) $name] = fopen($file, 'rb');
+            // Obtenemos el tipo MIME para construir el Data URI
+            $mimeType = mime_content_type($file) ?: 'application/octet-stream';
+            $base64Data = base64_encode(file_get_contents($file));
+
+            // Enviamos el archivo con el prefijo de tipo para que el backend reconozca la extensión
+            $payload[(string) $name] = "data:{$mimeType};base64,{$base64Data}";
+            
+            // Aseguramos que el nombre original también se envíe
+            if (! isset($payload['name'])) {
+                $payload['name'] = basename($file);
+            }
         }
 
-        return $this->request('POST', $path, ['multipart' => $multipart], true);
+        return $this->post($path, $payload);
     }
 
     public function request(string $method, string $path, array $options = [], bool $authenticated = true): array
