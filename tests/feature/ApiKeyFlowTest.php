@@ -74,7 +74,7 @@ final class ApiKeyFlowTest extends CIUnitTestCase
             'access_token' => 'token',
             'user'         => ['role' => 'admin'],
         ])->post('/admin/api-keys', [
-            'csrf_test_name' => csrf_hash(),
+            csrf_token() => csrf_hash(),
             'name' => 'Integration Key',
         ]);
 
@@ -87,7 +87,7 @@ final class ApiKeyFlowTest extends CIUnitTestCase
             'access_token' => 'token',
             'user'         => ['role' => 'admin'],
         ])->post('/admin/api-keys', [
-            'csrf_test_name' => csrf_hash(),
+            csrf_token() => csrf_hash(),
         ]);
 
         $result->assertRedirect();
@@ -141,7 +141,7 @@ final class ApiKeyFlowTest extends CIUnitTestCase
             'access_token' => 'token',
             'user'         => ['role' => 'admin'],
         ])->post('/admin/api-keys/15', [
-            'csrf_test_name' => csrf_hash(),
+            csrf_token() => csrf_hash(),
             'name' => 'Renamed',
         ]);
 
@@ -170,7 +170,7 @@ final class ApiKeyFlowTest extends CIUnitTestCase
             'access_token' => 'token',
             'user'         => ['role' => 'admin'],
         ])->post('/admin/api-keys/15/delete', [
-            'csrf_test_name' => csrf_hash(),
+            csrf_token() => csrf_hash(),
         ]);
 
         $result->assertRedirectTo(site_url('admin/api-keys'));

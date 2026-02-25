@@ -60,7 +60,7 @@ final class ProfileFlowTest extends CIUnitTestCase
             'access_token' => 'token',
             'user'         => ['id' => 15, 'email' => 'admin@example.com', 'role' => 'admin'],
         ])->post('/profile', [
-            'csrf_test_name' => csrf_hash(),
+            csrf_token() => csrf_hash(),
             'first_name'     => 'Admin',
             'last_name'      => 'Updated',
         ]);
@@ -75,7 +75,7 @@ final class ProfileFlowTest extends CIUnitTestCase
             'access_token' => 'token',
             'user'         => ['id' => 22, 'email' => 'user@example.com', 'role' => 'user'],
         ])->post('/profile', [
-            'csrf_test_name' => csrf_hash(),
+            csrf_token() => csrf_hash(),
             'first_name'     => 'User',
             'last_name'      => 'Updated',
         ]);
@@ -120,7 +120,7 @@ final class ProfileFlowTest extends CIUnitTestCase
             'access_token' => 'token',
             'user'         => ['id' => 22, 'email' => 'user@example.com', 'role' => 'user'],
         ])->post('/profile/request-password-reset', [
-            'csrf_test_name' => csrf_hash(),
+            csrf_token() => csrf_hash(),
         ]);
 
         $result->assertRedirectTo(site_url('profile'));

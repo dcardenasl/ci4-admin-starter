@@ -78,7 +78,7 @@ final class FileUploadFlowTest extends CIUnitTestCase
     public function testUploadWithoutFileReturnsValidationError(): void
     {
         $result = $this->withSession($this->authSession)->post('/files/upload', [
-            'csrf_test_name' => csrf_hash(),
+            csrf_token() => csrf_hash(),
         ]);
 
         $result->assertRedirectTo(site_url('files'));
@@ -88,7 +88,7 @@ final class FileUploadFlowTest extends CIUnitTestCase
     public function testUploadRouteRedirectsToLoginWithoutSession(): void
     {
         $result = $this->post('/files/upload', [
-            'csrf_test_name' => csrf_hash(),
+            csrf_token() => csrf_hash(),
         ]);
 
         $result->assertRedirectTo(site_url('login'));
@@ -243,7 +243,7 @@ final class FileUploadFlowTest extends CIUnitTestCase
         Services::injectMock('fileApiService', $mock);
 
         $result = $this->withSession($this->authSession)->post('/files/file-456/delete', [
-            'csrf_test_name' => csrf_hash(),
+            csrf_token() => csrf_hash(),
         ]);
 
         $result->assertRedirectTo(site_url('files'));
@@ -268,7 +268,7 @@ final class FileUploadFlowTest extends CIUnitTestCase
         Services::injectMock('fileApiService', $mock);
 
         $result = $this->withSession($this->authSession)->post('/files/forbidden-file/delete', [
-            'csrf_test_name' => csrf_hash(),
+            csrf_token() => csrf_hash(),
         ]);
 
         $result->assertRedirectTo(site_url('files'));
@@ -278,7 +278,7 @@ final class FileUploadFlowTest extends CIUnitTestCase
     public function testDeleteRedirectsToLoginWithoutSession(): void
     {
         $result = $this->post('/files/some-id/delete', [
-            'csrf_test_name' => csrf_hash(),
+            csrf_token() => csrf_hash(),
         ]);
 
         $result->assertRedirectTo(site_url('login'));

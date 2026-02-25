@@ -49,7 +49,7 @@ final class UserCreationInvitationFlowTest extends CIUnitTestCase
             'access_token' => 'token',
             'user'         => ['role' => 'admin'],
         ])->post('/admin/users', [
-            'csrf_test_name' => csrf_hash(),
+            csrf_token() => csrf_hash(),
             'first_name'     => 'Jane',
             'last_name'      => 'Doe',
             'email'          => 'jane@example.com',
@@ -89,7 +89,7 @@ final class UserCreationInvitationFlowTest extends CIUnitTestCase
             'access_token' => 'token',
             'user'         => ['role' => 'admin'],
         ])->post('/admin/users/101', [
-            'csrf_test_name' => csrf_hash(),
+            csrf_token() => csrf_hash(),
             'first_name'     => 'Jane',
             'last_name'      => 'Doe',
             'email'          => 'jane@example.com',
@@ -130,7 +130,7 @@ final class UserCreationInvitationFlowTest extends CIUnitTestCase
             'access_token' => 'token',
             'user'         => ['role' => 'admin'],
         ])->post('/admin/users/101', [
-            'csrf_test_name' => csrf_hash(),
+            csrf_token() => csrf_hash(),
             'first_name'     => 'Jane',
             'last_name'      => 'Doe',
             'email'          => 'jane@example.com',
