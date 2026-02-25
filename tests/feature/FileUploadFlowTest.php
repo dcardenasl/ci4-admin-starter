@@ -50,7 +50,20 @@ final class FileUploadFlowTest extends CIUnitTestCase
         $body = $result->getBody();
         $this->assertStringContainsString('multipart/form-data', $body);
         $this->assertStringContainsString('name="file"', $body);
+        $this->assertStringContainsString('onFileChange(event)', $body);
+        $this->assertStringContainsString(lang('Files.fileReady'), $body);
+        $this->assertStringContainsString(lang('Files.fileTooLarge'), $body);
         $this->assertStringContainsString('name="visibility"', $body);
+    }
+
+    public function testIndexRendersFileFieldErrorWhenPresentInSession(): void
+    {
+        $result = $this->withSession($this->authSession + [
+            'fieldErrors' => ['file' => 'Mock file error'],
+        ])->get('/files');
+
+        $result->assertStatus(200);
+        $this->assertStringContainsString('Mock file error', $result->getBody());
     }
 
     public function testIndexRedirectsToLoginWithoutSession(): void
