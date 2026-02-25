@@ -69,25 +69,14 @@ class ApiClient implements ApiClientInterface
 
     public function upload(string $path, array $files = [], array $fields = []): array
     {
-        $multipart = [];
-
-        foreach ($fields as $name => $value) {
-            $multipart[] = [
-                'name'     => (string) $name,
-                'contents' => (string) $value,
-            ];
-        }
+        $multipart = $fields;
 
         foreach ($files as $name => $file) {
             if (! is_file($file)) {
                 throw new RuntimeException("File not found: {$file}");
             }
 
-            $multipart[] = [
-                'name'     => (string) $name,
-                'contents' => fopen($file, 'rb'),
-                'filename' => basename($file),
-            ];
+            $multipart[(string) $name] = fopen($file, 'rb');
         }
 
         return $this->request('POST', $path, ['multipart' => $multipart], true);
@@ -103,6 +92,17 @@ class ApiClient implements ApiClientInterface
 
         if ($authenticated) {
             $options = $this->withAuthorization($options);
+        }
+
+        if (isset($options['multipart'])) {
+            unset($options['json'], $options['body']);
+            // Ensure no Content-Type is set so CURL can set the boundary
+            if (isset($options['headers']['Content-Type'])) {
+                unset($options['headers']['Content-Type']);
+            }
+            if (isset($options['headers']['content-type'])) {
+                unset($options['headers']['content-type']);
+            }
         }
 
         $response = $this->http->request($method, $uri, $options);
