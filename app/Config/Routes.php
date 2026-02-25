@@ -32,6 +32,7 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->get('/files/data', 'FileController::data');
     $routes->post('/files/upload', 'FileController::upload');
     $routes->get('/files/(:segment)/download', 'FileController::download/$1');
+    $routes->get('/files/(:segment)/view', 'FileController::view/$1');
     $routes->post('/files/(:segment)/delete', 'FileController::delete/$1');
 });
 

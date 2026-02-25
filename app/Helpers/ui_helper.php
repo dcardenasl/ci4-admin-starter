@@ -375,6 +375,7 @@ if (! function_exists('ui_icon')) {
             'edit'      => 'pencil',
             'download'  => 'download',
             'trash'     => 'trash-2',
+            'x'         => 'x',
         ];
 
         $icon = $icons[$name] ?? $icons['search'];

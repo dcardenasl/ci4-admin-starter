@@ -44,6 +44,7 @@
             <table class="<?= esc(table_class()) ?>">
                 <thead class="<?= esc(table_head_class()) ?>">
                     <tr>
+                        <th class="<?= esc(table_th_class()) ?> w-16"><?= lang('App.preview') ?? 'Preview' ?></th>
                         <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('name')">
                             <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('name')" aria-label="<?= esc(lang('Files.sortByFileName')) ?>">
                                 <span><?= lang('Files.fileName') ?></span>
@@ -56,10 +57,10 @@
                                 <span aria-hidden="true" x-text="sortIcon('status')"></span>
                             </button>
                         </th>
-                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('created_at')">
-                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('created_at')" aria-label="<?= esc(lang('Files.sortByDate')) ?>">
+                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('uploaded_at')">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('uploaded_at')" aria-label="<?= esc(lang('Files.sortByDate')) ?>">
                                 <span><?= lang('Files.date') ?></span>
-                                <span aria-hidden="true" x-text="sortIcon('created_at')"></span>
+                                <span aria-hidden="true" x-text="sortIcon('uploaded_at')"></span>
                             </button>
                         </th>
                         <th class="<?= esc(table_th_class()) ?>"><?= lang('Files.actions') ?></th>
@@ -68,11 +69,25 @@
                 <tbody class="<?= esc(table_body_class()) ?>">
                     <template x-for="row in rows" :key="String(row.id ?? Math.random())">
                         <tr class="<?= esc(table_row_class()) ?>">
-                            <td class="<?= esc(table_td_class('primary')) ?>" x-text="String(row.name ?? row.filename ?? '-')"></td>
+                            <td class="<?= esc(table_td_class()) ?>">
+                                <template x-if="row.is_image">
+                                    <button type="button" @click="$dispatch('open-preview', '<?= site_url('files') ?>/' + (row.id ?? '') + '/view')">
+                                        <img :src="'<?= site_url('files') ?>/' + (row.id ?? '') + '/view'" 
+                                             class="h-10 w-10 rounded-lg object-cover border border-gray-200 hover:scale-110 transition-transform shadow-sm" 
+                                             :alt="row.original_name">
+                                    </button>
+                                </template>
+                                <template x-if="!row.is_image">
+                                    <div class="h-10 w-10 flex items-center justify-center rounded-lg bg-gray-100 border border-gray-200">
+                                        <?= ui_icon('file', 'h-5 w-5 text-gray-400') ?>
+                                    </div>
+                                </template>
+                            </td>
+                            <td class="<?= esc(table_td_class('primary')) ?>" x-text="String(row.original_name ?? '-')"></td>
                             <td class="<?= esc(table_td_class()) ?>">
                                 <span class="inline-flex rounded-full px-2 py-1 text-xs" :class="statusBadgeClass(row.status)" x-text="statusLabel(row.status)"></span>
                             </td>
-                            <td class="<?= esc(table_td_class('muted')) ?>" x-text="formatDate(row.created_at)"></td>
+                            <td class="<?= esc(table_td_class('muted')) ?>" x-text="formatDate(row.uploaded_at)"></td>
                             <td class="<?= esc(table_td_class()) ?>">
                                 <div class="flex items-center gap-2">
                                     <a :href="fileDownloadUrl(row.id)" class="<?= esc(action_button_class()) ?>"><?= lang('Files.download') ?></a>
@@ -91,4 +106,32 @@
     </template>
 
     <?= view('layouts/partials/remote_pagination') ?>
+
+    <!-- Image Preview Modal (Lightbox) -->
+    <div x-data="{ show: false, url: '' }"
+         x-show="show" 
+         @open-preview.window="url = $event.detail; show = true"
+         @keydown.escape.window="show = false"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+         @click="show = false"
+         style="display: none;">
+        
+        <div class="relative max-h-full max-w-full" @click.stop>
+            <button type="button" @click="show = false" 
+                    class="absolute -top-12 right-0 p-2 text-white hover:text-gray-300 focus:outline-none transition-colors"
+                    aria-label="<?= lang('App.close') ?>">
+                <?= ui_icon('x', 'h-8 w-8') ?>
+            </button>
+            
+            <img :src="url" 
+                 class="max-h-[85vh] max-w-[90vw] rounded-lg shadow-2xl object-contain border border-white/10"
+                 @click.stop>
+        </div>
+    </div>
 </section>

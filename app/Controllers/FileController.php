@@ -35,42 +35,87 @@ class FileController extends BaseWebController
         );
     }
 
-    public function upload(): RedirectResponse
+    public function upload(): ResponseInterface
     {
         /** @var FileUploadRequest $request */
         $request = service('formRequest', FileUploadRequest::class, false);
         if (! $request->validate()) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['ok' => false, 'fieldErrors' => $request->errors()]);
+            }
+
             return redirect()->to(site_url('files'))->with('fieldErrors', $request->errors());
         }
 
         $file = $this->request->getFile('file');
 
         if ($file === null || ! $file->isValid()) {
-            return redirect()->to(site_url('files'))->with('error', lang('Files.invalidFile'));
+            $maxBytes = config('Validation')->maxFileSizeBytes ?? 10485760;
+            $maxSizeMb = round($maxBytes / 1024 / 1024, 1);
+            $error = ($file && $file->getError() === UPLOAD_ERR_INI_SIZE)
+                ? lang('Files.fileTooLarge', [$maxSizeMb])
+                : lang('Files.invalidFile');
+
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['ok' => false, 'messages' => [$error]]);
+            }
+
+            return redirect()->to(site_url('files'))->with('error', $error);
         }
 
-        $uploadDir = WRITEPATH . 'uploads/';
+        $uploadDir = WRITEPATH . 'uploads/' . bin2hex(random_bytes(8)) . '/';
         if (! is_dir($uploadDir)) {
             mkdir($uploadDir, 0o755, true);
         }
 
-        $tempPath = $uploadDir . uniqid('upload_', true) . '_' . $file->getName();
+        $tempPath = $uploadDir . $file->getName();
         $file->move(dirname($tempPath), basename($tempPath));
 
         $response = $this->safeApiCall(fn() => $this->fileService->upload('file', $tempPath, [
-            'visibility' => (string) ($request->payload()['visibility'] ?? 'private'),
+            'visibility'    => (string) ($request->payload()['visibility'] ?? 'private'),
+            'filename'      => $file->getName(),
+            'name'          => $file->getName(),
+            'original_name' => $file->getName(),
         ]));
 
         @unlink($tempPath);
+        @rmdir($uploadDir);
 
         if (! $response['ok']) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'ok'          => false,
+                    'messages'    => $response['messages'] ?? [lang('Files.uploadFailed')],
+                    'fieldErrors' => $response['fieldErrors'] ?? [],
+                ]);
+            }
+
             return $this->failApi($response, lang('Files.uploadFailed'), site_url('files'), false);
+        }
+
+        if ($this->request->isAJAX()) {
+            session()->setFlashdata('success', lang('Files.uploadSuccess'));
+            return $this->response->setJSON([
+                'ok'       => true,
+                'message'  => lang('Files.uploadSuccess'),
+                'redirect' => site_url('files'),
+            ]);
         }
 
         return redirect()->to(site_url('files'))->with('success', lang('Files.uploadSuccess'));
     }
 
     public function download(string $id): ResponseInterface
+    {
+        return $this->serveFile($id, 'attachment');
+    }
+
+    public function view(string $id): ResponseInterface
+    {
+        return $this->serveFile($id, 'inline');
+    }
+
+    protected function serveFile(string $id, string $disposition): ResponseInterface
     {
         $response = $this->safeApiCall(fn() => $this->fileService->getDownload($id));
 
@@ -89,21 +134,28 @@ class FileController extends BaseWebController
 
             $headers = is_array($response['headers'] ?? null) ? $response['headers'] : [];
             $contentType = (string) ($headers['content-type'] ?? 'application/octet-stream');
-            $contentDisposition = (string) ($headers['content-disposition'] ?? '');
-            $contentLength = (string) ($headers['content-length'] ?? '');
+            
+            // 1. Intentar obtener el nombre del campo 'original_name' de la API
+            $filename = $data['original_name'] ?? $response['original_name'] ?? $data['name'] ?? $data['filename'] ?? null;
+            
+            // 2. Si no hay nombre en el cuerpo, intentar obtenerlo del Content-Disposition de la propia API
+            if (! $filename && isset($headers['content-disposition'])) {
+                if (preg_match('/filename="?([^"]+)"?/', $headers['content-disposition'], $matches)) {
+                    $filename = $matches[1];
+                }
+            }
+
+            // 3. Si seguimos sin nombre, generar uno basado en el ID y el tipo de contenido
+            if (! $filename) {
+                $extension = \Config\Mimes::guessExtensionFromType($contentType) ?? 'bin';
+                $filename = "file_{$id}.{$extension}";
+            }
 
             $result = $this->response
                 ->setStatusCode((int) ($response['status'] ?? 200))
                 ->setHeader('Content-Type', $contentType)
+                ->setHeader('Content-Disposition', $disposition . '; filename="' . $filename . '"')
                 ->setBody($raw);
-
-            if ($contentDisposition !== '') {
-                $result->setHeader('Content-Disposition', $contentDisposition);
-            }
-
-            if ($contentLength !== '') {
-                $result->setHeader('Content-Length', $contentLength);
-            }
 
             return $result;
         }
