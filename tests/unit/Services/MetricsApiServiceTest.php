@@ -15,14 +15,15 @@ final class MetricsApiServiceTest extends CIUnitTestCase
     {
         $mock = $this->createMock(ApiClientInterface::class);
         $expected = ['ok' => true, 'status' => 200, 'data' => ['total_users' => 20]];
+        $filters = ['filter' => ['date_from' => '2026-01-01']];
 
         $mock->expects($this->once())
             ->method('get')
-            ->with('/metrics', ['date_from' => '2026-01-01'])
+            ->with('/metrics', $filters)
             ->willReturn($expected);
 
         $service = new MetricsApiService($mock);
-        $result = $service->summary(['date_from' => '2026-01-01']);
+        $result = $service->summary($filters);
 
         $this->assertSame($expected, $result);
     }

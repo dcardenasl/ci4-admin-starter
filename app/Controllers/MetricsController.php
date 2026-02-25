@@ -26,22 +26,29 @@ class MetricsController extends BaseWebController
             $groupBy = 'day';
         }
 
-        $filters = $dateRange + ['group_by' => $groupBy];
-        $summaryResponse = $this->safeApiCall(fn() => $this->metricsService->summary($filters));
-        $timeseriesResponse = $this->safeApiCall(fn() => $this->metricsService->timeseries($filters));
+        $viewFilters = $dateRange + ['group_by' => $groupBy];
+        
+        $apiParams = $this->buildTableApiParams([
+            'filters' => $dateRange,
+        ], ['group_by' => $groupBy]);
 
-        $metrics = $this->extractData($summaryResponse);
+        $summaryResponse = $this->safeApiCall(fn() => $this->metricsService->summary($apiParams));
+        $timeseriesResponse = $this->safeApiCall(fn() => $this->metricsService->timeseries($apiParams));
+
+        $summaryData = $this->extractData($summaryResponse);
+        $timeseriesData = $this->extractData($timeseriesResponse);
+
+        // If timeseries is empty in the items extraction, look for it in the data payload
         $timeseries = $this->extractItems($timeseriesResponse);
-
-        if ($timeseries === []) {
-            $timeseries = $this->extractData($timeseriesResponse)['timeseries'] ?? [];
+        if ($timeseries === [] || (isset($timeseries['group_by']) && ! isset($timeseries[0]))) {
+            $timeseries = $timeseriesData['timeseries'] ?? $timeseriesData['data'] ?? $timeseriesData['items'] ?? [];
         }
 
         return $this->render('metrics/index', [
             'title'          => lang('Metrics.title'),
-            'metrics'        => $metrics,
+            'metrics'        => $summaryData,
             'timeseries'     => is_array($timeseries) ? $timeseries : [],
-            'filters'        => $filters,
+            'filters'        => $viewFilters,
             'defaultFilters' => $defaultFilters,
             'hasFilters'     => has_active_filters($this->request->getGet(), $defaultFilters),
         ]);
