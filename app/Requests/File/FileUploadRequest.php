@@ -20,8 +20,11 @@ class FileUploadRequest extends BaseFormRequest
 
     public function data(): array
     {
+        $file = $this->request->getPost('file');
+
         return [
-            'file'       => $this->request->getFile('file'),
+            // CI4 file rules expect null|string as the value being validated.
+            'file'       => is_string($file) ? $file : null,
             'visibility' => $this->request->getPost('visibility'),
         ];
     }
