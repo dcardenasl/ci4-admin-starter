@@ -4,6 +4,8 @@ return [
     'title'           => 'Files',
     'uploadTitle'     => 'Upload file',
     'dragDrop'        => 'Drag a file here or click to select',
+    'fileReady'       => 'File ready to upload',
+    'fileTooLarge'    => 'The file exceeds the 10 MB limit.',
     'visibility'      => 'Visibility',
     'private'         => 'Private',
     'public'          => 'Public',
