@@ -12,6 +12,7 @@ return [
     'perPage'        => 'Per page',
     'upload'         => 'Upload',
     'download'       => 'Download',
+    'preview'        => 'Preview',
     'view'           => 'View',
     'back'           => 'Back',
     'first'          => 'First',

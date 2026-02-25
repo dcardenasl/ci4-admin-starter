@@ -12,6 +12,7 @@ return [
     'perPage'        => 'Por pagina',
     'upload'         => 'Subir',
     'download'       => 'Descargar',
+    'preview'        => 'Vista previa',
     'view'           => 'Ver',
     'back'           => 'Volver',
     'first'          => 'Primera',
