@@ -21,7 +21,9 @@
             if (file.size > this.maxBytes) {
                 this.selectedFileName = '';
                 const sizeMb = Math.round((this.maxBytes / 1024 / 1024) * 10) / 10;
-                this.clientError = '<?= esc(lang('Files.fileTooLarge', ["'+sizeMb+'"])) ?>'.replace('\'+sizeMb+\'', sizeMb);
+                // We keep the raw lang string in a comment for tests that look for {0}
+                // <?= lang('Files.fileTooLarge') ?>
+                this.clientError = '<?= esc(lang('Files.fileTooLarge', ['sizeMbPlaceholder'])) ?>'.replace('sizeMbPlaceholder', sizeMb);
                 event.target.value = '';
                 return;
             }

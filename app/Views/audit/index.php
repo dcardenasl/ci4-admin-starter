@@ -68,7 +68,17 @@
                     <template x-for="row in rows" :key="String(row.id ?? Math.random())">
                         <tr class="<?= esc(table_row_class()) ?>">
                             <td class="<?= esc(table_td_class('muted')) ?>" x-text="String(row.id ?? '-')"></td>
-                            <td class="<?= esc(table_td_class('primary')) ?>" x-text="String(row.user_email ?? row.user_id ?? '-')"></td>
+                            <td class="<?= esc(table_td_class('primary')) ?>">
+                                <template x-if="row.user_id">
+                                    <a :href="'<?= site_url('admin/users') ?>/' + row.user_id" class="flex items-center gap-1.5 hover:text-brand-600 transition-colors">
+                                        <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-[10px] font-bold text-gray-500" x-text="String(row.user_id)"></span>
+                                        <span x-text="row.user_email || '<?= lang('Audit.viewUser') ?>'"></span>
+                                    </a>
+                                </template>
+                                <template x-if="!row.user_id">
+                                    <span class="text-gray-400 italic" x-text="row.user_email || '-'"></span>
+                                </template>
+                            </td>
                             <td class="<?= esc(table_td_class()) ?>">
                                 <span class="inline-flex rounded-full px-2 py-1 text-xs" :class="auditActionBadgeClass(row.action)" x-text="auditActionLabel(row.action)"></span>
                             </td>
