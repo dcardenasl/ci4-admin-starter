@@ -34,11 +34,11 @@ if (! function_exists('is_email_verified')) {
      */
     function is_email_verified(array $user): bool
     {
-        if (! empty($user['email_verified_at']) || ! empty($user['verified_at'])) {
+        if (! empty($user['emailVerifiedAt']) || ! empty($user['email_verified_at']) || ! empty($user['verified_at'])) {
             return true;
         }
 
-        foreach (['email_verified', 'is_email_verified', 'verified'] as $key) {
+        foreach (['emailVerified', 'email_verified', 'isEmailVerified', 'is_email_verified', 'verified'] as $key) {
             if (! array_key_exists($key, $user)) {
                 continue;
             }

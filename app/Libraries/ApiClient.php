@@ -82,7 +82,7 @@ class ApiClient implements ApiClientInterface
 
             // Enviamos el archivo con el prefijo de tipo para que el backend reconozca la extensión
             $payload[(string) $name] = "data:{$mimeType};base64,{$base64Data}";
-            
+
             // Aseguramos que el nombre original también se envíe
             if (! isset($payload['filename'])) {
                 $payload['filename'] = basename($file);
@@ -104,6 +104,8 @@ class ApiClient implements ApiClientInterface
             $options = $this->withAuthorization($options);
         }
 
+        log_message('debug', 'API Request: ' . $method . ' ' . $uri . ' | Auth: ' . ($authenticated ? 'YES' : 'NO'));
+
         if (isset($options['multipart'])) {
             unset($options['json'], $options['body']);
             // Ensure no Content-Type is set so CURL can set the boundary
@@ -118,13 +120,22 @@ class ApiClient implements ApiClientInterface
         $response = $this->http->request($method, $uri, $options);
         $status = $response->getStatusCode();
 
+        log_message('debug', 'API Response Status: ' . $status);
+
         if ($authenticated && $status === 401 && $this->attemptTokenRefresh()) {
+            log_message('debug', 'API Token Refreshed. Retrying request.');
             $options = $this->withAuthorization($options);
             $response = $this->http->request($method, $uri, $options);
             $status = $response->getStatusCode();
+            log_message('debug', 'API Response Status (after retry): ' . $status);
         }
 
-        $payload = json_decode($response->getBody(), true);
+        $body = $response->getBody();
+        $payload = json_decode($body, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            log_message('error', 'API Response is NOT valid JSON: ' . substr($body, 0, 500));
+        }
 
         return [
             'ok'          => $status >= 200 && $status < 300,
@@ -142,40 +153,51 @@ class ApiClient implements ApiClientInterface
         $refreshToken = $this->session->get('refresh_token');
 
         if (! is_string($refreshToken) || $refreshToken === '') {
+            log_message('debug', 'Token refresh failed: No refresh token in session.');
             return false;
         }
+
+        log_message('debug', 'Attempting Token Refresh...');
 
         $response = $this->http->request('POST', $this->buildUri('/auth/refresh'), [
             'headers' => $this->baseHeaders(),
             'json' => ['refresh_token' => $refreshToken],
         ]);
 
-        if ($response->getStatusCode() !== 200) {
+        $status = $response->getStatusCode();
+        log_message('debug', 'Token Refresh Status: ' . $status);
+
+        if ($status !== 200) {
+            log_message('debug', 'Token Refresh FAILED. Clearing session.');
             $this->clearSessionAuth();
 
             return false;
         }
 
         $payload = json_decode($response->getBody(), true);
+        $data = $payload['data'] ?? $payload;
 
-        if (! is_array($payload) || empty($payload['access_token'])) {
+        $accessToken = $data['accessToken'] ?? $data['access_token'] ?? null;
+        if (! is_string($accessToken) || $accessToken === '') {
             $this->clearSessionAuth();
 
             return false;
         }
 
-        $this->session->set('access_token', $payload['access_token']);
+        $this->session->set('access_token', $accessToken);
 
-        if (! empty($payload['refresh_token'])) {
-            $this->session->set('refresh_token', $payload['refresh_token']);
+        $refreshTokenResponse = $data['refreshToken'] ?? $data['refresh_token'] ?? null;
+        if (! empty($refreshTokenResponse)) {
+            $this->session->set('refresh_token', $refreshTokenResponse);
         }
 
-        if (! empty($payload['expires_in'])) {
-            $this->session->set('token_expires_at', time() + (int) $payload['expires_in']);
+        $expiresIn = $data['expiresIn'] ?? $data['expires_in'] ?? null;
+        if (! empty($expiresIn)) {
+            $this->session->set('token_expires_at', time() + (int) $expiresIn);
         }
 
-        if (! empty($payload['user']) && is_array($payload['user'])) {
-            $this->session->set('user', $payload['user']);
+        if (! empty($data['user']) && is_array($data['user'])) {
+            $this->session->set('user', $data['user']);
         }
 
         return true;
