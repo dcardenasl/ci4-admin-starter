@@ -19,7 +19,7 @@
 
         <div>
             <label class="block text-sm font-medium text-gray-700" for="is_active"><?= lang('ApiKeys.status') ?></label>
-            <?php $currentActive = old('is_active', isset($apiKey['is_active']) ? ((int) ((bool) $apiKey['is_active'])) : 1); ?>
+            <?php $currentActive = old('is_active', isset($apiKey['isActive']) ? ((int) ((bool) $apiKey['isActive'])) : (isset($apiKey['is_active']) ? ((int) ((bool) $apiKey['is_active'])) : 1)); ?>
             <select id="is_active" name="is_active"
                 class="mt-1 w-full rounded-lg border px-3 py-2 <?= has_field_error('is_active') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand-500 focus:ring-brand-500' ?>">
                 <option value="1" <?= (string) $currentActive === '1' ? 'selected' : '' ?>><?= lang('ApiKeys.active') ?></option>
@@ -28,17 +28,23 @@
             <?= render_field_error('is_active') ?>
         </div>
 
-        <?php $labels = [
-            'rate_limit_requests' => lang('ApiKeys.rateLimitRequests'),
-            'rate_limit_window'   => lang('ApiKeys.rateLimitWindow'),
-            'user_rate_limit'     => lang('ApiKeys.userRateLimit'),
-            'ip_rate_limit'       => lang('ApiKeys.ipRateLimit'),
-        ]; ?>
+        <?php $fieldMapping = [
+            'rate_limit_requests' => $apiKey['rateLimitRequests'] ?? $apiKey['rate_limit_requests'] ?? '',
+            'rate_limit_window'   => $apiKey['rateLimitWindow'] ?? $apiKey['rate_limit_window'] ?? '',
+            'user_rate_limit'     => $apiKey['userRateLimit'] ?? $apiKey['user_rate_limit'] ?? '',
+            'ip_rate_limit'       => $apiKey['ipRateLimit'] ?? $apiKey['ip_rate_limit'] ?? '',
+        ];
+$labels = [
+    'rate_limit_requests' => lang('ApiKeys.rateLimitRequests'),
+    'rate_limit_window'   => lang('ApiKeys.rateLimitWindow'),
+    'user_rate_limit'     => lang('ApiKeys.userRateLimit'),
+    'ip_rate_limit'       => lang('ApiKeys.ipRateLimit'),
+]; ?>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <?php foreach ($labels as $field => $label): ?>
                 <div>
                     <label class="block text-sm font-medium text-gray-700" for="<?= esc($field) ?>"><?= esc($label) ?></label>
-                    <input id="<?= esc($field) ?>" name="<?= esc($field) ?>" type="number" min="1" value="<?= esc(old($field, $apiKey[$field] ?? '')) ?>"
+                    <input id="<?= esc($field) ?>" name="<?= esc($field) ?>" type="number" min="1" value="<?= esc(old($field, $fieldMapping[$field])) ?>"
                         class="mt-1 w-full rounded-lg border px-3 py-2 <?= has_field_error($field) ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand-500 focus:ring-brand-500' ?>">
                     <?= render_field_error($field) ?>
                 </div>

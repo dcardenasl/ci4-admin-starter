@@ -41,6 +41,17 @@
             <?= render_field_error('role') ?>
         </div>
 
+        <div class="flex items-start gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200">
+            <div class="flex items-center h-5">
+                <input id="send_invite" name="send_invite" type="checkbox" checked
+                    class="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+            </div>
+            <div class="text-sm">
+                <label for="send_invite" class="font-medium text-gray-700"><?= lang('Users.sendInvite') ?></label>
+                <p class="text-gray-500"><?= lang('Users.sendInviteHelp') ?></p>
+            </div>
+        </div>
+
         <div class="flex items-center gap-3 pt-2">
             <button type="submit" class="rounded-lg bg-brand-600 text-white px-4 py-2 text-sm hover:bg-brand-700"><?= lang('Users.create') ?></button>
             <a href="<?= site_url('admin/users') ?>" class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('App.cancel') ?></a>

@@ -1,4 +1,5 @@
-<?php $csrfName = csrf_token(); $csrfHash = csrf_hash(); ?>
+<?php $csrfName = csrf_token();
+$csrfHash = csrf_hash(); ?>
 <section class="mt-6 bg-white border border-gray-200 rounded-xl shadow-sm p-5"
     x-data="remoteTable({
         apiUrl: '<?= site_url('files/data') ?>',
@@ -45,10 +46,10 @@
                 <thead class="<?= esc(table_head_class()) ?>">
                     <tr>
                         <th class="<?= esc(table_th_class()) ?> w-16"><?= lang('App.preview') ?? 'Preview' ?></th>
-                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('name')">
-                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('name')" aria-label="<?= esc(lang('Files.sortByFileName')) ?>">
+                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('originalName')">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('originalName')" aria-label="<?= esc(lang('Files.sortByFileName')) ?>">
                                 <span><?= lang('Files.fileName') ?></span>
-                                <span aria-hidden="true" x-text="sortIcon('name')"></span>
+                                <span aria-hidden="true" x-text="sortIcon('originalName')"></span>
                             </button>
                         </th>
                         <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('status')">
@@ -57,10 +58,10 @@
                                 <span aria-hidden="true" x-text="sortIcon('status')"></span>
                             </button>
                         </th>
-                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('uploaded_at')">
-                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('uploaded_at')" aria-label="<?= esc(lang('Files.sortByDate')) ?>">
+                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('uploadedAt')">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('uploadedAt')" aria-label="<?= esc(lang('Files.sortByDate')) ?>">
                                 <span><?= lang('Files.date') ?></span>
-                                <span aria-hidden="true" x-text="sortIcon('uploaded_at')"></span>
+                                <span aria-hidden="true" x-text="sortIcon('uploadedAt')"></span>
                             </button>
                         </th>
                         <th class="<?= esc(table_th_class()) ?>"><?= lang('Files.actions') ?></th>
@@ -70,24 +71,24 @@
                     <template x-for="row in rows" :key="String(row.id ?? Math.random())">
                         <tr class="<?= esc(table_row_class()) ?>">
                             <td class="<?= esc(table_td_class()) ?>">
-                                <template x-if="row.is_image">
+                                <template x-if="row.isImage ?? row.is_image">
                                     <button type="button" @click="$dispatch('open-preview', '<?= site_url('files') ?>/' + (row.id ?? '') + '/view')">
                                         <img :src="'<?= site_url('files') ?>/' + (row.id ?? '') + '/view'" 
                                              class="h-10 w-10 rounded-lg object-cover border border-gray-200 hover:scale-110 transition-transform shadow-sm" 
-                                             :alt="row.original_name">
+                                             :alt="row.originalName ?? row.original_name">
                                     </button>
                                 </template>
-                                <template x-if="!row.is_image">
+                                <template x-if="!(row.isImage ?? row.is_image)">
                                     <div class="h-10 w-10 flex items-center justify-center rounded-lg bg-gray-100 border border-gray-200">
                                         <?= ui_icon('file', 'h-5 w-5 text-gray-400') ?>
                                     </div>
                                 </template>
                             </td>
-                            <td class="<?= esc(table_td_class('primary')) ?>" x-text="String(row.original_name ?? '-')"></td>
+                            <td class="<?= esc(table_td_class('primary')) ?>" x-text="String(row.originalName ?? row.original_name ?? '-')"></td>
                             <td class="<?= esc(table_td_class()) ?>">
                                 <span class="inline-flex rounded-full px-2 py-1 text-xs" :class="statusBadgeClass(row.status)" x-text="statusLabel(row.status)"></span>
                             </td>
-                            <td class="<?= esc(table_td_class('muted')) ?>" x-text="formatDate(row.uploaded_at)"></td>
+                            <td class="<?= esc(table_td_class('muted')) ?>" x-text="formatDate(row.uploadedAt ?? row.uploaded_at)"></td>
                             <td class="<?= esc(table_td_class()) ?>">
                                 <div class="flex items-center gap-2">
                                     <a :href="fileDownloadUrl(row.id)" class="<?= esc(action_button_class()) ?>"><?= lang('Files.download') ?></a>

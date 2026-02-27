@@ -25,11 +25,11 @@
             <dl class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm">
                 <div>
                     <dt class="text-gray-500"><?= lang('Users.firstName') ?></dt>
-                    <dd class="mt-1 text-gray-900"><?= esc((string) ($user['first_name'] ?? '-')) ?></dd>
+                    <dd class="mt-1 text-gray-900"><?= esc((string) ($user['firstName'] ?? $user['first_name'] ?? '-')) ?></dd>
                 </div>
                 <div>
                     <dt class="text-gray-500"><?= lang('Users.lastName') ?></dt>
-                    <dd class="mt-1 text-gray-900"><?= esc((string) ($user['last_name'] ?? '-')) ?></dd>
+                    <dd class="mt-1 text-gray-900"><?= esc((string) ($user['lastName'] ?? $user['last_name'] ?? '-')) ?></dd>
                 </div>
                 <div>
                     <dt class="text-gray-500"><?= lang('Users.email') ?></dt>
@@ -54,10 +54,12 @@
                 <div>
                     <dt class="text-gray-500"><?= lang('Users.emailVerified') ?></dt>
                     <dd class="mt-1 text-gray-900">
-                        <?php if (! empty($user['email_verified_at'])): ?>
+                        <?php if (! empty($user['emailVerifiedAt'])): ?>
+                            <?= esc(format_date($user['emailVerifiedAt'])) ?>
+                        <?php elseif (! empty($user['verifiedAt'])): ?>
+                            <?= esc(format_date($user['verifiedAt'])) ?>
+                        <?php elseif (! empty($user['email_verified_at'])): ?>
                             <?= esc(format_date($user['email_verified_at'])) ?>
-                        <?php elseif (! empty($user['verified_at'])): ?>
-                            <?= esc(format_date($user['verified_at'])) ?>
                         <?php else: ?>
                             <?= is_email_verified($user) ? lang('App.yes') : lang('App.no') ?>
                         <?php endif; ?>
@@ -65,11 +67,11 @@
                 </div>
                 <div>
                     <dt class="text-gray-500"><?= lang('Users.createdAt') ?></dt>
-                    <dd class="mt-1 text-gray-900"><?= esc(format_date($user['created_at'] ?? null)) ?></dd>
+                    <dd class="mt-1 text-gray-900"><?= esc(format_date($user['createdAt'] ?? $user['created_at'] ?? null)) ?></dd>
                 </div>
                 <div>
                     <dt class="text-gray-500"><?= lang('Users.updatedAt') ?></dt>
-                    <dd class="mt-1 text-gray-900"><?= esc(format_date($user['updated_at'] ?? null)) ?></dd>
+                    <dd class="mt-1 text-gray-900"><?= esc(format_date($user['updatedAt'] ?? $user['updated_at'] ?? null)) ?></dd>
                 </div>
             </dl>
         </section>

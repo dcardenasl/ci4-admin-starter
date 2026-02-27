@@ -58,8 +58,8 @@ $buildCursorUrl = static function (string $cursor) use ($baseUrl, $queryParams):
 
             <?php
             $start = max(1, $currentPage - 2);
-            $end   = min($lastPage, $currentPage + 2);
-            ?>
+$end   = min($lastPage, $currentPage + 2);
+?>
             <?php for ($i = $start; $i <= $end; $i++): ?>
                 <?php if ($i === $currentPage): ?>
                     <span class="rounded-lg bg-brand-600 px-3 py-1.5 text-xs text-white"><?= $i ?></span>

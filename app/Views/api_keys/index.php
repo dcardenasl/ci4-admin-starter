@@ -44,18 +44,18 @@
                                 </button>
                             </th>
                             <th class="<?= esc(table_th_class()) ?>"><?= lang('ApiKeys.keyPrefix') ?></th>
-                            <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('is_active')">
-                                <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('is_active')">
+                            <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('isActive')">
+                                <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('isActive')">
                                     <span><?= lang('ApiKeys.status') ?></span>
-                                    <span aria-hidden="true" x-text="sortIcon('is_active')"></span>
+                                    <span aria-hidden="true" x-text="sortIcon('isActive')"></span>
                                 </button>
                             </th>
                             <th class="<?= esc(table_th_class()) ?>"><?= lang('ApiKeys.rateLimitRequests') ?></th>
                             <th class="<?= esc(table_th_class()) ?>"><?= lang('ApiKeys.rateLimitWindow') ?></th>
-                            <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('created_at')">
-                                <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('created_at')">
+                            <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('createdAt')">
+                                <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('createdAt')">
                                     <span><?= lang('ApiKeys.createdAt') ?></span>
-                                    <span aria-hidden="true" x-text="sortIcon('created_at')"></span>
+                                    <span aria-hidden="true" x-text="sortIcon('createdAt')"></span>
                                 </button>
                             </th>
                             <th class="<?= esc(table_th_class()) ?>"><?= lang('ApiKeys.actions') ?></th>
@@ -65,13 +65,13 @@
                         <template x-for="row in rows" :key="String(row.id ?? Math.random())">
                             <tr class="<?= esc(table_row_class()) ?>">
                                 <td class="<?= esc(table_td_class('primary')) ?>" x-text="String(row.name ?? '-')"></td>
-                                <td class="<?= esc(table_td_class('subtle')) ?> font-mono text-xs" x-text="String(row.key_prefix ?? '-')"></td>
+                                <td class="<?= esc(table_td_class('subtle')) ?> font-mono text-xs" x-text="String(row.keyPrefix ?? row.key_prefix ?? '-')"></td>
                                 <td class="<?= esc(table_td_class()) ?>">
-                                    <span class="inline-flex rounded-full px-2 py-1 text-xs" :class="(row.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700')" x-text="row.is_active ? '<?= esc(lang('ApiKeys.active')) ?>' : '<?= esc(lang('ApiKeys.inactive')) ?>'"></span>
+                                    <span class="inline-flex rounded-full px-2 py-1 text-xs" :class="(row.isActive ?? row.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700')" x-text="row.isActive ?? row.is_active ? '<?= esc(lang('ApiKeys.active')) ?>' : '<?= esc(lang('ApiKeys.inactive')) ?>'"></span>
                                 </td>
-                                <td class="<?= esc(table_td_class('muted')) ?>" x-text="String(row.rate_limit_requests ?? '-')"></td>
-                                <td class="<?= esc(table_td_class('muted')) ?>" x-text="String(row.rate_limit_window ?? '-')"></td>
-                                <td class="<?= esc(table_td_class('muted')) ?>" x-text="formatDate(row.created_at)"></td>
+                                <td class="<?= esc(table_td_class('muted')) ?>" x-text="String(row.rateLimitRequests ?? row.rate_limit_requests ?? '-')"></td>
+                                <td class="<?= esc(table_td_class('muted')) ?>" x-text="String(row.rateLimitWindow ?? row.rate_limit_window ?? '-')"></td>
+                                <td class="<?= esc(table_td_class('muted')) ?>" x-text="formatDate(row.createdAt)"></td>
                                 <td class="<?= esc(table_td_class()) ?>">
                                     <div class="flex items-center gap-2">
                                         <a :href="userShowUrl(row.id)" class="<?= esc(action_button_class()) ?>"><?= lang('ApiKeys.view') ?></a>

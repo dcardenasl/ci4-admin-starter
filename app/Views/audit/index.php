@@ -36,10 +36,10 @@
                 <thead class="<?= esc(table_head_class()) ?>">
                     <tr>
                         <th class="<?= esc(table_th_class()) ?>"><?= lang('App.id') ?></th>
-                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('user_id')">
-                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('user_id')" aria-label="<?= esc(lang('Audit.sortByUser')) ?>">
+                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('userId')">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('userId')" aria-label="<?= esc(lang('Audit.sortByUser')) ?>">
                                 <span><?= lang('Audit.user') ?></span>
-                                <span aria-hidden="true" x-text="sortIcon('user_id')"></span>
+                                <span aria-hidden="true" x-text="sortIcon('userId')"></span>
                             </button>
                         </th>
                         <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('action')">
@@ -48,17 +48,17 @@
                                 <span aria-hidden="true" x-text="sortIcon('action')"></span>
                             </button>
                         </th>
-                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('entity_type')">
-                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('entity_type')" aria-label="<?= esc(lang('Audit.sortByEntity')) ?>">
+                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('entityType')">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('entityType')" aria-label="<?= esc(lang('Audit.sortByEntity')) ?>">
                                 <span><?= lang('Audit.entity') ?></span>
-                                <span aria-hidden="true" x-text="sortIcon('entity_type')"></span>
+                                <span aria-hidden="true" x-text="sortIcon('entityType')"></span>
                             </button>
                         </th>
                         <th class="<?= esc(table_th_class()) ?>"><?= lang('Audit.ipAddress') ?></th>
-                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('created_at')">
-                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('created_at')" aria-label="<?= esc(lang('Audit.sortByDate')) ?>">
+                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('createdAt')">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('createdAt')" aria-label="<?= esc(lang('Audit.sortByDate')) ?>">
                                 <span><?= lang('Audit.date') ?></span>
-                                <span aria-hidden="true" x-text="sortIcon('created_at')"></span>
+                                <span aria-hidden="true" x-text="sortIcon('createdAt')"></span>
                             </button>
                         </th>
                         <th class="<?= esc(table_th_class()) ?>"><?= lang('Audit.actions') ?></th>
@@ -69,25 +69,25 @@
                         <tr class="<?= esc(table_row_class()) ?>">
                             <td class="<?= esc(table_td_class('muted')) ?>" x-text="String(row.id ?? '-')"></td>
                             <td class="<?= esc(table_td_class('primary')) ?>">
-                                <template x-if="row.user_id">
-                                    <a :href="'<?= site_url('admin/users') ?>/' + row.user_id" class="flex items-center gap-1.5 hover:text-brand-600 transition-colors">
-                                        <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-[10px] font-bold text-gray-500" x-text="String(row.user_id)"></span>
-                                        <span x-text="row.user_email || '<?= lang('Audit.viewUser') ?>'"></span>
+                                <template x-if="row.userId">
+                                    <a :href="'<?= site_url('admin/users') ?>/' + row.userId" class="flex items-center gap-1.5 hover:text-brand-600 transition-colors">
+                                        <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-[10px] font-bold text-gray-500" x-text="String(row.userId)"></span>
+                                        <span x-text="row.userEmail || '<?= lang('Audit.viewUser') ?>'"></span>
                                     </a>
                                 </template>
-                                <template x-if="!row.user_id">
-                                    <span class="text-gray-400 italic" x-text="row.user_email || '-'"></span>
+                                <template x-if="!row.userId">
+                                    <span class="text-gray-400 italic" x-text="row.userEmail || '-'"></span>
                                 </template>
                             </td>
                             <td class="<?= esc(table_td_class()) ?>">
                                 <span class="inline-flex rounded-full px-2 py-1 text-xs" :class="auditActionBadgeClass(row.action)" x-text="auditActionLabel(row.action)"></span>
                             </td>
                             <td class="<?= esc(table_td_class('muted')) ?>">
-                                <span x-text="String(row.entity_type ?? '-')"></span>
-                                <span class="text-gray-400" x-show="row.entity_id">#<span x-text="String(row.entity_id)"></span></span>
+                                <span x-text="String(row.entityType ?? '-')"></span>
+                                <span class="text-gray-400" x-show="row.entityId">#<span x-text="String(row.entityId)"></span></span>
                             </td>
-                            <td class="<?= esc(table_td_class('subtle')) ?> font-mono text-xs" x-text="String(row.ip_address ?? '-')"></td>
-                            <td class="<?= esc(table_td_class('muted')) ?>" x-text="formatDate(row.created_at)"></td>
+                            <td class="<?= esc(table_td_class('subtle')) ?> font-mono text-xs" x-text="String(row.ipAddress ?? '-')"></td>
+                            <td class="<?= esc(table_td_class('muted')) ?>" x-text="formatDate(row.createdAt)"></td>
                             <td class="<?= esc(table_td_class()) ?>">
                                 <a :href="auditShowUrl(row.id)" class="<?= esc(action_button_class()) ?>"><?= lang('Audit.view') ?></a>
                             </td>
