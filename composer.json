@@ -61,6 +61,7 @@
         "sort-packages": true
     },
     "scripts": {
-        "test": "phpunit"
+        "test": "phpunit",
+        "sync-swagger": "cp ../ci4-api-starter/public/swagger.json swagger_contract.json"
     }
 }
