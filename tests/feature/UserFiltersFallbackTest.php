@@ -62,7 +62,7 @@ final class UserFiltersFallbackTest extends CIUnitTestCase
         $mock->expects($this->once())
             ->method('list')
             ->with($this->callback(static function (array $params): bool {
-                return ($params['sort'] ?? null) === '-created_at';
+                return ($params['sort'] ?? null) === '-createdAt';
             }))
             ->willReturn([
                 'ok'          => true,
@@ -83,7 +83,7 @@ final class UserFiltersFallbackTest extends CIUnitTestCase
         $result = $this->withSession([
             'access_token' => 'token',
             'user'         => ['role' => 'admin'],
-        ])->get('/admin/users/data?sort=-created_at');
+        ])->get('/admin/users/data?sort=-createdAt');
 
         $result->assertStatus(200);
     }
