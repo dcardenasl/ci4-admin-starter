@@ -5,7 +5,7 @@
     <div class="relative flex space-x-3">
         <div>
             <span class="h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white <?= audit_action_badge($item['action'] ?? '', true) ?>">
-                <?= ui_icon(match($item['action'] ?? '') {
+                <?= ui_icon(match ($item['action'] ?? '') {
                     'create', 'upload' => 'plus',
                     'update', 'edit'   => 'edit-3',
                     'delete', 'remove' => 'trash-2',
@@ -18,13 +18,13 @@
         <div class="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
             <div>
                 <p class="text-sm text-gray-600">
-                    <span class="font-medium text-gray-900"><?= esc($item['user_email'] ?? $item['user_id'] ?? 'System') ?></span>
+                    <span class="font-medium text-gray-900"><?= esc($item['userEmail'] ?? $item['user_email'] ?? $item['userId'] ?? $item['user_id'] ?? 'System') ?></span>
                     <?= esc($item['action'] ?? 'activity') ?>
-                    <span class="font-medium text-gray-900"><?= esc($item['entity_type'] ?? '') ?></span>
+                    <span class="font-medium text-gray-900"><?= esc($item['entityType'] ?? $item['entity_type'] ?? '') ?></span>
                 </p>
             </div>
             <div class="whitespace-nowrap text-right text-xs text-gray-500">
-                <time datetime="<?= esc($item['created_at'] ?? '') ?>"><?= format_date_diff($item['created_at'] ?? null) ?></time>
+                <time datetime="<?= esc($item['createdAt'] ?? $item['created_at'] ?? '') ?>"><?= format_date($item['createdAt'] ?? $item['created_at'] ?? null) ?></time>
             </div>
         </div>
     </div>

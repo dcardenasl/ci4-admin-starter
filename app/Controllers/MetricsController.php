@@ -21,16 +21,18 @@ class MetricsController extends BaseWebController
     {
         $dateRange = $this->resolveDateRange();
         $defaultFilters = $this->defaultFilters();
-        $groupBy = (string) ($this->request->getGet('group_by') ?: 'day');
+        $groupBy = (string) ($this->request->getGet('groupBy') ?? $this->request->getGet('group_by') ?: 'day');
         if (! in_array($groupBy, ['day', 'week', 'month'], true)) {
             $groupBy = 'day';
         }
 
-        $viewFilters = $dateRange + ['group_by' => $groupBy];
-        
-        $apiParams = $this->buildTableApiParams([
-            'filters' => $dateRange,
-        ], ['group_by' => $groupBy]);
+        $viewFilters = $dateRange + ['groupBy' => $groupBy, 'group_by' => $groupBy];
+
+        $apiParams = [
+            'dateFrom' => $dateRange['dateFrom'],
+            'dateTo'   => $dateRange['dateTo'],
+            'period'   => $groupBy, // Use 'period' as specified in latest Swagger
+        ];
 
         $summaryResponse = $this->safeApiCall(fn() => $this->metricsService->summary($apiParams));
         $timeseriesResponse = $this->safeApiCall(fn() => $this->metricsService->timeseries($apiParams));
@@ -41,7 +43,21 @@ class MetricsController extends BaseWebController
         // If timeseries is empty in the items extraction, look for it in the data payload
         $timeseries = $this->extractItems($timeseriesResponse);
         if ($timeseries === [] || (isset($timeseries['group_by']) && ! isset($timeseries[0]))) {
-            $timeseries = $timeseriesData['timeseries'] ?? $timeseriesData['data'] ?? $timeseriesData['items'] ?? [];
+            $timeseries = $timeseriesData['timeseries'] ?? $timeseriesData['data'] ?? $timeseriesData['items'] ?? $timeseriesData ?? [];
+        }
+
+        // Transform parallel arrays (dates, requests, etc.) to a list of objects for the table
+        if (is_array($timeseries) && isset($timeseries['dates']) && is_array($timeseries['dates'])) {
+            $points = [];
+            foreach ($timeseries['dates'] as $i => $date) {
+                $points[] = [
+                    'period' => $date,
+                    'value'  => $timeseries['requests'][$i] ?? 0,
+                    'errors' => $timeseries['errors'][$i] ?? 0,
+                    'latency' => $timeseries['latency'][$i] ?? 0,
+                ];
+            }
+            $timeseries = $points;
         }
 
         return $this->render('metrics/index', [
@@ -64,6 +80,9 @@ class MetricsController extends BaseWebController
         $dateFrom = $today->sub(new \DateInterval('P29D'))->format('Y-m-d');
 
         return [
+            'dateFrom' => $dateFrom,
+            'dateTo'   => $dateTo,
+            'groupBy'  => 'day',
             'date_from' => $dateFrom,
             'date_to'   => $dateTo,
             'group_by'  => 'day',

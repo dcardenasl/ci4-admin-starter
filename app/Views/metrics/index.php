@@ -15,39 +15,40 @@
 </section>
 
 <section class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-    <?php if (isset($metrics['request_stats'])): ?>
+    <?php if (isset($metrics['request_stats']) || isset($metrics['requestStats'])): ?>
+        <?php $stats = $metrics['requestStats'] ?? $metrics['request_stats']; ?>
         <article class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
             <p class="text-sm text-gray-500"><?= lang('Metrics.totalRequests') ?></p>
-            <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($metrics['request_stats']['total_requests'] ?? 0)) ?></p>
+            <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($stats['totalRequests'] ?? $stats['total_requests'] ?? 0)) ?></p>
         </article>
         <article class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
             <p class="text-sm text-gray-500"><?= lang('Metrics.avgResponseTime') ?></p>
-            <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($metrics['request_stats']['avg_response_time_ms'] ?? 0)) ?> ms</p>
+            <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($stats['avgResponseTimeMs'] ?? $stats['avg_response_time_ms'] ?? 0)) ?> ms</p>
         </article>
         <article class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
             <p class="text-sm text-gray-500"><?= lang('Metrics.availability') ?></p>
-            <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($metrics['request_stats']['availability_percent'] ?? 0)) ?>%</p>
+            <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($stats['availabilityPercent'] ?? $stats['availability_percent'] ?? 0)) ?>%</p>
         </article>
         <article class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
             <p class="text-sm text-gray-500"><?= lang('Metrics.successRequests') ?></p>
-            <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($metrics['request_stats']['successful_requests'] ?? 0)) ?></p>
+            <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($stats['successfulRequests'] ?? $stats['successful_requests'] ?? 0)) ?></p>
         </article>
     <?php else: ?>
         <article class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
             <p class="text-sm text-gray-500"><?= lang('Metrics.totalUsers') ?></p>
-            <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($metrics['total_users'] ?? $metrics['users'] ?? 0)) ?></p>
+            <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($metrics['totalUsers'] ?? $metrics['total_users'] ?? $metrics['users'] ?? 0)) ?></p>
         </article>
         <article class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
             <p class="text-sm text-gray-500"><?= lang('Metrics.activeUsers') ?></p>
-            <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($metrics['active_users'] ?? 0)) ?></p>
+            <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($metrics['activeUsers'] ?? $metrics['active_users'] ?? 0)) ?></p>
         </article>
         <article class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
             <p class="text-sm text-gray-500"><?= lang('Metrics.totalFiles') ?></p>
-            <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($metrics['total_files'] ?? $metrics['files'] ?? 0)) ?></p>
+            <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($metrics['totalFiles'] ?? $metrics['total_files'] ?? $metrics['files'] ?? 0)) ?></p>
         </article>
         <article class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
             <p class="text-sm text-gray-500"><?= lang('Metrics.storageUsed') ?></p>
-            <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($metrics['storage_used'] ?? $metrics['storage'] ?? $metrics['total_size'] ?? $metrics['disk_usage'] ?? '0 B')) ?></p>
+            <p class="mt-1 text-2xl font-semibold text-gray-900"><?= esc((string) ($metrics['storageUsed'] ?? $metrics['storage_used'] ?? $metrics['storage'] ?? $metrics['total_size'] ?? $metrics['disk_usage'] ?? '0 B')) ?></p>
         </article>
     <?php endif; ?>
 </section>
@@ -66,11 +67,11 @@
                     </tr>
                 </thead>
                 <tbody class="<?= esc(table_body_class()) ?>">
-                    <?php foreach ($metrics['slow_requests'] as $req): ?>
+                    <?php foreach ($metrics['slow_requests'] ?? $metrics['slowRequests'] ?? [] as $req): ?>
                         <tr class="<?= esc(table_row_class()) ?>">
                             <td class="<?= esc(table_td_class()) ?>"><?= esc($req['method'] ?? '-') ?></td>
                             <td class="<?= esc(table_td_class()) ?>"><?= esc($req['path'] ?? '-') ?></td>
-                            <td class="<?= esc(table_td_class('primary')) ?>"><?= esc($req['duration_ms'] ?? 0) ?> ms</td>
+                            <td class="<?= esc(table_td_class('primary')) ?>"><?= esc($req['durationMs'] ?? $req['duration_ms'] ?? 0) ?> ms</td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -126,30 +127,38 @@
                                             </tr>
                                         </thead>
                                         <tbody class="<?= esc(table_body_class()) ?>">
-                                            <?php 
+                                            <?php
                                                 $slos = [];
-                                                if (isset($metrics['slo']['availability'])) $slos['Availability'] = $metrics['slo']['availability'];
-                                                if (isset($metrics['slo']['uptime'])) $slos['Uptime'] = $metrics['slo']['uptime'];
-                                                if (isset($metrics['slo']['latency'])) $slos['Latency'] = $metrics['slo']['latency'];
-                                                
-                                                if (empty($slos)) {
-                                                    foreach ($metrics['slo'] as $k => $v) {
-                                                        if (is_array($v)) $slos[ucfirst((string)$k)] = $v;
-                                                    }
-                                                }
-                                            ?>
+                            if (isset($metrics['slo']['availability'])) {
+                                $slos['Availability'] = $metrics['slo']['availability'];
+                            }
+                            if (isset($metrics['slo']['uptime'])) {
+                                $slos['Uptime'] = $metrics['slo']['uptime'];
+                            }
+                            if (isset($metrics['slo']['latency'])) {
+                                $slos['Latency'] = $metrics['slo']['latency'];
+                            }
+
+                            if (empty($slos)) {
+                                foreach ($metrics['slo'] as $k => $v) {
+                                    if (is_array($v)) {
+                                        $slos[ucfirst((string) $k)] = $v;
+                                    }
+                                }
+                            }
+                            ?>
                                             <?php foreach ($slos as $name => $slo): ?>
                                                 <tr class="<?= esc(table_row_class()) ?>">
                                                     <td class="<?= esc(table_td_class()) ?>"><?= esc($name) ?></td>
-                                                    <td class="<?= esc(table_td_class()) ?>"><?= esc((string)($slo['target'] ?? $slo['goal'] ?? '-')) ?>%</td>
-                                                    <td class="<?= esc(table_td_class('primary')) ?>"><?= esc((string)($slo['current'] ?? $slo['value'] ?? '-')) ?>%</td>
+                                                    <td class="<?= esc(table_td_class()) ?>"><?= esc((string) ($slo['target'] ?? $slo['goal'] ?? '-')) ?>%</td>
+                                                    <td class="<?= esc(table_td_class('primary')) ?>"><?= esc((string) ($slo['current'] ?? $slo['value'] ?? '-')) ?>%</td>
                                                     <td class="<?= esc(table_td_class()) ?>">
-                                                        <?php 
-                                                            $remaining = $slo['remaining'] ?? $slo['error_budget'] ?? $slo['budget'] ?? null;
-                                                        ?>
+                                                        <?php
+                                            $remaining = $slo['remaining'] ?? $slo['error_budget'] ?? $slo['budget'] ?? null;
+                                                ?>
                                                         <?php if ($remaining !== null): ?>
-                                                            <span class="px-2 py-1 rounded text-xs <?= (float)$remaining > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' ?>">
-                                                                <?= esc((string)$remaining) ?>%
+                                                            <span class="px-2 py-1 rounded text-xs <?= (float) $remaining > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' ?>">
+                                                                <?= esc((string) $remaining) ?>%
                                                             </span>
                                                         <?php else: ?>
                                                             -
@@ -238,15 +247,15 @@
                     </tr>
                 </thead>
                 <tbody class="<?= esc(table_body_class()) ?>">
-                    <?php foreach ($metrics['recent_activity'] as $activity): ?>
+                    <?php foreach ($metrics['recent_activity'] ?? $metrics['recentActivity'] ?? [] as $activity): ?>
                         <tr class="<?= esc(table_row_class()) ?>">
                             <td class="<?= esc(table_td_class()) ?>">
                                 <span class="inline-flex rounded-full px-2 py-1 text-xs <?= audit_action_badge($activity['action'] ?? '') ?>">
                                     <?= esc((string) ($activity['action'] ?? '-')) ?>
                                 </span>
                             </td>
-                            <td class="<?= esc(table_td_class('primary')) ?>"><?= esc((string) ($activity['user_email'] ?? $activity['user_id'] ?? '-')) ?></td>
-                            <td class="<?= esc(table_td_class('muted')) ?>"><?= esc(format_date($activity['created_at'] ?? null)) ?></td>
+                            <td class="<?= esc(table_td_class('primary')) ?>"><?= esc((string) ($activity['userEmail'] ?? $activity['user_email'] ?? $activity['userId'] ?? $activity['user_id'] ?? '-')) ?></td>
+                            <td class="<?= esc(table_td_class('muted')) ?>"><?= esc(format_date($activity['createdAt'] ?? $activity['created_at'] ?? null)) ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>

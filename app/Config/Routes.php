@@ -8,6 +8,8 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/', static fn() => redirect()->to(site_url('login')));
 $routes->get('/language/set', 'LanguageController::set');
 
+$routes->get('/debug-session', 'DebugController::index');
+
 // Publicas
 $routes->get('/login', 'AuthController::login');
 $routes->post('/login', 'AuthController::attemptLogin');
