@@ -2,16 +2,16 @@
     <?= csrf_field() ?>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-            <label class="block text-sm font-medium text-gray-700" for="first_name"><?= lang('Auth.firstNameLabel') ?></label>
-            <input id="first_name" name="first_name" type="text" value="<?= old('first_name') ?>" autocomplete="given-name" required
-                class="mt-1 w-full rounded-lg border px-3 py-2 focus-visible:outline-none focus-visible:ring-2 <?= has_field_error('first_name') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand-500 focus:ring-brand-500' ?>">
-            <?= render_field_error('first_name') ?>
+            <label class="block text-sm font-medium text-gray-700" for="firstName"><?= lang('Auth.firstNameLabel') ?></label>
+            <input id="firstName" name="firstName" type="text" value="<?= old('firstName') ?>" autocomplete="given-name" required
+                class="mt-1 w-full rounded-lg border px-3 py-2 focus-visible:outline-none focus-visible:ring-2 <?= has_field_error('firstName') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand-500 focus:ring-brand-500' ?>">
+            <?= render_field_error('firstName') ?>
         </div>
         <div>
-            <label class="block text-sm font-medium text-gray-700" for="last_name"><?= lang('Auth.lastNameLabel') ?></label>
-            <input id="last_name" name="last_name" type="text" value="<?= old('last_name') ?>" autocomplete="family-name" required
-                class="mt-1 w-full rounded-lg border px-3 py-2 focus-visible:outline-none focus-visible:ring-2 <?= has_field_error('last_name') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand-500 focus:ring-brand-500' ?>">
-            <?= render_field_error('last_name') ?>
+            <label class="block text-sm font-medium text-gray-700" for="lastName"><?= lang('Auth.lastNameLabel') ?></label>
+            <input id="lastName" name="lastName" type="text" value="<?= old('lastName') ?>" autocomplete="family-name" required
+                class="mt-1 w-full rounded-lg border px-3 py-2 focus-visible:outline-none focus-visible:ring-2 <?= has_field_error('lastName') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand-500 focus:ring-brand-500' ?>">
+            <?= render_field_error('lastName') ?>
         </div>
     </div>
 
@@ -33,10 +33,10 @@
     </div>
 
     <div>
-        <label class="block text-sm font-medium text-gray-700" for="password_confirmation"><?= lang('Auth.confirmPassword') ?></label>
-        <input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" required
-            class="mt-1 w-full rounded-lg border px-3 py-2 focus-visible:outline-none focus-visible:ring-2 <?= has_field_error('password_confirmation') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand-500 focus:ring-brand-500' ?>">
-        <?= render_field_error('password_confirmation') ?>
+        <label class="block text-sm font-medium text-gray-700" for="passwordConfirmation"><?= lang('Auth.confirmPassword') ?></label>
+        <input id="passwordConfirmation" name="passwordConfirmation" type="password" autocomplete="new-password" required
+            class="mt-1 w-full rounded-lg border px-3 py-2 focus-visible:outline-none focus-visible:ring-2 <?= has_field_error('passwordConfirmation') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand-500 focus:ring-brand-500' ?>">
+        <?= render_field_error('passwordConfirmation') ?>
     </div>
 
     <button type="submit" class="w-full rounded-lg bg-brand-600 text-white px-4 py-2 font-medium hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"><?= lang('Auth.registerButton') ?></button>

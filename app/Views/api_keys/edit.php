@@ -17,40 +17,39 @@
             <?= render_field_error('name') ?>
         </div>
 
-        <div>
-            <label class="block text-sm font-medium text-gray-700" for="is_active"><?= lang('ApiKeys.status') ?></label>
-            <?php $currentActive = old('is_active', isset($apiKey['isActive']) ? ((int) ((bool) $apiKey['isActive'])) : (isset($apiKey['is_active']) ? ((int) ((bool) $apiKey['is_active'])) : 1)); ?>
-            <select id="is_active" name="is_active"
-                class="mt-1 w-full rounded-lg border px-3 py-2 <?= has_field_error('is_active') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand-500 focus:ring-brand-500' ?>">
-                <option value="1" <?= (string) $currentActive === '1' ? 'selected' : '' ?>><?= lang('ApiKeys.active') ?></option>
-                <option value="0" <?= (string) $currentActive === '0' ? 'selected' : '' ?>><?= lang('ApiKeys.inactive') ?></option>
-            </select>
-            <?= render_field_error('is_active') ?>
-        </div>
-
-        <?php $fieldMapping = [
-            'rate_limit_requests' => $apiKey['rateLimitRequests'] ?? $apiKey['rate_limit_requests'] ?? '',
-            'rate_limit_window'   => $apiKey['rateLimitWindow'] ?? $apiKey['rate_limit_window'] ?? '',
-            'user_rate_limit'     => $apiKey['userRateLimit'] ?? $apiKey['user_rate_limit'] ?? '',
-            'ip_rate_limit'       => $apiKey['ipRateLimit'] ?? $apiKey['ip_rate_limit'] ?? '',
-        ];
-$labels = [
-    'rate_limit_requests' => lang('ApiKeys.rateLimitRequests'),
-    'rate_limit_window'   => lang('ApiKeys.rateLimitWindow'),
-    'user_rate_limit'     => lang('ApiKeys.userRateLimit'),
-    'ip_rate_limit'       => lang('ApiKeys.ipRateLimit'),
-]; ?>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <?php foreach ($labels as $field => $label): ?>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700" for="<?= esc($field) ?>"><?= esc($label) ?></label>
-                    <input id="<?= esc($field) ?>" name="<?= esc($field) ?>" type="number" min="1" value="<?= esc(old($field, $fieldMapping[$field])) ?>"
-                        class="mt-1 w-full rounded-lg border px-3 py-2 <?= has_field_error($field) ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand-500 focus:ring-brand-500' ?>">
-                    <?= render_field_error($field) ?>
+                    <label class="block text-sm font-medium text-gray-700" for="isActive"><?= lang('ApiKeys.status') ?></label>
+                    <?php $currentActive = old('isActive', isset($apiKey['isActive']) ? ((int) ((bool) $apiKey['isActive'])) : 1); ?>
+                    <select id="isActive" name="isActive"
+                        class="mt-1 w-full rounded-lg border px-3 py-2 <?= has_field_error('isActive') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand-500 focus:ring-brand-500' ?>">
+                        <option value="1" <?= (string) $currentActive === '1' ? 'selected' : '' ?>><?= lang('ApiKeys.active') ?></option>
+                        <option value="0" <?= (string) $currentActive === '0' ? 'selected' : '' ?>><?= lang('ApiKeys.inactive') ?></option>
+                    </select>
+                    <?= render_field_error('isActive') ?>
                 </div>
-            <?php endforeach; ?>
-        </div>
-
+        
+                <?php $fieldMapping = [
+                    'rateLimitRequests' => $apiKey['rateLimitRequests'] ?? '',
+                    'rateLimitWindow'   => $apiKey['rateLimitWindow'] ?? '',
+                    'userRateLimit'     => $apiKey['userRateLimit'] ?? '',
+                    'ipRateLimit'       => $apiKey['ipRateLimit'] ?? '',
+                ];
+                $labels = [
+                    'rateLimitRequests' => lang('ApiKeys.rateLimitRequests'),
+                    'rateLimitWindow'   => lang('ApiKeys.rateLimitWindow'),
+                    'userRateLimit'     => lang('ApiKeys.userRateLimit'),
+                    'ipRateLimit'       => lang('ApiKeys.ipRateLimit'),
+                ]; ?>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <?php foreach ($labels as $field => $label): ?>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700" for="<?= esc($field) ?>"><?= esc($label) ?></label>
+                            <input id="<?= esc($field) ?>" name="<?= esc($field) ?>" type="number" min="1" value="<?= esc(old($field, $fieldMapping[$field])) ?>"
+                                class="mt-1 w-full rounded-lg border px-3 py-2 <?= has_field_error($field) ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand-500 focus:ring-brand-500' ?>">
+                            <?= render_field_error($field) ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
         <div class="flex items-center gap-3 pt-2">
             <button type="submit" class="rounded-lg bg-brand-600 text-white px-4 py-2 text-sm hover:bg-brand-700"><?= lang('App.save') ?></button>
             <a href="<?= site_url('admin/api-keys/' . esc($id, 'url')) ?>" class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('App.cancel') ?></a>

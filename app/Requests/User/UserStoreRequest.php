@@ -8,32 +8,32 @@ class UserStoreRequest extends BaseFormRequest
 {
     protected function fields(): array
     {
-        return ['first_name', 'last_name', 'email', 'role', 'send_invite', 'client_base_url'];
+        return ['firstName', 'lastName', 'email', 'role', 'sendInvite', 'clientBaseUrl'];
     }
 
     public function rules(): array
     {
         return [
-            'first_name'      => 'required|min_length[2]|max_length[100]',
-            'last_name'       => 'required|min_length[2]|max_length[100]',
-            'email'           => 'required|valid_email',
-            'role'            => 'required|in_list[user,admin,superadmin]',
-            'send_invite'     => 'permit_empty|in_list[0,1,on,off,true,false]',
-            'client_base_url' => 'permit_empty|valid_url',
+            'firstName'     => 'required|min_length[2]|max_length[100]',
+            'lastName'      => 'required|min_length[2]|max_length[100]',
+            'email'         => 'required|valid_email',
+            'role'          => 'required|in_list[user,admin,superadmin]',
+            'sendInvite'    => 'permit_empty|in_list[0,1,on,off,true,false]',
+            'clientBaseUrl' => 'permit_empty|valid_url',
         ];
     }
 
     public function payload(): array
     {
-        $sendInvite = $this->request->getPost('send_invite');
+        $sendInvite = $this->request->getPost('sendInvite');
 
         return [
-            'first_name'      => (string) $this->request->getPost('first_name'),
-            'last_name'       => (string) $this->request->getPost('last_name'),
-            'email'           => (string) $this->request->getPost('email'),
-            'role'            => (string) $this->request->getPost('role'),
-            'send_invite'     => $sendInvite === 'on' || $sendInvite === '1' || $sendInvite === 'true',
-            'client_base_url' => (string) $this->request->getPost('client_base_url'),
+            'firstName'     => (string) $this->request->getPost('firstName'),
+            'lastName'      => (string) $this->request->getPost('lastName'),
+            'email'         => (string) $this->request->getPost('email'),
+            'role'          => (string) $this->request->getPost('role'),
+            'sendInvite'    => $sendInvite === 'on' || $sendInvite === '1' || $sendInvite === 'true',
+            'clientBaseUrl' => (string) $this->request->getPost('clientBaseUrl'),
         ];
     }
 }

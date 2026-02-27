@@ -10,8 +10,8 @@
     </div>
     <div>
         <label class="<?= esc(filter_label_class()) ?>"><?= lang('ApiKeys.status') ?></label>
-        <?php $active = (string) request()->getGet('is_active'); ?>
-        <select name="is_active" class="<?= esc(filter_input_class()) ?>">
+        <?php $active = (string) (request()->getGet('isActive') ?? request()->getGet('is_active')); ?>
+        <select name="isActive" class="<?= esc(filter_input_class()) ?>">
             <option value=""><?= lang('ApiKeys.allStatuses') ?></option>
             <option value="1" <?= $active === '1' ? 'selected' : '' ?>><?= lang('ApiKeys.active') ?></option>
             <option value="0" <?= $active === '0' ? 'selected' : '' ?>><?= lang('ApiKeys.inactive') ?></option>

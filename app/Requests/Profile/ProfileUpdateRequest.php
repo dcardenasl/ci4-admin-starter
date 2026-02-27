@@ -8,22 +8,22 @@ class ProfileUpdateRequest extends BaseFormRequest
 {
     protected function fields(): array
     {
-        return ['first_name', 'last_name'];
+        return ['firstName', 'lastName'];
     }
 
     public function rules(): array
     {
         return [
-            'first_name' => 'required|min_length[2]|max_length[100]',
-            'last_name'  => 'required|min_length[2]|max_length[100]',
+            'firstName' => 'required|min_length[2]|max_length[100]',
+            'lastName'  => 'required|min_length[2]|max_length[100]',
         ];
     }
 
     public function payload(): array
     {
         return [
-            'first_name' => (string) $this->request->getPost('first_name'),
-            'last_name'  => (string) $this->request->getPost('last_name'),
+            'firstName' => (string) $this->request->getPost('firstName'),
+            'lastName'  => (string) $this->request->getPost('lastName'),
         ];
     }
 }

@@ -51,7 +51,7 @@ $googleClientId = (string) ($googleClientId ?? '');
 
     <form id="google-login-form" method="post" action="<?= site_url('login/google') ?>" class="hidden">
         <?= csrf_field() ?>
-        <input type="hidden" id="google-id-token" name="id_token" value="">
+        <input type="hidden" id="google-id-token" name="idToken" value="">
     </form>
 
     <script>

@@ -27,13 +27,13 @@ final class ProfileFlowTest extends CIUnitTestCase
         $userService->expects($this->once())
             ->method('update')
             ->with('15', [
-                'first_name' => 'Admin',
-                'last_name'  => 'Updated',
+                'firstName' => 'Admin',
+                'lastName'  => 'Updated',
             ])
             ->willReturn([
                 'ok'          => true,
                 'status'      => 200,
-                'data'        => ['data' => ['id' => 15, 'first_name' => 'Admin', 'last_name' => 'Updated']],
+                'data'        => ['data' => ['id' => 15, 'firstName' => 'Admin', 'lastName' => 'Updated']],
                 'raw'         => '',
                 'headers'     => [],
                 'messages'    => [],
@@ -46,7 +46,7 @@ final class ProfileFlowTest extends CIUnitTestCase
             ->willReturn([
                 'ok'          => true,
                 'status'      => 200,
-                'data'        => ['data' => ['id' => 15, 'first_name' => 'Admin', 'last_name' => 'Updated', 'email' => 'admin@example.com', 'role' => 'admin']],
+                'data'        => ['data' => ['id' => 15, 'firstName' => 'Admin', 'lastName' => 'Updated', 'email' => 'admin@example.com', 'role' => 'admin']],
                 'raw'         => '',
                 'headers'     => [],
                 'messages'    => [],
@@ -61,8 +61,8 @@ final class ProfileFlowTest extends CIUnitTestCase
             'user'         => ['id' => 15, 'email' => 'admin@example.com', 'role' => 'admin'],
         ])->post('/profile', [
             csrf_token() => csrf_hash(),
-            'first_name'     => 'Admin',
-            'last_name'      => 'Updated',
+            'firstName'     => 'Admin',
+            'lastName'      => 'Updated',
         ]);
 
         $result->assertRedirectTo(site_url('profile'));
@@ -76,8 +76,8 @@ final class ProfileFlowTest extends CIUnitTestCase
             'user'         => ['id' => 22, 'email' => 'user@example.com', 'role' => 'user'],
         ])->post('/profile', [
             csrf_token() => csrf_hash(),
-            'first_name'     => 'User',
-            'last_name'      => 'Updated',
+            'firstName'     => 'User',
+            'lastName'      => 'Updated',
         ]);
 
         $result->assertRedirectTo(site_url('profile'));
@@ -88,7 +88,7 @@ final class ProfileFlowTest extends CIUnitTestCase
     {
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['id' => 22, 'email' => 'user@example.com', 'first_name' => 'Jane', 'last_name' => 'Doe', 'role' => 'user'],
+            'user'         => ['id' => 22, 'email' => 'user@example.com', 'firstName' => 'Jane', 'lastName' => 'Doe', 'role' => 'user'],
         ])->get('/profile');
 
         $result->assertStatus(200);

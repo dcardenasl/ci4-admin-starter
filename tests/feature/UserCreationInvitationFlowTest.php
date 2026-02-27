@@ -26,12 +26,12 @@ final class UserCreationInvitationFlowTest extends CIUnitTestCase
         $mock->expects($this->once())
             ->method('create')
             ->with($this->callback(static function (array $payload): bool {
-                return ($payload['first_name'] ?? null) === 'Jane'
-                    && ($payload['last_name'] ?? null) === 'Doe'
+                return ($payload['firstName'] ?? null) === 'Jane'
+                    && ($payload['lastName'] ?? null) === 'Doe'
                     && ($payload['email'] ?? null) === 'jane@example.com'
                     && ($payload['role'] ?? null) === 'user'
-                    && is_string($payload['client_base_url'] ?? null)
-                    && ($payload['client_base_url'] ?? '') !== ''
+                    && is_string($payload['clientBaseUrl'] ?? null)
+                    && ($payload['clientBaseUrl'] ?? '') !== ''
                     && ! array_key_exists('password', $payload);
             }))
             ->willReturn([
@@ -50,8 +50,8 @@ final class UserCreationInvitationFlowTest extends CIUnitTestCase
             'user'         => ['role' => 'admin'],
         ])->post('/admin/users', [
             csrf_token() => csrf_hash(),
-            'first_name'     => 'Jane',
-            'last_name'      => 'Doe',
+            'firstName'     => 'Jane',
+            'lastName'      => 'Doe',
             'email'          => 'jane@example.com',
             'role'           => 'user',
         ]);
@@ -67,8 +67,8 @@ final class UserCreationInvitationFlowTest extends CIUnitTestCase
             ->with(
                 '101',
                 $this->callback(static function (array $payload): bool {
-                    return ($payload['first_name'] ?? null) === 'Jane'
-                        && ($payload['last_name'] ?? null) === 'Doe'
+                    return ($payload['firstName'] ?? null) === 'Jane'
+                        && ($payload['lastName'] ?? null) === 'Doe'
                         && ($payload['email'] ?? null) === 'jane@example.com'
                         && ($payload['role'] ?? null) === 'admin'
                         && ! array_key_exists('password', $payload);
@@ -90,8 +90,8 @@ final class UserCreationInvitationFlowTest extends CIUnitTestCase
             'user'         => ['role' => 'admin'],
         ])->post('/admin/users/101', [
             csrf_token() => csrf_hash(),
-            'first_name'     => 'Jane',
-            'last_name'      => 'Doe',
+            'firstName'     => 'Jane',
+            'lastName'      => 'Doe',
             'email'          => 'jane@example.com',
             'role'           => 'admin',
             'password'       => 'ShouldNotBeProcessed123',
@@ -108,8 +108,8 @@ final class UserCreationInvitationFlowTest extends CIUnitTestCase
             ->with(
                 '101',
                 $this->callback(static function (array $payload): bool {
-                    return ($payload['first_name'] ?? null) === 'Jane'
-                        && ($payload['last_name'] ?? null) === 'Doe'
+                    return ($payload['firstName'] ?? null) === 'Jane'
+                        && ($payload['lastName'] ?? null) === 'Doe'
                         && ($payload['role'] ?? null) === 'admin'
                         && ! array_key_exists('password', $payload)
                         && ! array_key_exists('email', $payload);
@@ -131,10 +131,10 @@ final class UserCreationInvitationFlowTest extends CIUnitTestCase
             'user'         => ['role' => 'admin'],
         ])->post('/admin/users/101', [
             csrf_token() => csrf_hash(),
-            'first_name'     => 'Jane',
-            'last_name'      => 'Doe',
+            'firstName'     => 'Jane',
+            'lastName'      => 'Doe',
             'email'          => 'jane@example.com',
-            'original_email' => 'jane@example.com',
+            'originalEmail' => 'jane@example.com',
             'role'           => 'admin',
         ]);
 

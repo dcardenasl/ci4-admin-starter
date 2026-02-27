@@ -8,29 +8,29 @@ class UserUpdateRequest extends BaseFormRequest
 {
     protected function fields(): array
     {
-        return ['first_name', 'last_name', 'email', 'role', 'original_email'];
+        return ['firstName', 'lastName', 'email', 'role', 'originalEmail'];
     }
 
     public function rules(): array
     {
         return [
-            'first_name' => 'required|min_length[2]|max_length[100]',
-            'last_name'  => 'required|min_length[2]|max_length[100]',
-            'email'      => 'required|valid_email',
-            'role'       => 'required|in_list[user,admin,superadmin]',
+            'firstName' => 'required|min_length[2]|max_length[100]',
+            'lastName'  => 'required|min_length[2]|max_length[100]',
+            'email'     => 'required|valid_email',
+            'role'      => 'required|in_list[user,admin,superadmin]',
         ];
     }
 
     public function payload(): array
     {
         $payload = [
-            'first_name' => (string) $this->request->getPost('first_name'),
-            'last_name'  => (string) $this->request->getPost('last_name'),
-            'role'       => (string) $this->request->getPost('role'),
+            'firstName' => (string) $this->request->getPost('firstName'),
+            'lastName'  => (string) $this->request->getPost('lastName'),
+            'role'      => (string) $this->request->getPost('role'),
         ];
 
         $email = trim((string) $this->request->getPost('email'));
-        $originalEmail = trim((string) $this->request->getPost('original_email'));
+        $originalEmail = trim((string) $this->request->getPost('originalEmail'));
 
         if ($originalEmail === '' || mb_strtolower($email) !== mb_strtolower($originalEmail)) {
             $payload['email'] = $email;

@@ -34,11 +34,13 @@ final class UserFiltersFallbackTest extends CIUnitTestCase
                 'status'      => 200,
                 'data'        => [
                     'data'         => [
-                        ['id' => 2, 'first_name' => 'User', 'last_name' => 'One', 'email' => 'user@example.com', 'role' => 'user', 'status' => 'active'],
+                        ['id' => 2, 'firstName' => 'User', 'lastName' => 'One', 'email' => 'user@example.com', 'role' => 'user', 'status' => 'active'],
                     ],
-                    'current_page' => 1,
-                    'last_page'    => 1,
-                    'total'        => 1,
+                    'meta' => [
+                        'page'     => 1,
+                        'lastPage' => 1,
+                        'total'    => 1,
+                    ],
                 ],
                 'raw'         => '',
                 'messages'    => [],
@@ -69,9 +71,11 @@ final class UserFiltersFallbackTest extends CIUnitTestCase
                 'status'      => 200,
                 'data'        => [
                     'data'         => [],
-                    'current_page' => 1,
-                    'last_page'    => 1,
-                    'total'        => 0,
+                    'meta' => [
+                        'page'     => 1,
+                        'lastPage' => 1,
+                        'total'    => 0,
+                    ],
                 ],
                 'raw'         => '',
                 'messages'    => [],
@@ -101,9 +105,11 @@ final class UserFiltersFallbackTest extends CIUnitTestCase
                 'status'      => 200,
                 'data'        => [
                     'data'         => [],
-                    'current_page' => 1,
-                    'last_page'    => 1,
-                    'total'        => 0,
+                    'meta' => [
+                        'page'     => 1,
+                        'lastPage' => 1,
+                        'total'    => 0,
+                    ],
                 ],
                 'raw'         => '',
                 'messages'    => [],
@@ -135,9 +141,11 @@ final class UserFiltersFallbackTest extends CIUnitTestCase
                 'status'      => 200,
                 'data'        => [
                     'data'         => [],
-                    'current_page' => 3,
-                    'last_page'    => 5,
-                    'total'        => 250,
+                    'meta' => [
+                        'page'     => 3,
+                        'lastPage' => 5,
+                        'total'    => 250,
+                    ],
                 ],
                 'raw'         => '',
                 'messages'    => [],

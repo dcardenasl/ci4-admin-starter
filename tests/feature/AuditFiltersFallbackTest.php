@@ -34,11 +34,13 @@ final class AuditFiltersFallbackTest extends CIUnitTestCase
                 'status'      => 200,
                 'data'        => [
                     'data' => [
-                        ['id' => 1, 'action' => 'login', 'user_email' => 'user1@example.com', 'entity_type' => 'user', 'created_at' => '2026-02-01 10:00:00'],
+                        ['id' => 1, 'action' => 'login', 'userEmail' => 'user1@example.com', 'entityType' => 'user', 'createdAt' => '2026-02-01 10:00:00'],
                     ],
-                    'current_page' => 1,
-                    'last_page'    => 1,
-                    'total'        => 1,
+                    'meta' => [
+                        'page'     => 1,
+                        'lastPage' => 1,
+                        'total'    => 1,
+                    ],
                 ],
                 'raw'         => '',
                 'messages'    => [],
@@ -68,10 +70,12 @@ final class AuditFiltersFallbackTest extends CIUnitTestCase
                 'ok'          => true,
                 'status'      => 200,
                 'data'        => [
-                    'data'         => [],
-                    'current_page' => 1,
-                    'last_page'    => 1,
-                    'total'        => 0,
+                    'data' => [],
+                    'meta' => [
+                        'page'     => 1,
+                        'lastPage' => 1,
+                        'total'    => 0,
+                    ],
                 ],
                 'raw'         => '',
                 'messages'    => [],
@@ -102,10 +106,12 @@ final class AuditFiltersFallbackTest extends CIUnitTestCase
                 'ok'          => true,
                 'status'      => 200,
                 'data'        => [
-                    'data'         => [],
-                    'current_page' => 2,
-                    'last_page'    => 3,
-                    'total'        => 250,
+                    'data' => [],
+                    'meta' => [
+                        'page'     => 2,
+                        'lastPage' => 3,
+                        'total'    => 250,
+                    ],
                 ],
                 'raw'         => '',
                 'messages'    => [],

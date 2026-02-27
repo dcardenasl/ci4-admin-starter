@@ -10,22 +10,22 @@ class ApiKeyStoreRequest extends BaseFormRequest
     {
         return [
             'name',
-            'is_active',
-            'rate_limit_requests',
-            'rate_limit_window',
-            'user_rate_limit',
-            'ip_rate_limit',
+            'isActive',
+            'rateLimitRequests',
+            'rateLimitWindow',
+            'userRateLimit',
+            'ipRateLimit',
         ];
     }
 
     public function rules(): array
     {
         return [
-            'name'                => 'required|max_length[100]',
-            'rate_limit_requests' => 'permit_empty|is_natural_no_zero',
-            'rate_limit_window'   => 'permit_empty|is_natural_no_zero',
-            'user_rate_limit'     => 'permit_empty|is_natural_no_zero',
-            'ip_rate_limit'       => 'permit_empty|is_natural_no_zero',
+            'name'              => 'required|max_length[100]',
+            'rateLimitRequests' => 'permit_empty|is_natural_no_zero',
+            'rateLimitWindow'   => 'permit_empty|is_natural_no_zero',
+            'userRateLimit'     => 'permit_empty|is_natural_no_zero',
+            'ipRateLimit'       => 'permit_empty|is_natural_no_zero',
         ];
     }
 
@@ -46,16 +46,16 @@ class ApiKeyStoreRequest extends BaseFormRequest
             $payload['name'] = $name;
         }
 
-        $isActive = $this->request->getPost('is_active');
+        $isActive = $this->request->getPost('isActive');
         if ($isActive !== null && $isActive !== '') {
-            $payload['is_active'] = $isActive === '1' || $isActive === 1 || $isActive === true || $isActive === 'true';
+            $payload['isActive'] = $isActive === '1' || $isActive === 1 || $isActive === true || $isActive === 'true';
         }
 
         $numericFields = [
-            'rate_limit_requests',
-            'rate_limit_window',
-            'user_rate_limit',
-            'ip_rate_limit',
+            'rateLimitRequests',
+            'rateLimitWindow',
+            'userRateLimit',
+            'ipRateLimit',
         ];
 
         foreach ($numericFields as $field) {

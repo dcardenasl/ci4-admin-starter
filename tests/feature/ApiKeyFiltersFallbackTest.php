@@ -121,10 +121,12 @@ final class ApiKeyFiltersFallbackTest extends CIUnitTestCase
                 'ok'          => true,
                 'status'      => 200,
                 'data'        => [
-                    'data'         => [],
-                    'current_page' => 3,
-                    'last_page'    => 3,
-                    'total'        => 100,
+                    'data' => [],
+                    'meta' => [
+                        'page'     => 3,
+                        'lastPage' => 3,
+                        'total'    => 100,
+                    ],
                 ],
                 'raw'         => '',
                 'messages'    => [],
