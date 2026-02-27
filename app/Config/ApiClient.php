@@ -23,6 +23,8 @@ class ApiClient extends BaseConfig
      */
     public array $healthPaths = ['/health'];
 
+    public bool $logRequests = false;
+
     public function __construct()
     {
         parent::__construct();
@@ -60,6 +62,11 @@ class ApiClient extends BaseConfig
             if ($paths !== []) {
                 $this->healthPaths = $paths;
             }
+        }
+
+        $logRequests = env('apiClient.logRequests') ?: env('API_LOG_REQUESTS');
+        if ($logRequests !== null && $logRequests !== '') {
+            $this->logRequests = filter_var($logRequests, FILTER_VALIDATE_BOOLEAN);
         }
     }
 }

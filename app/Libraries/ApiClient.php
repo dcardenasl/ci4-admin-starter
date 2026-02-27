@@ -104,7 +104,14 @@ class ApiClient implements ApiClientInterface
             $options = $this->withAuthorization($options);
         }
 
-        log_message('debug', 'API Request: ' . $method . ' ' . $uri . ' | Auth: ' . ($authenticated ? 'YES' : 'NO'));
+        if ($this->config->logRequests) {
+            $logMsg = "API Request: {$method} {$uri}\n"
+                . "Auth: " . ($authenticated ? 'YES' : 'NO') . "\n"
+                . "Options: " . json_encode($options, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+            log_message('info', $logMsg);
+        } else {
+            log_message('debug', 'API Request: ' . $method . ' ' . $uri . ' | Auth: ' . ($authenticated ? 'YES' : 'NO'));
+        }
 
         if (isset($options['multipart'])) {
             unset($options['json'], $options['body']);
@@ -117,23 +124,30 @@ class ApiClient implements ApiClientInterface
             }
         }
 
+        $startedAt = microtime(true);
         $response = $this->http->request($method, $uri, $options);
         $status = $response->getStatusCode();
-
-        log_message('debug', 'API Response Status: ' . $status);
+        $latency = (int) round((microtime(true) - $startedAt) * 1000);
 
         if ($authenticated && $status === 401 && $this->attemptTokenRefresh()) {
             log_message('debug', 'API Token Refreshed. Retrying request.');
             $options = $this->withAuthorization($options);
             $response = $this->http->request($method, $uri, $options);
             $status = $response->getStatusCode();
-            log_message('debug', 'API Response Status (after retry): ' . $status);
         }
 
         $body = $response->getBody();
         $payload = json_decode($body, true);
 
-        if (json_last_error() !== JSON_ERROR_NONE) {
+        if ($this->config->logRequests) {
+            $logMsg = "API Response: {$status} ({$latency}ms)\n"
+                . "Body: " . (is_array($payload) ? json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : $body);
+            log_message('info', $logMsg);
+        } else {
+            log_message('debug', 'API Response Status: ' . $status);
+        }
+
+        if (json_last_error() !== JSON_ERROR_NONE && ! empty($body)) {
             log_message('error', 'API Response is NOT valid JSON: ' . substr($body, 0, 500));
         }
 
@@ -141,7 +155,7 @@ class ApiClient implements ApiClientInterface
             'ok'          => $status >= 200 && $status < 300,
             'status'      => $status,
             'data'        => is_array($payload) ? $payload : [],
-            'raw'         => $response->getBody(),
+            'raw'         => $body,
             'headers'     => $this->extractResponseHeaders($response),
             'messages'    => $this->extractMessages($payload, $status),
             'fieldErrors' => $this->extractFieldErrors($payload),
