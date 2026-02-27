@@ -88,7 +88,7 @@ $csrfHash = csrf_hash(); ?>
                             <td class="<?= esc(table_td_class()) ?>">
                                 <span class="inline-flex rounded-full px-2 py-1 text-xs" :class="statusBadgeClass(row.status)" x-text="statusLabel(row.status)"></span>
                             </td>
-                            <td class="<?= esc(table_td_class('muted')) ?>" x-text="formatDate(row.uploadedAt ?? row.uploaded_at)"></td>
+                            <td class="<?= esc(table_td_class('muted')) ?>" x-text="formatDate(row.uploadedAt)"></td>
                             <td class="<?= esc(table_td_class()) ?>">
                                 <div class="flex items-center gap-2">
                                     <a :href="fileDownloadUrl(row.id)" class="<?= esc(action_button_class()) ?>"><?= lang('Files.download') ?></a>

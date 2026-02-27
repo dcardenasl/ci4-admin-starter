@@ -65,17 +65,17 @@
                         <template x-for="row in rows" :key="String(row.id ?? Math.random())">
                             <tr class="<?= esc(table_row_class()) ?>">
                                 <td class="<?= esc(table_td_class('primary')) ?>" x-text="String(row.name ?? '-')"></td>
-                                <td class="<?= esc(table_td_class('subtle')) ?> font-mono text-xs" x-text="String(row.keyPrefix ?? row.key_prefix ?? '-')"></td>
+                                <td class="<?= esc(table_td_class('subtle')) ?> font-mono text-xs" x-text="String(row.keyPrefix ?? '-')"></td>
                                 <td class="<?= esc(table_td_class()) ?>">
-                                    <span class="inline-flex rounded-full px-2 py-1 text-xs" :class="(row.isActive ?? row.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700')" x-text="row.isActive ?? row.is_active ? '<?= esc(lang('ApiKeys.active')) ?>' : '<?= esc(lang('ApiKeys.inactive')) ?>'"></span>
+                                    <span class="inline-flex rounded-full px-2 py-1 text-xs" :class="(row.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700')" x-text="row.isActive ? '<?= esc(lang('ApiKeys.active')) ?>' : '<?= esc(lang('ApiKeys.inactive')) ?>'"></span>
                                 </td>
-                                <td class="<?= esc(table_td_class('muted')) ?>" x-text="String(row.rateLimitRequests ?? row.rate_limit_requests ?? '-')"></td>
-                                <td class="<?= esc(table_td_class('muted')) ?>" x-text="String(row.rateLimitWindow ?? row.rate_limit_window ?? '-')"></td>
+                                <td class="<?= esc(table_td_class('muted')) ?>" x-text="String(row.rateLimitRequests ?? '-')"></td>
+                                <td class="<?= esc(table_td_class('muted')) ?>" x-text="String(row.rateLimitWindow ?? '-')"></td>
                                 <td class="<?= esc(table_td_class('muted')) ?>" x-text="formatDate(row.createdAt)"></td>
                                 <td class="<?= esc(table_td_class()) ?>">
                                     <div class="flex items-center gap-2">
-                                        <a :href="userShowUrl(row.id)" class="<?= esc(action_button_class()) ?>"><?= lang('ApiKeys.view') ?></a>
-                                        <a :href="userEditUrl(row.id)" class="<?= esc(action_button_class()) ?>"><?= lang('App.edit') ?></a>
+                                        <a :href="apiKeyShowUrl(row.id)" class="<?= esc(action_button_class()) ?>"><?= lang('ApiKeys.view') ?></a>
+                                        <a :href="apiKeyEditUrl(row.id)" class="<?= esc(action_button_class()) ?>"><?= lang('App.edit') ?></a>
                                     </div>
                                 </td>
                             </tr>

@@ -18,7 +18,7 @@
     </div>
     <div>
         <label class="<?= esc(filter_label_class()) ?>"><?= lang('Audit.userId') ?></label>
-        <input type="text" name="userId" value="<?= esc((string) (request()->getGet('userId') ?? request()->getGet('user_id'))) ?>" class="<?= esc(filter_input_class()) ?>">
+        <input type="text" name="userId" value="<?= esc((string) request()->getGet('userId')) ?>" class="<?= esc(filter_input_class()) ?>">
     </div>
     <?= view('layouts/partials/filter_limit') ?>
 </div>

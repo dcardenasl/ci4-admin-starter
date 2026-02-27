@@ -11,18 +11,17 @@ final class UiHelperTest extends CIUnitTestCase
 {
     public function testIsEmailVerifiedReturnsTrueForTimestampFields(): void
     {
-        $this->assertTrue(is_email_verified(['email_verified_at' => '2026-01-20T10:00:00Z']));
-        $this->assertTrue(is_email_verified(['verified_at' => '2026-01-20T10:00:00Z']));
+        $this->assertTrue(is_email_verified(['emailVerifiedAt' => '2026-01-20T10:00:00Z']));
     }
 
     public function testIsEmailVerifiedSupportsBooleanNumericAndStringFlags(): void
     {
-        $this->assertTrue(is_email_verified(['email_verified' => true]));
-        $this->assertTrue(is_email_verified(['is_email_verified' => 1]));
+        $this->assertTrue(is_email_verified(['emailVerified' => true]));
+        $this->assertTrue(is_email_verified(['isEmailVerified' => 1]));
         $this->assertTrue(is_email_verified(['verified' => 'true']));
         $this->assertTrue(is_email_verified(['verified' => 'verified']));
-        $this->assertFalse(is_email_verified(['email_verified' => false]));
-        $this->assertFalse(is_email_verified(['is_email_verified' => 0]));
+        $this->assertFalse(is_email_verified(['emailVerified' => false]));
+        $this->assertFalse(is_email_verified(['isEmailVerified' => 0]));
         $this->assertFalse(is_email_verified(['verified' => 'pending']));
     }
 

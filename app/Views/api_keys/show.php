@@ -33,12 +33,12 @@
                 </div>
                 <div>
                     <dt class="text-gray-500"><?= lang('ApiKeys.keyPrefix') ?></dt>
-                    <dd class="mt-1 text-gray-900 font-mono text-xs"><?= esc((string) ($apiKey['keyPrefix'] ?? $apiKey['key_prefix'] ?? '-')) ?></dd>
+                    <dd class="mt-1 text-gray-900 font-mono text-xs"><?= esc((string) ($apiKey['keyPrefix'] ?? '-')) ?></dd>
                 </div>
                 <div>
                     <dt class="text-gray-500"><?= lang('ApiKeys.status') ?></dt>
                     <dd class="mt-1">
-                        <?php $isActive = ! empty($apiKey['isActive']) || ! empty($apiKey['is_active']); ?>
+                        <?php $isActive = ! empty($apiKey['isActive']); ?>
                         <span class="inline-flex rounded-full px-2 py-1 text-xs <?= $isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700' ?>">
                             <?= $isActive ? lang('ApiKeys.active') : lang('ApiKeys.inactive') ?>
                         </span>
@@ -46,27 +46,27 @@
                 </div>
                 <div>
                     <dt class="text-gray-500"><?= lang('ApiKeys.rateLimitRequests') ?></dt>
-                    <dd class="mt-1 text-gray-900"><?= esc((string) ($apiKey['rateLimitRequests'] ?? $apiKey['rate_limit_requests'] ?? '-')) ?></dd>
+                    <dd class="mt-1 text-gray-900"><?= esc((string) ($apiKey['rateLimitRequests'] ?? '-')) ?></dd>
                 </div>
                 <div>
                     <dt class="text-gray-500"><?= lang('ApiKeys.rateLimitWindow') ?></dt>
-                    <dd class="mt-1 text-gray-900"><?= esc((string) ($apiKey['rateLimitWindow'] ?? $apiKey['rate_limit_window'] ?? '-')) ?></dd>
+                    <dd class="mt-1 text-gray-900"><?= esc((string) ($apiKey['rateLimitWindow'] ?? '-')) ?></dd>
                 </div>
                 <div>
                     <dt class="text-gray-500"><?= lang('ApiKeys.userRateLimit') ?></dt>
-                    <dd class="mt-1 text-gray-900"><?= esc((string) ($apiKey['userRateLimit'] ?? $apiKey['user_rate_limit'] ?? '-')) ?></dd>
+                    <dd class="mt-1 text-gray-900"><?= esc((string) ($apiKey['userRateLimit'] ?? '-')) ?></dd>
                 </div>
                 <div>
                     <dt class="text-gray-500"><?= lang('ApiKeys.ipRateLimit') ?></dt>
-                    <dd class="mt-1 text-gray-900"><?= esc((string) ($apiKey['ipRateLimit'] ?? $apiKey['ip_rate_limit'] ?? '-')) ?></dd>
+                    <dd class="mt-1 text-gray-900"><?= esc((string) ($apiKey['ipRateLimit'] ?? '-')) ?></dd>
                 </div>
                 <div>
                     <dt class="text-gray-500"><?= lang('ApiKeys.createdAt') ?></dt>
-                    <dd class="mt-1 text-gray-900"><?= esc(format_date($apiKey['createdAt'] ?? $apiKey['created_at'] ?? null)) ?></dd>
+                    <dd class="mt-1 text-gray-900"><?= esc(format_date($apiKey['createdAt'] ?? null)) ?></dd>
                 </div>
                 <div>
                     <dt class="text-gray-500"><?= lang('ApiKeys.updatedAt') ?></dt>
-                    <dd class="mt-1 text-gray-900"><?= esc(format_date($apiKey['updatedAt'] ?? $apiKey['updated_at'] ?? null)) ?></dd>
+                    <dd class="mt-1 text-gray-900"><?= esc(format_date($apiKey['updatedAt'] ?? null)) ?></dd>
                 </div>
             </dl>
         </section>

@@ -177,7 +177,7 @@ class ApiClient implements ApiClientInterface
         $payload = json_decode($response->getBody(), true);
         $data = $payload['data'] ?? $payload;
 
-        $accessToken = $data['accessToken'] ?? $data['access_token'] ?? null;
+        $accessToken = $data['accessToken'] ?? null;
         if (! is_string($accessToken) || $accessToken === '') {
             $this->clearSessionAuth();
 
@@ -186,12 +186,12 @@ class ApiClient implements ApiClientInterface
 
         $this->session->set('access_token', $accessToken);
 
-        $refreshTokenResponse = $data['refreshToken'] ?? $data['refresh_token'] ?? null;
+        $refreshTokenResponse = $data['refreshToken'] ?? null;
         if (! empty($refreshTokenResponse)) {
             $this->session->set('refresh_token', $refreshTokenResponse);
         }
 
-        $expiresIn = $data['expiresIn'] ?? $data['expires_in'] ?? null;
+        $expiresIn = $data['expiresIn'] ?? null;
         if (! empty($expiresIn)) {
             $this->session->set('token_expires_at', time() + (int) $expiresIn);
         }

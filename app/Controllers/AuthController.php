@@ -225,9 +225,9 @@ class AuthController extends BaseWebController
 
     protected function persistAuthSession(array $data): void
     {
-        $this->session->set('access_token', $data['accessToken'] ?? $data['access_token'] ?? null);
-        $this->session->set('refresh_token', $data['refreshToken'] ?? $data['refresh_token'] ?? null);
-        $this->session->set('token_expires_at', time() + (int) ($data['expiresIn'] ?? $data['expires_in'] ?? 3600));
+        $this->session->set('access_token', $data['accessToken'] ?? null);
+        $this->session->set('refresh_token', $data['refreshToken'] ?? null);
+        $this->session->set('token_expires_at', time() + (int) ($data['expiresIn'] ?? 3600));
         $this->session->set('user', $data['user'] ?? []);
     }
 

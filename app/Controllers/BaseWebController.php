@@ -240,8 +240,8 @@ abstract class BaseWebController extends BaseController
      */
     protected function resolveDateRange(int $defaultDays = 30): array
     {
-        $dateFrom = trim((string) ($this->request->getGet('dateFrom') ?? $this->request->getGet('date_from') ?? ''));
-        $dateTo = trim((string) ($this->request->getGet('dateTo') ?? $this->request->getGet('date_to') ?? ''));
+        $dateFrom = trim((string) $this->request->getGet('dateFrom'));
+        $dateTo = trim((string) $this->request->getGet('dateTo'));
 
         $today = new \DateTimeImmutable('today');
 
@@ -260,9 +260,6 @@ abstract class BaseWebController extends BaseController
         return [
             'dateFrom' => $dateFrom,
             'dateTo'   => $dateTo,
-            // Keep snake_case for backward compatibility if needed in views
-            'date_from' => $dateFrom,
-            'date_to'   => $dateTo,
         ];
     }
 
@@ -471,37 +468,36 @@ abstract class BaseWebController extends BaseController
      * @param array<string, mixed> $response
      * @param array<string, mixed> $state
      */
-        protected function resolveTablePagination(array $response, array $state, int $visibleCount = 0): array
-        {
-            $data = $response['data'] ?? [];
-            if (! is_array($data)) {
-                $data = [];
-            }
-    
-            $meta = $data['meta'] ?? [];
-            if (! is_array($meta)) {
-                $meta = [];
-            }
-    
-            $nextCursor = (string) ($meta['nextCursor'] ?? $meta['next_cursor'] ?? $data['nextCursor'] ?? $data['next_cursor'] ?? '');
-            $prevCursor = (string) ($meta['prevCursor'] ?? $meta['prev_cursor'] ?? $data['prevCursor'] ?? $data['prev_cursor'] ?? '');
-            $hasMore = (bool) ($meta['hasMore'] ?? $meta['has_more'] ?? ($nextCursor !== ''));
-    
-            $currentPage = (int) ($meta['page'] ?? $meta['currentPage'] ?? $meta['current_page'] ?? $data['page'] ?? $data['currentPage'] ?? $data['current_page'] ?? ($state['page'] ?? 1));
-            $lastPage = (int) ($meta['lastPage'] ?? $meta['last_page'] ?? $data['lastPage'] ?? $data['last_page'] ?? $currentPage);
-            $total = (int) ($meta['total'] ?? $data['total'] ?? $meta['totalEstimate'] ?? $meta['total_estimate'] ?? $visibleCount);
-    
-            $isCursorMode = $nextCursor !== '' || $prevCursor !== '' || ((string) ($state['cursor'] ?? '')) !== '';
-    
-            return [
-                'mode'           => $isCursorMode ? 'cursor' : 'page',
-                'current_page'   => max(1, $currentPage),
-                'last_page'      => max(1, $lastPage),
-                'total'          => max(0, $total),
-                'next_cursor'    => $nextCursor,
-                'prev_cursor'    => $prevCursor,
-                'has_more'       => $hasMore,
-                'current_cursor' => (string) ($state['cursor'] ?? ''),
-            ];
-        }
-}
+            protected function resolveTablePagination(array $response, array $state, int $visibleCount = 0): array
+            {
+                $data = $response['data'] ?? [];
+                if (! is_array($data)) {
+                    $data = [];
+                }
+        
+                $meta = $data['meta'] ?? [];
+                if (! is_array($meta)) {
+                    $meta = [];
+                }
+        
+                $nextCursor = (string) ($meta['nextCursor'] ?? $data['nextCursor'] ?? '');
+                $prevCursor = (string) ($meta['prevCursor'] ?? $data['prevCursor'] ?? '');
+                $hasMore = (bool) ($meta['hasMore'] ?? ($nextCursor !== ''));
+        
+                $currentPage = (int) ($meta['page'] ?? $meta['currentPage'] ?? $data['page'] ?? $data['currentPage'] ?? ($state['page'] ?? 1));
+                $lastPage = (int) ($meta['lastPage'] ?? $data['lastPage'] ?? $currentPage);
+                $total = (int) ($meta['total'] ?? $data['total'] ?? $meta['totalEstimate'] ?? $visibleCount);
+        
+                $isCursorMode = $nextCursor !== '' || $prevCursor !== '' || ((string) ($state['cursor'] ?? '')) !== '';
+        
+                return [
+                    'mode'           => $isCursorMode ? 'cursor' : 'page',
+                    'current_page'   => max(1, $currentPage),
+                    'last_page'      => max(1, $lastPage),
+                    'total'          => max(0, $total),
+                    'next_cursor'    => $nextCursor,
+                    'prev_cursor'    => $prevCursor,
+                    'has_more'       => $hasMore,
+                    'current_cursor' => (string) ($state['cursor'] ?? ''),
+                ];
+            }}

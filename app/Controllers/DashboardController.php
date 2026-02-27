@@ -76,10 +76,9 @@ class DashboardController extends BaseWebController
         ];
 
         // Añadir métricas de red solo si el contrato o la respuesta las provee (con fallbacks robustos)
-        $uptime = $metrics['request_stats']['availability_percent']
+        $uptime = $metrics['requestStats']['availabilityPercent']
                ?? $metrics['slo']['availability']['current']
-               ?? $metrics['availability_percent']
-               ?? $metrics['uptime_percent']
+               ?? $metrics['availabilityPercent']
                ?? null;
 
         if ($uptime !== null) {
@@ -95,7 +94,7 @@ class DashboardController extends BaseWebController
             'user'  => session('user') ?? [],
             'stats' => $stats,
             'recentFiles'    => $recentFiles,
-            'recentActivity' => $metrics['recentActivity'] ?? $metrics['recent_activity'] ?? [],
+            'recentActivity' => $metrics['recentActivity'] ?? [],
             'apiHealth'      => $healthResponse,
         ]);
     }

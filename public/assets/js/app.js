@@ -83,8 +83,8 @@ const tablePayloadRoot = (payload) => {
     }
 
     if (Array.isArray(nested.data) || isObject(nested.meta) || 
-        nested.current_page !== undefined || nested.currentPage !== undefined ||
-        nested.last_page !== undefined || nested.lastPage !== undefined ||
+        nested.currentPage !== undefined || nested.page !== undefined ||
+        nested.lastPage !== undefined ||
         nested.total !== undefined || isObject(nested.summary)) {
         return nested;
     }
@@ -271,9 +271,6 @@ const toDateInput = (value) => {
         }
         if (typeof value.createdAt === 'string' || typeof value.createdAt === 'number') {
             return value.createdAt;
-        }
-        if (typeof value.created_at === 'string' || typeof value.created_at === 'number') {
-            return value.created_at;
         }
         if (typeof value.value === 'string' || typeof value.value === 'number') {
             return value.value;
@@ -663,19 +660,19 @@ document.addEventListener('alpine:init', () => {
 
         extractPagination(root, visibleCount) {
             const meta = isObject(root.meta) ? root.meta : {};
-            const nextCursor = String(meta.nextCursor ?? meta.next_cursor ?? root.nextCursor ?? root.next_cursor ?? '');
-            const prevCursor = String(meta.prevCursor ?? meta.prev_cursor ?? root.prevCursor ?? root.prev_cursor ?? '');
+            const nextCursor = String(meta.nextCursor ?? root.nextCursor ?? '');
+            const prevCursor = String(meta.prevCursor ?? root.prevCursor ?? '');
             const hasCursor = nextCursor !== '' || prevCursor !== '' || String(this.query.cursor || '') !== '';
             
-            const limit = Number(meta.perPage ?? meta.per_page ?? root.perPage ?? root.per_page ?? meta.limit ?? this.query.limit ?? 25) || 25;
+            const limit = Number(meta.perPage ?? root.perPage ?? meta.limit ?? this.query.limit ?? 25) || 25;
             const safeLimit = Math.max(1, limit);
             
-            const total = Number(meta.total ?? root.total ?? meta.totalEstimate ?? meta.total_estimate ?? visibleCount) || visibleCount;
+            const total = Number(meta.total ?? root.total ?? meta.totalEstimate ?? visibleCount) || visibleCount;
             
-            const currentPage = Number(meta.page ?? meta.currentPage ?? meta.current_page ?? root.page ?? root.currentPage ?? root.current_page ?? this.query.page ?? 1) || 1;
+            const currentPage = Number(meta.page ?? meta.currentPage ?? root.page ?? root.currentPage ?? this.query.page ?? 1) || 1;
             
             const derivedLastPage = Math.max(1, Math.ceil(Math.max(0, total) / safeLimit));
-            const lastPage = Number(meta.lastPage ?? meta.last_page ?? root.lastPage ?? root.last_page ?? derivedLastPage) || derivedLastPage;
+            const lastPage = Number(meta.lastPage ?? root.lastPage ?? derivedLastPage) || derivedLastPage;
             
             const normalizedCurrentPage = Math.max(1, Math.min(currentPage, Math.max(1, lastPage)));
             const from = total <= 0 ? 0 : ((normalizedCurrentPage - 1) * safeLimit) + 1;
@@ -863,8 +860,8 @@ document.addEventListener('alpine:init', () => {
         },
 
         fullName(row) {
-            const firstName = String(row.firstName ?? row.first_name ?? '').trim();
-            const lastName = String(row.lastName ?? row.last_name ?? '').trim();
+            const firstName = String(row.firstName ?? '').trim();
+            const lastName = String(row.lastName ?? '').trim();
             const fullName = `${firstName} ${lastName}`.trim();
 
             return fullName === '' ? '-' : fullName;

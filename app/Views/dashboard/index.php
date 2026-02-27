@@ -1,7 +1,7 @@
 <header class="mb-8">
     <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900"><?= sprintf(lang('Dashboard.welcomeTitle'), esc($user['firstName'] ?? $user['first_name'] ?? $user['username'] ?? 'User')) ?></h1>
+            <h1 class="text-2xl font-bold text-gray-900"><?= sprintf(lang('Dashboard.welcomeTitle'), esc($user['firstName'] ?? $user['username'] ?? 'User')) ?></h1>
             <p class="text-gray-500 mt-1">
                 <?= lang('Dashboard.welcomeSubtitle') ?> 
                 <a href="<?= site_url('profile') ?>" class="inline-flex items-center gap-1 text-brand-600 hover:text-brand-700 font-medium ml-1 transition-colors">
@@ -63,12 +63,12 @@
                                     <?php foreach ($recentFiles as $file): ?>
                                         <tr class="<?= esc(table_row_class()) ?>">
                                             <td class="<?= esc(table_td_class()) ?>">
-                                                <?php if (! empty($file['isImage']) || ! empty($file['is_image'])): ?>
+                                                <?php if (! empty($file['isImage'])): ?>
                                                     <?php $viewUrl = site_url('files/' . ($file['id'] ?? '') . '/view'); ?>
                                                     <button type="button" @click="previewUrl = '<?= $viewUrl ?>'; previewShow = true">
                                                         <img src="<?= $viewUrl ?>" 
                                                              class="h-8 w-8 rounded-lg object-cover border border-gray-200 hover:scale-110 transition-transform shadow-sm" 
-                                                             alt="<?= esc((string) ($file['originalName'] ?? $file['original_name'] ?? '')) ?>">
+                                                             alt="<?= esc((string) ($file['originalName'] ?? '')) ?>">
                                                     </button>
                                                 <?php else: ?>
                                                     <div class="h-8 w-8 flex items-center justify-center rounded-lg bg-gray-100 border border-gray-200">
@@ -77,7 +77,7 @@
                                                 <?php endif; ?>
                                             </td>
                                             <td class="<?= esc(table_td_class('primary')) ?>">
-                                                <?= esc((string) ($file['originalName'] ?? $file['original_name'] ?? $file['name'] ?? $file['filename'] ?? '-')) ?>
+                                                <?= esc((string) ($file['originalName'] ?? $file['filename'] ?? '-')) ?>
                                             </td>
                                             <td class="<?= esc(table_td_class()) ?>">
                                                 <span class="inline-flex rounded-full px-2 py-1 text-xs <?= status_badge($file['status'] ?? 'active') ?>">
@@ -85,7 +85,7 @@
                                                 </span>
                                             </td>
                                             <td class="<?= esc(table_td_class('muted')) ?>">
-                                                <?= esc(format_date($file['uploadedAt'] ?? $file['uploaded_at'] ?? $file['created_at'] ?? null)) ?>
+                                                <?= esc(format_date($file['uploadedAt'] ?? null)) ?>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>

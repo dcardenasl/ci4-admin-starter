@@ -14,13 +14,13 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700" for="first_name"><?= lang('Users.firstName') ?></label>
-                <input id="first_name" name="first_name" type="text" value="<?= esc(old('first_name', $editUser['firstName'] ?? $editUser['first_name'] ?? '')) ?>" required
+                <input id="first_name" name="first_name" type="text" value="<?= esc(old('first_name', $editUser['firstName'] ?? '')) ?>" required
                     class="mt-1 w-full rounded-lg border px-3 py-2 <?= has_field_error('first_name') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand-500 focus:ring-brand-500' ?>">
                 <?= render_field_error('first_name') ?>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700" for="last_name"><?= lang('Users.lastName') ?></label>
-                <input id="last_name" name="last_name" type="text" value="<?= esc(old('last_name', $editUser['lastName'] ?? $editUser['last_name'] ?? '')) ?>" required
+                <input id="last_name" name="last_name" type="text" value="<?= esc(old('last_name', $editUser['lastName'] ?? '')) ?>" required
                     class="mt-1 w-full rounded-lg border px-3 py-2 <?= has_field_error('last_name') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand-500 focus:ring-brand-500' ?>">
                 <?= render_field_error('last_name') ?>
             </div>
