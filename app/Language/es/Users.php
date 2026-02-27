@@ -41,6 +41,8 @@ return [
     'confirmDelete'    => 'Esta seguro de que desea eliminar este usuario?',
     'createSuccess'    => 'Usuario creado exitosamente.',
     'createFailed'     => 'No se pudo crear el usuario.',
+    'sendInvite'       => 'Enviar correo de invitación',
+    'sendInviteHelp'   => 'Envía un correo con un enlace para que el usuario establezca su contraseña.',
     'updateSuccess'    => 'Usuario actualizado exitosamente.',
     'updateFailed'     => 'No se pudo actualizar el usuario.',
     'deleteSuccess'    => 'Usuario eliminado exitosamente.',

@@ -31,7 +31,7 @@ class UserController extends BaseWebController
     {
         return $this->tableDataResponse(
             ['status', 'role'],
-            ['created_at', 'email', 'role', 'status', 'first_name', 'last_name'],
+            ['createdAt', 'email', 'role', 'status', 'firstName', 'lastName'],
             fn(array $params) => $this->userService->list($params),
         );
     }

@@ -30,8 +30,8 @@ class ApiKeyController extends BaseWebController
     public function data(): ResponseInterface
     {
         return $this->tableDataResponse(
-            ['name', 'is_active'],
-            ['id', 'name', 'is_active', 'created_at'],
+            ['name', 'isActive'],
+            ['id', 'name', 'isActive', 'createdAt'],
             fn(array $params) => $this->apiKeyService->list($params),
         );
     }

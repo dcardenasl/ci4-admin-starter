@@ -10,8 +10,7 @@ abstract class BaseFormRequest implements FormRequestInterface
     public function __construct(
         protected IncomingRequest $request,
         protected ValidationInterface $validation,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<int, string>

@@ -30,7 +30,7 @@ class FileController extends BaseWebController
     {
         return $this->tableDataResponse(
             ['status'],
-            ['created_at', 'name', 'status'],
+            ['uploadedAt', 'originalName', 'mimeType', 'size'],
             fn(array $params) => $this->fileService->list($params),
         );
     }
@@ -134,10 +134,10 @@ class FileController extends BaseWebController
 
             $headers = is_array($response['headers'] ?? null) ? $response['headers'] : [];
             $contentType = (string) ($headers['content-type'] ?? 'application/octet-stream');
-            
+
             // 1. Intentar obtener el nombre del campo 'original_name' de la API
             $filename = $data['original_name'] ?? $response['original_name'] ?? $data['name'] ?? $data['filename'] ?? null;
-            
+
             // 2. Si no hay nombre en el cuerpo, intentar obtenerlo del Content-Disposition de la propia API
             if (! $filename && isset($headers['content-disposition'])) {
                 if (preg_match('/filename="?([^"]+)"?/', $headers['content-disposition'], $matches)) {

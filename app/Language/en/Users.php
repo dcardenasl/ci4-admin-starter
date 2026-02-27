@@ -41,6 +41,8 @@ return [
     'confirmDelete'    => 'Are you sure you want to delete this user?',
     'createSuccess'    => 'User created successfully.',
     'createFailed'     => 'Could not create the user.',
+    'sendInvite'       => 'Send invitation email',
+    'sendInviteHelp'   => 'Sends an email with a link for the user to set their password.',
     'updateSuccess'    => 'User updated successfully.',
     'updateFailed'     => 'Could not update the user.',
     'deleteSuccess'    => 'User deleted successfully.',
