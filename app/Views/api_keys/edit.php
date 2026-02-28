@@ -34,12 +34,12 @@
                     'userRateLimit'     => $apiKey['userRateLimit'] ?? '',
                     'ipRateLimit'       => $apiKey['ipRateLimit'] ?? '',
                 ];
-                $labels = [
-                    'rateLimitRequests' => lang('ApiKeys.rateLimitRequests'),
-                    'rateLimitWindow'   => lang('ApiKeys.rateLimitWindow'),
-                    'userRateLimit'     => lang('ApiKeys.userRateLimit'),
-                    'ipRateLimit'       => lang('ApiKeys.ipRateLimit'),
-                ]; ?>
+$labels = [
+    'rateLimitRequests' => lang('ApiKeys.rateLimitRequests'),
+    'rateLimitWindow'   => lang('ApiKeys.rateLimitWindow'),
+    'userRateLimit'     => lang('ApiKeys.userRateLimit'),
+    'ipRateLimit'       => lang('ApiKeys.ipRateLimit'),
+]; ?>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <?php foreach ($labels as $field => $label): ?>
                         <div>

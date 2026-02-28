@@ -489,36 +489,37 @@ abstract class BaseWebController extends BaseController
      * @param array<string, mixed> $response
      * @param array<string, mixed> $state
      */
-            protected function resolveTablePagination(array $response, array $state, int $visibleCount = 0): array
-            {
-                $data = $response['data'] ?? [];
-                if (! is_array($data)) {
-                    $data = [];
-                }
-        
-                $meta = $data['meta'] ?? [];
-                if (! is_array($meta)) {
-                    $meta = [];
-                }
-        
-                $nextCursor = (string) ($meta['nextCursor'] ?? $data['nextCursor'] ?? '');
-                $prevCursor = (string) ($meta['prevCursor'] ?? $data['prevCursor'] ?? '');
-                $hasMore = (bool) ($meta['hasMore'] ?? ($nextCursor !== ''));
-        
-                $currentPage = (int) ($meta['page'] ?? $meta['currentPage'] ?? $data['page'] ?? $data['currentPage'] ?? ($state['page'] ?? 1));
-                $lastPage = (int) ($meta['lastPage'] ?? $data['lastPage'] ?? $currentPage);
-                $total = (int) ($meta['total'] ?? $data['total'] ?? $meta['totalEstimate'] ?? $visibleCount);
-        
-                $isCursorMode = $nextCursor !== '' || $prevCursor !== '' || ((string) ($state['cursor'] ?? '')) !== '';
-        
-                return [
-                    'mode'           => $isCursorMode ? 'cursor' : 'page',
-                    'current_page'   => max(1, $currentPage),
-                    'last_page'      => max(1, $lastPage),
-                    'total'          => max(0, $total),
-                    'next_cursor'    => $nextCursor,
-                    'prev_cursor'    => $prevCursor,
-                    'has_more'       => $hasMore,
-                    'current_cursor' => (string) ($state['cursor'] ?? ''),
-                ];
-            }}
+    protected function resolveTablePagination(array $response, array $state, int $visibleCount = 0): array
+    {
+        $data = $response['data'] ?? [];
+        if (! is_array($data)) {
+            $data = [];
+        }
+
+        $meta = $data['meta'] ?? [];
+        if (! is_array($meta)) {
+            $meta = [];
+        }
+
+        $nextCursor = (string) ($meta['nextCursor'] ?? $data['nextCursor'] ?? '');
+        $prevCursor = (string) ($meta['prevCursor'] ?? $data['prevCursor'] ?? '');
+        $hasMore = (bool) ($meta['hasMore'] ?? ($nextCursor !== ''));
+
+        $currentPage = (int) ($meta['page'] ?? $meta['currentPage'] ?? $data['page'] ?? $data['currentPage'] ?? ($state['page'] ?? 1));
+        $lastPage = (int) ($meta['lastPage'] ?? $data['lastPage'] ?? $currentPage);
+        $total = (int) ($meta['total'] ?? $data['total'] ?? $meta['totalEstimate'] ?? $visibleCount);
+
+        $isCursorMode = $nextCursor !== '' || $prevCursor !== '' || ((string) ($state['cursor'] ?? '')) !== '';
+
+        return [
+            'mode'           => $isCursorMode ? 'cursor' : 'page',
+            'current_page'   => max(1, $currentPage),
+            'last_page'      => max(1, $lastPage),
+            'total'          => max(0, $total),
+            'next_cursor'    => $nextCursor,
+            'prev_cursor'    => $prevCursor,
+            'has_more'       => $hasMore,
+            'current_cursor' => (string) ($state['cursor'] ?? ''),
+        ];
+    }
+}

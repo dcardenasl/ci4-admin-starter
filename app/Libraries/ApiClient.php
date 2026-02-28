@@ -386,13 +386,13 @@ class ApiClient implements ApiClientInterface
                         break;
                     }
                     if (is_array($entry)) {
-                         // Nested array, try one more level or skip
-                         foreach($entry as $subEntry) {
-                             if (is_scalar($subEntry)) {
-                                 $fieldErrors[$key] = (string) $subEntry;
-                                 break 2;
-                             }
-                         }
+                        // Nested array, try one more level or skip
+                        foreach ($entry as $subEntry) {
+                            if (is_scalar($subEntry)) {
+                                $fieldErrors[$key] = (string) $subEntry;
+                                break 2;
+                            }
+                        }
                     }
                 }
             }
