@@ -51,8 +51,17 @@ abstract class BaseFormRequest implements FormRequestInterface
     {
         $this->validation->reset();
         $this->validation->setRules($this->rules(), $this->messages());
+        $data = $this->data();
 
-        return $this->validation->withRequest($this->request)->run($this->data());
+        $result = $this->validation->run($data);
+
+        if (! $result) {
+            log_message('debug', '[BaseFormRequest] Validation failed for ' . static::class);
+            log_message('debug', '[BaseFormRequest] Data: ' . json_encode($data));
+            log_message('debug', '[BaseFormRequest] Errors: ' . json_encode($this->validation->getErrors()));
+        }
+
+        return $result;
     }
 
     /**

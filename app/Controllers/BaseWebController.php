@@ -146,13 +146,38 @@ abstract class BaseWebController extends BaseController
             return [];
         }
 
+        $normalized = [];
+
         foreach ($fieldErrors as $key => $value) {
-            if (is_string($key) && is_scalar($value)) {
-                $fieldErrors[$key] = $this->localizeApiMessage((string) $value);
+            if (! is_string($key) || ! is_scalar($value)) {
+                continue;
             }
+
+            $normalizedKey = $this->normalizeErrorKey($key);
+            $normalized[$normalizedKey] = $this->localizeApiMessage((string) $value);
         }
 
-        return $fieldErrors;
+        return $normalized;
+    }
+
+    protected function normalizeErrorKey(string $key): string
+    {
+        $map = [
+            'first_name'            => 'firstName',
+            'last_name'             => 'lastName',
+            'is_active'             => 'isActive',
+            'rate_limit_requests'   => 'rateLimitRequests',
+            'rate_limit_window'     => 'rateLimitWindow',
+            'user_rate_limit'       => 'userRateLimit',
+            'ip_rate_limit'         => 'ipRateLimit',
+            'password_confirmation' => 'passwordConfirmation',
+            'send_invite'           => 'sendInvite',
+            'client_base_url'       => 'clientBaseUrl',
+            'id_token'              => 'idToken',
+            'original_email'        => 'originalEmail',
+        ];
+
+        return $map[$key] ?? $key;
     }
 
     /**
