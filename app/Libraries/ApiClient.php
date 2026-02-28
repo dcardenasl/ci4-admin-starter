@@ -69,27 +69,39 @@ class ApiClient implements ApiClientInterface
 
     public function upload(string $path, array $files = [], array $fields = []): array
     {
-        $payload = $fields;
+        $multipart = [];
 
-        foreach ($files as $name => $file) {
-            if (! is_file($file)) {
-                throw new RuntimeException("File not found: {$file}");
-            }
-
-            // Obtenemos el tipo MIME para construir el Data URI
-            $mimeType = mime_content_type($file) ?: 'application/octet-stream';
-            $base64Data = base64_encode(file_get_contents($file));
-
-            // Enviamos el archivo con el prefijo de tipo para que el backend reconozca la extensión
-            $payload[(string) $name] = "data:{$mimeType};base64,{$base64Data}";
-
-            // Aseguramos que el nombre original también se envíe
-            if (! isset($payload['filename'])) {
-                $payload['filename'] = basename($file);
-            }
+        foreach ($fields as $name => $value) {
+            $multipart[] = [
+                'name'     => (string) $name,
+                'contents' => is_scalar($value) ? (string) $value : json_encode($value),
+            ];
         }
 
-        return $this->post($path, $payload);
+        foreach ($files as $name => $file) {
+            $filePath = is_array($file) ? ($file['path'] ?? '') : $file;
+            if (! is_string($filePath) || $filePath === '' || ! is_file($filePath)) {
+                throw new RuntimeException("File not found: {$filePath}");
+            }
+
+            $filename = is_array($file) && isset($file['filename']) && is_string($file['filename'])
+                ? $file['filename']
+                : basename($filePath);
+
+            $part = [
+                'name'     => (string) $name,
+                'contents' => fopen($filePath, 'rb'),
+                'filename' => $filename,
+            ];
+
+            if (is_array($file) && isset($file['mimeType']) && is_string($file['mimeType'])) {
+                $part['mime'] = $file['mimeType'];
+            }
+
+            $multipart[] = $part;
+        }
+
+        return $this->request('POST', $path, ['multipart' => $multipart], true);
     }
 
     public function request(string $method, string $path, array $options = [], bool $authenticated = true): array
@@ -102,15 +114,6 @@ class ApiClient implements ApiClientInterface
 
         if ($authenticated) {
             $options = $this->withAuthorization($options);
-        }
-
-        if ($this->config->logRequests) {
-            $logMsg = "API Request: {$method} {$uri}\n"
-                . "Auth: " . ($authenticated ? 'YES' : 'NO') . "\n"
-                . "Options: " . json_encode($options, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-            log_message('info', $logMsg);
-        } else {
-            log_message('debug', 'API Request: ' . $method . ' ' . $uri . ' | Auth: ' . ($authenticated ? 'YES' : 'NO'));
         }
 
         if (isset($options['multipart'])) {
@@ -130,7 +133,15 @@ class ApiClient implements ApiClientInterface
         $latency = (int) round((microtime(true) - $startedAt) * 1000);
 
         if ($authenticated && $status === 401 && $this->attemptTokenRefresh()) {
-            log_message('debug', 'API Token Refreshed. Retrying request.');
+            // Re-open/rewind streams for retry if needed
+            if (isset($options['multipart']) && is_array($options['multipart'])) {
+                foreach ($options['multipart'] as $part) {
+                    if (isset($part['contents']) && is_resource($part['contents'])) {
+                        @rewind($part['contents']);
+                    }
+                }
+            }
+
             $options = $this->withAuthorization($options);
             $response = $this->http->request($method, $uri, $options);
             $status = $response->getStatusCode();
@@ -140,15 +151,10 @@ class ApiClient implements ApiClientInterface
         $payload = json_decode($body, true);
 
         if ($this->config->logRequests) {
+            $logPayload = is_array($payload) ? $this->redactData($payload) : $this->redactData($body);
             $logMsg = "API Response: {$status} ({$latency}ms)\n"
-                . "Body: " . (is_array($payload) ? json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : $body);
+                . "Body: " . (is_array($logPayload) ? json_encode($logPayload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : $logPayload);
             log_message('info', $logMsg);
-        } else {
-            log_message('debug', 'API Response Status: ' . $status);
-        }
-
-        if (json_last_error() !== JSON_ERROR_NONE && ! empty($body)) {
-            log_message('error', 'API Response is NOT valid JSON: ' . substr($body, 0, 500));
         }
 
         return [
@@ -175,7 +181,7 @@ class ApiClient implements ApiClientInterface
 
         $response = $this->http->request('POST', $this->buildUri('/auth/refresh'), [
             'headers' => $this->baseHeaders(),
-            'json' => ['refresh_token' => $refreshToken],
+            'json' => ['refreshToken' => $refreshToken],
         ]);
 
         $status = $response->getStatusCode();
@@ -191,7 +197,7 @@ class ApiClient implements ApiClientInterface
         $payload = json_decode($response->getBody(), true);
         $data = $payload['data'] ?? $payload;
 
-        $accessToken = $data['accessToken'] ?? null;
+        $accessToken = $data['accessToken'] ?? $data['access_token'] ?? null;
         if (! is_string($accessToken) || $accessToken === '') {
             $this->clearSessionAuth();
 
@@ -200,12 +206,12 @@ class ApiClient implements ApiClientInterface
 
         $this->session->set('access_token', $accessToken);
 
-        $refreshTokenResponse = $data['refreshToken'] ?? null;
+        $refreshTokenResponse = $data['refreshToken'] ?? $data['refresh_token'] ?? null;
         if (! empty($refreshTokenResponse)) {
             $this->session->set('refresh_token', $refreshTokenResponse);
         }
 
-        $expiresIn = $data['expiresIn'] ?? null;
+        $expiresIn = $data['expiresIn'] ?? $data['expires_in'] ?? null;
         if (! empty($expiresIn)) {
             $this->session->set('token_expires_at', time() + (int) $expiresIn);
         }
@@ -365,8 +371,32 @@ class ApiClient implements ApiClientInterface
         $fieldErrors = [];
 
         foreach ($errors as $key => $value) {
-            if (is_string($key) && $key !== 'general' && is_scalar($value)) {
+            if (! is_string($key) || $key === 'general') {
+                continue;
+            }
+
+            if (is_scalar($value)) {
                 $fieldErrors[$key] = (string) $value;
+                continue;
+            }
+
+            if (is_array($value)) {
+                // If it's an array of errors, take the first one that is a string
+                foreach ($value as $entry) {
+                    if (is_scalar($entry)) {
+                        $fieldErrors[$key] = (string) $entry;
+                        break;
+                    }
+                    if (is_array($entry)) {
+                         // Nested array, try one more level or skip
+                         foreach($entry as $subEntry) {
+                             if (is_scalar($subEntry)) {
+                                 $fieldErrors[$key] = (string) $subEntry;
+                                 break 2;
+                             }
+                         }
+                    }
+                }
             }
         }
 
@@ -383,5 +413,46 @@ class ApiClient implements ApiClientInterface
             'content-disposition' => $response->getHeaderLine('Content-Disposition'),
             'content-length'      => $response->getHeaderLine('Content-Length'),
         ];
+    }
+
+    /**
+     * Redacts or truncates data for logging.
+     * Prevents large base64 strings or huge response bodies from filling up logs.
+     */
+    protected function redactData(mixed $data): mixed
+    {
+        if (is_resource($data)) {
+            return '[RESOURCE: ' . get_resource_type($data) . ']';
+        }
+
+        if ($data instanceof \CURLFile) {
+            return '[CURLFile: ' . $data->getFilename() . ' (' . $data->getMimeType() . ')]';
+        }
+
+        if (is_array($data)) {
+            $redacted = [];
+
+            foreach ($data as $key => $value) {
+                $redacted[$key] = $this->redactData($value);
+            }
+
+            return $redacted;
+        }
+
+        if (is_string($data)) {
+            // Redact base64 Data URIs (common in file uploads)
+            if (str_starts_with($data, 'data:') && str_contains($data, ';base64,')) {
+                $pos = strpos($data, ';base64,');
+
+                return substr($data, 0, $pos + 8) . '[BASE64_DATA_REDACTED]';
+            }
+
+            // Truncate long strings (e.g. over 1000 characters)
+            if (strlen($data) > 1000) {
+                return substr($data, 0, 100) . '... [TRUNCATED (' . strlen($data) . ' bytes)]';
+            }
+        }
+
+        return $data;
     }
 }

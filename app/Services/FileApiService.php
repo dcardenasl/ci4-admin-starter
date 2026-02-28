@@ -11,13 +11,33 @@ class FileApiService extends ResourceApiService
         return '/files';
     }
 
-    public function upload(string $inputName, string $filePath, array $meta = []): array
+    /**
+     * Upload a file to the API using Base64 encoding.
+     * Base64 is used for maximum reliability across different server configurations.
+     */
+    public function upload(string $inputName, string $filePath, string $filename, ?string $mimeType = null, array $fields = []): array
     {
         if (! is_file($filePath)) {
             throw new RuntimeException("File does not exist: {$filePath}");
         }
 
-        return $this->apiClient->upload('/files/upload', [$inputName => $filePath], $meta);
+        $fileData = file_get_contents($filePath);
+        if ($fileData === false) {
+            throw new RuntimeException("Could not read file: {$filePath}");
+        }
+
+        if ($mimeType === null) {
+            $finfo = new \finfo(FILEINFO_MIME_TYPE);
+            $mimeType = $finfo->file($filePath);
+        }
+
+        $base64 = 'data:' . $mimeType . ';base64,' . base64_encode($fileData);
+
+        // We use standard POST with Base64 payload instead of Multipart
+        return $this->apiClient->post('/files/upload', array_merge($fields, [
+            'file'     => $base64,
+            'filename' => $filename,
+        ]));
     }
 
     public function getDownload(int|string $id): array
