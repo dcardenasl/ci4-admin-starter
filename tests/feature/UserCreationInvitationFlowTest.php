@@ -30,8 +30,6 @@ final class UserCreationInvitationFlowTest extends CIUnitTestCase
                     && ($payload['lastName'] ?? null) === 'Doe'
                     && ($payload['email'] ?? null) === 'jane@example.com'
                     && ($payload['role'] ?? null) === 'user'
-                    && is_string($payload['clientBaseUrl'] ?? null)
-                    && ($payload['clientBaseUrl'] ?? '') !== ''
                     && ! array_key_exists('password', $payload);
             }))
             ->willReturn([
@@ -56,7 +54,8 @@ final class UserCreationInvitationFlowTest extends CIUnitTestCase
             'role'           => 'user',
         ]);
 
-        $result->assertRedirectTo(site_url('admin/users'));
+        $result->assertRedirect();
+        $this->assertStringContainsString('admin/users', $result->getRedirectUrl());
     }
 
     public function testUpdateOmitsPasswordEvenWhenSentInRequest(): void

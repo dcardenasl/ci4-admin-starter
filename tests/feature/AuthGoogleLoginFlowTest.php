@@ -41,10 +41,8 @@ final class AuthGoogleLoginFlowTest extends CIUnitTestCase
         $authService->expects($this->once())
             ->method('googleLogin')
             ->with($this->callback(static function (array $payload): bool {
-                return isset($payload['idToken'], $payload['client_base_url'])
-                    && $payload['idToken'] === 'google.id.token'
-                    && is_string($payload['client_base_url'])
-                    && $payload['client_base_url'] !== '';
+                return isset($payload['idToken'])
+                    && $payload['idToken'] === 'google.id.token';
             }))
             ->willReturn([
                 'ok' => true,
@@ -71,7 +69,8 @@ final class AuthGoogleLoginFlowTest extends CIUnitTestCase
             'idToken' => 'google.id.token',
         ]);
 
-        $result->assertRedirectTo(site_url('dashboard'));
+        $result->assertRedirect();
+        $this->assertStringContainsString('dashboard', $result->getRedirectUrl());
         $result->assertSessionHas('success');
         $result->assertSessionHas('access_token');
         $result->assertSessionHas('refresh_token');

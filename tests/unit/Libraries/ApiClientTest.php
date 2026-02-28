@@ -101,7 +101,7 @@ final class ApiClientTest extends CIUnitTestCase
 
         $this->assertSame('es', $headers['Accept-Language']);
         $this->assertSame('test-key', $headers['X-App-Key']);
-        $this->assertSame('test-key', $headers['X-API-Key']);
+        $this->assertArrayNotHasKey('X-API-Key', $headers);
     }
 
     protected function tearDown(): void

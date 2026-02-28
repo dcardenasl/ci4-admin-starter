@@ -12,16 +12,23 @@ use Config\Services;
  */
 final class FileUploadRequestTest extends CIUnitTestCase
 {
-    public function testDataKeepsFileFieldNullWhenNotString(): void
+    public function testDataReturnsFilenameWhenFileIsPresent(): void
     {
         $request = service('request');
-        $request->setGlobal('post', ['file' => ['unexpected'], 'visibility' => 'public']);
+        
+        $mockFile = $this->createMock(\CodeIgniter\HTTP\Files\UploadedFile::class);
+        $mockFile->method('isValid')->willReturn(true);
+        $mockFile->method('getName')->willReturn('test.png');
+        
+        // Mock getFile to return our file
+        $request = $this->createMock(\CodeIgniter\HTTP\IncomingRequest::class);
+        $request->method('getFile')->with('file')->willReturn($mockFile);
+        $request->method('getPost')->willReturn([]);
 
         $formRequest = new FileUploadRequest($request, $this->createValidationMock());
         $data = $formRequest->data();
 
-        $this->assertNull($data['file']);
-        $this->assertSame('public', $data['visibility']);
+        $this->assertSame('test.png', $data['file']);
     }
 
     public function testPayloadDefaultsVisibilityToPrivateWhenEmpty(): void

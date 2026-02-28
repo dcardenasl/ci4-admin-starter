@@ -11,22 +11,22 @@ use App\Services\AuthApiService;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
-use Psr\Log\LoggerInterface;
+use Config\Services;
 
 class AuthController extends BaseWebController
 {
     protected AuthApiService $authService;
 
-    public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
+    public function initController(RequestInterface $request, ResponseInterface $response, \Psr\Log\LoggerInterface $logger): void
     {
         parent::initController($request, $response, $logger);
         $this->authService = service('authApiService');
     }
 
-    public function login(): string|RedirectResponse
+    public function login(): string
     {
         if ($this->session->has('access_token')) {
-            return redirect()->to(site_url('dashboard'));
+            return (string) redirect()->to(site_url('dashboard'));
         }
 
         return $this->renderAuth('auth/login', [
@@ -46,16 +46,13 @@ class AuthController extends BaseWebController
             return $invalid;
         }
 
-        $payload = $request->payload();
-
-        $response = $this->safeApiCall(fn() => $this->authService->login($payload));
+        $response = $this->safeApiCall(fn() => $this->authService->login($request->payload()));
 
         if (! $response['ok']) {
             return $this->failApi($response, lang('Auth.loginFailed'), null, true, ['email', 'password']);
         }
 
-        $data = $this->extractData($response);
-        $this->persistAuthSession($data);
+        $this->persistAuthSession($this->extractData($response));
 
         return redirect()->to(site_url('dashboard'))->with('success', lang('Auth.loginSuccess'));
     }
@@ -88,7 +85,9 @@ class AuthController extends BaseWebController
         }
 
         $data = $this->extractData($response);
-        if (! isset($data['access_token']) || ! isset($data['refresh_token'])) {
+        
+        // Handle 202 Accepted (Pending approval)
+        if ($response['status'] === 202 || (! isset($data['accessToken']) && ! isset($data['access_token']))) {
             return redirect()->to(site_url('login'))
                 ->with('error', $this->firstMessage($response, lang('Auth.googleLoginPendingApproval')));
         }
@@ -150,15 +149,10 @@ class AuthController extends BaseWebController
             return $invalid;
         }
 
-        $email = (string) ($request->payload()['email'] ?? '');
-        $response = $this->safeApiCall(fn() => $this->authService->forgotPassword(
-            $email,
-            $this->clientBaseUrl()
-        ));
+        $payload = $request->payload();
+        $payload['client_base_url'] = $this->clientBaseUrl();
 
-        if (! $response['ok']) {
-            return $this->failApi($response, lang('Auth.forgotFailed'), null, true, ['email']);
-        }
+        $response = $this->safeApiCall(fn() => $this->authService->forgotPassword($payload['email'], $payload['client_base_url']));
 
         return redirect()->to(site_url('login'))->with('success', lang('Auth.forgotSuccess'));
     }
@@ -168,8 +162,7 @@ class AuthController extends BaseWebController
         return $this->renderAuth('auth/reset_password', [
             'title'    => lang('Auth.resetTitle'),
             'subtitle' => lang('Auth.resetSubtitle'),
-            'token'    => (string) $this->request->getGet('token'),
-            'email'    => (string) $this->request->getGet('email'),
+            'token'    => $this->request->getGet('token'),
         ]);
     }
 
@@ -225,9 +218,9 @@ class AuthController extends BaseWebController
 
     protected function persistAuthSession(array $data): void
     {
-        $this->session->set('access_token', $data['accessToken'] ?? null);
-        $this->session->set('refresh_token', $data['refreshToken'] ?? null);
-        $this->session->set('token_expires_at', time() + (int) ($data['expiresIn'] ?? 3600));
+        $this->session->set('access_token', $data['accessToken'] ?? $data['access_token'] ?? null);
+        $this->session->set('refresh_token', $data['refreshToken'] ?? $data['refresh_token'] ?? null);
+        $this->session->set('token_expires_at', time() + (int) ($data['expiresIn'] ?? $data['expires_in'] ?? 3600));
         $this->session->set('user', $data['user'] ?? []);
     }
 
