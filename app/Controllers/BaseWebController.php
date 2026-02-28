@@ -210,22 +210,18 @@ abstract class BaseWebController extends BaseController
      */
     protected function extractItems(array $response): array
     {
-        $data = $response['data'] ?? [];
-
-        if (isset($data['data']) && is_array($data['data'])) {
-            return $data['data'];
-        }
-
-        return is_array($data) ? $data : [];
+        return $this->extractData($response);
     }
 
     /**
-     * Extract the nested 'data' payload from an API single-object response.
+     * Extract the nested 'data' payload from an API response.
+     * Supports both single object and paginated list responses.
      */
     protected function extractData(array $response): array
     {
         $payload = $response['data'] ?? [];
 
+        // If it's a standard API response with a nested 'data' key (paginated or wrapped)
         if (isset($payload['data']) && is_array($payload['data'])) {
             return $payload['data'];
         }

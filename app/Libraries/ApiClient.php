@@ -273,8 +273,6 @@ class ApiClient implements ApiClientInterface
 
         if ($appKey !== '') {
             $headers['X-App-Key'] = $appKey;
-            // Backend compatibility: some gateways use X-API-Key naming.
-            $headers['X-API-Key'] = $appKey;
         }
 
         return $headers;
