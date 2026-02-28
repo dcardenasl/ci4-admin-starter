@@ -125,17 +125,13 @@ class FileController extends BaseWebController
 
         if ($raw !== '' && str_contains($contentType, '/')) {
             $filename = $data['originalName'] ?? $data['original_name'] ?? $data['name'] ?? $data['filename'] ?? "file_{$id}";
-            
-            // Use CI4's download response which is immune to Debug Toolbar issues
-            $download = $this->response->download($filename, $raw, true);
-            
-            if ($disposition === 'inline') {
-                $download->inline();
-            }
 
-            return $download;
+            return $this->response
+                ->setStatusCode(200)
+                ->setHeader('Content-Type', $contentType)
+                ->setHeader('Content-Disposition', $disposition . '; filename="' . $filename . '"')
+                ->setBody($raw);
         }
-
         if (is_string($url) && $url !== '') {
             return redirect()->to($url);
         }
