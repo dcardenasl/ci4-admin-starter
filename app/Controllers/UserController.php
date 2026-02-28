@@ -60,7 +60,6 @@ class UserController extends BaseWebController
         }
 
         $payload = $request->payload();
-        $payload['client_base_url'] = $this->clientBaseUrl();
 
         $response = $this->safeApiCall(fn() => $this->userService->create($payload));
 
