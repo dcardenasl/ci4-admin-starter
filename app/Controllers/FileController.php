@@ -63,23 +63,15 @@ class FileController extends BaseWebController
             return redirect()->to(site_url('files'))->with('error', $error);
         }
 
-        $uploadDir = WRITEPATH . 'uploads/' . bin2hex(random_bytes(8)) . '/';
-        if (! is_dir($uploadDir)) {
-            mkdir($uploadDir, 0o755, true);
-        }
+        $tempPath = $file->getTempName();
 
-        $tempPath = $uploadDir . $file->getName();
-        $file->move(dirname($tempPath), basename($tempPath));
-
-        $response = $this->safeApiCall(fn() => $this->fileService->upload('file', $tempPath, [
-            'visibility'    => (string) ($request->payload()['visibility'] ?? 'private'),
-            'filename'      => $file->getName(),
-            'name'          => $file->getName(),
-            'original_name' => $file->getName(),
-        ]));
-
-        @unlink($tempPath);
-        @rmdir($uploadDir);
+        $response = $this->safeApiCall(fn() => $this->fileService->upload(
+            'file',
+            $tempPath,
+            $file->getName(),
+            $file->getMimeType(),
+            $request->payload(),
+        ));
 
         if (! $response['ok']) {
             if ($this->request->isAJAX()) {
@@ -120,47 +112,35 @@ class FileController extends BaseWebController
         $response = $this->safeApiCall(fn() => $this->fileService->getDownload($id));
 
         if (! $response['ok']) {
-            return $this->failApi($response, lang('Files.downloadFailed'), site_url('files'), false);
+            return $this->response->setStatusCode(404)->setBody('File not found');
         }
 
         $data = $this->extractData($response);
         $url = is_array($data) ? ($data['download_url'] ?? $data['url'] ?? null) : null;
 
-        if (! is_string($url) || $url === '') {
-            $raw = (string) ($response['raw'] ?? '');
-            if ($raw === '') {
-                return redirect()->to(site_url('files'))->with('error', lang('Files.downloadInvalid'));
+        // If API returned binary data directly
+        $raw = (string) ($response['raw'] ?? '');
+        $headers = is_array($response['headers'] ?? null) ? $response['headers'] : [];
+        $contentType = (string) ($headers['content-type'] ?? '');
+
+        if ($raw !== '' && str_contains($contentType, '/')) {
+            $filename = $data['originalName'] ?? $data['original_name'] ?? $data['name'] ?? $data['filename'] ?? "file_{$id}";
+            
+            // Use CI4's download response which is immune to Debug Toolbar issues
+            $download = $this->response->download($filename, $raw, true);
+            
+            if ($disposition === 'inline') {
+                $download->inline();
             }
 
-            $headers = is_array($response['headers'] ?? null) ? $response['headers'] : [];
-            $contentType = (string) ($headers['content-type'] ?? 'application/octet-stream');
-
-            // 1. Intentar obtener el nombre del campo 'original_name' de la API
-            $filename = $data['original_name'] ?? $response['original_name'] ?? $data['name'] ?? $data['filename'] ?? null;
-
-            // 2. Si no hay nombre en el cuerpo, intentar obtenerlo del Content-Disposition de la propia API
-            if (! $filename && isset($headers['content-disposition'])) {
-                if (preg_match('/filename="?([^"]+)"?/', $headers['content-disposition'], $matches)) {
-                    $filename = $matches[1];
-                }
-            }
-
-            // 3. Si seguimos sin nombre, generar uno basado en el ID y el tipo de contenido
-            if (! $filename) {
-                $extension = \Config\Mimes::guessExtensionFromType($contentType) ?? 'bin';
-                $filename = "file_{$id}.{$extension}";
-            }
-
-            $result = $this->response
-                ->setStatusCode((int) ($response['status'] ?? 200))
-                ->setHeader('Content-Type', $contentType)
-                ->setHeader('Content-Disposition', $disposition . '; filename="' . $filename . '"')
-                ->setBody($raw);
-
-            return $result;
+            return $download;
         }
 
-        return redirect()->to($url);
+        if (is_string($url) && $url !== '') {
+            return redirect()->to($url);
+        }
+
+        return $this->response->setStatusCode(404)->setBody('File content empty');
     }
 
     public function delete(string $id): RedirectResponse
