@@ -25,7 +25,7 @@ final class FileSizeLimitsTest extends CIUnitTestCase
         $upload = FileSizeLimits::phpUploadMaxBytes();
         $post = FileSizeLimits::phpPostMaxBytes();
 
-        $expected = min(array_filter([$configured, $upload, $post], static fn (int $value): bool => $value > 0));
+        $expected = min(array_filter([$configured, $upload, $post], static fn(int $value): bool => $value > 0));
 
         $this->assertSame($expected, FileSizeLimits::effectiveMaxBytes());
     }

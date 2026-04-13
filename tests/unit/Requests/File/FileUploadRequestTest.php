@@ -15,11 +15,11 @@ final class FileUploadRequestTest extends CIUnitTestCase
     public function testDataReturnsFilenameWhenFileIsPresent(): void
     {
         $request = service('request');
-        
+
         $mockFile = $this->createMock(\CodeIgniter\HTTP\Files\UploadedFile::class);
         $mockFile->method('isValid')->willReturn(true);
         $mockFile->method('getName')->willReturn('test.png');
-        
+
         // Mock getFile to return our file
         $request = $this->createMock(\CodeIgniter\HTTP\IncomingRequest::class);
         $request->method('getFile')->with('file')->willReturn($mockFile);
@@ -40,6 +40,22 @@ final class FileUploadRequestTest extends CIUnitTestCase
         $payload = $formRequest->payload();
 
         $this->assertSame('private', $payload['visibility']);
+    }
+
+    public function testValidateFailsWhenExtensionIsNotAllowed(): void
+    {
+        $mockFile = $this->createMock(\CodeIgniter\HTTP\Files\UploadedFile::class);
+        $mockFile->method('isValid')->willReturn(true);
+        $mockFile->method('getName')->willReturn('malware.exe');
+
+        $request = $this->createMock(\CodeIgniter\HTTP\IncomingRequest::class);
+        $request->method('getFile')->with('file')->willReturn($mockFile);
+        $request->method('getPost')->willReturn(null);
+
+        $formRequest = new FileUploadRequest($request, service('validation'));
+
+        $this->assertFalse($formRequest->validate());
+        $this->assertArrayHasKey('file', $formRequest->errors());
     }
 
     protected function tearDown(): void
