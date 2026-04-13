@@ -206,7 +206,9 @@ if (! function_exists('localized_audit_severity')) {
 if (! function_exists('has_admin_access')) {
     function has_admin_access(?string $role): bool
     {
-        return in_array(strtolower((string) $role), ['admin', 'superadmin'], true);
+        /** @var \Config\Auth $authConfig */
+        $authConfig = config('Auth');
+        return in_array(strtolower((string) $role), $authConfig->adminRoles, true);
     }
 }
 

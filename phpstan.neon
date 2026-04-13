@@ -8,6 +8,7 @@ parameters:
         - app/Requests
         - app/Services
         - app/Support
+        - app/Traits
     excludePaths:
         - app/Views
     bootstrapFiles:
@@ -15,5 +16,6 @@ parameters:
     scanFiles:
         - app/Config/ApiClient.php
         - app/Config/App.php
+        - app/Config/Auth.php
         - app/Config/Services.php
     treatPhpDocTypesAsCertain: false

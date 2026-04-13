@@ -22,7 +22,9 @@ class AdminFilter implements FilterInterface
 
         $roleValue = is_scalar($role) ? strtolower((string) $role) : '';
 
-        if (! in_array($roleValue, ['admin', 'superadmin'], true)) {
+        /** @var \Config\Auth $authConfig */
+        $authConfig = config('Auth');
+        if (! in_array($roleValue, $authConfig->adminRoles, true)) {
             log_message('debug', 'AdminFilter: insufficient role for admin route.');
 
             if ($request instanceof IncomingRequest && $request->isAJAX()) {

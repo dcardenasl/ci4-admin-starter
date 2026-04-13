@@ -26,7 +26,7 @@ class ApiKeyController extends BaseWebController
 
     public function index(): string
     {
-        $catalogs = $this->resolveCatalogs();
+        $catalogs = $this->resolveCatalogs($this->catalogService);
 
         return $this->render('api_keys/index', [
             'title'         => lang('ApiKeys.title'),
@@ -95,7 +95,7 @@ class ApiKeyController extends BaseWebController
     public function edit(string $id): string
     {
         $response = $this->safeApiCall(fn() => $this->apiKeyService->get($id));
-        $catalogs = $this->resolveCatalogs();
+        $catalogs = $this->resolveCatalogs($this->catalogService);
 
         return $this->render('api_keys/edit', [
             'title'         => lang('ApiKeys.edit'),
@@ -137,17 +137,6 @@ class ApiKeyController extends BaseWebController
         }
 
         return redirect()->to(site_url('admin/api-keys'))->with('success', lang('ApiKeys.deleted_success'));
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function resolveCatalogs(): array
-    {
-        $response = $this->safeApiCall(fn() => $this->catalogService->index());
-        $data = $this->extractData($response);
-
-        return is_array($data) ? $data : [];
     }
 
     /**

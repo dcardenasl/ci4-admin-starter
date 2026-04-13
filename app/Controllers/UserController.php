@@ -26,7 +26,7 @@ class UserController extends BaseWebController
 
     public function index(): string
     {
-        $catalogs = $this->resolveCatalogs();
+        $catalogs = $this->resolveCatalogs($this->catalogService);
 
         return $this->render('users/index', [
             'title'         => lang('Users.title'),
@@ -54,7 +54,7 @@ class UserController extends BaseWebController
 
     public function create(): string
     {
-        $catalogs = $this->resolveCatalogs();
+        $catalogs = $this->resolveCatalogs($this->catalogService);
 
         return $this->render('users/create', [
             'title'       => lang('Users.create'),
@@ -90,7 +90,7 @@ class UserController extends BaseWebController
             return redirect()->to(site_url('admin/users'))->with('error', lang('Users.not_found'));
         }
 
-        $catalogs = $this->resolveCatalogs();
+        $catalogs = $this->resolveCatalogs($this->catalogService);
 
         return $this->render('users/edit', [
             'title'       => lang('Users.edit_user'),
@@ -139,17 +139,6 @@ class UserController extends BaseWebController
         }
 
         return redirect()->to(site_url('admin/users/' . $id))->with('success', lang('Users.approve_success'));
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function resolveCatalogs(): array
-    {
-        $response = $this->safeApiCall(fn() => $this->catalogService->index());
-        $data = $this->extractData($response);
-
-        return is_array($data) ? $data : [];
     }
 
     /**
