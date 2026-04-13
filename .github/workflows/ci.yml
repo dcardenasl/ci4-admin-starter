@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  phpunit:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['8.2', '8.3']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          coverage: ${{ matrix.php-version == '8.2' && 'xdebug' || 'none' }}
+          extensions: curl, fileinfo, intl, mbstring
+
+      - name: Validate composer.json
+        run: composer validate --strict
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build CSS
+        run: npm run build:css
+
+      - name: Static analysis
+        run: vendor/bin/phpstan analyse --debug
+
+      - name: Code style
+        run: vendor/bin/php-cs-fixer fix --dry-run --diff
+
+      - name: Lint JS
+        run: npm run lint:js
+
+      - name: Run test suite with coverage
+        if: matrix.php-version == '8.2'
+        run: vendor/bin/phpunit --coverage-clover build/logs/clover.xml
+
+      - name: Run test suite
+        if: matrix.php-version != '8.2'
+        run: vendor/bin/phpunit
