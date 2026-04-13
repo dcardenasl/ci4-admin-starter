@@ -3,6 +3,7 @@
 namespace Tests\Unit\Filters;
 
 use App\Filters\AuthFilter;
+use CodeIgniter\HTTP\IncomingRequest;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\Test\CIUnitTestCase;
 
@@ -16,7 +17,11 @@ final class AuthFilterTest extends CIUnitTestCase
         session()->remove('access_token');
 
         $filter = new AuthFilter();
-        $request = service('request');
+        $request = $this->getMockBuilder(IncomingRequest::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['isAJAX'])
+            ->getMock();
+        $request->method('isAJAX')->willReturn(false);
         $result = $filter->before($request);
 
         $this->assertInstanceOf(RedirectResponse::class, $result);
@@ -27,7 +32,11 @@ final class AuthFilterTest extends CIUnitTestCase
         session()->set('access_token', 'test-token-value');
 
         $filter = new AuthFilter();
-        $request = service('request');
+        $request = $this->getMockBuilder(IncomingRequest::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['isAJAX'])
+            ->getMock();
+        $request->method('isAJAX')->willReturn(false);
         $result = $filter->before($request);
 
         $this->assertNull($result);
