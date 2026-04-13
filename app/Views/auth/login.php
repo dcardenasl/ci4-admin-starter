@@ -54,23 +54,6 @@ $googleClientId = (string) ($googleClientId ?? '');
         <input type="hidden" id="google-id-token" name="id_token" value="">
     </form>
 
-    <script>
-        window.handleGoogleCredentialResponse = function (response) {
-            var token = response && response.credential ? response.credential : '';
-            if (!token) {
-                return;
-            }
-
-            var tokenInput = document.getElementById('google-id-token');
-            var loginForm = document.getElementById('google-login-form');
-            if (!tokenInput || !loginForm) {
-                return;
-            }
-
-            tokenInput.value = token;
-            loginForm.submit();
-        };
-    </script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 <?php endif; ?>
 

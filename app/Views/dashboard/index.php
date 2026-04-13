@@ -84,7 +84,7 @@
                                                 <?= esc((string) ($file['human_size'] ?? '-')) ?>
                                             </td>
                                             <td class="<?= esc(table_td_class('subtle')) ?> text-xs">
-                                                <?= esc(strtoupper(explode('/', (string)($file['mime_type'] ?? 'unk/'))[1] ?? '-')) ?>
+                                                <?= esc(strtoupper(explode('/', (string) ($file['mime_type'] ?? 'unk/'))[1] ?? '-')) ?>
                                             </td>
                                             <td class="<?= esc(table_td_class('muted')) ?>">
                                                 <?= esc(format_date($file['uploaded_at'] ?? null)) ?>
@@ -98,7 +98,7 @@
                 <?php endif; ?>
 
                 <!-- Lightbox Modal -->
-                <div x-show="previewShow" @keydown.escape.window="previewShow = false" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" @click="previewShow = false" style="display: none;">
+                <div x-show="previewShow" x-cloak @keydown.escape.window="previewShow = false" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" @click="previewShow = false">
                     <div class="relative max-h-full max-w-full" @click.stop>
                         <button type="button" @click="previewShow = false" class="absolute -top-12 right-0 p-2 text-white hover:text-gray-300"><?= ui_icon('x', 'h-8 w-8') ?></button>
                         <img :src="previewUrl" class="max-h-[85vh] max-w-[90vw] rounded-lg shadow-2xl object-contain border border-white/10">
@@ -138,7 +138,7 @@
             <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-6"><?= lang('Dashboard.recent_activity') ?></h3>
             <div class="flow-root">
                 <?php if (empty($recent_activity)): ?>
-                    <p class="text-sm text-gray-500 text-center py-4 italic">No recent activity detected.</p>
+                    <p class="text-sm text-gray-500 text-center py-4 italic"><?= lang('Dashboard.noRecentActivity') ?></p>
                 <?php else: ?>
                     <ul role="list" class="-mb-8">
                         <?php foreach ($recent_activity as $index => $item): ?>

@@ -113,7 +113,8 @@ $csrfHash = csrf_hash(); ?>
 
     <!-- Image Preview Modal (Lightbox) -->
     <div x-data="{ show: false, url: '' }"
-         x-show="show" 
+         x-show="show"
+         x-cloak
          @open-preview.window="url = $event.detail; show = true"
          @keydown.escape.window="show = false"
          x-transition:enter="transition ease-out duration-300"
@@ -123,8 +124,7 @@ $csrfHash = csrf_hash(); ?>
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
          class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
-         @click="show = false"
-         style="display: none;">
+         @click="show = false">
         
         <div class="relative max-h-full max-w-full" @click.stop>
             <button type="button" @click="show = false" 

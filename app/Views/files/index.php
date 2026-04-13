@@ -100,9 +100,7 @@
                             <span x-text="selectedFileName"></span>
                             <span x-text="progress + '%'"></span>
                         </div>
-                        <div class="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-                            <div class="h-full bg-brand-500 transition-all duration-300" :style="'width: ' + progress + '%'"></div>
-                        </div>
+                        <progress class="h-2 w-full overflow-hidden rounded-full [&::-webkit-progress-bar]:bg-gray-200 [&::-webkit-progress-value]:bg-brand-500 [&::-moz-progress-bar]:bg-brand-500" max="100" :value="progress"></progress>
                         <p class="text-xs text-gray-500 animate-pulse text-center"><?= lang('App.loading') ?>...</p>
                     </div>
                 </template>

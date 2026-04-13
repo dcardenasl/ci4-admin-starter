@@ -19,7 +19,7 @@
                 <h3 class="text-lg font-semibold text-gray-900"><?= lang('ApiKeys.details') ?></h3>
                 <div class="flex items-center gap-2">
                     <a href="<?= site_url('admin/api-keys/' . esc($id, 'url') . '/edit') ?>" class="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('App.edit') ?></a>
-                    <form method="post" action="<?= site_url('admin/api-keys/' . esc($id, 'url') . '/delete') ?>" onsubmit="return confirm('<?= lang('ApiKeys.confirm_delete') ?>');">
+                    <form method="post" action="<?= site_url('admin/api-keys/' . esc($id, 'url') . '/delete') ?>" x-data @submit.prevent="$store.confirm.show('<?= esc(lang('ApiKeys.confirm_delete'), 'js') ?>', () => $el.submit())">
                         <?= csrf_field() ?>
                         <button type="submit" class="rounded-lg bg-red-600 px-3 py-2 text-sm text-white hover:bg-red-700"><?= lang('App.delete') ?></button>
                     </form>
