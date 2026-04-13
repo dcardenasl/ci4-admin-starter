@@ -27,7 +27,7 @@ final class UserFiltersFallbackTest extends CIUnitTestCase
             ->method('list')
             ->with($this->callback(static function (array $params): bool {
                 return (($params['filter']['role'] ?? null) === 'user')
-                    && ! array_key_exists('role', $params);
+                    && (($params['role'] ?? null) === 'user');
             }))
             ->willReturn([
                 'ok'          => true,
@@ -133,6 +133,7 @@ final class UserFiltersFallbackTest extends CIUnitTestCase
             ->method('list')
             ->with($this->callback(static function (array $params): bool {
                 return (int) ($params['limit'] ?? 0) === 50
+                    && (int) ($params['per_page'] ?? 0) === 50
                     && (int) ($params['page'] ?? 0) === 3
                     && ! array_key_exists('cursor', $params);
             }))

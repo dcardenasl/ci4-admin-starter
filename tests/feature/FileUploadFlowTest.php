@@ -9,7 +9,7 @@ use Config\Services;
 
 /**
  * Tests for the complete file upload flow.
- * 
+ *
  * @internal
  */
 final class FileUploadFlowTest extends CIUnitTestCase
@@ -83,7 +83,7 @@ final class FileUploadFlowTest extends CIUnitTestCase
             'raw' => '',
             'headers' => [],
             'messages' => [],
-            'fieldErrors' => []
+            'fieldErrors' => [],
         ]);
 
         Services::injectMock('fileApiService', $mock);
@@ -104,7 +104,7 @@ final class FileUploadFlowTest extends CIUnitTestCase
         $mockClient = $this->createMock(\App\Libraries\ApiClientInterface::class);
         $mockClient->expects($this->once())
             ->method('post')
-            ->with('/files/upload', $this->callback(function($data) use ($expectedBase64) {
+            ->with('/files/upload', $this->callback(function ($data) use ($expectedBase64) {
                 return $data['file'] === $expectedBase64 && $data['filename'] === 'test.txt';
             }))
             ->willReturn($this->apiOkResponse(['id' => 1], 201));

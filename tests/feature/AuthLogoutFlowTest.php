@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Services\AuthApiService;
+use CodeIgniter\Exceptions\PageNotFoundException;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\FeatureTestTrait;
 use Config\Services;
@@ -41,7 +42,9 @@ final class AuthLogoutFlowTest extends CIUnitTestCase
             'access_token' => 'token',
             'refresh_token' => 'refresh',
             'user'         => ['id' => 1, 'email' => 'admin@example.com', 'role' => 'admin'],
-        ])->get('/logout');
+        ])->post('/logout', [
+            csrf_token() => csrf_hash(),
+        ]);
 
         $result->assertRedirectTo(site_url('login'));
         $result->assertSessionHas('success');
@@ -61,10 +64,19 @@ final class AuthLogoutFlowTest extends CIUnitTestCase
             'access_token' => 'token',
             'refresh_token' => 'refresh',
             'user'         => ['id' => 1, 'email' => 'admin@example.com', 'role' => 'admin'],
-        ])->get('/logout');
+        ])->post('/logout', [
+            csrf_token() => csrf_hash(),
+        ]);
 
         $result->assertRedirectTo(site_url('login'));
         $result->assertSessionHas('success');
         $result->assertSessionMissing('access_token');
+    }
+
+    public function testLogoutGetRouteIsNotAvailable(): void
+    {
+        $this->expectException(PageNotFoundException::class);
+
+        $this->get('/logout');
     }
 }
