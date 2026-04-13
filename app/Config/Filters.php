@@ -79,13 +79,16 @@ class Filters extends BaseFilters
     public array $globals = [
         'before' => [
             // 'honeypot',
+            // Google Identity Services posts the credential directly to this endpoint from
+            // Google's origin. CSRF stays enabled everywhere else, and the controller also
+            // rejects malformed, expired, wrong-issuer, or wrong-audience ID tokens.
             'csrf' => ['except' => ['login/google']],
             'locale',
             // 'invalidchars',
         ],
         'after' => [
             // 'honeypot',
-            // 'secureheaders',
+            'secureheaders',
         ],
     ];
 

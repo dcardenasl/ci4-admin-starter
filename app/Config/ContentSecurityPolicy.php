@@ -173,4 +173,45 @@ class ContentSecurityPolicy extends BaseConfig
      * Replace nonce tag automatically
      */
     public bool $autoNonce = true;
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        $this->defaultSrc = ["'self'"];
+        $this->scriptSrc = [
+            "'self'",
+            'https://cdn.jsdelivr.net',
+            'https://accounts.google.com',
+        ];
+        $this->styleSrc = [
+            "'self'",
+        ];
+        $this->imageSrc = [
+            "'self'",
+            'data:',
+            'blob:',
+            'https://*.googleusercontent.com',
+        ];
+        $this->connectSrc = [
+            "'self'",
+            'https://accounts.google.com',
+        ];
+        $this->fontSrc = [
+            "'self'",
+            'data:',
+        ];
+        $this->baseURI = "'self'";
+        $this->formAction = "'self'";
+        $this->frameAncestors = "'none'";
+        $this->frameSrc = [
+            'https://accounts.google.com',
+        ];
+        $this->objectSrc = "'none'";
+
+        $reportUri = env('app.cspReportURI') ?: env('CSP_REPORT_URI');
+        if (is_string($reportUri) && trim($reportUri) !== '') {
+            $this->reportURI = trim($reportUri);
+        }
+    }
 }
