@@ -140,11 +140,12 @@ class FileController extends BaseWebController
 
         if ($raw !== '' && str_contains($contentType, '/')) {
             $filename = $data['original_name'] ?? $data['name'] ?? $data['filename'] ?? "file_{$id}";
+            $safeFilename = str_replace(['"', "\r", "\n", "\0"], '', basename((string) $filename));
 
             return $this->response
                 ->setStatusCode(200)
                 ->setHeader('Content-Type', $contentType)
-                ->setHeader('Content-Disposition', $disposition . '; filename="' . $filename . '"')
+                ->setHeader('Content-Disposition', $disposition . '; filename="' . $safeFilename . '"')
                 ->setBody($raw);
         }
         if (is_string($url) && $url !== '') {

@@ -57,8 +57,8 @@ class MetricsController extends BaseWebController
 
         // If timeseries is empty in the items extraction, look for it in the data payload
         $timeseries = $this->extractItems($timeseriesResponse);
-        if ($timeseries === [] || (isset($timeseries['group_by']) && ! isset($timeseries[0]))) {
-            $timeseries = $timeseriesData['timeseries'] ?? $timeseriesData['data'] ?? $timeseriesData['items'] ?? $timeseriesData ?? [];
+        if ($timeseries === [] || (is_array($timeseries) && ! isset($timeseries[0]))) {
+            $timeseries = $timeseriesData['timeseries'] ?? $timeseriesData['data'] ?? $timeseriesData['items'] ?? $timeseriesData;
         }
 
         // Transform parallel arrays (dates, requests, etc.) to a list of objects for the table

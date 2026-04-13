@@ -36,20 +36,16 @@ class DashboardController extends BaseWebController
             ? $this->safeApiCall(fn() => $this->userService->list(['limit' => 1]))
             : ['ok' => false, 'data' => []];
 
-        log_message('debug', 'Dashboard Users Response: ' . ($usersResponse['ok'] ? 'OK' : 'FAIL'));
-
         $filesResponse = $this->safeApiCall(fn() => $this->fileService->list(['limit' => 5]));
-        log_message('debug', 'Dashboard Files Response: ' . ($filesResponse['ok'] ? 'OK' : 'FAIL'));
 
         // 2. Métricas de red (según contrato /metrics -> request_stats)
         $metricsResponse = $this->safeApiCall(fn() => $this->metricsService->summary($dateRange));
-        log_message('debug', 'Dashboard Metrics Response: ' . ($metricsResponse['ok'] ? 'OK' : 'FAIL'));
 
         $healthResponse = $this->safeApiCall(fn() => $this->healthService->check());
-        log_message('debug', 'Dashboard Health Response: ' . ($healthResponse['ok'] ? 'OK' : 'FAIL'));
 
         // Procesamiento de datos
         $metrics = $this->extractData($metricsResponse);
+        $health = $this->extractData($healthResponse);
 
         $totalUsers = 0;
         if (has_admin_access((string) (session('user.role') ?? ''))) {
@@ -93,8 +89,9 @@ class DashboardController extends BaseWebController
             'user'  => session('user') ?? [],
             'stats' => $stats,
             'recentFiles'    => $recentFiles,
+            'recent_activity' => $metrics['recent_activity'] ?? [],
             'recentActivity' => $metrics['recent_activity'] ?? [],
-            'apiHealth'      => $healthResponse,
+            'apiHealth'      => is_array($health) ? $health : [],
         ]);
     }
 }

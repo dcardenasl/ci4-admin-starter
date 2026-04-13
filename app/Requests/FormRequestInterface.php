@@ -5,7 +5,7 @@ namespace App\Requests;
 interface FormRequestInterface
 {
     /**
-     * @return array<string, string>
+     * @return array<string, mixed>
      */
     public function rules(): array;
 
