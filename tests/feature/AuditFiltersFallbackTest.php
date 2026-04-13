@@ -27,7 +27,7 @@ final class AuditFiltersFallbackTest extends CIUnitTestCase
             ->method('list')
             ->with($this->callback(static function (array $params): bool {
                 return (($params['filter']['action'] ?? null) === 'login')
-                    && ! array_key_exists('action', $params);
+                    && (($params['action'] ?? null) === 'login');
             }))
             ->willReturn([
                 'ok'          => true,
@@ -99,6 +99,7 @@ final class AuditFiltersFallbackTest extends CIUnitTestCase
             ->method('list')
             ->with($this->callback(static function (array $params): bool {
                 return (int) ($params['limit'] ?? 0) === 100
+                    && (int) ($params['per_page'] ?? 0) === 100
                     && (int) ($params['page'] ?? 0) === 2
                     && ! array_key_exists('cursor', $params);
             }))
