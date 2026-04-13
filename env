@@ -75,6 +75,7 @@
 
 # apiClient.baseUrl = 'http://localhost:8080'
 # apiClient.appName = 'API Client'
+# apiClient.apiPrefix = '/api/v1'
 # apiClient.logRequests = false
 
 # Maximum file upload size in bytes (applies to frontend validation + server rules)
