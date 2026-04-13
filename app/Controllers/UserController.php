@@ -82,9 +82,14 @@ class UserController extends BaseWebController
         return redirect()->to(site_url('admin/users'))->with('success', lang('Users.create_success'));
     }
 
-    public function edit(string $id): string
+    public function edit(string $id): string|RedirectResponse
     {
         $response = $this->safeApiCall(fn() => $this->userService->get($id));
+
+        if (! $response['ok']) {
+            return redirect()->to(site_url('admin/users'))->with('error', lang('Users.not_found'));
+        }
+
         $catalogs = $this->resolveCatalogs();
 
         return $this->render('users/edit', [
