@@ -178,6 +178,11 @@ class ContentSecurityPolicy extends BaseConfig
     {
         parent::__construct();
 
+        // Allow CSP violation report endpoint via environment variable
+        if (! empty(env('CSP_REPORT_URI'))) {
+            $this->reportURI = env('CSP_REPORT_URI');
+        }
+
         $this->defaultSrc = ["'self'"];
         $this->scriptSrc = [
             "'self'",
