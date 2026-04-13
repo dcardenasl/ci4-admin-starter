@@ -77,3 +77,9 @@ system/
 *.iml
 .vscode/
 .php-version
+
+#-------------------------
+# Node / Frontend
+#-------------------------
+node_modules/
+npm-debug.log*

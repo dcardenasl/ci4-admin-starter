@@ -1,0 +1,13 @@
+{
+    "name": "ci4-admin-starter",
+    "private": true,
+    "scripts": {
+        "build:css": "tailwindcss -i ./src/css/app.css -o ./public/assets/css/app.css --minify",
+        "lint:js": "eslint public/assets/js/app.js"
+    },
+    "devDependencies": {
+        "eslint": "^9.25.1",
+        "@eslint/js": "^9.25.1",
+        "tailwindcss": "^3.4.17"
+    }
+}
