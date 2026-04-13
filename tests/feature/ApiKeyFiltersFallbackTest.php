@@ -27,7 +27,7 @@ final class ApiKeyFiltersFallbackTest extends CIUnitTestCase
             ->method('list')
             ->with($this->callback(static function (array $params): bool {
                 return (($params['filter']['is_active'] ?? null) === '1')
-                    && ! array_key_exists('is_active', $params);
+                    && (($params['is_active'] ?? null) === '1');
             }))
             ->willReturn([
                 'ok'          => true,
@@ -114,6 +114,7 @@ final class ApiKeyFiltersFallbackTest extends CIUnitTestCase
             ->method('list')
             ->with($this->callback(static function (array $params): bool {
                 return (int) ($params['limit'] ?? 0) === 50
+                    && (int) ($params['per_page'] ?? 0) === 50
                     && (int) ($params['page'] ?? 0) === 3
                     && ! array_key_exists('cursor', $params);
             }))
