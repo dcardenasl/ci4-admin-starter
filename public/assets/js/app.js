@@ -73,15 +73,21 @@ const formToQuery = (form) => {
 const isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 
 const tablePayloadRoot = (payload) => {
+    if (Array.isArray(payload)) {
+        return { data: payload };
+    }
+
     if (!isObject(payload)) {
         return {};
     }
 
     const nested = payload.data;
     if (!isObject(nested)) {
+        // If it's a simple object but payload itself is the data (e.g. single item)
         return payload;
     }
 
+    // Heuristic: If it looks like a pagination wrapper or a result with meta
     if (Array.isArray(nested.data) || isObject(nested.meta) || 
         nested.current_page !== undefined || nested.page !== undefined ||
         nested.last_page !== undefined ||
@@ -148,13 +154,14 @@ const auditSeverityBadgeClass = (severity) => {
 
 const localePrefix = () => String(document.documentElement?.lang || 'es').toLowerCase().startsWith('en') ? 'en' : 'es';
 const localeTag = () => (localePrefix() === 'en' ? 'en-US' : 'es-ES');
+const focusableSelector = 'a[href], button:not([disabled]), textarea, input:not([type="hidden"]):not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 const uiLabels = {
     es: {
-        confirmAction: 'Confirmar accion',
+        confirmAction: 'Confirmar acción',
         confirm: 'Confirmar',
-        requestFailed: 'La solicitud fallo (HTTP {status}).',
-        loadRetry: 'No se pudo cargar la informacion. Intenta nuevamente.'
+        requestFailed: 'La solicitud falló (HTTP {status}).',
+        loadRetry: 'No se pudo cargar la información. Intenta nuevamente.'
     },
     en: {
         confirmAction: 'Confirm action',
@@ -389,6 +396,20 @@ document.addEventListener('alpine:init', () => {
             this.message = message;
             this.title = title;
             this.onAccept = onAccept;
+            requestAnimationFrame(() => {
+                const dialog = document.getElementById('confirm-dialog-panel');
+                if (!(dialog instanceof HTMLElement)) {
+                    return;
+                }
+
+                const focusable = dialog.querySelector(focusableSelector);
+                if (focusable instanceof HTMLElement) {
+                    focusable.focus();
+                    return;
+                }
+
+                dialog.focus();
+            });
         },
         close() {
             this.open = false;
@@ -400,6 +421,33 @@ document.addEventListener('alpine:init', () => {
                 this.onAccept();
             }
             this.close();
+        },
+        handleTab(event, container) {
+            if (!(container instanceof HTMLElement)) {
+                return;
+            }
+
+            const focusable = Array.from(container.querySelectorAll(focusableSelector))
+                .filter((element) => element instanceof HTMLElement && !element.hasAttribute('disabled'));
+            if (focusable.length === 0) {
+                container.focus();
+                return;
+            }
+
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            const active = document.activeElement;
+
+            if (event.shiftKey && active === first) {
+                event.preventDefault();
+                last.focus();
+                return;
+            }
+
+            if (!event.shiftKey && active === last) {
+                event.preventDefault();
+                first.focus();
+            }
         }
     });
 
@@ -439,7 +487,7 @@ document.addEventListener('alpine:init', () => {
             current_page: 1,
             last_page: 1,
             total_items: 0,
-            per_page: 25,
+            limit: 25,
             from: 0,
             to: 0,
             next_cursor: '',
@@ -449,7 +497,7 @@ document.addEventListener('alpine:init', () => {
         query: {},
         filterDefaults: {},
         filterFields: new Set(),
-        ignoredFilterKeys: new Set(['sort', 'page', 'cursor', 'order_by', 'order_dir', 'per_page']),
+        ignoredFilterKeys: new Set(['sort', 'page', 'cursor', 'order_by', 'order_dir', 'per_page', 'limit']),
         requestId: 0,
         debounceTimers: new WeakMap(),
         form: null,
@@ -503,7 +551,9 @@ document.addEventListener('alpine:init', () => {
                             this.filterDefaults[key] = String(value ?? '').trim();
                         });
                     }
-                } catch (_error) {}
+                } catch {
+                    return;
+                }
             }
 
             const ignoredRaw = String(this.form.dataset.filterIgnored || '').trim();
@@ -517,7 +567,9 @@ document.addEventListener('alpine:init', () => {
                             }
                         });
                     }
-                } catch (_error) {}
+                } catch {
+                    return;
+                }
             }
         },
 
@@ -643,18 +695,33 @@ document.addEventListener('alpine:init', () => {
             const apiUrl = this.buildUrl(this.apiUrl, this.query);
             const pageUrl = this.buildUrl(this.pageUrl, this.query);
 
+            const locale = localePrefix();
+            const text = uiLabels[locale] || uiLabels.es;
+
             try {
                 const response = await fetch(apiUrl, {
+                    credentials: 'include',
                     headers: {
                         Accept: 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'
                     }
                 });
 
-                const text = await response.text();
+                const rawBody = await response.text();
                 let payload = {};
-                if (text.trim() !== '') {
-                    payload = JSON.parse(text);
+
+                if (rawBody.trim() !== '') {
+                    try {
+                        payload = JSON.parse(rawBody);
+                    } catch (e) {
+                        console.error('JSON Parse error in fetchData:', e);
+                        if (requestId === this.requestId) {
+                            this.rows = [];
+                            this.error = true;
+                            this.errorMessage = text.loadRetry;
+                        }
+                        return;
+                    }
                 }
 
                 if (requestId !== this.requestId) {
@@ -669,7 +736,7 @@ document.addEventListener('alpine:init', () => {
                         current_page: 1,
                         last_page: 1,
                         total_items: 0,
-                        per_page: 25,
+                        limit: 25,
                         from: 0,
                         to: 0,
                         next_cursor: '',
@@ -678,6 +745,7 @@ document.addEventListener('alpine:init', () => {
                     this.page_input = '1';
                     this.error = true;
                     this.errorMessage = this.resolveErrorMessage(payload, response.status);
+
                     return;
                 }
 
@@ -694,7 +762,8 @@ document.addEventListener('alpine:init', () => {
                 if (pushHistory) {
                     window.history.pushState({}, '', pageUrl);
                 }
-            } catch (_error) {
+            } catch (err) {
+                console.error('Fetch error in fetchData:', err);
                 if (requestId !== this.requestId) {
                     return;
                 }
@@ -711,16 +780,31 @@ document.addEventListener('alpine:init', () => {
         },
 
         extractRows(root) {
+            // Priority 1: Direct root.data array
             if (Array.isArray(root.data)) {
                 return root.data;
             }
 
+            // Priority 2: root.data.data array (paginated wrapper)
             if (isObject(root.data) && Array.isArray(root.data.data)) {
                 return root.data.data;
             }
 
+            // Priority 3: root.items array
             if (Array.isArray(root.items)) {
                 return root.items;
+            }
+
+            // Priority 4: Any array under common keys (users, files, audit, api_keys)
+            const commonKeys = ['users', 'files', 'audit', 'api_keys', 'keys', 'logs', 'entries'];
+            for (const key of commonKeys) {
+                if (Array.isArray(root[key])) {
+                    return root[key];
+                }
+                // Also check inside .data if that exists as object
+                if (isObject(root.data) && Array.isArray(root.data[key])) {
+                    return root.data[key];
+                }
             }
 
             return [];
@@ -744,12 +828,12 @@ document.addEventListener('alpine:init', () => {
             const prev_cursor = String(meta.prev_cursor ?? root.prev_cursor ?? '');
             const hasCursor = next_cursor !== '' || prev_cursor !== '' || String(this.query.cursor || '') !== '';
             
-            const per_page = Number(meta.per_page ?? root.per_page ?? this.query.per_page ?? 25) || 25;
-            const safeLimit = Math.max(1, per_page);
-            
-            const total = Number(meta.total_items ?? root.total_items ?? visibleCount) || visibleCount;
-            
-            const current_page = Number(meta.current_page ?? root.current_page ?? this.query.page ?? 1) || 1;
+            const limit = Number(meta.per_page ?? meta.limit ?? root.per_page ?? root.limit ?? this.query.limit ?? this.query.per_page ?? 25) || 25;
+            const safeLimit = Math.max(1, limit);
+
+            const total = Number(meta.total_items ?? meta.total ?? root.total_items ?? root.total ?? visibleCount) || visibleCount;
+
+            const current_page = Number(meta.current_page ?? meta.page ?? root.current_page ?? root.page ?? this.query.page ?? 1) || 1;
             
             const derivedLastPage = Math.max(1, Math.ceil(Math.max(0, total) / safeLimit));
             const last_page = Number(meta.last_page ?? root.last_page ?? derivedLastPage) || derivedLastPage;
@@ -770,7 +854,7 @@ document.addEventListener('alpine:init', () => {
                 current_page: normalizedCurrentPage,
                 last_page: Math.max(1, last_page),
                 total_items: Math.max(0, total),
-                per_page: safeLimit,
+                limit: safeLimit,
                 from: Math.max(0, from),
                 to: Math.max(0, to),
                 next_cursor,
@@ -816,8 +900,8 @@ document.addEventListener('alpine:init', () => {
         },
 
         paginationLabel() {
-            const locale = localePrefix();
-            const labels = paginationLabels[locale] || paginationLabels.es;
+            const currentLocale = localePrefix();
+            const labels = paginationLabels[currentLocale] || paginationLabels.es;
             if (this.isCursorMode()) {
                 return `${labels.visibleResults}: ${this.pagination.total_items}`;
             }
@@ -945,10 +1029,10 @@ document.addEventListener('alpine:init', () => {
         onLimitChange(limit) {
             const parsed = Number.parseInt(String(limit || ''), 10);
             if (!Number.isFinite(parsed) || parsed <= 0) {
-                delete this.query.per_page;
+                delete this.query.limit;
             } else {
                 const maxOption = Math.max(...this.paginationLimitOptions());
-                this.query.per_page = String(Math.min(maxOption, Math.max(1, parsed)));
+                this.query.limit = String(Math.min(maxOption, Math.max(1, parsed)));
             }
 
             delete this.query.page;
@@ -1006,3 +1090,19 @@ document.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('load', () => {
     bootLucideIcons();
 });
+
+window.handleGoogleCredentialResponse = (response) => {
+    const token = response && typeof response.credential === 'string' ? response.credential : '';
+    if (token === '') {
+        return;
+    }
+
+    const tokenInput = document.getElementById('google-id-token');
+    const loginForm = document.getElementById('google-login-form');
+    if (!(tokenInput instanceof HTMLInputElement) || !(loginForm instanceof HTMLFormElement)) {
+        return;
+    }
+
+    tokenInput.value = token;
+    loginForm.submit();
+};
