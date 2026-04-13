@@ -695,8 +695,8 @@ document.addEventListener('alpine:init', () => {
             const apiUrl = this.buildUrl(this.apiUrl, this.query);
             const pageUrl = this.buildUrl(this.pageUrl, this.query);
 
-            const locale = localePrefix();
-            const text = uiLabels[locale] || uiLabels.es;
+            const fetchLocale = localePrefix();
+            const pageText = uiLabels[fetchLocale] || uiLabels.es;
 
             try {
                 const response = await fetch(apiUrl, {
@@ -718,7 +718,7 @@ document.addEventListener('alpine:init', () => {
                         if (requestId === this.requestId) {
                             this.rows = [];
                             this.error = true;
-                            this.errorMessage = text.loadRetry;
+                            this.errorMessage = pageText.loadRetry;
                         }
                         return;
                     }
