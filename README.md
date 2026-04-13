@@ -17,13 +17,13 @@ Arquitectura objetivo:
 
 Regla obligatoria para cualquier proyecto nuevo creado desde este template:
 
-- El backend de datos y reglas de negocio vive en **`ci-api-tester`**.
+- El backend de datos y reglas de negocio vive en **`ci4-api-starter`**.
 - La estructura y contrato de endpoints deben mantenerse alineados con **`ci4-api-starter`**.
 - Este repositorio es solo la capa web/admin (UI + orquestacion de requests + manejo de sesion JWT).
 
 En otras palabras:
 
-- `ci-api-tester` / `ci4-api-starter` = fuente de verdad de negocio y persistencia.
+- `ci4-api-starter` = fuente de verdad de negocio y persistencia.
 - `ci4-admin-starter` = cliente web administrativo, sin logica de dominio persistente.
 
 ## Compatibilidad obligatoria con `ci4-api-starter`
@@ -120,7 +120,7 @@ Convenciones importantes:
 
 ```bash
 composer install
-cp env .env
+cp .env.example .env
 ```
 
 Configurar en `.env`:
@@ -131,6 +131,10 @@ app.baseURL = 'http://localhost:8082/'
 apiClient.baseUrl = 'http://localhost:8080'
 GOOGLE_CLIENT_ID = 'your-google-oauth-client-id.apps.googleusercontent.com'
 FILE_MAX_SIZE = 10485760
+# Recomendado en produccion HTTPS:
+# app.forceGlobalSecureRequests = true
+# app.CSPEnabled = true
+# cookie.secure = true
 # Opcional: API key para rate limit elevado (600 req/min vs 60 req/min por IP)
 # Crear una via /admin/api-keys o POST /api/v1/api-keys
 # apiClient.appKey = apk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -150,6 +154,13 @@ Aplicacion disponible en `http://localhost:8082`.
 
 ```bash
 vendor/bin/phpunit
+```
+
+Checks utiles:
+
+```bash
+composer test:unit
+composer test:feature
 ```
 
 Cobertura (opcional):
@@ -191,6 +202,23 @@ Si creas un nuevo proyecto desde este repositorio:
 - `DocumentRoot` debe apuntar a `public/`.
 - Nunca commitear secretos (`.env`, tokens, credenciales).
 - `writable/` es solo runtime (logs, cache, sesiones, uploads).
+- `POST /logout` reemplaza el antiguo `GET /logout`.
+- La configuracion de produccion debe activar HTTPS, CSP y cookies seguras.
+- No existe ruta publica de debug en el template.
+
+## Production Deployment Checklist
+
+- Configurar `CI_ENVIRONMENT = production`.
+- Configurar `app.baseURL` con el dominio final y HTTPS.
+- Activar `app.forceGlobalSecureRequests = true`.
+- Activar `app.CSPEnabled = true`.
+- Activar `cookie.secure = true`.
+- Revisar `apiClient.baseUrl`, `apiClient.apiPrefix` y `apiClient.appKey`.
+- Configurar `GOOGLE_CLIENT_ID` solo si el login Google estará habilitado.
+- Ejecutar `composer install --no-dev --prefer-dist --optimize-autoloader`.
+- Ejecutar `npm ci && npm run build:css` antes del deploy.
+- Confirmar que `public/` sea el document root y que `writable/` tenga permisos correctos.
+- Verificar `vendor/bin/phpunit`, `vendor/bin/phpstan analyse --debug`, `npm run lint:js` y `vendor/bin/php-cs-fixer fix --dry-run --diff`.
 
 ## Referencias
 
