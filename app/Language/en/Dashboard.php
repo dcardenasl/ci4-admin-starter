@@ -14,6 +14,7 @@ return [
     'latest_files'     => 'Latest Files',
     'manage_files'     => 'Manage files',
     'no_recent_files'  => 'No recently uploaded files.',
+    'noRecentActivity' => 'No recent activity detected.',
     'view_all'         => 'View all',
     'total_users'      => 'Total users',
     'total_files'      => 'Total files',

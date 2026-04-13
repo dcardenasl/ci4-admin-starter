@@ -14,6 +14,7 @@ return [
     'latest_files'     => 'Últimos Archivos',
     'manage_files'     => 'Gestionar archivos',
     'no_recent_files'  => 'No hay archivos subidos recientemente.',
+    'noRecentActivity' => 'No se detectó actividad reciente.',
     'view_all'         => 'Ver todo',
     'total_users'      => 'Usuarios totales',
     'total_files'      => 'Archivos totales',
