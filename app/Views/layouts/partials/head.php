@@ -5,9 +5,9 @@ $appName ??= 'API Client';
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><?= esc($title ?? $appName) ?></title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/lucide@0.539.0/dist/umd/lucide.min.js"></script>
-<style>
+<style <?= csp_style_nonce() ?>>
     [x-cloak] {
         display: none !important;
     }
@@ -27,7 +27,7 @@ $appName ??= 'API Client';
         --font-mono: "JetBrains Mono", ui-monospace, monospace;
     }
 </style>
-<script>
+<script <?= csp_script_nonce() ?>>
     tailwind.config = {
         theme: {
             extend: {
