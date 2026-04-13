@@ -192,10 +192,19 @@ abstract class BaseWebController extends BaseController
 
     /**
      * Extract the nested 'data' items from an API list response.
+     * Prioritizes the nested 'data' key commonly found in paginated responses.
      */
     protected function extractItems(array $response): array
     {
-        return $this->extractData($response);
+        $payload = $response['data'] ?? [];
+
+        // In paginated responses: { data: { data: [...], meta: {...} } }
+        if (isset($payload['data']) && is_array($payload['data'])) {
+            return $payload['data'];
+        }
+
+        // In simple list responses: { data: [...] }
+        return is_array($payload) ? $payload : [];
     }
 
     /**
@@ -206,8 +215,9 @@ abstract class BaseWebController extends BaseController
     {
         $payload = $response['data'] ?? [];
 
-        // If it's a standard API response with a nested 'data' key (paginated or wrapped)
-        if (isset($payload['data']) && is_array($payload['data'])) {
+        // Avoid returning the nested 'data' array if the payload is a pagination wrapper,
+        // unless it's a simple wrapped object.
+        if (isset($payload['data']) && is_array($payload['data']) && ! isset($payload['meta']) && ! isset($payload['current_page'])) {
             return $payload['data'];
         }
 
@@ -365,7 +375,7 @@ abstract class BaseWebController extends BaseController
      *   search: string,
      *   filters: array<string, string>,
      *   sort: string,
-     *   per_page: int,
+     *   limit: int,
      *   cursor: string,
      *   page: int
      * }
@@ -395,11 +405,14 @@ abstract class BaseWebController extends BaseController
             }
         }
 
-        $per_page = (int) $this->request->getGet('per_page');
-        if ($per_page <= 0) {
-            $per_page = $defaultLimit;
+        $limit = (int) ($this->request->getGet('limit') ?? 0);
+        if ($limit <= 0) {
+            $limit = (int) ($this->request->getGet('per_page') ?? 0);
         }
-        $per_page = min($per_page, $maxLimit);
+        if ($limit <= 0) {
+            $limit = $defaultLimit;
+        }
+        $limit = min($limit, $maxLimit);
 
         $cursor = trim((string) ($this->request->getGet('cursor') ?? ''));
         $page = $this->positiveIntFromQuery('page', 1);
@@ -408,7 +421,7 @@ abstract class BaseWebController extends BaseController
             'search'   => $search,
             'filters'  => $filters,
             'sort'     => $sort,
-            'per_page' => $per_page,
+            'limit'    => $limit,
             'cursor'   => $cursor,
             'page'     => $page,
         ];
@@ -421,7 +434,7 @@ abstract class BaseWebController extends BaseController
      *   search?: string,
      *   filters?: array<string, string>,
      *   sort?: string,
-     *   per_page?: int,
+     *   limit?: int,
      *   cursor?: string,
      *   page?: int
      * } $state
@@ -439,23 +452,30 @@ abstract class BaseWebController extends BaseController
 
         $filters = $state['filters'] ?? [];
         if (is_array($filters) && $filters !== []) {
+            // Keep nested 'filter' for compatibility with some endpoints
             $params['filter'] = $filters;
+
+            // Also flatten filters for endpoints expecting root-level params (like Swagger docs)
+            foreach ($filters as $key => $value) {
+                if (! isset($params[$key])) {
+                    $params[$key] = $value;
+                }
+            }
         }
 
         $sort = trim((string) ($state['sort'] ?? ''));
         if ($sort !== '') {
-            if (str_starts_with($sort, '-')) {
-                $params['order_by'] = ltrim($sort, '-');
-                $params['order_dir'] = 'desc';
-            } else {
-                $params['order_by'] = $sort;
-                $params['order_dir'] = 'asc';
-            }
+            $params['sort'] = $sort;
+
+            // Convert '-field' to order_by=field&order_dir=DESC for standard API compliance
+            $params['order_by'] = ltrim($sort, '-');
+            $params['order_dir'] = str_starts_with($sort, '-') ? 'DESC' : 'ASC';
         }
 
-        $per_page = (int) ($state['per_page'] ?? 25);
-        if ($per_page > 0) {
-            $params['per_page'] = $per_page;
+        $limit = (int) ($state['limit'] ?? 25);
+        if ($limit > 0) {
+            $params['limit'] = $limit;
+            $params['per_page'] = $limit;
         }
 
         $cursor = trim((string) ($state['cursor'] ?? ''));
@@ -498,8 +518,8 @@ abstract class BaseWebController extends BaseController
 
         $current_page = (int) ($meta['current_page'] ?? $data['current_page'] ?? ($state['page'] ?? 1));
         $last_page = (int) ($meta['last_page'] ?? $data['last_page'] ?? $current_page);
-        $per_page = (int) ($meta['per_page'] ?? $data['per_page'] ?? ($state['per_page'] ?? 25));
-        $total_items = (int) ($meta['total_items'] ?? $data['total_items'] ?? $visibleCount);
+        $per_page = (int) ($meta['per_page'] ?? $meta['limit'] ?? $data['per_page'] ?? $data['limit'] ?? ($state['limit'] ?? 25));
+        $total_items = (int) ($meta['total_items'] ?? $meta['total'] ?? $data['total_items'] ?? $data['total'] ?? $visibleCount);
 
         $is_cursor_mode = $next_cursor !== '' || $prev_cursor !== '' || ((string) ($state['cursor'] ?? '')) !== '';
 

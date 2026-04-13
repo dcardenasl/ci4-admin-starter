@@ -75,6 +75,10 @@ class AuthController extends BaseWebController
         }
 
         $payload = $request->payload();
+        if (! $this->hasValidGoogleIdTokenClaims((string) ($payload['id_token'] ?? ''))) {
+            return redirect()->to(site_url('login'))->with('error', lang('Auth.google_invalid_token'));
+        }
+
         $payload['client_base_url'] = $this->clientBaseUrl();
 
         $response = $this->safeApiCall(fn() => $this->authService->googleLogin($payload));
@@ -85,7 +89,7 @@ class AuthController extends BaseWebController
         }
 
         $data = $this->extractData($response);
-        
+
         // Handle 202 Accepted (Pending approval)
         if ($response['status'] === 202 || ! isset($data['access_token'])) {
             return redirect()->to(site_url('login'))
@@ -218,6 +222,7 @@ class AuthController extends BaseWebController
 
     protected function persistAuthSession(array $data): void
     {
+        $this->session->regenerate(true);
         $this->session->set('access_token', $data['access_token'] ?? null);
         $this->session->set('refresh_token', $data['refresh_token'] ?? null);
         $this->session->set('token_expires_at', time() + (int) ($data['expires_in'] ?? 3600));
@@ -227,5 +232,57 @@ class AuthController extends BaseWebController
     protected function isGoogleLoginEnabled(): bool
     {
         return trim((string) env('GOOGLE_CLIENT_ID', '')) !== '';
+    }
+
+    protected function hasValidGoogleIdTokenClaims(string $idToken): bool
+    {
+        $claims = $this->decodeJwtPayload($idToken);
+        if ($claims === null) {
+            return false;
+        }
+
+        $issuer = (string) ($claims['iss'] ?? '');
+        if (! in_array($issuer, ['accounts.google.com', 'https://accounts.google.com'], true)) {
+            return false;
+        }
+
+        $audience = $claims['aud'] ?? null;
+        $expectedAudience = trim((string) env('GOOGLE_CLIENT_ID', ''));
+        if ($expectedAudience === '') {
+            return false;
+        }
+
+        $matchesAudience = is_string($audience)
+            ? hash_equals($expectedAudience, $audience)
+            : (is_array($audience) && in_array($expectedAudience, $audience, true));
+        if (! $matchesAudience) {
+            return false;
+        }
+
+        $expiresAt = (int) ($claims['exp'] ?? 0);
+
+        return $expiresAt > time();
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function decodeJwtPayload(string $token): ?array
+    {
+        $segments = explode('.', $token);
+        if (count($segments) !== 3) {
+            return null;
+        }
+
+        $payload = $segments[1];
+        $payload .= str_repeat('=', (4 - strlen($payload) % 4) % 4);
+        $decoded = base64_decode(strtr($payload, '-_', '+/'), true);
+        if ($decoded === false) {
+            return null;
+        }
+
+        $claims = json_decode($decoded, true);
+
+        return is_array($claims) ? $claims : null;
     }
 }
