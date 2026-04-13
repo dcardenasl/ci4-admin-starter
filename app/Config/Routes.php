@@ -8,8 +8,6 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/', static fn() => redirect()->to(site_url('login')));
 $routes->get('/language/set', 'LanguageController::set');
 
-$routes->get('/debug-session', 'DebugController::index');
-
 // Publicas
 $routes->get('/login', 'AuthController::login');
 $routes->post('/login', 'AuthController::attemptLogin');
@@ -21,7 +19,7 @@ $routes->post('/forgot-password', 'AuthController::attemptForgotPassword');
 $routes->get('/reset-password', 'AuthController::resetPassword');
 $routes->post('/reset-password', 'AuthController::attemptResetPassword');
 $routes->get('/verify-email', 'AuthController::verifyEmail');
-$routes->get('/logout', 'AuthController::logout');
+$routes->post('/logout', 'AuthController::logout');
 
 // Autenticadas
 $routes->group('', ['filter' => 'auth'], static function (RouteCollection $routes): void {

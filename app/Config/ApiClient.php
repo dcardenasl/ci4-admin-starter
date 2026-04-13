@@ -46,6 +46,12 @@ class ApiClient extends BaseConfig
             $this->connectTimeout = (int) $connectTimeout;
         }
 
+        $apiPrefix = env('apiClient.apiPrefix') ?: env('API_PREFIX');
+        if (is_string($apiPrefix) && trim($apiPrefix) !== '') {
+            $normalizedPrefix = '/' . trim($apiPrefix, '/');
+            $this->apiPrefix = $normalizedPrefix === '/' ? '/api/v1' : $normalizedPrefix;
+        }
+
         $appName = env('apiClient.appName') ?: env('APP_NAME');
         if (is_string($appName) && trim($appName) !== '') {
             $this->appName = $appName;
