@@ -1,16 +1,17 @@
 {
-    "name": "codeigniter4/framework",
-    "description": "The CodeIgniter framework v4",
+    "name": "dcardenasl/ci4-admin-starter",
+    "description": "Enterprise-oriented CodeIgniter 4 admin frontend starter that consumes a backend API",
     "license": "MIT",
     "type": "project",
-    "homepage": "https://codeigniter.com",
+    "homepage": "https://github.com/dcardenasl/ci4-admin-starter",
     "support": {
-        "forum": "https://forum.codeigniter.com/",
-        "source": "https://github.com/codeigniter4/CodeIgniter4",
-        "slack": "https://codeigniterchat.slack.com"
+        "source": "https://github.com/dcardenasl/ci4-admin-starter",
+        "issues": "https://github.com/dcardenasl/ci4-admin-starter/issues"
     },
     "require": {
         "php": "^8.1",
+        "ext-curl": "*",
+        "ext-fileinfo": "*",
         "ext-intl": "*",
         "ext-mbstring": "*",
         "laminas/laminas-escaper": "^2.17",
@@ -23,14 +24,13 @@
         "kint-php/kint": "^6.1",
         "mikey179/vfsstream": "^1.6.12",
         "nexusphp/cs-config": "^3.6",
+        "phpstan/phpstan": "^1.12",
         "phpunit/phpunit": "^10.5.16 || ^11.2",
         "predis/predis": "^3.0"
     },
     "suggest": {
-        "ext-curl": "If you use CURLRequest class",
         "ext-dom": "If you use TestResponse",
         "ext-exif": "If you run Image class tests",
-        "ext-fileinfo": "Improves mime type detection for files",
         "ext-gd": "If you use Image class GDHandler",
         "ext-imagick": "If you use Image class ImageMagickHandler",
         "ext-libxml": "If you use TestResponse",
@@ -62,6 +62,12 @@
     },
     "scripts": {
         "test": "phpunit",
+        "test:unit": "phpunit tests/unit",
+        "test:feature": "phpunit tests/feature",
+        "quality": [
+            "vendor/bin/phpstan analyse --debug",
+            "vendor/bin/php-cs-fixer fix --dry-run --diff"
+        ],
         "sync-swagger": "cp ../ci4-api-starter/public/swagger.json swagger_contract.json"
     }
 }
