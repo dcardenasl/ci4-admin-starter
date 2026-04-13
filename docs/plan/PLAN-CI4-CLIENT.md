@@ -3,11 +3,11 @@
 ## Context
 
 `ci4-admin-starter` se usa como **template frontend administrativo** para levantar nuevos proyectos CI4.
-La comunicacion con base de datos y reglas de negocio se realiza en el backend (`ci-api-tester`), manteniendo compatibilidad de contrato con `ci4-api-starter`.
+La comunicacion con base de datos y reglas de negocio se realiza en el backend (`ci4-api-starter`), manteniendo compatibilidad de contrato con ese mismo proyecto.
 
 Este documento conserva el roadmap y las decisiones de implementacion, pero debe leerse bajo esta separacion de responsabilidades:
 
-- Backend (`ci-api-tester` / contrato `ci4-api-starter`): dominio, persistencia y endpoints.
+- Backend (`ci4-api-starter`): dominio, persistencia y endpoints.
 - Frontend (`ci4-admin-starter`): UI, sesion JWT server-side, consumo y manejo robusto de respuestas JSON.
 
 ## Decisiones del Usuario
@@ -210,7 +210,7 @@ POST /forgot-password          → AuthController::attemptForgotPassword
 GET  /reset-password           → AuthController::resetPassword
 POST /reset-password           → AuthController::attemptResetPassword
 GET  /verify-email             → AuthController::verifyEmail
-GET  /logout                   → AuthController::logout
+POST /logout                   → AuthController::logout
 
 // --- Autenticadas (filter: auth) ---
 GET  /dashboard                → DashboardController::index

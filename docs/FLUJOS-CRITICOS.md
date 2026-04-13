@@ -14,7 +14,7 @@ Para garantizar la máxima compatibilidad y evitar errores de cURL o límites de
 
 El `ApiClient` tiene una lógica de auto-refresco de tokens JWT. Si una petición falla con un `401`, intenta refrescar el token y re-enviar la petición original.
 
-- **⚠️ Punto Crítico:** Si la petición original contenía recursos (streams), estos se consumen en el primer intento. 
+- **⚠️ Punto Crítico:** Si la petición original contenía recursos (streams), estos se consumen en el primer intento.
 - **Solución:** En `ApiClient::request()`, antes del re-intento, se recorre el array `multipart` y se aplica `rewind($stream)` para asegurar que el segundo intento no envíe un cuerpo vacío.
 
 ## 3. Visualización de Imágenes y Descargas
@@ -22,7 +22,7 @@ El `ApiClient` tiene una lógica de auto-refresco de tokens JWT. Si una petició
 Las imágenes y descargas pasan por un proxy en el Admin (`FileController::view` y `FileController::download`) para inyectar las cabeceras de autenticación del API.
 
 - **⚠️ El problema de la Barra de Depuración:** CodeIgniter intenta inyectar el código HTML de la "Debug Toolbar" en todas las respuestas. Si la respuesta es una imagen binaria, esto corrompe el archivo y lanza un `TypeError`.
-- **Solución:** El controlador **debe** devolver un objeto `DownloadResponse` (usando `$this->response->download()`). CodeIgniter detecta este tipo de respuesta y desactiva automáticamente la barra de depuración para ese flujo.
+- **Solución:** El controlador debe devolver la respuesta binaria con `Content-Type` y `Content-Disposition` correctos, o redirigir a la URL de descarga del backend, evitando cualquier mutación del cuerpo binario.
 
 ## 4. Normalización de Errores de Validación
 

@@ -13,19 +13,11 @@ use to test your application. Those details can be found in the documentation.
 
 ## Requirements
 
-It is recommended to use the latest version of PHPUnit. At the time of this
-writing, we are running version 9.x. Support for this has been built into the
-**composer.json** file that ships with CodeIgniter and can easily be installed
-via [Composer](https://getcomposer.org/) if you don't already have it installed globally.
+The repository uses the PHPUnit version defined in `composer.json`.
+Install dependencies with Composer before running any suite.
 
 ```console
 > composer install
-```
-
-If running under macOS or Linux, you can create a symbolic link to make running tests a touch nicer.
-
-```console
-> ln -s ./vendor/bin/phpunit ./phpunit
 ```
 
 You also need to install [XDebug](https://xdebug.org/docs/install) in order
@@ -44,21 +36,21 @@ More details on a test database setup are in the
 
 The entire test suite can be run by simply typing one command-line command from the main directory.
 
-```console
-> ./phpunit
+> vendor\bin\phpunit
 ```
 
-If you are using Windows, use the following command.
+Equivalent on macOS/Linux:
 
 ```console
-> vendor\bin\phpunit
+> vendor/bin/phpunit
 ```
 
 You can limit tests to those within a single test directory by specifying the
 directory name after phpunit.
 
 ```console
-> ./phpunit app/Models
+> vendor/bin/phpunit tests/unit
+> vendor/bin/phpunit tests/feature
 ```
 
 ## Generating Code Coverage
