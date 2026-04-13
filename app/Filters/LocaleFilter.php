@@ -18,7 +18,7 @@ class LocaleFilter implements FilterInterface
         if (is_string($locale) && in_array($locale, $supported, true)) {
             $this->applyLocale($locale);
 
-            return;
+            return null;
         }
 
         $locale = null;
@@ -34,9 +34,14 @@ class LocaleFilter implements FilterInterface
 
         session()->set('locale', $locale);
         $this->applyLocale($locale);
+
+        return null;
     }
 
-    public function after(RequestInterface $request, ResponseInterface $response, $arguments = null) {}
+    public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
+    {
+        return null;
+    }
 
     private function applyLocale(string $locale): void
     {

@@ -3,6 +3,7 @@
 namespace App\Filters;
 
 use CodeIgniter\Filters\FilterInterface;
+use CodeIgniter\HTTP\IncomingRequest;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 
@@ -22,10 +23,22 @@ class AdminFilter implements FilterInterface
         $roleValue = is_scalar($role) ? strtolower((string) $role) : '';
 
         if (! in_array($roleValue, ['admin', 'superadmin'], true)) {
-            log_message('debug', 'AdminFilter: Redirecting user to dashboard. Role found: ' . $roleValue . '. User in session: ' . (is_null($user) ? 'NULL' : gettype($user)));
-            return redirect()->to(site_url('dashboard'))->with('error', 'No tienes permisos para esta seccion.');
+            log_message('debug', 'AdminFilter: insufficient role for admin route.');
+
+            if ($request instanceof IncomingRequest && $request->isAJAX()) {
+                return service('response')
+                    ->setStatusCode(403)
+                    ->setJSON(['ok' => false, 'message' => lang('Auth.noPermission')]);
+            }
+
+            return redirect()->to(site_url('dashboard'))->with('error', lang('Auth.noPermission'));
         }
+
+        return null;
     }
 
-    public function after(RequestInterface $request, ResponseInterface $response, $arguments = null) {}
+    public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
+    {
+        return null;
+    }
 }
