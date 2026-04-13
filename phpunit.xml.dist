@@ -15,6 +15,9 @@
         pathCoverage="false"
         ignoreDeprecatedCodeUnits="true"
         disableCodeCoverageIgnore="true">
+        <!-- Coverage reports are generated in CI only on PHP 8.2.
+             To enforce coverage thresholds, upgrade to PHPUnit 12+ which supports:
+             <require><directory minPercentage="60">app</directory></require> -->
         <report>
             <clover outputFile="build/logs/clover.xml"/>
             <html outputDirectory="build/logs/html"/>
