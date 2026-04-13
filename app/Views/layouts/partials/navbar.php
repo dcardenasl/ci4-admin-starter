@@ -1,6 +1,11 @@
 <header class="h-16 bg-white border-b border-gray-200 px-4 md:px-6 flex items-center justify-between">
     <div class="flex items-center gap-3">
-        <button class="md:hidden text-gray-600 hover:text-gray-900" @click="sidebarOpen = true"><?= lang('App.menu') ?></button>
+        <button
+            class="md:hidden text-gray-600 hover:text-gray-900"
+            @click="sidebarOpen = true"
+            :aria-expanded="sidebarOpen ? 'true' : 'false'"
+            aria-controls="app-sidebar"
+        ><?= lang('App.menu') ?></button>
         <h2 class="text-sm text-gray-500"><?= esc($title ?? lang('App.panel')) ?></h2>
     </div>
 
@@ -29,7 +34,10 @@
             </button>
             <div x-show="open" x-cloak class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden z-50">
                 <a href="<?= site_url('profile') ?>" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('App.my_profile') ?></a>
-                <a href="<?= site_url('logout') ?>" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50"><?= lang('App.logout') ?></a>
+                <form method="post" action="<?= site_url('logout') ?>">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"><?= lang('App.logout') ?></button>
+                </form>
             </div>
         </div>
     </div>

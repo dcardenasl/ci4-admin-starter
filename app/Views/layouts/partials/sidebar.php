@@ -1,8 +1,10 @@
-<aside class="bg-gray-900 text-gray-200 w-72 fixed inset-y-0 left-0 z-40 transform transition-transform duration-200 md:translate-x-0"
+<aside id="app-sidebar" class="bg-gray-900 text-gray-200 w-72 fixed inset-y-0 left-0 z-40 transform transition-transform duration-200 md:translate-x-0"
     :class="{ '-translate-x-full': !sidebarOpen, 'translate-x-0': sidebarOpen }">
     <div class="h-16 px-4 border-b border-gray-800 flex items-center justify-between">
         <span class="text-sm uppercase tracking-widest text-gray-400"><?= lang('App.menu') ?></span>
-        <button class="md:hidden text-gray-400 hover:text-white" @click="sidebarOpen = false">x</button>
+        <button class="md:hidden text-gray-400 hover:text-white" @click="sidebarOpen = false" aria-label="<?= esc(lang('App.close_navigation')) ?>">
+            <span aria-hidden="true">x</span>
+        </button>
     </div>
 
     <nav class="p-3 space-y-1">
