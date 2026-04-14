@@ -6,7 +6,7 @@ namespace App\Modules\Auth\Services;
 
 use App\Services\BaseApiService;
 
-class AuthApiService extends BaseApiService
+class AuthApiService extends BaseApiService implements AuthApiServiceInterface
 {
     public function login(array $credentials): array
     {

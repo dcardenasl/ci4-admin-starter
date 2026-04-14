@@ -6,7 +6,7 @@ namespace App\Modules\Metrics\Services;
 
 use App\Services\BaseApiService;
 
-class MetricsApiService extends BaseApiService
+class MetricsApiService extends BaseApiService implements MetricsApiServiceInterface
 {
     public function summary(array $filters = []): array
     {

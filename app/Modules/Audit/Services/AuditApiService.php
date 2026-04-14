@@ -6,7 +6,7 @@ namespace App\Modules\Audit\Services;
 
 use App\Services\ResourceApiService;
 
-class AuditApiService extends ResourceApiService
+class AuditApiService extends ResourceApiService implements AuditApiServiceInterface
 {
     protected function resourcePath(): string
     {

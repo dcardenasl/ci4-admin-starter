@@ -12,7 +12,7 @@ use App\Services\BaseApiService;
  * Wraps API endpoints for user profile operations.
  * Consolidates authentication and user data endpoints used by ProfileController.
  */
-class ProfileApiService extends BaseApiService
+class ProfileApiService extends BaseApiService implements ProfileApiServiceInterface
 {
     /**
      * Get authenticated user profile

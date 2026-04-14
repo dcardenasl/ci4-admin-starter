@@ -7,7 +7,7 @@ namespace App\Modules\Files\Services;
 use App\Services\ResourceApiService;
 use RuntimeException;
 
-class FileApiService extends ResourceApiService
+class FileApiService extends ResourceApiService implements FileApiServiceInterface
 {
     protected function resourcePath(): string
     {

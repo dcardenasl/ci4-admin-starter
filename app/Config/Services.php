@@ -1,19 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Config;
 
 use App\Libraries\ApiClient;
 use App\Libraries\ApiClientInterface;
 use App\Requests\FormRequestInterface;
 use App\Modules\Audit\Services\AuditApiService;
+use App\Modules\Audit\Services\AuditApiServiceInterface;
 use App\Modules\Auth\Services\AuthApiService;
+use App\Modules\Auth\Services\AuthApiServiceInterface;
 use App\Services\CatalogApiService;
 use App\Modules\Files\Services\FileApiService;
-use App\Services\HealthApiService;
+use App\Modules\Files\Services\FileApiServiceInterface;
+use App\Modules\Dashboard\Services\HealthApiService;
+use App\Modules\Dashboard\Services\HealthApiServiceInterface;
 use App\Modules\ApiKeys\Services\ApiKeyApiService;
+use App\Modules\ApiKeys\Services\ApiKeyApiServiceInterface;
 use App\Modules\Metrics\Services\MetricsApiService;
+use App\Modules\Metrics\Services\MetricsApiServiceInterface;
 use App\Modules\Profile\Services\ProfileApiService;
+use App\Modules\Profile\Services\ProfileApiServiceInterface;
 use App\Modules\Users\Services\UserApiService;
+use App\Modules\Users\Services\UserApiServiceInterface;
 use CodeIgniter\Config\BaseService;
 use InvalidArgumentException;
 
@@ -62,7 +72,7 @@ class Services extends BaseService
         return new ApiClient(config('ApiClient'));
     }
 
-    public static function authApiService(bool $getShared = true): AuthApiService
+    public static function authApiService(bool $getShared = true): AuthApiServiceInterface
     {
         if ($getShared) {
             /** @var AuthApiService */
@@ -72,7 +82,7 @@ class Services extends BaseService
         return new AuthApiService(static::apiClient());
     }
 
-    public static function fileApiService(bool $getShared = true): FileApiService
+    public static function fileApiService(bool $getShared = true): FileApiServiceInterface
     {
         if ($getShared) {
             /** @var FileApiService */
@@ -82,7 +92,7 @@ class Services extends BaseService
         return new FileApiService(static::apiClient());
     }
 
-    public static function userApiService(bool $getShared = true): UserApiService
+    public static function userApiService(bool $getShared = true): UserApiServiceInterface
     {
         if ($getShared) {
             /** @var UserApiService */
@@ -92,7 +102,7 @@ class Services extends BaseService
         return new UserApiService(static::apiClient());
     }
 
-    public static function auditApiService(bool $getShared = true): AuditApiService
+    public static function auditApiService(bool $getShared = true): AuditApiServiceInterface
     {
         if ($getShared) {
             /** @var AuditApiService */
@@ -102,7 +112,7 @@ class Services extends BaseService
         return new AuditApiService(static::apiClient());
     }
 
-    public static function apiKeyApiService(bool $getShared = true): ApiKeyApiService
+    public static function apiKeyApiService(bool $getShared = true): ApiKeyApiServiceInterface
     {
         if ($getShared) {
             /** @var ApiKeyApiService */
@@ -112,7 +122,7 @@ class Services extends BaseService
         return new ApiKeyApiService(static::apiClient());
     }
 
-    public static function metricsApiService(bool $getShared = true): MetricsApiService
+    public static function metricsApiService(bool $getShared = true): MetricsApiServiceInterface
     {
         if ($getShared) {
             /** @var MetricsApiService */
@@ -122,7 +132,7 @@ class Services extends BaseService
         return new MetricsApiService(static::apiClient());
     }
 
-    public static function healthApiService(bool $getShared = true): HealthApiService
+    public static function healthApiService(bool $getShared = true): HealthApiServiceInterface
     {
         if ($getShared) {
             /** @var HealthApiService */
@@ -142,7 +152,7 @@ class Services extends BaseService
         return new CatalogApiService(static::apiClient());
     }
 
-    public static function profileApiService(bool $getShared = true): ProfileApiService
+    public static function profileApiService(bool $getShared = true): ProfileApiServiceInterface
     {
         if ($getShared) {
             /** @var ProfileApiService */
