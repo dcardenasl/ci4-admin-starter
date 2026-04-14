@@ -9,21 +9,33 @@ namespace App\Modules\Files\Services;
  */
 interface FileApiServiceInterface
 {
-    /** @return ApiResponse */
+    /**
+     * @param array<string, mixed> $filters
+     * @return ApiResponse
+     */
     public function list(array $filters = []): array;
 
     /** @return ApiResponse */
     public function get(int|string $id): array;
 
-    /** @return ApiResponse */
+    /**
+     * @param array<string, mixed> $payload
+     * @return ApiResponse
+     */
     public function create(array $payload): array;
 
-    /** @return ApiResponse */
+    /**
+     * @param array<string, mixed> $payload
+     * @return ApiResponse
+     */
     public function update(int|string $id, array $payload): array;
 
     /** @return ApiResponse */
     public function delete(int|string $id): array;
 
-    /** @return ApiResponse */
+    /**
+     * @param array<string, mixed> $fields
+     * @return ApiResponse
+     */
     public function upload(string $inputName, string $filePath, string $filename, ?string $mimeType = null, array $fields = []): array;
 }

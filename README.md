@@ -105,6 +105,10 @@ Convenciones importantes:
 - Los mensajes de UI deben usar `lang('...')`.
 - No duplicar validaciones de dominio que pertenecen al backend.
 
+## 📚 Documentation Hub
+
+For a deep dive into the architecture, frontend conventions, services, and deployment, please refer to our **[Documentation Hub](./docs/INDEX.md)**.
+
 ## Requisitos
 
 - PHP `^8.1`

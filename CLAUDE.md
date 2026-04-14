@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Browser → CI4 Admin Starter (port 8082) → ci4-api-starter API (port 8080)
 ```
 
-**Current state:** Fully implemented. All modules are active: authentication, dashboard, profile, file management, and admin panel (users, audit logs, API keys, metrics). See `docs/plan/PLAN-CI4-CLIENT.md` for the original implementation roadmap.
+**Current state:** Fully implemented. All modules are active: authentication, dashboard, profile, file management, and admin panel (users, audit logs, API keys, metrics). See `docs/INDEX.md` for detailed architectural documentation.
 
 ## Technology Stack
 
@@ -308,8 +308,13 @@ This app consumes **ci4-api-starter** (https://github.com/dcardenasl/ci4-api-sta
 
 ## References
 
+- **Documentation Hub:** `docs/INDEX.md` — Complete guides for architecture, frontend, services, testing, deployment, and how-to guides
+- **Architecture Deep Dive:** `docs/ARCHITECTURE.md` — ApiClient, security patterns, and data flow
+- **API Compatibility Contract:** `docs/COMPATIBILIDAD-API.md` — Mandatory backend/frontend integration rules
+- **Services & Validation:** `docs/SERVICES.md` — Service layer pattern and FormRequest validation
+- **Testing Guide:** `tests/README.md` and `docs/TESTING.md` — Unit/feature test strategies
+- **Frontend Guidelines:** `docs/FRONTEND.md` — UI/UX patterns, Tailwind, Alpine.js
+- **Deployment Guide:** `docs/DEPLOYMENT.md` — Production checklist and server configuration
+- **How-To Guides:** `docs/HOW-TO.md` — Step-by-step instructions for common tasks
 - [CodeIgniter 4 User Guide](https://codeigniter.com/user_guide/)
 - [CI4 API Starter Repository](https://github.com/dcardenasl/ci4-api-starter)
-- Implementation Plan: `docs/plan/PLAN-CI4-CLIENT.md`
-- API Compatibility Contract: `docs/COMPATIBILIDAD-API.md`
-- Testing Guide: `tests/README.md`

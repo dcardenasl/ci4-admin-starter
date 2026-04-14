@@ -9,16 +9,25 @@ namespace App\Modules\ApiKeys\Services;
  */
 interface ApiKeyApiServiceInterface
 {
-    /** @return ApiResponse */
+    /**
+     * @param array<string, mixed> $filters
+     * @return ApiResponse
+     */
     public function list(array $filters = []): array;
 
     /** @return ApiResponse */
     public function get(int|string $id): array;
 
-    /** @return ApiResponse */
+    /**
+     * @param array<string, mixed> $payload
+     * @return ApiResponse
+     */
     public function create(array $payload): array;
 
-    /** @return ApiResponse */
+    /**
+     * @param array<string, mixed> $payload
+     * @return ApiResponse
+     */
     public function update(int|string $id, array $payload): array;
 
     /** @return ApiResponse */

@@ -18,6 +18,10 @@ The project follows a decoupled architecture where the frontend handles UI, sess
 ### Architecture Flow
 `Browser -> CI4 Admin Starter (this repo) -> Backend API (ci4-api-starter)`
 
+## 📚 Documentation Hub
+
+For detailed technical guides and architectural insights, refer to the **[Documentation Hub](./docs/INDEX.md)**.
+
 ---
 
 ## Building and Running

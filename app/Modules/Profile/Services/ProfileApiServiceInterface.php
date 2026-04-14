@@ -12,12 +12,18 @@ interface ProfileApiServiceInterface
     /** @return ApiResponse */
     public function me(): array;
 
-    /** @return ApiResponse */
+    /**
+     * @param array<string, mixed> $payload
+     * @return ApiResponse
+     */
     public function update(string $userId, array $payload): array;
 
     /** @return ApiResponse */
     public function forgotPassword(string $email, string $clientBaseUrl): array;
 
-    /** @return ApiResponse */
+    /**
+     * @param array<string, mixed> $payload
+     * @return ApiResponse
+     */
     public function resendVerification(array $payload = []): array;
 }

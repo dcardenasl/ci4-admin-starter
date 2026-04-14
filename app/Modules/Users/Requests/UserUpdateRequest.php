@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Modules\Users\Requests;
 
 use App\Requests\BaseFormRequest;
@@ -14,10 +16,11 @@ class UserUpdateRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'first_name' => 'required|min_length[2]|max_length[100]',
-            'last_name'  => 'required|min_length[2]|max_length[100]',
-            'email'     => 'required|valid_email',
-            'role'      => 'required|in_list[user,admin,superadmin]',
+            'first_name'     => 'required|min_length[2]|max_length[100]',
+            'last_name'      => 'required|min_length[2]|max_length[100]',
+            'email'          => 'required|valid_email',
+            'role'           => 'required|in_list[user,admin,superadmin]',
+            'original_email' => 'required|valid_email',
         ];
     }
 

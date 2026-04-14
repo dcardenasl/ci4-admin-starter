@@ -9,9 +9,15 @@ namespace App\Modules\Metrics\Services;
  */
 interface MetricsApiServiceInterface
 {
-    /** @return ApiResponse */
+    /**
+     * @param array<string, mixed> $filters
+     * @return ApiResponse
+     */
     public function summary(array $filters = []): array;
 
-    /** @return ApiResponse */
+    /**
+     * @param array<string, mixed> $filters
+     * @return ApiResponse
+     */
     public function timeseries(array $filters = []): array;
 }

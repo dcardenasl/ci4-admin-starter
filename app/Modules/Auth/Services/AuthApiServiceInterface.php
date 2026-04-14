@@ -9,19 +9,31 @@ namespace App\Modules\Auth\Services;
  */
 interface AuthApiServiceInterface
 {
-    /** @return ApiResponse */
+    /**
+     * @param array<string, mixed> $credentials
+     * @return ApiResponse
+     */
     public function login(array $credentials): array;
 
-    /** @return ApiResponse */
+    /**
+     * @param array<string, mixed> $payload
+     * @return ApiResponse
+     */
     public function googleLogin(array $payload): array;
 
-    /** @return ApiResponse */
+    /**
+     * @param array<string, mixed> $payload
+     * @return ApiResponse
+     */
     public function register(array $payload): array;
 
     /** @return ApiResponse */
     public function forgotPassword(string $email, ?string $clientBaseUrl = null): array;
 
-    /** @return ApiResponse */
+    /**
+     * @param array<string, mixed> $payload
+     * @return ApiResponse
+     */
     public function resetPassword(array $payload): array;
 
     /** @return ApiResponse */
@@ -33,6 +45,9 @@ interface AuthApiServiceInterface
     /** @return ApiResponse */
     public function me(): array;
 
-    /** @return ApiResponse */
+    /**
+     * @param array<string, mixed> $payload
+     * @return ApiResponse
+     */
     public function resendVerification(array $payload = []): array;
 }
