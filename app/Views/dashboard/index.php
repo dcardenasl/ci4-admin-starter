@@ -65,7 +65,7 @@
                                         <tr class="<?= esc(table_row_class()) ?>">
                                             <td class="<?= esc(table_td_class()) ?>">
                                                 <?php if (! empty($file['is_image'])): ?>
-                                                    <?php $viewUrl = site_url('files/' . ($file['id'] ?? '') . '/view'); ?>
+                                                    <?php $viewUrl = route_to('files.view', $file['id'] ?? ''); ?>
                                                     <button type="button" @click="previewUrl = '<?= $viewUrl ?>'; previewShow = true">
                                                         <img src="<?= $viewUrl ?>" 
                                                              class="h-8 w-8 rounded-lg object-cover border border-gray-200 hover:scale-110 transition-transform shadow-sm" 
@@ -114,12 +114,7 @@
         <section class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
             <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4"><?= lang('Dashboard.system_status') ?></h3>
             <?php
-            $healthState = $apiHealth['state'] ?? 'down';
-            $healthTone = match ($healthState) {
-                'up' => ['dot' => 'bg-green-500', 'text' => 'text-green-700', 'bg' => 'bg-green-50'],
-                'degraded' => ['dot' => 'bg-amber-500', 'text' => 'text-amber-700', 'bg' => 'bg-amber-50'],
-                default => ['dot' => 'bg-red-500', 'text' => 'text-red-700', 'bg' => 'bg-red-50'],
-            };
+            $healthTone = health_tone_badge($apiHealth['state'] ?? 'down');
             ?>
             <div class="flex items-center gap-3 p-3 rounded-lg <?= esc($healthTone['bg']) ?>">
                 <span class="flex h-3 w-3 relative">

@@ -1,5 +1,5 @@
 <?php
-$appName ??= 'API Client';
+$appName ??= config('ApiClient')->appName;
 ?>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -27,5 +27,7 @@ $appName ??= 'API Client';
         --font-mono: "JetBrains Mono", ui-monospace, monospace;
     }
 </style>
-<?php // tailwind.config script removed as we now use compiled CSS ?>
-<?php if (isset($extraHead)) echo $extraHead; ?>
+<?php // tailwind.config script removed as we now use compiled CSS?>
+<?php if (isset($extraHead)) {
+    echo $extraHead;
+} ?>

@@ -137,6 +137,19 @@ class App extends BaseConfig
 
     /**
      * --------------------------------------------------------------------------
+     * Date Format Strings by Locale
+     * --------------------------------------------------------------------------
+     *
+     * Date format strings used by the format_date() helper when no explicit
+     * format is passed. Keyed by locale code.
+     */
+    public array $dateFormats = [
+        'es' => 'd/m/Y H:i',
+        'en' => 'm/d/Y H:i',
+    ];
+
+    /**
+     * --------------------------------------------------------------------------
      * Default Character Set
      * --------------------------------------------------------------------------
      *

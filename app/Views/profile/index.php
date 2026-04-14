@@ -8,13 +8,13 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700" for="first_name"><?= lang('Profile.first_name_label') ?></label>
                         <input id="first_name" name="first_name" type="text" value="<?= esc(old('first_name', $user['first_name'] ?? '')) ?>" autocomplete="given-name" required
-                            class="mt-1 w-full rounded-lg border px-3 py-2 focus-visible:outline-none focus-visible:ring-2 <?= has_field_error('first_name') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand-500 focus:ring-brand-500' ?>">
+                            class="mt-1 w-full rounded-lg border px-3 py-2 focus-visible:outline-none focus-visible:ring-2 border-gray-300 focus:border-brand-500 focus:ring-brand-500 <?= field_error_class('first_name') ?>">
                         <?= render_field_error('first_name') ?>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700" for="last_name"><?= lang('Profile.last_name_label') ?></label>
                         <input id="last_name" name="last_name" type="text" value="<?= esc(old('last_name', $user['last_name'] ?? '')) ?>" autocomplete="family-name" required
-                            class="mt-1 w-full rounded-lg border px-3 py-2 focus-visible:outline-none focus-visible:ring-2 <?= has_field_error('last_name') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand-500 focus:ring-brand-500' ?>">
+                            class="mt-1 w-full rounded-lg border px-3 py-2 focus-visible:outline-none focus-visible:ring-2 border-gray-300 focus:border-brand-500 focus:ring-brand-500 <?= field_error_class('last_name') ?>">
                         <?= render_field_error('last_name') ?>
                     </div>
                 </div>

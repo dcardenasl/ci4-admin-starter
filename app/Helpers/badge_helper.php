@@ -156,3 +156,19 @@ if (! function_exists('localized_role')) {
         };
     }
 }
+
+if (! function_exists('health_tone_badge')) {
+    /**
+     * Health status colors and tones for API health indicators.
+     *
+     * @return array{dot: string, text: string, bg: string}
+     */
+    function health_tone_badge(?string $state): array
+    {
+        return match ($state) {
+            'up'       => ['dot' => 'bg-green-500', 'text' => 'text-green-700', 'bg' => 'bg-green-50'],
+            'degraded' => ['dot' => 'bg-amber-500', 'text' => 'text-amber-700', 'bg' => 'bg-amber-50'],
+            default    => ['dot' => 'bg-red-500',   'text' => 'text-red-700',   'bg' => 'bg-red-50'],
+        };
+    }
+}

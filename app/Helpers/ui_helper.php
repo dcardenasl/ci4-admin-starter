@@ -8,8 +8,16 @@ if (! function_exists('active_nav')) {
 }
 
 if (! function_exists('format_date')) {
-    function format_date(mixed $date, string $format = 'd/m/Y H:i'): string
+    function format_date(mixed $date, ?string $format = null): string
     {
+        if ($format === null) {
+            $locale = service('request')->getLocale();
+            $formats = config('App')->dateFormats ?? [];
+            $format = (is_string($locale) && isset($formats[$locale]))
+                ? $formats[$locale]
+                : 'd/m/Y H:i';
+        }
+
         if (is_array($date)) {
             $date = $date['date'] ?? $date[0] ?? null;
         }
@@ -96,7 +104,7 @@ if (! function_exists('filter_input_class')) {
 if (! function_exists('filter_panel_class')) {
     function filter_panel_class(): string
     {
-        return 'mt-4 rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-white p-4';
+        return 'mt-4 rounded-xl border border-gray-200 bg-white p-4';
     }
 }
 
@@ -292,7 +300,14 @@ if (! function_exists('ui_icon')) {
             'file-plus' => 'file-plus',
         ];
 
-        $icon = $icons[$name] ?? $icons['search'];
+        if (!isset($icons[$name])) {
+            if (ENVIRONMENT === 'development') {
+                throw new \InvalidArgumentException("ui_icon(): unknown icon '{$name}'. Add it to the map or fix the typo.");
+            }
+            $icon = $name;
+        } else {
+            $icon = $icons[$name];
+        }
 
         return '<i data-lucide="' . esc($icon) . '" class="' . esc($class) . '" aria-hidden="true"></i>';
     }
