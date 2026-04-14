@@ -2,7 +2,28 @@
 module.exports = {
     content: [
         './app/Views/**/*.php',
+        './app/Helpers/**/*.php',
         './public/assets/js/**/*.js'
+    ],
+    safelist: [
+        // Table row striping
+        'odd:bg-white',
+        'even:bg-gray-50/45',
+        'hover:bg-brand-50/40',
+        // Table header gradient
+        'bg-gradient-to-b',
+        'from-gray-50',
+        'to-gray-100',
+        // Filter panel gradient
+        'bg-gradient-to-br',
+        'to-white',
+        // Custom padding
+        'py-3.5',
+        // Custom text sizes
+        'text-[11px]',
+        // Brand color variants with opacity
+        'hover:bg-brand-50/40',
+        'bg-brand-50/40',
     ],
     theme: {
         extend: {
