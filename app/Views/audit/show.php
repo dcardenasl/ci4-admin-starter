@@ -1,5 +1,5 @@
 <div class="mb-4">
-    <a href="<?= site_url('admin/audit') ?>" class="text-sm text-brand-600 hover:text-brand-700">&larr; <?= lang('Audit.back_to_list') ?></a>
+    <a href="<?= route_to('admin.audit') ?>" class="text-sm text-brand-600 hover:text-brand-700">&larr; <?= lang('Audit.back_to_list') ?></a>
 </div>
 
 <?php if (! empty($error)): ?>
@@ -21,7 +21,7 @@
                     <dd class="mt-1 text-gray-900">
                         <?= esc((string) ($log['user_email'] ?? '-')) ?>
                         <?php if (! empty($log['user_id'])): ?>
-                            <a href="<?= site_url('admin/users/' . esc((string) $log['user_id'], 'url')) ?>" class="ml-2 text-brand-600 hover:text-brand-700 text-xs"><?= lang('Audit.view_user') ?></a>
+                            <a href="<?= route_to('admin.users.show', (string) $log['user_id']) ?>" class="ml-2 text-brand-600 hover:text-brand-700 text-xs"><?= lang('Audit.view_user') ?></a>
                         <?php endif; ?>
                     </dd>
                 </div>

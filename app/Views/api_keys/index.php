@@ -1,11 +1,11 @@
 <section class="bg-white border border-gray-200 rounded-xl shadow-sm p-5"
     x-data="remoteTable({
-        apiUrl: '<?= site_url('admin/api-keys/data') ?>',
-        pageUrl: '<?= site_url('admin/api-keys') ?>',
+        apiUrl: '<?= route_to('admin.api_keys.data') ?>',
+        pageUrl: '<?= route_to('admin.api_keys') ?>',
         mode: 'api_keys',
         routes: {
-            showBase: '<?= site_url('admin/api-keys') ?>',
-            editBase: '<?= site_url('admin/api-keys') ?>'
+            showBase: '<?= route_to('admin.api_keys') ?>',
+            editBase: '<?= route_to('admin.api_keys') ?>'
         },
         limitOptions: <?= esc(json_encode(array_map('strval', $limitOptions ?? [10, 25, 50, 100]))) ?>
     })" x-init="init()">
@@ -15,8 +15,8 @@
     ]) ?>
 
     <?= view('layouts/partials/filter_panel', [
-        'actionUrl' => site_url('admin/api-keys'),
-        'clearUrl' => site_url('admin/api-keys'),
+        'actionUrl' => route_to('admin.api_keys'),
+        'clearUrl' => route_to('admin.api_keys'),
         'hasFilters' => has_active_filters(request()->getGet(), ['limit' => '25']),
         'reactiveHasFilters' => true,
         'filterDefaults' => ['limit' => '25'],

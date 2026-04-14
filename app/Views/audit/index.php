@@ -1,10 +1,10 @@
 <section class="bg-white border border-gray-200 rounded-xl shadow-sm p-5"
     x-data="remoteTable({
-        apiUrl: '<?= site_url('admin/audit/data') ?>',
-        pageUrl: '<?= site_url('admin/audit') ?>',
+        apiUrl: '<?= route_to('admin.audit.data') ?>',
+        pageUrl: '<?= route_to('admin.audit') ?>',
         mode: 'audit',
         routes: {
-            showBase: '<?= site_url('admin/audit') ?>'
+            showBase: '<?= route_to('admin.audit') ?>'
         },
         limitOptions: <?= esc(json_encode(array_map('strval', $limitOptions ?? [10, 25, 50, 100]))) ?>
     })" x-init="init()">
@@ -13,8 +13,8 @@
     ]) ?>
 
     <?= view('layouts/partials/filter_panel', [
-        'actionUrl' => site_url('admin/audit'),
-        'clearUrl' => site_url('admin/audit'),
+        'actionUrl' => route_to('admin.audit'),
+        'clearUrl' => route_to('admin.audit'),
         'hasFilters' => has_active_filters(request()->getGet(), ['limit' => '25']),
         'reactiveHasFilters' => true,
         'filterDefaults' => ['limit' => '25'],
@@ -75,7 +75,7 @@
                             <td class="<?= esc(table_td_class('muted')) ?>" x-text="String(row.id ?? '-')"></td>
                             <td class="<?= esc(table_td_class('primary')) ?>">
                                 <template x-if="row.user_id">
-                                    <a :href="'<?= site_url('admin/users') ?>/' + row.user_id" class="flex items-center gap-1.5 hover:text-brand-600 transition-colors">
+                                    <a :href="'<?= route_to('admin.users') ?>/' + row.user_id" class="flex items-center gap-1.5 hover:text-brand-600 transition-colors">
                                         <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-[10px] font-bold text-gray-500" x-text="String(row.user_id)"></span>
                                         <span x-text="row.user_email || '<?= lang('Audit.view_user') ?>'"></span>
                                     </a>

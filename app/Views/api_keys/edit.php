@@ -1,13 +1,13 @@
 <?php $id = (string) ($apiKey['id'] ?? ''); ?>
 
 <div class="mb-4">
-    <a href="<?= site_url('admin/api-keys/' . esc($id, 'url')) ?>" class="text-sm text-brand-600 hover:text-brand-700">&larr; <?= lang('ApiKeys.back_to_details') ?></a>
+    <a href="<?= route_to('admin.api_keys.show', $id) ?>" class="text-sm text-brand-600 hover:text-brand-700">&larr; <?= lang('ApiKeys.back_to_details') ?></a>
 </div>
 
 <section class="bg-white border border-gray-200 rounded-xl shadow-sm p-5 max-w-3xl">
     <h3 class="text-lg font-semibold text-gray-900"><?= lang('ApiKeys.edit') ?></h3>
 
-    <form method="post" action="<?= site_url('admin/api-keys/' . esc($id, 'url')) ?>" class="mt-4 space-y-4">
+    <form method="post" action="<?= route_to('admin.api_keys.update', $id) ?>" class="mt-4 space-y-4">
         <?= csrf_field() ?>
 
         <div>
@@ -60,7 +60,7 @@ $labels = [
                 </div>
         <div class="flex items-center gap-3 pt-2">
             <button type="submit" class="rounded-lg bg-brand-600 text-white px-4 py-2 text-sm hover:bg-brand-700"><?= lang('App.save') ?></button>
-            <a href="<?= site_url('admin/api-keys/' . esc($id, 'url')) ?>" class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('App.cancel') ?></a>
+            <a href="<?= route_to('admin.api_keys.show', $id) ?>" class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('App.cancel') ?></a>
         </div>
     </form>
 </section>

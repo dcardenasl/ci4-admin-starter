@@ -1,5 +1,5 @@
 <div class="mb-4">
-    <a href="<?= site_url('admin/api-keys') ?>" class="text-sm text-brand-600 hover:text-brand-700">&larr; <?= lang('ApiKeys.back_to_list') ?></a>
+    <a href="<?= route_to('admin.api_keys') ?>" class="text-sm text-brand-600 hover:text-brand-700">&larr; <?= lang('ApiKeys.back_to_list') ?></a>
 </div>
 
 <?php if (! empty($error)): ?>
@@ -18,8 +18,8 @@
             <div class="flex items-center justify-between">
                 <h3 class="text-lg font-semibold text-gray-900"><?= lang('ApiKeys.details') ?></h3>
                 <div class="flex items-center gap-2">
-                    <a href="<?= site_url('admin/api-keys/' . esc($id, 'url') . '/edit') ?>" class="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('App.edit') ?></a>
-                    <form method="post" action="<?= site_url('admin/api-keys/' . esc($id, 'url') . '/delete') ?>" x-data @submit.prevent="$store.confirm.show('<?= esc(lang('ApiKeys.confirm_delete'), 'js') ?>', () => $el.submit())">
+                    <a href="<?= route_to('admin.api_keys.edit', $id) ?>" class="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('App.edit') ?></a>
+                    <form method="post" action="<?= route_to('admin.api_keys.delete', $id) ?>" x-data @submit.prevent="$store.confirm.show('<?= esc(lang('ApiKeys.confirm_delete'), 'js') ?>', () => $el.submit())">
                         <?= csrf_field() ?>
                         <button type="submit" class="rounded-lg bg-red-600 px-3 py-2 text-sm text-white hover:bg-red-700"><?= lang('App.delete') ?></button>
                     </form>
@@ -74,8 +74,8 @@
         <section class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
             <h3 class="text-lg font-semibold text-gray-900"><?= lang('ApiKeys.quick_actions') ?></h3>
             <div class="mt-4 space-y-3">
-                <a href="<?= site_url('admin/api-keys/' . esc($id, 'url') . '/edit') ?>" class="block w-full text-center rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('App.edit') ?></a>
-                <a href="<?= site_url('admin/api-keys/create') ?>" class="block w-full text-center rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('ApiKeys.create') ?></a>
+                <a href="<?= route_to('admin.api_keys.edit', $id) ?>" class="block w-full text-center rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('App.edit') ?></a>
+                <a href="<?= route_to('admin.api_keys.create') ?>" class="block w-full text-center rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('ApiKeys.create') ?></a>
             </div>
         </section>
     </div>
@@ -98,7 +98,7 @@
 
                 <div class="mt-4 flex items-center justify-end gap-2">
                     <button type="button" class="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" @click="navigator.clipboard.writeText(key).then(() => { copied = true; setTimeout(() => copied = false, 2000); })" x-text="copied ? '<?= esc(lang('ApiKeys.copied')) ?>' : '<?= esc(lang('ApiKeys.copy_key')) ?>'"></button>
-                    <a href="<?= site_url('admin/api-keys/' . esc($id, 'url')) ?>" class="rounded-lg bg-brand-600 px-3 py-2 text-sm text-white hover:bg-brand-700"><?= lang('App.close') ?></a>
+                    <a href="<?= route_to('admin.api_keys.show', $id) ?>" class="rounded-lg bg-brand-600 px-3 py-2 text-sm text-white hover:bg-brand-700"><?= lang('App.close') ?></a>
                 </div>
             </div>
         </div>

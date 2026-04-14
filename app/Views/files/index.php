@@ -54,7 +54,7 @@
                 try {
                     const response = JSON.parse(xhr.responseText);
                     if (response.ok) {
-                        window.location.href = response.redirect || '<?= site_url('files') ?>';
+                        window.location.href = response.redirect || '<?= route_to('files') ?>';
                     } else {
                         if (response.fieldErrors && response.fieldErrors.file) {
                             this.clientError = response.fieldErrors.file;

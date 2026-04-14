@@ -4,7 +4,7 @@
             <h1 class="text-2xl font-bold text-gray-900"><?= sprintf(lang('Dashboard.welcome_title'), esc($user['first_name'] ?? $user['username'] ?? 'User')) ?></h1>
             <p class="text-gray-500 mt-1">
                 <?= lang('Dashboard.welcome_subtitle') ?> 
-                <a href="<?= site_url('profile') ?>" class="inline-flex items-center gap-1 text-brand-600 hover:text-brand-700 font-medium ml-1 transition-colors">
+                <a href="<?= route_to('profile') ?>" class="inline-flex items-center gap-1 text-brand-600 hover:text-brand-700 font-medium ml-1 transition-colors">
                     <?= ui_icon('edit', 'h-3.5 w-3.5') ?>
                     <?= lang('Dashboard.edit_profile') ?>
                 </a>
@@ -33,7 +33,7 @@
         <section class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
             <div class="flex items-center justify-between mb-5">
                 <h3 class="text-lg font-semibold text-gray-900"><?= lang('Dashboard.latest_files') ?></h3>
-                <a href="<?= site_url('files') ?>" class="text-sm font-medium text-brand-600 hover:text-brand-700"><?= lang('Dashboard.manage_files') ?> &rarr;</a>
+                <a href="<?= route_to('files') ?>" class="text-sm font-medium text-brand-600 hover:text-brand-700"><?= lang('Dashboard.manage_files') ?> &rarr;</a>
             </div>
 
             <div x-data="{ previewShow: false, previewUrl: '' }">
@@ -43,7 +43,7 @@
                             <?= ui_icon('file-plus', 'h-12 w-12') ?>
                         </div>
                         <p class="mt-2 text-sm text-gray-600"><?= lang('Dashboard.no_recent_files') ?></p>
-                        <a href="<?= site_url('files') ?>" class="mt-4 inline-flex items-center rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
+                        <a href="<?= route_to('files') ?>" class="mt-4 inline-flex items-center rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
                             <?= lang('Dashboard.manage_files') ?>
                         </a>
                     </div>
@@ -158,12 +158,12 @@
             <p class="text-xs text-gray-500 mb-4"><?= lang('Dashboard.quick_start_desc') ?></p>
             <div class="grid grid-cols-2 gap-2">
                 <?php if (has_admin_access((string) (session('user.role') ?? ''))): ?>
-                    <a href="<?= site_url('admin/users') ?>" class="flex items-center justify-center gap-2 p-2 rounded-lg border border-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                    <a href="<?= route_to('admin.users') ?>" class="flex items-center justify-center gap-2 p-2 rounded-lg border border-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                         <?= ui_icon('users', 'h-3.5 w-3.5 text-gray-400') ?>
                         <?= lang('Dashboard.users') ?>
                     </a>
                 <?php endif; ?>
-                <a href="<?= site_url('files') ?>" class="flex items-center justify-center gap-2 p-2 rounded-lg border border-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                <a href="<?= route_to('files') ?>" class="flex items-center justify-center gap-2 p-2 rounded-lg border border-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                     <?= ui_icon('files', 'h-3.5 w-3.5 text-gray-400') ?>
                     <?= lang('Dashboard.files') ?>
                 </a>

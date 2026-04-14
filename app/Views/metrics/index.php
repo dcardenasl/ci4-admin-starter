@@ -4,8 +4,8 @@
     ]) ?>
 
     <?= view('layouts/partials/filter_panel', [
-        'actionUrl' => site_url('admin/metrics'),
-        'clearUrl' => site_url('admin/metrics'),
+        'actionUrl' => route_to('admin.metrics'),
+        'clearUrl' => route_to('admin.metrics'),
         'hasFilters' => $hasFilters ?? false,
         'filterDefaults' => $defaultFilters ?? [],
         'fieldsView' => 'metrics/partials/filters',

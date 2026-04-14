@@ -1,11 +1,11 @@
 <section class="bg-white border border-gray-200 rounded-xl shadow-sm p-5"
     x-data="remoteTable({
-        apiUrl: '<?= site_url('admin/users/data') ?>',
-        pageUrl: '<?= site_url('admin/users') ?>',
+        apiUrl: '<?= route_to('admin.users.data') ?>',
+        pageUrl: '<?= route_to('admin.users') ?>',
         mode: 'users',
         routes: {
-            showBase: '<?= site_url('admin/users') ?>',
-            editBase: '<?= site_url('admin/users') ?>'
+            showBase: '<?= route_to('admin.users') ?>',
+            editBase: '<?= route_to('admin.users') ?>'
         },
         limitOptions: <?= esc(json_encode(array_map('strval', $limitOptions ?? [10, 25, 50, 100]))) ?>
     })" x-init="init()">
@@ -15,8 +15,8 @@
     ]) ?>
 
     <?= view('layouts/partials/filter_panel', [
-        'actionUrl' => site_url('admin/users'),
-        'clearUrl' => site_url('admin/users'),
+        'actionUrl' => route_to('admin.users'),
+        'clearUrl' => route_to('admin.users'),
         'hasFilters' => has_active_filters(request()->getGet(), ['limit' => '25']),
         'reactiveHasFilters' => true,
         'filterDefaults' => ['limit' => '25'],

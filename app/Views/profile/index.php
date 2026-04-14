@@ -2,7 +2,7 @@
     <section class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
         <h3 class="text-lg font-semibold text-gray-900"><?= $isAdmin ? lang('Profile.personal_info') : lang('Profile.personal_info_readonly') ?></h3>
         <?php if ($isAdmin): ?>
-            <form method="post" action="<?= site_url('profile') ?>" class="mt-4 space-y-4">
+            <form method="post" action="<?= route_to('profile.update') ?>" class="mt-4 space-y-4">
                 <?= csrf_field() ?>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>

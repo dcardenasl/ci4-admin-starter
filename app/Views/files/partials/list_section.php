@@ -3,11 +3,11 @@ $csrfHash = csrf_hash(); ?>
 <section class="mt-6 bg-white border border-gray-200 rounded-xl shadow-sm p-5"
     x-data="remoteTable({
         apiUrl: '<?= site_url('files/data') ?>',
-        pageUrl: '<?= site_url('files') ?>',
+        pageUrl: '<?= route_to('files') ?>',
         mode: 'files',
         routes: {
-            downloadBase: '<?= site_url('files') ?>',
-            deleteBase: '<?= site_url('files') ?>'
+            downloadBase: '<?= route_to('files') ?>',
+            deleteBase: '<?= route_to('files') ?>'
         },
         csrf: {
             name: '<?= esc($csrfName) ?>',
@@ -20,8 +20,8 @@ $csrfHash = csrf_hash(); ?>
         'title' => lang('Files.my_files'),
     ]) ?>
     <?= view('layouts/partials/filter_panel', [
-        'actionUrl' => site_url('files'),
-        'clearUrl' => site_url('files'),
+        'actionUrl' => route_to('files'),
+        'clearUrl' => route_to('files'),
         'hasFilters' => has_active_filters(request()->getGet(), ['limit' => '25']),
         'reactiveHasFilters' => true,
         'filterDefaults' => ['limit' => '25'],
@@ -70,8 +70,8 @@ $csrfHash = csrf_hash(); ?>
                         <tr class="<?= esc(table_row_class()) ?>">
                             <td class="<?= esc(table_td_class()) ?>">
                                 <template x-if="row.is_image">
-                                    <button type="button" @click="$dispatch('open-preview', '<?= site_url('files') ?>/' + (row.id ?? '') + '/view')">
-                                        <img :src="'<?= site_url('files') ?>/' + (row.id ?? '') + '/view'" 
+                                    <button type="button" @click="$dispatch('open-preview', '<?= route_to('files') ?>/' + (row.id ?? '') + '/view')">
+                                        <img :src="'<?= route_to('files') ?>/' + (row.id ?? '') + '/view'" 
                                              class="h-10 w-10 rounded-lg object-cover border border-gray-200 hover:scale-110 transition-transform shadow-sm" 
                                              :alt="row.original_name">
                                     </button>

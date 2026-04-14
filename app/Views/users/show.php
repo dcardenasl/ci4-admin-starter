@@ -1,5 +1,5 @@
 <div class="mb-4">
-    <a href="<?= site_url('admin/users') ?>" class="text-sm text-brand-600 hover:text-brand-700">&larr; <?= lang('Users.back_to_list') ?></a>
+    <a href="<?= route_to('admin.users') ?>" class="text-sm text-brand-600 hover:text-brand-700">&larr; <?= lang('Users.back_to_list') ?></a>
 </div>
 
 <?php if (! empty($error)): ?>
@@ -14,8 +14,8 @@
             <div class="flex items-center justify-between">
                 <h3 class="text-lg font-semibold text-gray-900"><?= lang('Users.details') ?></h3>
                 <div class="flex items-center gap-2">
-                    <a href="<?= site_url('admin/users/' . esc($uid, 'url') . '/edit') ?>" class="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('App.edit') ?></a>
-                    <form method="post" action="<?= site_url('admin/users/' . esc($uid, 'url') . '/delete') ?>" x-data @submit.prevent="$store.confirm.show('<?= esc(lang('Users.confirm_delete'), 'js') ?>', () => $el.submit())">
+                    <a href="<?= route_to('admin.users.edit', $uid) ?>" class="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('App.edit') ?></a>
+                    <form method="post" action="<?= route_to('admin.users.delete', $uid) ?>" x-data @submit.prevent="$store.confirm.show('<?= esc(lang('Users.confirm_delete'), 'js') ?>', () => $el.submit())">
                         <?= csrf_field() ?>
                         <button type="submit" class="rounded-lg bg-red-600 px-3 py-2 text-sm text-white hover:bg-red-700"><?= lang('App.delete') ?></button>
                     </form>
@@ -76,13 +76,13 @@
             <h3 class="text-lg font-semibold text-gray-900"><?= lang('Users.quick_actions') ?></h3>
             <div class="mt-4 space-y-3">
                 <?php if (($user['status'] ?? '') === 'pending_approval'): ?>
-                    <form method="post" action="<?= site_url('admin/users/' . esc($uid, 'url') . '/approve') ?>">
+                    <form method="post" action="<?= route_to('admin.users.approve', $uid) ?>">
                         <?= csrf_field() ?>
                         <button type="submit" class="w-full rounded-lg bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700"><?= lang('Users.approve') ?></button>
                     </form>
                 <?php endif; ?>
-                <a href="<?= site_url('admin/users/' . esc($uid, 'url') . '/edit') ?>" class="block w-full text-center rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('App.edit') ?></a>
-                <a href="<?= site_url('admin/audit?user_id=' . esc($uid, 'url')) ?>" class="block w-full text-center rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('Users.view_audit') ?></a>
+                <a href="<?= route_to('admin.users.edit', $uid) ?>" class="block w-full text-center rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('App.edit') ?></a>
+                <a href="<?= route_to('admin.audit') . '?user_id=' . rawurlencode($uid) ?>" class="block w-full text-center rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('Users.view_audit') ?></a>
             </div>
         </section>
     </div>

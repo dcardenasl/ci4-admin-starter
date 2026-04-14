@@ -1,6 +1,6 @@
 <?php
 $isAuthed = (string) session('access_token') !== '';
-$primaryUrl = $isAuthed ? site_url('dashboard') : site_url('login');
+$primaryUrl = $isAuthed ? site_url(route_to('dashboard')) : site_url('login');
 $primaryLabel = $isAuthed ? lang('App.go_dashboard') : lang('App.go_login');
 ?>
 <!doctype html>
