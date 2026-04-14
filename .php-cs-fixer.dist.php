@@ -6,9 +6,15 @@ use PhpCsFixer\Config;
 use PhpCsFixer\Finder;
 
 return (new Config())
-    ->setRiskyAllowed(false)
+    ->setRiskyAllowed(true)
     ->setRules([
-        '@auto' => true,
+        '@PSR12'                  => true,
+        'declare_strict_types'    => true,
+        'ordered_imports'         => ['sort_algorithm' => 'alpha'],
+        'no_unused_imports'       => true,
+        'array_syntax'            => ['syntax' => 'short'],
+        'strict_comparison'       => true,
+        'void_return'             => true,
     ])
     // 💡 by default, Fixer looks for `*.php` files excluding `./vendor/` - here, you can groom this config
     ->setFinder(

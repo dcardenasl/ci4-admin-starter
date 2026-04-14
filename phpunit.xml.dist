@@ -13,9 +13,10 @@
     cacheDirectory="build/.phpunit.cache">
     <coverage
         includeUncoveredFiles="true"
-        pathCoverage="false"
+        pathCoverage="true"
         ignoreDeprecatedCodeUnits="true"
-        disableCodeCoverageIgnore="true">
+        disableCodeCoverageIgnore="true"
+        minimumCoverage="80">
         <report>
             <clover outputFile="tests/coverage.xml"/>
             <html outputDirectory="tests/coverage/"/>
