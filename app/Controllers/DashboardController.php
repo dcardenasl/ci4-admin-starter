@@ -47,7 +47,7 @@ class DashboardController extends BaseWebController
 
         // Procesamiento de datos
         $metrics = $this->extractData($metricsResponse);
-        $health = $this->extractData($healthResponse);
+        $health = $healthResponse;
 
         $totalUsers = 0;
         if ($isAdmin) {

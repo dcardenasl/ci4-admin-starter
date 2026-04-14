@@ -21,4 +21,7 @@ return [
     'api_uptime'       => 'Tiempo de actividad API',
     'api_available'    => 'API disponible',
     'api_unavailable'  => 'API no disponible',
+    'status_up'        => 'En línea',
+    'status_degraded'  => 'Degradado',
+    'status_down'      => 'Fuera de servicio',
 ];

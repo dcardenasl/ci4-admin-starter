@@ -21,4 +21,7 @@ return [
     'api_uptime'       => 'API Uptime',
     'api_available'    => 'API available',
     'api_unavailable'  => 'API unavailable',
+    'status_up'        => 'Up',
+    'status_degraded'  => 'Degraded',
+    'status_down'      => 'Down',
 ];

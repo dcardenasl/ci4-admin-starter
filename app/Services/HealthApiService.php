@@ -40,33 +40,38 @@ class HealthApiService extends BaseApiService
 
         foreach ($paths as $path) {
             $startedAt = microtime(true);
-            $response = $this->apiClient->request('GET', $path, ['skip_prefix' => true], false);
-            $latencyMs = (int) round((microtime(true) - $startedAt) * 1000);
-            $status = (int) ($response['status'] ?? 0);
-            $message = $this->resolveMessage($response);
+            try {
+                $response = $this->apiClient->request('GET', $path, ['skip_prefix' => true], false);
+                $latencyMs = (int) round((microtime(true) - $startedAt) * 1000);
+                $status = (int) ($response['status'] ?? 0);
+                $message = $this->resolveMessage($response);
 
-            if (($response['ok'] ?? false) === true) {
-                return [
-                    'ok'         => true,
-                    'state'      => 'up',
-                    'status'     => $status > 0 ? $status : 200,
-                    'path'       => $path,
-                    'latency_ms' => $latencyMs,
-                    'message'    => lang('Dashboard.api_available'),
-                ];
-            }
+                if (($response['ok'] ?? false) === true) {
+                    return [
+                        'ok'         => true,
+                        'state'      => 'up',
+                        'status'     => $status > 0 ? $status : 200,
+                        'path'       => $path,
+                        'latency_ms' => $latencyMs,
+                        'message'    => lang('Dashboard.api_available'),
+                    ];
+                }
 
-            if ($status > 0) {
-                $degradedResult ??= [
-                    'ok'         => false,
-                    'state'      => 'degraded',
-                    'status'     => $status,
-                    'path'       => $path,
-                    'latency_ms' => $latencyMs,
-                    'message'    => $message,
-                ];
+                if ($status > 0) {
+                    $degradedResult ??= [
+                        'ok'         => false,
+                        'state'      => 'degraded',
+                        'status'     => $status,
+                        'path'       => $path,
+                        'latency_ms' => $latencyMs,
+                        'message'    => $message,
+                    ];
 
-                continue;
+                    continue;
+                }
+            } catch (\Throwable $e) {
+                log_message('error', "Health check failed for {$path}: " . $e->getMessage());
+                $message = lang('Dashboard.api_unavailable');
             }
 
             $lastDownResult = [

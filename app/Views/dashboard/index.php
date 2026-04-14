@@ -127,7 +127,7 @@
                     <span class="relative inline-flex rounded-full h-3 w-3 <?= esc($healthTone['dot']) ?>"></span>
                 </span>
                 <span class="text-sm font-medium <?= esc($healthTone['text']) ?>">
-                    API: <?= esc((string) ($apiHealth['state'] ?? $apiHealth['status'] ?? 'unknown')) ?> 
+                    API: <?= esc(lang('Dashboard.status_' . ($apiHealth['state'] ?? 'down'))) ?> 
                     (<?= esc((string) ($apiHealth['latency_ms'] ?? 0)) ?>ms)
                 </span>
             </div>
