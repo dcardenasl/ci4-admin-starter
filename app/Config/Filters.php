@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Config;
 
 use CodeIgniter\Config\Filters as BaseFilters;
@@ -12,8 +14,8 @@ use CodeIgniter\Filters\InvalidChars;
 use CodeIgniter\Filters\PageCache;
 use CodeIgniter\Filters\PerformanceMetrics;
 use CodeIgniter\Filters\SecureHeaders;
-use App\Filters\AuthFilter;
 use App\Filters\AdminFilter;
+use App\Filters\AuthFilter;
 use App\Filters\LocaleFilter;
 
 class Filters extends BaseFilters

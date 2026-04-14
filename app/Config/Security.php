@@ -69,9 +69,10 @@ class Security extends BaseConfig
      * CSRF Regenerate
      * --------------------------------------------------------------------------
      *
-     * Regenerate CSRF Token on every submission.
+     * Keep the same CSRF token during the session so forms opened in other tabs
+     * and AJAX uploads do not become invalid after an unrelated POST request.
      */
-    public bool $regenerate = true;
+    public bool $regenerate = false;
 
     /**
      * --------------------------------------------------------------------------

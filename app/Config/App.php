@@ -8,6 +8,13 @@ class App extends BaseConfig
 {
     /**
      * --------------------------------------------------------------------------
+     * Application Name
+     * --------------------------------------------------------------------------
+     */
+    public string $appName = 'API Client';
+
+    /**
+     * --------------------------------------------------------------------------
      * Base Site URL
      * --------------------------------------------------------------------------
      *
@@ -137,6 +144,16 @@ class App extends BaseConfig
 
     /**
      * --------------------------------------------------------------------------
+     * Default Date Format
+     * --------------------------------------------------------------------------
+     *
+     * Base format used by the format_date() helper when the active locale does
+     * not define an override.
+     */
+    public string $dateFormat = 'd/m/Y H:i';
+
+    /**
+     * --------------------------------------------------------------------------
      * Date Format Strings by Locale
      * --------------------------------------------------------------------------
      *
@@ -171,6 +188,21 @@ class App extends BaseConfig
      * and the HTTP Strict Transport Security (HSTS) header will be set.
      */
     public bool $forceGlobalSecureRequests = ENVIRONMENT === 'production';
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        $appName = env('APP_NAME');
+        if (is_string($appName) && trim($appName) !== '') {
+            $this->appName = $appName;
+        }
+
+        $dateFormat = env('APP_DATE_FORMAT');
+        if (is_string($dateFormat) && trim($dateFormat) !== '') {
+            $this->dateFormat = $dateFormat;
+        }
+    }
 
     /**
      * --------------------------------------------------------------------------
