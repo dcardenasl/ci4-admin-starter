@@ -52,7 +52,7 @@ final class FileUploadFlowTest extends CIUnitTestCase
     {
         $mock = $this->createMock(FileApiService::class);
         $mock->expects($this->once())
-            ->method('getDownload')
+            ->method('get')
             ->with('abc-123')
             ->willReturn([
                 'ok'          => true,
@@ -76,7 +76,7 @@ final class FileUploadFlowTest extends CIUnitTestCase
     public function testDownloadApiFailureReturnsNotFound(): void
     {
         $mock = $this->createMock(FileApiService::class);
-        $mock->method('getDownload')->willReturn([
+        $mock->method('get')->willReturn([
             'ok' => false,
             'status' => 404,
             'data' => [],
