@@ -6,26 +6,169 @@ This document provides step-by-step instructions for common development tasks in
 
 ## 🛠️ How to Add a New Module
 
-To add a complete new feature (e.g., "Products"), follow these steps:
+This project uses a **modular architecture**. To add a new feature (e.g., "Products"), follow these steps:
 
-1.  **Backend Verification:** Ensure the corresponding API endpoints exist in the Backend.
-2.  **Service Interface:** Create `app/Services/ProductApiServiceInterface.php`.
-3.  **Service Class:** Create `app/Services/ProductApiService.php` extending `BaseApiService`.
-4.  **Register Service:** Add the binding in `app/Config/Services.php`:
-    ```php
-    public static function productsApi(bool $getShared = true)
-    {
-        if ($getShared) {
-            return static::getSharedUnitOfWork(__FUNCTION__);
-        }
-        return new \App\Services\ProductApiService(static::apiClient());
+### Step 1: Backend Verification
+Ensure the corresponding API endpoints exist in the Backend (`ci4-api-starter`).
+
+### Step 2: Create Module Structure
+Create the directory structure under `app/Modules/Products/`:
+
+```
+app/Modules/Products/
+├── Config/
+│   └── Routes.php                 # Module routes (prefix: products/)
+├── Controllers/
+│   └── ProductController.php      # Extends BaseWebController
+├── Language/
+│   ├── en/
+│   │   └── Products.php           # English translations
+│   └── es/
+│       └── Products.php           # Spanish translations
+├── Requests/                      # Only if form inputs exist
+│   ├── ProductStoreRequest.php
+│   └── ProductUpdateRequest.php
+└── Services/
+    ├── ProductApiService.php      # Extends BaseApiService
+    └── ProductApiServiceInterface.php  # (REQUIRED) Interface for DI
+```
+
+### Step 3: Create Service Interface & Class
+**`app/Modules/Products/Services/ProductApiServiceInterface.php`:**
+```php
+<?php
+declare(strict_types=1);
+
+namespace App\Modules\Products\Services;
+
+interface ProductApiServiceInterface
+{
+    /** @return ApiResponse */
+    public function list(array<string, mixed> $filters = []): array;
+    
+    /** @return ApiResponse */
+    public function get(int|string $id): array;
+    
+    /** @return ApiResponse */
+    public function create(array<string, mixed> $payload): array;
+    
+    /** @return ApiResponse */
+    public function update(int|string $id, array<string, mixed> $payload): array;
+    
+    /** @return ApiResponse */
+    public function delete(int|string $id): array;
+}
+```
+
+**`app/Modules/Products/Services/ProductApiService.php`:**
+```php
+<?php
+declare(strict_types=1);
+
+namespace App\Modules\Products\Services;
+
+use App\Services\BaseApiService;
+
+class ProductApiService extends BaseApiService implements ProductApiServiceInterface
+{
+    // Implement interface methods...
+}
+```
+
+### Step 4: Register Service in `app/Config/Services.php`
+```php
+use App\Modules\Products\Services\ProductApiService;
+use App\Modules\Products\Services\ProductApiServiceInterface;
+
+public static function productApiService(bool $getShared = true): ProductApiServiceInterface
+{
+    if ($getShared) {
+        /** @var ProductApiService */
+        return static::getSharedInstance('productApiService');
     }
-    ```
-5.  **Controller:** Create `app/Controllers/ProductController.php` extending `BaseWebController`.
-6.  **FormRequests:** Create any necessary validation classes in `app/Requests/Product/`.
-7.  **Views:** Create the module views in `app/Views/products/`.
-8.  **Routes:** Register the routes in `app/Config/Routes.php`.
-9.  **Navigation:** Add the link to `app/Views/layouts/partials/sidebar.php`.
+    return new ProductApiService(static::apiClient());
+}
+```
+
+### Step 5: Create Controller
+**`app/Modules/Products/Controllers/ProductController.php`:**
+```php
+<?php
+declare(strict_types=1);
+
+namespace App\Modules\Products\Controllers;
+
+use App\Controllers\BaseWebController;
+use App\Modules\Products\Services\ProductApiServiceInterface;
+use CodeIgniter\HTTP\RequestInterface;
+use CodeIgniter\HTTP\ResponseInterface;
+use Psr\Log\LoggerInterface;
+
+class ProductController extends BaseWebController
+{
+    protected ProductApiServiceInterface $apiService;
+
+    public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger): void
+    {
+        parent::initController($request, $response, $logger);
+        $this->apiService = service('productApiService');
+    }
+
+    public function index(): string
+    {
+        // Render product list...
+    }
+}
+```
+
+### Step 6: Create Language Files
+**`app/Modules/Products/Language/en/Products.php`:**
+```php
+<?php
+return [
+    'title'       => 'Products',
+    'description' => 'Manage your products',
+    // Add more translations...
+];
+```
+
+### Step 7: Create Views
+**`app/Views/products/index.php`:**
+```php
+<?= $this->extend('layouts/app') ?>
+
+<?= $this->section('content') ?>
+    <!-- Product listing view -->
+<?= $this->endSection() ?>
+```
+
+### Step 8: Register Routes
+**`app/Modules/Products/Config/Routes.php`:**
+```php
+<?php
+$routes->group('products', ['filter' => 'auth'], static function ($routes) {
+    $routes->get('/', 'ProductController::index', ['as' => 'products.index']);
+    $routes->get('(:num)', 'ProductController::show/$1', ['as' => 'products.show']);
+    $routes->get('create', 'ProductController::create', ['as' => 'products.create']);
+    $routes->post('/', 'ProductController::store', ['as' => 'products.store']);
+    $routes->get('(:num)/edit', 'ProductController::edit/$1', ['as' => 'products.edit']);
+    $routes->put('(:num)', 'ProductController::update/$1', ['as' => 'products.update']);
+    $routes->delete('(:num)', 'ProductController::delete/$1', ['as' => 'products.delete']);
+});
+```
+
+### Step 9: Add to Navigation
+Edit `app/Views/layouts/partials/sidebar.php` and add:
+```php
+<a href="<?= site_url('products') ?>"
+   class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors <?= active_nav('products*') ?>">
+    <?= ui_icon('box') ?>
+    <span><?= lang('Products.title') ?></span>
+</a>
+```
+
+### Step 10: Add Type Safety
+Ensure all new files have `declare(strict_types=1);` at the top and use proper type hints on method parameters and return types.
 
 ---
 
