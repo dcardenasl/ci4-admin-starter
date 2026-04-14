@@ -52,7 +52,37 @@ jobs:
 
       - name: Run test suite with coverage
         if: matrix.php-version == '8.2'
-        run: vendor/bin/phpunit --coverage-clover build/logs/clover.xml
+        run: vendor/bin/phpunit --coverage-clover build/logs/clover.xml --coverage-text
+
+      - name: Enforce coverage threshold
+        if: matrix.php-version == '8.2'
+        run: |
+          php -r '
+          $path = "build/logs/clover.xml";
+          if (! is_file($path)) {
+              fwrite(STDERR, "Coverage report not found: {$path}\n");
+              exit(1);
+          }
+          $xml = simplexml_load_file($path);
+          if ($xml === false || ! isset($xml->project->metrics)) {
+              fwrite(STDERR, "Invalid Clover coverage report.\n");
+              exit(1);
+          }
+          $metrics = $xml->project->metrics;
+          $statements = (int) ($metrics["statements"] ?? 0);
+          $covered = (int) ($metrics["coveredstatements"] ?? 0);
+          if ($statements === 0) {
+              fwrite(STDERR, "Coverage report contains zero statements.\n");
+              exit(1);
+          }
+          $coverage = ($covered / $statements) * 100;
+          $threshold = 80.0;
+          fwrite(STDOUT, sprintf("Line coverage: %.2f%% (threshold %.2f%%)\n", $coverage, $threshold));
+          if ($coverage < $threshold) {
+              fwrite(STDERR, sprintf("Coverage %.2f%% is below required %.2f%%.\n", $coverage, $threshold));
+              exit(1);
+          }
+          '
 
       - name: Run test suite
         if: matrix.php-version != '8.2'

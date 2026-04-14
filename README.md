@@ -120,7 +120,7 @@ Convenciones importantes:
 
 ```bash
 composer install
-cp .env.example .env
+cp env .env
 ```
 
 Configurar en `.env`:
