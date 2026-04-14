@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Dashboard\Controllers;
 
 use App\Controllers\BaseWebController;
+use App\Modules\Dashboard\Services\HealthApiServiceInterface;
 use App\Modules\Files\Services\FileApiServiceInterface;
-use App\Services\HealthApiServiceInterface;
 use App\Modules\Metrics\Services\MetricsApiServiceInterface;
 use App\Modules\Users\Services\UserApiServiceInterface;
 use CodeIgniter\HTTP\RequestInterface;

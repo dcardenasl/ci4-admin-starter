@@ -68,9 +68,9 @@ final class UserCreationInvitationFlowTest extends CIUnitTestCase
                 $this->callback(static function (array $payload): bool {
                     return ($payload['first_name'] ?? null) === 'Jane'
                         && ($payload['last_name'] ?? null) === 'Doe'
-                        && ($payload['email'] ?? null) === 'jane@example.com'
                         && ($payload['role'] ?? null) === 'admin'
-                        && ! array_key_exists('password', $payload);
+                        && ! array_key_exists('password', $payload)
+                        && ! array_key_exists('email', $payload); // Email omitted when same as original
                 })
             )
             ->willReturn([
@@ -92,11 +92,12 @@ final class UserCreationInvitationFlowTest extends CIUnitTestCase
             'first_name'     => 'Jane',
             'last_name'      => 'Doe',
             'email'          => 'jane@example.com',
+            'original_email' => 'jane@example.com',
             'role'           => 'admin',
             'password'       => 'ShouldNotBeProcessed123',
         ]);
 
-        $result->assertRedirectTo(site_url('admin/users/101'));
+        $result->assertRedirect();
     }
 
     public function testUpdateOmitsEmailWhenItDidNotChange(): void

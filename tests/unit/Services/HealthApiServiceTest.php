@@ -3,7 +3,7 @@
 namespace Tests\Unit\Services;
 
 use App\Libraries\ApiClientInterface;
-use App\Services\HealthApiService;
+use App\Modules\Dashboard\Services\HealthApiService;
 use CodeIgniter\Test\CIUnitTestCase;
 
 /**

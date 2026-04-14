@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Services\HealthApiServiceInterface;
+use App\Modules\Dashboard\Services\HealthApiServiceInterface;
 use App\Modules\Files\Services\FileApiService;
 use App\Modules\Metrics\Services\MetricsApiService;
 use App\Modules\Users\Services\UserApiService;

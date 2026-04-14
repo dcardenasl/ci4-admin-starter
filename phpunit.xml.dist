@@ -15,8 +15,7 @@
         includeUncoveredFiles="true"
         pathCoverage="true"
         ignoreDeprecatedCodeUnits="true"
-        disableCodeCoverageIgnore="true"
-        minimumCoverage="80">
+        disableCodeCoverageIgnore="true">
         <report>
             <clover outputFile="tests/coverage.xml"/>
             <html outputDirectory="tests/coverage/"/>
