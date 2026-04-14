@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controllers;
 
 use App\Services\FileApiService;
@@ -48,7 +50,7 @@ class DashboardController extends BaseWebController
         $health = $this->extractData($healthResponse);
 
         $totalUsers = 0;
-        if (has_admin_access((string) (session('user.role') ?? ''))) {
+        if ($isAdmin) {
             $payloadUsers = $usersResponse['data'] ?? [];
             $totalUsers = $payloadUsers['meta']['total'] ?? $payloadUsers['data']['meta']['total'] ?? $payloadUsers['total'] ?? 0;
         }
@@ -90,7 +92,6 @@ class DashboardController extends BaseWebController
             'stats' => $stats,
             'recentFiles'    => $recentFiles,
             'recent_activity' => $metrics['recent_activity'] ?? [],
-            'recentActivity' => $metrics['recent_activity'] ?? [],
             'apiHealth'      => is_array($health) ? $health : [],
         ]);
     }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controllers;
 
 use App\Requests\File\FileUploadRequest;
@@ -60,7 +62,7 @@ class FileController extends BaseWebController
                 return $this->response->setJSON(['ok' => false, 'fieldErrors' => $request->errors()]);
             }
 
-            return redirect()->to(site_url('files'))->with('fieldErrors', $request->errors());
+            return redirect()->to(route_to('files'))->with('fieldErrors', $request->errors());
         }
 
         $file = $this->request->getFile('file');
@@ -75,7 +77,7 @@ class FileController extends BaseWebController
                 return $this->response->setJSON(['ok' => false, 'messages' => [$error]]);
             }
 
-            return redirect()->to(site_url('files'))->with('error', $error);
+            return redirect()->to(route_to('files'))->with('error', $error);
         }
 
         $tempPath = $file->getTempName();
@@ -97,7 +99,7 @@ class FileController extends BaseWebController
                 ]);
             }
 
-            return $this->failApi($response, lang('Files.upload_failed'), site_url('files'), false);
+            return $this->failApi($response, lang('Files.upload_failed'), route_to('files'), false);
         }
 
         if ($this->request->isAJAX()) {
@@ -105,11 +107,11 @@ class FileController extends BaseWebController
             return $this->response->setJSON([
                 'ok'       => true,
                 'message'  => lang('Files.upload_success'),
-                'redirect' => site_url('files'),
+                'redirect' => route_to('files'),
             ]);
         }
 
-        return redirect()->to(site_url('files'))->with('success', lang('Files.upload_success'));
+        return redirect()->to(route_to('files'))->with('success', lang('Files.upload_success'));
     }
 
     public function download(string $id): ResponseInterface
@@ -124,7 +126,7 @@ class FileController extends BaseWebController
 
     protected function serveFile(string $id, string $disposition): ResponseInterface
     {
-        $response = $this->safeApiCall(fn() => $this->fileService->getDownload($id));
+        $response = $this->safeApiCall(fn() => $this->fileService->get($id));
 
         if (! $response['ok']) {
             return $this->response->setStatusCode(404)->setBody('File not found');
@@ -137,9 +139,37 @@ class FileController extends BaseWebController
         $raw = (string) ($response['raw'] ?? '');
         $headers = is_array($response['headers'] ?? null) ? $response['headers'] : [];
         $contentType = (string) ($headers['content-type'] ?? '');
+        $contentDisposition = (string) ($headers['content-disposition'] ?? '');
 
-        if ($raw !== '' && str_contains($contentType, '/')) {
-            $filename = $data['original_name'] ?? $data['name'] ?? $data['filename'] ?? "file_{$id}";
+        // If the API returned a redirect URL, use it
+        if (is_string($url) && $url !== '') {
+            return redirect()->to($url);
+        }
+
+        // Handle direct binary response (avoid serving JSON metadata as a file)
+        if ($raw !== '' && str_contains($contentType, '/') && ! str_contains($contentType, 'json')) {
+            // 1. Try to get filename from Content-Disposition header from API
+            $headerFilename = '';
+            if ($contentDisposition !== '') {
+                if (preg_match('/filename\*?=(?:[A-Z0-9-]+\'\')?"?([^";]+)"?/i', $contentDisposition, $matches)) {
+                    $headerFilename = rawurldecode($matches[1]);
+                }
+            }
+
+            // 2. Resolve final filename (metadata > header > default)
+            $filename = $data['original_name'] ?? $data['name'] ?? $data['filename'] ?? $headerFilename;
+            if (empty($filename)) {
+                $filename = "file_{$id}";
+            }
+
+            // 3. Ensure it has an extension if it doesn't
+            if (! str_contains($filename, '.')) {
+                $extension = \Config\Mimes::guessExtensionFromType($contentType);
+                if ($extension) {
+                    $filename .= '.' . $extension;
+                }
+            }
+
             $safeFilename = str_replace(['"', "\r", "\n", "\0"], '', basename((string) $filename));
 
             return $this->response
@@ -148,11 +178,8 @@ class FileController extends BaseWebController
                 ->setHeader('Content-Disposition', $disposition . '; filename="' . $safeFilename . '"')
                 ->setBody($raw);
         }
-        if (is_string($url) && $url !== '') {
-            return redirect()->to($url);
-        }
 
-        return $this->response->setStatusCode(404)->setBody('File content empty');
+        return $this->response->setStatusCode(404)->setBody('File content empty or invalid');
     }
 
     public function delete(string $id): RedirectResponse
@@ -160,9 +187,9 @@ class FileController extends BaseWebController
         $response = $this->safeApiCall(fn() => $this->fileService->delete($id));
 
         if (! $response['ok']) {
-            return $this->failApi($response, lang('Files.delete_failed'), site_url('files'), false);
+            return $this->failApi($response, lang('Files.delete_failed'), route_to('files'), false);
         }
 
-        return redirect()->to(site_url('files'))->with('success', lang('Files.delete_success'));
+        return redirect()->to(route_to('files'))->with('success', lang('Files.delete_success'));
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controllers;
 
 use App\Requests\User\UserStoreRequest;
@@ -79,7 +81,7 @@ class UserController extends BaseWebController
             return $this->failApi($response, lang('Users.create_failed'));
         }
 
-        return redirect()->to(site_url('admin/users'))->with('success', lang('Users.create_success'));
+        return redirect()->to(route_to('admin.users'))->with('success', lang('Users.create_success'));
     }
 
     public function edit(string $id): string|RedirectResponse
@@ -87,7 +89,7 @@ class UserController extends BaseWebController
         $response = $this->safeApiCall(fn() => $this->userService->get($id));
 
         if (! $response['ok']) {
-            return redirect()->to(site_url('admin/users'))->with('error', lang('Users.not_found'));
+            return redirect()->to(route_to('admin.users'))->with('error', lang('Users.not_found'));
         }
 
         $catalogs = $this->resolveCatalogs($this->catalogService);
@@ -116,7 +118,7 @@ class UserController extends BaseWebController
             return $this->failApi($response, lang('Users.update_failed'));
         }
 
-        return redirect()->to(site_url('admin/users/' . $id))->with('success', lang('Users.update_success'));
+        return redirect()->to(route_to('admin.users.show', $id))->with('success', lang('Users.update_success'));
     }
 
     public function delete(string $id): RedirectResponse
@@ -124,10 +126,10 @@ class UserController extends BaseWebController
         $response = $this->safeApiCall(fn() => $this->userService->delete($id));
 
         if (! $response['ok']) {
-            return $this->failApi($response, lang('Users.delete_failed'), site_url('admin/users'), false);
+            return $this->failApi($response, lang('Users.delete_failed'), route_to('admin.users'), false);
         }
 
-        return redirect()->to(site_url('admin/users'))->with('success', lang('Users.delete_success'));
+        return redirect()->to(route_to('admin.users'))->with('success', lang('Users.delete_success'));
     }
 
     public function approve(string $id): RedirectResponse
@@ -135,10 +137,10 @@ class UserController extends BaseWebController
         $response = $this->safeApiCall(fn() => $this->userService->approve($id));
 
         if (! $response['ok']) {
-            return $this->failApi($response, lang('Users.approve_failed'), site_url('admin/users/' . $id), false);
+            return $this->failApi($response, lang('Users.approve_failed'), route_to('admin.users.show', $id), false);
         }
 
-        return redirect()->to(site_url('admin/users/' . $id))->with('success', lang('Users.approve_success'));
+        return redirect()->to(route_to('admin.users.show', $id))->with('success', lang('Users.approve_success'));
     }
 
     /**

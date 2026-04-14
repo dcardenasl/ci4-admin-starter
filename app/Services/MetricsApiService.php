@@ -1,14 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 class MetricsApiService extends BaseApiService
 {
-    public function get(array $filters = []): array
-    {
-        return $this->summary($filters);
-    }
-
     public function summary(array $filters = []): array
     {
         return $this->apiClient->get('/metrics', $filters);

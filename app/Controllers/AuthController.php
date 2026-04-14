@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controllers;
 
 use App\Requests\Auth\ForgotPasswordRequest;
@@ -26,7 +28,7 @@ class AuthController extends BaseWebController
     public function login(): ResponseInterface|string
     {
         if ($this->session->has('access_token')) {
-            return redirect()->to(site_url('dashboard'));
+            return redirect()->to(route_to('dashboard'));
         }
 
         return $this->renderAuth('auth/login', [
@@ -54,13 +56,13 @@ class AuthController extends BaseWebController
 
         $this->persistAuthSession($this->extractData($response));
 
-        return redirect()->to(site_url('dashboard'))->with('success', lang('Auth.login_success'));
+        return redirect()->to(route_to('dashboard'))->with('success', lang('Auth.login_success'));
     }
 
     public function attemptGoogleLogin(): RedirectResponse
     {
         if ($this->session->has('access_token')) {
-            return redirect()->to(site_url('dashboard'));
+            return redirect()->to(route_to('dashboard'));
         }
 
         if (! $this->isGoogleLoginEnabled()) {
@@ -98,7 +100,7 @@ class AuthController extends BaseWebController
 
         $this->persistAuthSession($data);
 
-        return redirect()->to(site_url('dashboard'))->with('success', lang('Auth.login_success'));
+        return redirect()->to(route_to('dashboard'))->with('success', lang('Auth.login_success'));
     }
 
     public function register(): string

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use RuntimeException;
@@ -38,10 +40,5 @@ class FileApiService extends ResourceApiService
             'file'     => $base64,
             'filename' => $filename,
         ]));
-    }
-
-    public function getDownload(int|string $id): array
-    {
-        return $this->get($id);
     }
 }

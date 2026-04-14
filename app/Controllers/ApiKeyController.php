@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controllers;
 
 use App\Requests\ApiKey\ApiKeyStoreRequest;
@@ -77,8 +79,8 @@ class ApiKeyController extends BaseWebController
         $created = $this->extractData($response);
         $id = (string) ($created['id'] ?? '');
         $redirectTo = $id !== ''
-            ? site_url('admin/api-keys/' . rawurlencode($id))
-            : site_url('admin/api-keys');
+            ? route_to('admin.api_keys.show', $id)
+            : route_to('admin.api_keys');
 
         $redirect = redirect()->to($redirectTo)->with('success', lang('ApiKeys.created_success'));
 
@@ -125,7 +127,7 @@ class ApiKeyController extends BaseWebController
             return $this->failApi($response, lang('ApiKeys.update_failed'));
         }
 
-        return redirect()->to(site_url('admin/api-keys/' . rawurlencode($id)))->with('success', lang('ApiKeys.updated_success'));
+        return redirect()->to(route_to('admin.api_keys.show', $id))->with('success', lang('ApiKeys.updated_success'));
     }
 
     public function delete(string $id): RedirectResponse
@@ -133,10 +135,10 @@ class ApiKeyController extends BaseWebController
         $response = $this->safeApiCall(fn() => $this->apiKeyService->delete($id));
 
         if (! $response['ok']) {
-            return $this->failApi($response, lang('ApiKeys.delete_failed'), site_url('admin/api-keys'), false);
+            return $this->failApi($response, lang('ApiKeys.delete_failed'), route_to('admin.api_keys'), false);
         }
 
-        return redirect()->to(site_url('admin/api-keys'))->with('success', lang('ApiKeys.deleted_success'));
+        return redirect()->to(route_to('admin.api_keys'))->with('success', lang('ApiKeys.deleted_success'));
     }
 
     /**

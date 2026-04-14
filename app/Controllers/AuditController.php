@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controllers;
 
 use App\Services\CatalogApiService;
@@ -78,7 +80,7 @@ class AuditController extends BaseWebController
     {
         $search = rawurlencode(trim($type . ' ' . $id));
 
-        return redirect()->to(site_url('admin/audit?search=' . $search));
+        return redirect()->to(route_to('admin.audit') . '?search=' . $search);
     }
 
 }
