@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Services\FileApiService;
+use AppModulesFilesServicesFileApiService;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\FeatureTestTrait;
 use Config\Services;

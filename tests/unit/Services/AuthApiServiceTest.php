@@ -3,7 +3,6 @@
 namespace Tests\Unit\Services;
 
 use App\Libraries\ApiClientInterface;
-use App\Services\AuthApiService;
 use CodeIgniter\Test\CIUnitTestCase;
 
 /**

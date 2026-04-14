@@ -38,7 +38,16 @@ class Autoload extends AutoloadConfig
      * @var array<string, list<string>|string>
      */
     public $psr4 = [
-        APP_NAMESPACE => APPPATH,
+        APP_NAMESPACE           => APPPATH,
+        'App\Modules\Auth'      => APPPATH . 'Modules/Auth',
+        'App\Modules\Dashboard' => APPPATH . 'Modules/Dashboard',
+        'App\Modules\Profile'   => APPPATH . 'Modules/Profile',
+        'App\Modules\Files'     => APPPATH . 'Modules/Files',
+        'App\Modules\Users'     => APPPATH . 'Modules/Users',
+        'App\Modules\Audit'     => APPPATH . 'Modules/Audit',
+        'App\Modules\ApiKeys'   => APPPATH . 'Modules/ApiKeys',
+        'App\Modules\Metrics'   => APPPATH . 'Modules/Metrics',
+        'App\Modules\Language'  => APPPATH . 'Modules/Language',
     ];
 
     /**

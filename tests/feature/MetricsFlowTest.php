@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Services\CatalogApiService;
-use App\Services\MetricsApiService;
+use AppModulesMetricsServicesMetricsApiService;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\FeatureTestTrait;
 use Config\Services;

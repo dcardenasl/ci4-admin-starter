@@ -3,8 +3,8 @@
 namespace Tests\Unit\Services;
 
 use App\Libraries\ApiClientInterface;
-use App\Services\FileApiService;
 use CodeIgniter\Test\CIUnitTestCase;
+use App\Modules\Files\Services\FileApiService;
 
 /**
  * @internal

@@ -3,8 +3,8 @@
 namespace Tests\Unit\Services;
 
 use App\Libraries\ApiClientInterface;
-use App\Services\AuditApiService;
 use CodeIgniter\Test\CIUnitTestCase;
+use App\Modules\Audit\Services\AuditApiService;
 
 /**
  * @internal

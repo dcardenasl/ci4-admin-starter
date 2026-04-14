@@ -1,0 +1,27 @@
+<?php
+
+return [
+    'title'                   => 'Profile',
+    'personal_info'           => 'Personal information',
+    'personal_info_readonly'  => 'Personal information (read-only)',
+    'first_name_label'        => 'First name',
+    'last_name_label'         => 'Last name',
+    'save_changes'            => 'Save changes',
+    'readonly_help'           => 'Your account role cannot edit profile fields in this portal.',
+    'edit_requires_admin'     => 'Editing profile details requires admin role in the API contract.',
+    'update_not_allowed'      => 'Your role cannot update profile details.',
+    'security'                => 'Security',
+    'password_reset_help'     => 'Use email reset flow to change your password.',
+    'send_password_reset'     => 'Send reset link',
+    'password_reset_sent'     => 'Password reset email sent.',
+    'password_reset_failed'   => 'Could not send password reset email.',
+    'email_verification'      => 'Email verification',
+    'status'                  => 'Status',
+    'verified'                => 'Verified',
+    'pending'                 => 'Pending',
+    'resend_verification'     => 'Resend verification',
+    'update_success'          => 'Profile updated.',
+    'update_failed'           => 'Could not update profile.',
+    'resend_success'          => 'Verification email resent.',
+    'resend_failed'           => 'Could not resend verification.',
+];

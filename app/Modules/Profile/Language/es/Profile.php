@@ -1,0 +1,27 @@
+<?php
+
+return [
+    'title'                   => 'Perfil',
+    'personal_info'           => 'Información personal',
+    'personal_info_readonly'  => 'Información personal (solo lectura)',
+    'first_name_label'        => 'Nombre',
+    'last_name_label'         => 'Apellido',
+    'save_changes'            => 'Guardar cambios',
+    'readonly_help'           => 'Tu rol no permite editar campos de perfil en este portal.',
+    'edit_requires_admin'     => 'Editar el perfil requiere rol admin según el contrato del API.',
+    'update_not_allowed'      => 'Tu rol no puede actualizar datos de perfil.',
+    'security'                => 'Seguridad',
+    'password_reset_help'     => 'Para cambiar password usa el flujo de recuperación por correo.',
+    'send_password_reset'     => 'Enviar enlace de reset',
+    'password_reset_sent'     => 'Te enviamos un correo para restablecer tu password.',
+    'password_reset_failed'   => 'No se pudo enviar el correo de restablecimiento.',
+    'email_verification'      => 'Verificación de correo',
+    'status'                  => 'Estado',
+    'verified'                => 'Verificado',
+    'pending'                 => 'Pendiente',
+    'resend_verification'     => 'Reenviar verificación',
+    'update_success'          => 'Perfil actualizado.',
+    'update_failed'           => 'No se pudo actualizar el perfil.',
+    'resend_success'          => 'Te reenviamos el correo de verificación.',
+    'resend_failed'           => 'No se pudo reenviar la verificación.',
+];

@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Services\ApiKeyApiService;
+use AppModulesApiKeysServicesApiKeyApiService;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\FeatureTestTrait;
 use Config\Services;
