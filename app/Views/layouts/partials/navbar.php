@@ -17,10 +17,13 @@
             </button>
             <div x-show="open" x-cloak class="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden z-50">
                 <?php foreach (($supportedLocales ?? ['es', 'en']) as $loc): ?>
-                    <a href="<?= site_url('language/set?locale=' . esc($loc, 'url')) ?>"
-                       class="block px-4 py-2 text-sm <?= ($currentLocale ?? 'es') === $loc ? 'bg-brand-50 text-brand-700 font-medium' : 'text-gray-700 hover:bg-gray-50' ?>">
-                        <?= esc(strtoupper($loc)) ?>
-                    </a>
+                    <form method="post" action="<?= route_to('language.set') ?>" class="block">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="locale" value="<?= esc($loc, 'attr') ?>">
+                        <button type="submit" class="w-full px-4 py-2 text-sm text-left <?= ($currentLocale ?? 'es') === $loc ? 'bg-brand-50 text-brand-700 font-medium' : 'text-gray-700 hover:bg-gray-50' ?>">
+                            <?= esc(strtoupper($loc)) ?>
+                        </button>
+                    </form>
                 <?php endforeach; ?>
             </div>
         </div>

@@ -6,7 +6,7 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 $routes->get('/', static fn() => redirect()->to(site_url('login')));
-$routes->get('/language/set', 'LanguageController::set');
+$routes->post('/language/set', 'LanguageController::set', ['as' => 'language.set']);
 
 // Publicas
 $routes->get('/login', 'AuthController::login');

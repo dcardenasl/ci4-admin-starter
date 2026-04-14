@@ -16,7 +16,8 @@ final class LanguageFlowTest extends CIUnitTestCase
     {
         $result = $this->withHeaders([
             'Referer' => site_url('login'),
-        ])->get('/language/set?locale=en');
+            'X-CSRF-TOKEN' => csrf_hash(),
+        ])->post('/language/set', ['locale' => 'en']);
 
         $result->assertRedirect();
         $result->assertSessionHas('locale', 'en');
@@ -28,7 +29,8 @@ final class LanguageFlowTest extends CIUnitTestCase
             'locale' => 'es',
         ])->withHeaders([
             'Referer' => site_url('login'),
-        ])->get('/language/set?locale=fr');
+            'X-CSRF-TOKEN' => csrf_hash(),
+        ])->post('/language/set', ['locale' => 'fr']);
 
         $result->assertRedirect();
         $result->assertSessionHas('locale', 'es');

@@ -11,7 +11,7 @@ class LanguageController extends BaseController
 {
     public function set(): RedirectResponse
     {
-        $locale = $this->request->getGet('locale');
+        $locale = $this->request->getPost('locale');
         $supported = config('App')->supportedLocales;
 
         if (is_string($locale) && in_array($locale, $supported, true)) {
