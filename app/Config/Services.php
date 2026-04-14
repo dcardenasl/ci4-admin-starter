@@ -14,8 +14,6 @@ use App\Modules\Auth\Services\AuthApiServiceInterface;
 use App\Services\CatalogApiService;
 use App\Modules\Files\Services\FileApiService;
 use App\Modules\Files\Services\FileApiServiceInterface;
-use App\Modules\Dashboard\Services\HealthApiService;
-use App\Modules\Dashboard\Services\HealthApiServiceInterface;
 use App\Modules\ApiKeys\Services\ApiKeyApiService;
 use App\Modules\ApiKeys\Services\ApiKeyApiServiceInterface;
 use App\Modules\Metrics\Services\MetricsApiService;
@@ -24,6 +22,8 @@ use App\Modules\Profile\Services\ProfileApiService;
 use App\Modules\Profile\Services\ProfileApiServiceInterface;
 use App\Modules\Users\Services\UserApiService;
 use App\Modules\Users\Services\UserApiServiceInterface;
+use App\Services\HealthApiService;
+use App\Services\HealthApiServiceInterface;
 use CodeIgniter\Config\BaseService;
 use InvalidArgumentException;
 
@@ -139,7 +139,7 @@ class Services extends BaseService
             return static::getSharedInstance('healthApiService');
         }
 
-        return new HealthApiService(static::apiClient());
+        return new HealthApiService(static::apiClient(), config('ApiClient')->healthPaths);
     }
 
     public static function catalogApiService(bool $getShared = true): CatalogApiService
