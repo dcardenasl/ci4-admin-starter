@@ -54,13 +54,10 @@ class MetricsController extends BaseWebController
         $summaryData = $this->extractData($summaryResponse);
         $timeseriesData = $this->extractData($timeseriesResponse);
 
-        // Timeseries is already transformed into point objects by the service
-        $timeseries = is_array($timeseriesData) ? $timeseriesData : [];
-
         return $this->render('metrics/index', [
             'title'          => lang('Metrics.title'),
             'metrics'        => $summaryData,
-            'timeseries'     => is_array($timeseries) ? $timeseries : [],
+            'timeseries'     => $timeseriesData,
             'filters'        => $viewFilters,
             'defaultFilters' => $defaultFilters,
             'hasFilters'     => has_active_filters($this->request->getGet(), $defaultFilters),

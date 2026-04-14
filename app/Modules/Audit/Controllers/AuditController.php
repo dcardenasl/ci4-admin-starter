@@ -31,9 +31,6 @@ class AuditController extends BaseWebController
 
         $facetsResponse = $this->safeApiCall(fn() => $this->catalogService->auditFacets());
         $facets = $this->extractData($facetsResponse);
-        if (! is_array($facets)) {
-            $facets = [];
-        }
 
         $actionOptions = CatalogOptions::options(
             ['audit' => ['actions' => $facets['actions'] ?? []]],

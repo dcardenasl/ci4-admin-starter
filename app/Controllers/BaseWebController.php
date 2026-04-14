@@ -267,9 +267,7 @@ abstract class BaseWebController extends BaseController
     protected function resolveCatalogs(object $service): array
     {
         $response = $this->safeApiCall(fn() => $service->index());
-        $data = $this->extractData($response);
-
-        return is_array($data) ? $data : [];
+        return $this->extractData($response);
     }
 
     protected function positiveIntFromQuery(string $key, int $default, int $max = 200): int

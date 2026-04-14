@@ -98,6 +98,9 @@ class ApiClient implements ApiClientInterface
         return $this->request('POST', $path, ['multipart' => $multipart], true);
     }
 
+    /**
+     * @return array{ok: bool, status: int, data: array<string, mixed>, raw: string, headers: array<string, string>, messages: list<string>, fieldErrors: array<string, string>}
+     */
     public function request(string $method, string $path, array $options = [], bool $authenticated = true): array
     {
         $skipPrefix = (bool) ($options['skip_prefix'] ?? false);
@@ -132,7 +135,7 @@ class ApiClient implements ApiClientInterface
             $status = $response->getStatusCode();
         }
 
-        $body = $response->getBody();
+        $body = (string) $response->getBody();
         $payload = json_decode($body, true);
 
         if ($this->config->logRequests) {
@@ -318,6 +321,9 @@ class ApiClient implements ApiClientInterface
         $this->session->regenerate(true);
     }
 
+    /**
+     * @return list<string>
+     */
     protected function extractMessages(mixed $payload, int $status): array
     {
         if (! is_array($payload)) {
@@ -329,7 +335,8 @@ class ApiClient implements ApiClientInterface
         }
 
         if (isset($payload['messages']) && is_array($payload['messages'])) {
-            return array_values(array_filter($payload['messages'], 'is_scalar'));
+            $messages = array_values(array_filter($payload['messages'], 'is_scalar'));
+            return array_map('strval', $messages);
         }
 
         if (isset($payload['errors']['general']) && is_scalar($payload['errors']['general'])) {

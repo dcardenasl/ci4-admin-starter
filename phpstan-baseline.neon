@@ -121,11 +121,6 @@ parameters:
 			path: app/Libraries/ApiClient.php
 
 		-
-			message: "#^Method App\\\\Libraries\\\\ApiClient\\:\\:extractMessages\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Libraries/ApiClient.php
-
-		-
 			message: "#^Method App\\\\Libraries\\\\ApiClient\\:\\:get\\(\\) has parameter \\$query with no value type specified in iterable type array\\.$#"
 			count: 1
 			path: app/Libraries/ApiClient.php
@@ -152,11 +147,6 @@ parameters:
 
 		-
 			message: "#^Method App\\\\Libraries\\\\ApiClient\\:\\:request\\(\\) has parameter \\$options with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Libraries/ApiClient.php
-
-		-
-			message: "#^Method App\\\\Libraries\\\\ApiClient\\:\\:request\\(\\) should return array\\{ok\\: bool, status\\: int, data\\: array\\<string, mixed\\>, raw\\: string, headers\\: array\\<string, string\\>, messages\\: array\\<int, string\\>, fieldErrors\\: array\\<string, string\\>\\} but returns array\\{ok\\: bool, status\\: int, data\\: array, raw\\: string\\|null, headers\\: array\\<string, string\\>, messages\\: array, fieldErrors\\: array\\}\\.$#"
 			count: 1
 			path: app/Libraries/ApiClient.php
 
@@ -192,7 +182,7 @@ parameters:
 
 		-
 			message: "#^Parameter \\#1 \\$json of function json_decode expects string, string\\|null given\\.$#"
-			count: 2
+			count: 1
 			path: app/Libraries/ApiClient.php
 
 		-
@@ -286,21 +276,6 @@ parameters:
 			path: app/Modules/Dashboard/Controllers/DashboardController.php
 
 		-
-			message: "#^Method App\\\\Modules\\\\Dashboard\\\\Services\\\\HealthApiService\\:\\:check\\(\\) should return array\\{ok\\: bool, status\\: int, data\\: array\\<string, mixed\\>, raw\\: string, headers\\: array\\<string, string\\>, messages\\: array\\<int, string\\>, fieldErrors\\: array\\<string, string\\>\\} but returns array\\.$#"
-			count: 2
-			path: app/Modules/Dashboard/Services/HealthApiService.php
-
-		-
-			message: "#^Method App\\\\Modules\\\\Dashboard\\\\Services\\\\HealthApiService\\:\\:normalizeResponse\\(\\) has parameter \\$response with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Modules/Dashboard/Services/HealthApiService.php
-
-		-
-			message: "#^Method App\\\\Modules\\\\Dashboard\\\\Services\\\\HealthApiService\\:\\:normalizeResponse\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Modules/Dashboard/Services/HealthApiService.php
-
-		-
 			message: "#^Call to an undefined method CodeIgniter\\\\HTTP\\\\CLIRequest\\|CodeIgniter\\\\HTTP\\\\IncomingRequest\\:\\:getFile\\(\\)\\.$#"
 			count: 1
 			path: app/Modules/Files/Controllers/FileController.php
@@ -329,11 +304,6 @@ parameters:
 			message: "#^Parameter \\#1 \\$query of function has_active_filters expects array\\<string, mixed\\>\\|null, array\\|bool\\|float\\|int\\|object\\|string\\|null given\\.$#"
 			count: 1
 			path: app/Modules/Metrics/Controllers/MetricsController.php
-
-		-
-			message: "#^Method App\\\\Modules\\\\Metrics\\\\Services\\\\MetricsApiService\\:\\:timeseries\\(\\) should return array\\{ok\\: bool, status\\: int, data\\: array\\<string, mixed\\>, raw\\: string, headers\\: array\\<string, string\\>, messages\\: array\\<int, string\\>, fieldErrors\\: array\\<string, string\\>\\} but returns array\\{ok\\: bool, status\\: int, data\\: array\\<int\\<0, max\\>\\|string, mixed\\>, raw\\: string, headers\\: array\\<string, string\\>, messages\\: array\\<int, string\\>, fieldErrors\\: array\\<string, string\\>\\}\\.$#"
-			count: 1
-			path: app/Modules/Metrics/Services/MetricsApiService.php
 
 		-
 			message: "#^Cannot cast array\\|bool\\|float\\|int\\|object\\|string\\|null to string\\.$#"

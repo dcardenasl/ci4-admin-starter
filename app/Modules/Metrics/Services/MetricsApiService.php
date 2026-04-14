@@ -13,6 +13,9 @@ class MetricsApiService extends BaseApiService implements MetricsApiServiceInter
         return $this->apiClient->get('/metrics', $filters);
     }
 
+    /**
+     * @return array{ok: bool, status: int, data: array<string, mixed>|list<array<string, mixed>>, raw: string, headers: array<string, string>, messages: list<string>, fieldErrors: array<string, string>}
+     */
     public function timeseries(array $filters = []): array
     {
         $response = $this->apiClient->get('/metrics/timeseries', $filters);

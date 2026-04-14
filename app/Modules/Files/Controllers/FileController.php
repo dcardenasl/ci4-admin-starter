@@ -130,7 +130,7 @@ class FileController extends BaseWebController
         }
 
         $data = $this->extractData($response);
-        $url = is_array($data) ? ($data['download_url'] ?? $data['url'] ?? null) : null;
+        $url = $data['download_url'] ?? $data['url'] ?? null;
 
         // If API returned binary data directly
         $raw = (string) ($response['raw'] ?? '');

@@ -17,6 +17,9 @@ class HealthApiService extends BaseApiService implements HealthApiServiceInterfa
         parent::__construct($apiClient);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function check(): array
     {
         $paths = $this->resolveHealthPaths();
@@ -82,6 +85,10 @@ class HealthApiService extends BaseApiService implements HealthApiServiceInterfa
         return $resolved !== [] ? $resolved : ['/health'];
     }
 
+    /**
+     * @param array<string, mixed> $response
+     * @return array<string, mixed>
+     */
     private function normalizeResponse(array $response, string $path, string $defaultState, int $latencyMs): array
     {
         $data = $response['data'] ?? [];

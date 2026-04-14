@@ -93,7 +93,7 @@ class DashboardController extends BaseWebController
             'stats' => $stats,
             'recentFiles'    => $recentFiles,
             'recent_activity' => $metrics['recent_activity'] ?? [],
-            'apiHealth'      => is_array($health) ? $health : [],
+            'apiHealth'      => $health,
         ]);
     }
 }
