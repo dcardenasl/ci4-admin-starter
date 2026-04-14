@@ -213,12 +213,7 @@ class AuthController extends BaseWebController
             $this->safeApiCall(fn() => $this->authService->logout());
         }
 
-        $this->session->remove([
-            SessionKeys::ACCESS_TOKEN,
-            'refresh_token',
-            'token_expires_at',
-            'user',
-        ]);
+        $this->apiClient->clearSessionAuth();
         $this->session->destroy();
 
         return redirect()->to(site_url('login'))->with('success', lang('Auth.logout_success'));
@@ -228,9 +223,9 @@ class AuthController extends BaseWebController
     {
         $this->session->regenerate(true);
         $this->session->set(SessionKeys::ACCESS_TOKEN, $data[SessionKeys::ACCESS_TOKEN] ?? null);
-        $this->session->set('refresh_token', $data['refresh_token'] ?? null);
-        $this->session->set('token_expires_at', time() + (int) ($data['expires_in'] ?? 3600));
-        $this->session->set('user', $data['user'] ?? []);
+        $this->session->set(SessionKeys::REFRESH_TOKEN, $data['refresh_token'] ?? null);
+        $this->session->set(SessionKeys::EXPIRES_AT, time() + (int) ($data['expires_in'] ?? 3600));
+        $this->session->set(SessionKeys::USER, $data['user'] ?? []);
     }
 
     protected function isGoogleLoginEnabled(): bool

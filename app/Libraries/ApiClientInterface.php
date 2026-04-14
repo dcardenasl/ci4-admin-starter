@@ -40,4 +40,6 @@ interface ApiClientInterface
 
     /** @return ApiResponse */
     public function request(string $method, string $path, array $options = [], bool $authenticated = true): array;
+
+    public function clearSessionAuth(): void;
 }

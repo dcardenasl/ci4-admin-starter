@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Libraries\ApiClientInterface;
 use App\Requests\FormRequestInterface;
+use App\Support\SessionKeys;
 use App\Traits\TableResponseTrait;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;
@@ -36,7 +37,7 @@ abstract class BaseWebController extends BaseController
 
         $this->viewData = [
             'appName'          => $apiConfig->appName,
-            'user'             => $this->session->get('user'),
+            'user'             => $this->session->get(SessionKeys::USER),
             'currentLocale'    => Services::language()->getLocale(),
             'supportedLocales' => config('App')->supportedLocales,
         ];

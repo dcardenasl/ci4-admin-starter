@@ -173,7 +173,7 @@ class ApiClient implements ApiClientInterface
 
     public function attemptTokenRefresh(): bool
     {
-        $refreshToken = $this->session->get('refresh_token');
+        $refreshToken = $this->session->get(SessionKeys::REFRESH_TOKEN);
 
         if (! is_string($refreshToken) || $refreshToken === '') {
             log_message('debug', 'Token refresh failed: No refresh token in session.');
@@ -211,16 +211,16 @@ class ApiClient implements ApiClientInterface
 
         $refreshTokenResponse = $data['refresh_token'] ?? null;
         if (! empty($refreshTokenResponse)) {
-            $this->session->set('refresh_token', $refreshTokenResponse);
+            $this->session->set(SessionKeys::REFRESH_TOKEN, $refreshTokenResponse);
         }
 
         $expiresIn = $data['expires_in'] ?? null;
         if (! empty($expiresIn)) {
-            $this->session->set('token_expires_at', time() + (int) $expiresIn);
+            $this->session->set(SessionKeys::EXPIRES_AT, time() + (int) $expiresIn);
         }
 
         if (! empty($data['user']) && is_array($data['user'])) {
-            $this->session->set('user', $data['user']);
+            $this->session->set(SessionKeys::USER, $data['user']);
         }
 
         return true;
@@ -292,7 +292,7 @@ class ApiClient implements ApiClientInterface
             return $matchedCurrentLocale;
         }
 
-        $sessionLocale = $this->session->get('locale');
+        $sessionLocale = $this->session->get(SessionKeys::LOCALE);
         if (is_string($sessionLocale)) {
             $matchedSessionLocale = $this->matchSupportedLocale($sessionLocale, $supportedLocales);
             if ($matchedSessionLocale !== null) {
@@ -325,13 +325,13 @@ class ApiClient implements ApiClientInterface
         return null;
     }
 
-    protected function clearSessionAuth(): void
+    public function clearSessionAuth(): void
     {
         $this->session->remove([
             SessionKeys::ACCESS_TOKEN,
-            'refresh_token',
-            'token_expires_at',
-            'user',
+            SessionKeys::REFRESH_TOKEN,
+            SessionKeys::EXPIRES_AT,
+            SessionKeys::USER,
         ]);
         $this->session->regenerate(true);
     }
