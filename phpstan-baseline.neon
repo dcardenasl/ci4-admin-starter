@@ -1,3 +1,9 @@
+# Temporary PHPStan baseline for known legacy debt.
+# Intentionally covered here:
+# - dynamic typing noise in legacy controllers/libraries pending stricter array-shape cleanup
+# - pre-module flat controllers still referenced by historical debt-removal work
+# - framework interaction edges where CI4 request/service types are broader than current app contracts
+# New ignores should be treated as exceptions, documented in the PR, and removed once the related refactor lands.
 parameters:
 	ignoreErrors:
 		-

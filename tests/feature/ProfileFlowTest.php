@@ -89,7 +89,8 @@ final class ProfileFlowTest extends CIUnitTestCase
         ])->get('/profile');
 
         $result->assertStatus(200);
-        $this->assertStringContainsString('solo lectura', mb_strtolower($result->getBody()));
+        $body = html_entity_decode($result->getBody(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $this->assertStringContainsString(lang('Profile.personal_info_readonly'), $body);
     }
 
     public function testRequestPasswordResetUsesForgotPasswordFlow(): void

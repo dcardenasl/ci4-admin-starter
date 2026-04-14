@@ -14,6 +14,148 @@ final class UserCRUDTest extends CIUnitTestCase
 {
     use FeatureTestTrait;
 
+    public function testStoreCreatesUserThroughController(): void
+    {
+        $userService = $this->createMock(UserApiService::class);
+        $userService->expects($this->once())
+            ->method('create')
+            ->with([
+                'first_name' => 'Jane',
+                'last_name' => 'Doe',
+                'email' => 'jane@example.com',
+                'role' => 'admin',
+            ])
+            ->willReturn([
+                'ok'          => true,
+                'status'      => 201,
+                'data'        => ['data' => ['id' => 77]],
+                'raw'         => '',
+                'headers'     => [],
+                'messages'    => [],
+                'fieldErrors' => [],
+            ]);
+
+        Services::injectMock('userApiService', $userService);
+
+        $result = $this->withSession([
+            'access_token' => 'token',
+            'user'         => ['role' => 'admin'],
+        ])->post('/admin/users', [
+            csrf_token() => csrf_hash(),
+            'first_name' => 'Jane',
+            'last_name'  => 'Doe',
+            'email'      => 'jane@example.com',
+            'role'       => 'admin',
+        ]);
+
+        $result->assertRedirectTo(site_url('admin/users'));
+        $result->assertSessionHas('success');
+    }
+
+    public function testStoreRedirectsBackWithErrorWhenApiCreateFails(): void
+    {
+        $userService = $this->createMock(UserApiService::class);
+        $userService->expects($this->once())
+            ->method('create')
+            ->willReturn([
+                'ok'          => false,
+                'status'      => 422,
+                'data'        => [],
+                'raw'         => '',
+                'headers'     => [],
+                'messages'    => ['Email already exists'],
+                'fieldErrors' => ['email' => 'Email already exists'],
+            ]);
+
+        Services::injectMock('userApiService', $userService);
+
+        $result = $this->withSession([
+            'access_token' => 'token',
+            'user'         => ['role' => 'admin'],
+        ])->post('/admin/users', [
+            csrf_token() => csrf_hash(),
+            'first_name' => 'Jane',
+            'last_name'  => 'Doe',
+            'email'      => 'jane@example.com',
+            'role'       => 'admin',
+        ]);
+
+        $result->assertRedirect();
+        $result->assertSessionHas('fieldErrors');
+    }
+
+    public function testUpdatePersistsUserChangesThroughController(): void
+    {
+        $userService = $this->createMock(UserApiService::class);
+        $userService->expects($this->once())
+            ->method('update')
+            ->with('123', [
+                'first_name' => 'Jane',
+                'last_name' => 'Updated',
+                'role' => 'superadmin',
+                'email' => 'jane.updated@example.com',
+            ])
+            ->willReturn([
+                'ok'          => true,
+                'status'      => 200,
+                'data'        => ['data' => ['id' => 123]],
+                'raw'         => '',
+                'headers'     => [],
+                'messages'    => [],
+                'fieldErrors' => [],
+            ]);
+
+        Services::injectMock('userApiService', $userService);
+
+        $result = $this->withSession([
+            'access_token' => 'token',
+            'user'         => ['role' => 'admin'],
+        ])->post('/admin/users/123', [
+            csrf_token()     => csrf_hash(),
+            'first_name'     => 'Jane',
+            'last_name'      => 'Updated',
+            'email'          => 'jane.updated@example.com',
+            'original_email' => 'jane@example.com',
+            'role'           => 'superadmin',
+        ]);
+
+        $result->assertRedirectTo(site_url('admin/users/123'));
+        $result->assertSessionHas('success');
+    }
+
+    public function testUpdateRedirectsBackWithErrorWhenApiUpdateFails(): void
+    {
+        $userService = $this->createMock(UserApiService::class);
+        $userService->expects($this->once())
+            ->method('update')
+            ->willReturn([
+                'ok'          => false,
+                'status'      => 422,
+                'data'        => [],
+                'raw'         => '',
+                'headers'     => [],
+                'messages'    => ['Invalid role'],
+                'fieldErrors' => ['role' => 'Invalid role'],
+            ]);
+
+        Services::injectMock('userApiService', $userService);
+
+        $result = $this->withSession([
+            'access_token' => 'token',
+            'user'         => ['role' => 'admin'],
+        ])->post('/admin/users/123', [
+            csrf_token()     => csrf_hash(),
+            'first_name'     => 'Jane',
+            'last_name'      => 'Updated',
+            'email'          => 'jane.updated@example.com',
+            'original_email' => 'jane@example.com',
+            'role'           => 'superadmin',
+        ]);
+
+        $result->assertRedirect();
+        $result->assertSessionHas('fieldErrors');
+    }
+
     protected function tearDown(): void
     {
         Services::reset();

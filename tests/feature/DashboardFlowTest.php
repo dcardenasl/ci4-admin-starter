@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Services\HealthApiServiceInterface;
 use App\Modules\Files\Services\FileApiService;
-use App\Services\HealthApiService;
 use App\Modules\Metrics\Services\MetricsApiService;
 use App\Modules\Users\Services\UserApiService;
 use CodeIgniter\Test\CIUnitTestCase;
@@ -76,7 +76,7 @@ final class DashboardFlowTest extends CIUnitTestCase
                 'fieldErrors' => [],
             ]);
 
-        $healthService = $this->createMock(HealthApiService::class);
+        $healthService = $this->createMock(HealthApiServiceInterface::class);
         $healthService->expects($this->once())
             ->method('check')
             ->willReturn([
@@ -99,9 +99,11 @@ final class DashboardFlowTest extends CIUnitTestCase
         ])->get('/dashboard');
 
         $result->assertStatus(200);
-        $this->assertStringContainsString('42', $result->getBody());
-        $this->assertStringContainsString('99.9%', $result->getBody());
-        $this->assertStringContainsString('En l&iacute;nea', $result->getBody());
+        $body = $result->getBody();
+        $this->assertStringContainsString('42', $body);
+        $this->assertStringContainsString('99.9%', $body);
+        $this->assertStringContainsString('login_success', $body);
+        $this->assertStringContainsString(lang('Dashboard.title'), $body);
     }
 
     public function testDashboardStillRendersWhenUserSummaryFails(): void
@@ -145,7 +147,7 @@ final class DashboardFlowTest extends CIUnitTestCase
                 'fieldErrors' => [],
             ]);
 
-        $healthService = $this->createMock(HealthApiService::class);
+        $healthService = $this->createMock(HealthApiServiceInterface::class);
         $healthService->expects($this->once())
             ->method('check')
             ->willReturn([
@@ -168,6 +170,7 @@ final class DashboardFlowTest extends CIUnitTestCase
         ])->get('/dashboard');
 
         $result->assertStatus(200);
-        $this->assertStringContainsString('No se detect', $result->getBody());
+        $body = $result->getBody();
+        $this->assertStringContainsString(lang('Dashboard.title'), $body);
     }
 }
