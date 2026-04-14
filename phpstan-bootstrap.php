@@ -60,6 +60,13 @@ if (! function_exists('site_url')) {
     }
 }
 
+if (! function_exists('route_to')) {
+    function route_to(string $routeName, ...$params): string
+    {
+        return '';
+    }
+}
+
 if (! function_exists('session')) {
     function session(?string $val = null)
     {

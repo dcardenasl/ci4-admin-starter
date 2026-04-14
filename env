@@ -77,6 +77,8 @@
 # apiClient.appName = 'API Client'
 # apiClient.apiPrefix = '/api/v1'
 # apiClient.logRequests = false
+# Optional: Override the webapp base URL (used in email links, password reset redirects)
+# WEBAPP_BASE_URL = 'http://localhost:8082'
 
 # Maximum file upload size in bytes (applies to frontend validation + server rules)
 # FILE_MAX_SIZE = 10485760
