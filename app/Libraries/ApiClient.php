@@ -75,10 +75,7 @@ class ApiClient implements ApiClientInterface
         $multipart = [];
 
         foreach ($fields as $name => $value) {
-            $multipart[] = [
-                'name'     => (string) $name,
-                'contents' => is_scalar($value) ? (string) $value : json_encode($value),
-            ];
+            $multipart[(string) $name] = is_scalar($value) ? (string) $value : json_encode($value);
         }
 
         foreach ($files as $name => $file) {
@@ -91,17 +88,11 @@ class ApiClient implements ApiClientInterface
                 ? $file['filename']
                 : basename($filePath);
 
-            $part = [
-                'name'     => (string) $name,
-                'contents' => fopen($filePath, 'rb'),
-                'filename' => $filename,
-            ];
+            $mimeType = is_array($file) && isset($file['mimeType']) && is_string($file['mimeType'])
+                ? $file['mimeType']
+                : mime_content_type($filePath);
 
-            if (is_array($file) && isset($file['mimeType']) && is_string($file['mimeType'])) {
-                $part['mime'] = $file['mimeType'];
-            }
-
-            $multipart[] = $part;
+            $multipart[(string) $name] = new \CURLFile($filePath, $mimeType ?: 'application/octet-stream', $filename);
         }
 
         return $this->request('POST', $path, ['multipart' => $multipart], true);
@@ -136,15 +127,6 @@ class ApiClient implements ApiClientInterface
         $latency = (int) round((microtime(true) - $startedAt) * 1000);
 
         if ($authenticated && $status === 401 && $this->attemptTokenRefresh()) {
-            // Re-open/rewind streams for retry if needed
-            if (isset($options['multipart']) && is_array($options['multipart'])) {
-                foreach ($options['multipart'] as $part) {
-                    if (isset($part['contents']) && is_resource($part['contents'])) {
-                        @rewind($part['contents']);
-                    }
-                }
-            }
-
             $options = $this->withAuthorization($options);
             $response = $this->http->request($method, $uri, $options);
             $status = $response->getStatusCode();
