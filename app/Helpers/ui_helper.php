@@ -11,11 +11,12 @@ if (! function_exists('format_date')) {
     function format_date(mixed $date, ?string $format = null): string
     {
         if ($format === null) {
+            $appConfig = config('App');
             $locale = service('request')->getLocale();
-            $formats = config('App')->dateFormats ?? [];
+            $formats = $appConfig->dateFormats ?? [];
             $format = (is_string($locale) && isset($formats[$locale]))
                 ? $formats[$locale]
-                : 'd/m/Y H:i';
+                : ($appConfig->dateFormat ?? 'd/m/Y H:i');
         }
 
         if (is_array($date)) {
@@ -300,11 +301,12 @@ if (! function_exists('ui_icon')) {
             'file-plus' => 'file-plus',
         ];
 
-        if (!isset($icons[$name])) {
+        if (! isset($icons[$name])) {
             if (ENVIRONMENT === 'development') {
                 throw new \InvalidArgumentException("ui_icon(): unknown icon '{$name}'. Add it to the map or fix the typo.");
             }
-            $icon = $name;
+
+            $icon = $icons['search'];
         } else {
             $icon = $icons[$name];
         }
