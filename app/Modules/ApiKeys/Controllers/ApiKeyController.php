@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 namespace App\Modules\ApiKeys\Controllers;
-use App\Controllers\BaseWebController;
 
+use App\Controllers\BaseWebController;
 use App\Modules\ApiKeys\Requests\ApiKeyStoreRequest;
 use App\Modules\ApiKeys\Requests\ApiKeyUpdateRequest;
 use App\Modules\ApiKeys\Services\ApiKeyApiService;

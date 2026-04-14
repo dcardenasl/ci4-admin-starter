@@ -9,6 +9,7 @@
     columns="max"
     failOnRisky="true"
     failOnWarning="false"
+    failOnDeprecation="false"
     cacheDirectory="build/.phpunit.cache">
     <coverage
         includeUncoveredFiles="true"

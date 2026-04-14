@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 namespace App\Modules\Files\Controllers;
-use App\Controllers\BaseWebController;
 
+use App\Controllers\BaseWebController;
 use App\Modules\Files\Requests\FileUploadRequest;
 use App\Services\CatalogApiService;
 use App\Modules\Files\Services\FileApiService;

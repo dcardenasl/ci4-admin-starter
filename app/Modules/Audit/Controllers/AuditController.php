@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 namespace App\Modules\Audit\Controllers;
-use App\Controllers\BaseWebController;
 
+use App\Controllers\BaseWebController;
 use App\Services\CatalogApiService;
 use App\Modules\Audit\Services\AuditApiService;
 use App\Support\CatalogOptions;

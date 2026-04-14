@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 namespace App\Modules\Users\Controllers;
-use App\Controllers\BaseWebController;
 
+use App\Controllers\BaseWebController;
 use App\Modules\Users\Requests\UserStoreRequest;
 use App\Modules\Users\Requests\UserUpdateRequest;
 use App\Services\CatalogApiService;
