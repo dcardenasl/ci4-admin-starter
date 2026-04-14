@@ -145,7 +145,7 @@ final class FileApiServiceTest extends CIUnitTestCase
         $this->assertSame(204, $result['status']);
     }
 
-    public function testUploadFileWithBase64Encoding(): void
+    public function testUploadFileWithMultipart(): void
     {
         $expected = [
             'ok'          => true,
@@ -158,13 +158,17 @@ final class FileApiServiceTest extends CIUnitTestCase
 
         $mock = $this->createMock(ApiClientInterface::class);
         $mock->expects($this->once())
-            ->method('post')
-            ->with('/files/upload', $this->callback(static function (array $payload): bool {
-                return isset($payload['file'])
-                    && str_starts_with($payload['file'], 'data:text/plain;base64,')
-                    && isset($payload['filename'])
-                    && $payload['filename'] === 'test.txt';
-            }))
+            ->method('upload')
+            ->with(
+                '/files/upload',
+                $this->callback(static function (array $files): bool {
+                    return isset($files['file'])
+                        && isset($files['file']['path'])
+                        && isset($files['file']['filename'])
+                        && $files['file']['filename'] === 'test.txt';
+                }),
+                []
+            )
             ->willReturn($expected);
 
         $service = new FileApiService($mock);
@@ -205,13 +209,16 @@ final class FileApiServiceTest extends CIUnitTestCase
 
         $mock = $this->createMock(ApiClientInterface::class);
         $mock->expects($this->once())
-            ->method('post')
-            ->with('/files/upload', $this->callback(static function (array $payload): bool {
-                // Should detect image/png or similar
-                return isset($payload['file'])
-                    && str_starts_with($payload['file'], 'data:')
-                    && isset($payload['filename']);
-            }))
+            ->method('upload')
+            ->with(
+                '/files/upload',
+                $this->callback(static function (array $files): bool {
+                    return isset($files['file'])
+                        && isset($files['file']['path'])
+                        && isset($files['file']['filename']);
+                }),
+                []
+            )
             ->willReturn($expected);
 
         $service = new FileApiService($mock);

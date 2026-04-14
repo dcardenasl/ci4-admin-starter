@@ -96,17 +96,20 @@ final class FileUploadFlowTest extends CIUnitTestCase
 
     // ─── FileApiService unit tests ────────────────────────────────
 
-    public function testFileApiServiceUploadConvertsToBase64(): void
+    public function testFileApiServiceUploadUsesMultipart(): void
     {
         $tmpFile = $this->createTempFile('hello', 'test.txt');
-        $expectedBase64 = 'data:text/plain;base64,' . base64_encode('hello');
 
         $mockClient = $this->createMock(\App\Libraries\ApiClientInterface::class);
         $mockClient->expects($this->once())
-            ->method('post')
-            ->with('/files/upload', $this->callback(function ($data) use ($expectedBase64) {
-                return $data['file'] === $expectedBase64 && $data['filename'] === 'test.txt';
-            }))
+            ->method('upload')
+            ->with(
+                '/files/upload',
+                $this->callback(function ($files) use ($tmpFile) {
+                    return isset($files['file']) && $files['file']['path'] === $tmpFile && $files['file']['filename'] === 'test.txt';
+                }),
+                ['visibility' => 'private']
+            )
             ->willReturn($this->apiOkResponse(['id' => 1], 201));
 
         $service = new FileApiService($mockClient);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filters;
 
+use App\Support\SessionKeys;
 use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\IncomingRequest;
 use CodeIgniter\HTTP\RequestInterface;
@@ -14,11 +15,11 @@ class AuthFilter implements FilterInterface
     public function before(RequestInterface $request, $arguments = null)
     {
         $session = session();
-        $accessToken = $session->get('access_token');
-        $expiresAt = (int) ($session->get('token_expires_at') ?? 0);
+        $accessToken = $session->get(SessionKeys::ACCESS_TOKEN);
+        $expiresAt = (int) ($session->get(SessionKeys::EXPIRES_AT) ?? 0);
 
         if ($expiresAt > 0 && $expiresAt <= time()) {
-            $session->remove(['access_token', 'refresh_token', 'token_expires_at', 'user']);
+            $session->remove([SessionKeys::ACCESS_TOKEN, SessionKeys::REFRESH_TOKEN, SessionKeys::EXPIRES_AT, SessionKeys::USER]);
             log_message('debug', 'AuthFilter: token expired before request.');
 
             if ($request instanceof IncomingRequest && $request->isAJAX()) {

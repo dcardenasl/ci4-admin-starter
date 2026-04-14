@@ -26,11 +26,7 @@ class AuditController extends BaseWebController
 
     public function index(): string
     {
-        $catalogsResponse = $this->safeApiCall(fn() => $this->catalogService->index());
-        $catalogs = $this->extractData($catalogsResponse);
-        if (! is_array($catalogs)) {
-            $catalogs = [];
-        }
+        $catalogs = $this->resolveCatalogs($this->catalogService);
 
         $facetsResponse = $this->safeApiCall(fn() => $this->catalogService->auditFacets());
         $facets = $this->extractData($facetsResponse);

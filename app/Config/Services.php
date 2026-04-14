@@ -12,6 +12,7 @@ use App\Services\FileApiService;
 use App\Services\HealthApiService;
 use App\Services\ApiKeyApiService;
 use App\Services\MetricsApiService;
+use App\Services\ProfileApiService;
 use App\Services\UserApiService;
 use CodeIgniter\Config\BaseService;
 use InvalidArgumentException;
@@ -51,10 +52,10 @@ class Services extends BaseService
         return $request;
     }
 
-    public static function apiClient(bool $getShared = true): ApiClient
+    public static function apiClient(bool $getShared = true): ApiClientInterface
     {
         if ($getShared) {
-            /** @var ApiClient */
+            /** @var ApiClientInterface */
             return static::getSharedInstance('apiClient');
         }
 
@@ -139,6 +140,16 @@ class Services extends BaseService
         }
 
         return new CatalogApiService(static::apiClient());
+    }
+
+    public static function profileApiService(bool $getShared = true): ProfileApiService
+    {
+        if ($getShared) {
+            /** @var ProfileApiService */
+            return static::getSharedInstance('profileApiService');
+        }
+
+        return new ProfileApiService(static::apiClient());
     }
 
 }

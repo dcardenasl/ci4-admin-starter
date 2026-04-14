@@ -2,8 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Services\AuthApiService;
-use App\Services\UserApiService;
+use App\Services\ProfileApiService;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\FeatureTestTrait;
 use Config\Services;
@@ -23,8 +22,8 @@ final class ProfileFlowTest extends CIUnitTestCase
 
     public function testAdminCanUpdateOwnProfileUsingUsersEndpoint(): void
     {
-        $userService = $this->createMock(UserApiService::class);
-        $userService->expects($this->once())
+        $profileService = $this->createMock(ProfileApiService::class);
+        $profileService->expects($this->once())
             ->method('update')
             ->with('15', [
                 'first_name' => 'Admin',
@@ -40,8 +39,7 @@ final class ProfileFlowTest extends CIUnitTestCase
                 'fieldErrors' => [],
             ]);
 
-        $authService = $this->createMock(AuthApiService::class);
-        $authService->expects($this->once())
+        $profileService->expects($this->once())
             ->method('me')
             ->willReturn([
                 'ok'          => true,
@@ -53,8 +51,7 @@ final class ProfileFlowTest extends CIUnitTestCase
                 'fieldErrors' => [],
             ]);
 
-        Services::injectMock('userApiService', $userService);
-        Services::injectMock('authApiService', $authService);
+        Services::injectMock('profileApiService', $profileService);
 
         $result = $this->withSession([
             'access_token' => 'token',
@@ -97,8 +94,8 @@ final class ProfileFlowTest extends CIUnitTestCase
 
     public function testRequestPasswordResetUsesForgotPasswordFlow(): void
     {
-        $authService = $this->createMock(AuthApiService::class);
-        $authService->expects($this->once())
+        $profileService = $this->createMock(ProfileApiService::class);
+        $profileService->expects($this->once())
             ->method('forgotPassword')
             ->with(
                 'user@example.com',
@@ -114,7 +111,7 @@ final class ProfileFlowTest extends CIUnitTestCase
                 'fieldErrors' => [],
             ]);
 
-        Services::injectMock('authApiService', $authService);
+        Services::injectMock('profileApiService', $profileService);
 
         $result = $this->withSession([
             'access_token' => 'token',

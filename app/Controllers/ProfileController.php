@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Requests\Profile\ProfileUpdateRequest;
-use App\Services\AuthApiService;
-use App\Services\UserApiService;
+use App\Services\ProfileApiService;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -14,14 +13,12 @@ use Psr\Log\LoggerInterface;
 
 class ProfileController extends BaseWebController
 {
-    protected AuthApiService $authService;
-    protected UserApiService $userService;
+    protected ProfileApiService $profileService;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
         parent::initController($request, $response, $logger);
-        $this->authService = service('authApiService');
-        $this->userService = service('userApiService');
+        $this->profileService = service('profileApiService');
     }
 
     public function index(): string
@@ -60,7 +57,7 @@ class ProfileController extends BaseWebController
             return redirect()->to(route_to('profile'))->with('error', lang('Profile.update_failed'));
         }
 
-        $response = $this->safeApiCall(fn() => $this->userService->update((string) $userId, $payload));
+        $response = $this->safeApiCall(fn() => $this->profileService->update((string) $userId, $payload));
 
         if (! $response['ok']) {
             return $this->failApi($response, lang('Profile.update_failed'));
@@ -78,7 +75,7 @@ class ProfileController extends BaseWebController
             return redirect()->to(route_to('profile'))->with('error', lang('Profile.password_reset_failed'));
         }
 
-        $response = $this->safeApiCall(fn() => $this->authService->forgotPassword(
+        $response = $this->safeApiCall(fn() => $this->profileService->forgotPassword(
             $email,
             $this->clientBaseUrl(),
         ));
@@ -92,7 +89,7 @@ class ProfileController extends BaseWebController
 
     public function resendVerification(): RedirectResponse
     {
-        $response = $this->safeApiCall(fn() => $this->authService->resendVerification([
+        $response = $this->safeApiCall(fn() => $this->profileService->resendVerification([
             'client_base_url' => $this->clientBaseUrl(),
         ]));
 
@@ -105,7 +102,7 @@ class ProfileController extends BaseWebController
 
     protected function refreshUserSession(): void
     {
-        $me = $this->safeApiCall(fn() => $this->authService->me());
+        $me = $this->safeApiCall(fn() => $this->profileService->me());
 
         if (! $me['ok']) {
             return;

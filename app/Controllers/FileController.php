@@ -28,11 +28,7 @@ class FileController extends BaseWebController
 
     public function index(): string
     {
-        $catalogsResponse = $this->safeApiCall(fn() => $this->catalogService->index());
-        $catalogs = $this->extractData($catalogsResponse);
-        if (! is_array($catalogs)) {
-            $catalogs = [];
-        }
+        $catalogs = $this->resolveCatalogs($this->catalogService);
 
         return $this->render('files/index', [
             'title'             => lang('Files.title'),

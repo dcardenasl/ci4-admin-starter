@@ -10,6 +10,7 @@ use App\Requests\Auth\LoginRequest;
 use App\Requests\Auth\RegisterRequest;
 use App\Requests\Auth\ResetPasswordRequest;
 use App\Services\AuthApiService;
+use App\Support\SessionKeys;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -27,7 +28,7 @@ class AuthController extends BaseWebController
 
     public function login(): ResponseInterface|string
     {
-        if ($this->session->has('access_token')) {
+        if ($this->session->has(SessionKeys::ACCESS_TOKEN)) {
             return redirect()->to(route_to('dashboard'));
         }
 
@@ -61,7 +62,7 @@ class AuthController extends BaseWebController
 
     public function attemptGoogleLogin(): RedirectResponse
     {
-        if ($this->session->has('access_token')) {
+        if ($this->session->has(SessionKeys::ACCESS_TOKEN)) {
             return redirect()->to(route_to('dashboard'));
         }
 
@@ -93,7 +94,7 @@ class AuthController extends BaseWebController
         $data = $this->extractData($response);
 
         // Handle 202 Accepted (Pending approval)
-        if ($response['status'] === 202 || ! isset($data['access_token'])) {
+        if ($response['status'] === 202 || ! isset($data[SessionKeys::ACCESS_TOKEN])) {
             return redirect()->to(site_url('login'))
                 ->with('error', $this->firstMessage($response, lang('Auth.google_login_pending_approval')));
         }
@@ -207,12 +208,12 @@ class AuthController extends BaseWebController
 
     public function logout(): RedirectResponse
     {
-        if ($this->session->has('access_token')) {
+        if ($this->session->has(SessionKeys::ACCESS_TOKEN)) {
             $this->safeApiCall(fn() => $this->authService->logout());
         }
 
         $this->session->remove([
-            'access_token',
+            SessionKeys::ACCESS_TOKEN,
             'refresh_token',
             'token_expires_at',
             'user',
@@ -225,7 +226,7 @@ class AuthController extends BaseWebController
     protected function persistAuthSession(array $data): void
     {
         $this->session->regenerate(true);
-        $this->session->set('access_token', $data['access_token'] ?? null);
+        $this->session->set(SessionKeys::ACCESS_TOKEN, $data[SessionKeys::ACCESS_TOKEN] ?? null);
         $this->session->set('refresh_token', $data['refresh_token'] ?? null);
         $this->session->set('token_expires_at', time() + (int) ($data['expires_in'] ?? 3600));
         $this->session->set('user', $data['user'] ?? []);

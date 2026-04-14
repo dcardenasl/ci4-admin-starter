@@ -25,11 +25,7 @@ class MetricsController extends BaseWebController
 
     public function index(): string
     {
-        $catalogsResponse = $this->safeApiCall(fn() => $this->catalogService->index());
-        $catalogs = $this->extractData($catalogsResponse);
-        if (! is_array($catalogs)) {
-            $catalogs = [];
-        }
+        $catalogs = $this->resolveCatalogs($this->catalogService);
 
         $periodOptions = CatalogOptions::options($catalogs, 'metrics.periods', [
             ['value' => '1h', 'label' => '1h'],

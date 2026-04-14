@@ -61,12 +61,20 @@
         "sort-packages": true
     },
     "scripts": {
-        "test": "phpunit",
+        "test": "phpunit --no-coverage",
+        "test:coverage": "phpunit",
         "test:unit": "phpunit tests/unit",
         "test:feature": "phpunit tests/feature",
+        "analyse": "vendor/bin/phpstan analyse",
+        "format:check": "vendor/bin/php-cs-fixer fix --dry-run --diff",
+        "format": "vendor/bin/php-cs-fixer fix",
         "quality": [
-            "vendor/bin/phpstan analyse --debug",
-            "vendor/bin/php-cs-fixer fix --dry-run --diff"
+            "@analyse",
+            "@format:check"
+        ],
+        "ci": [
+            "@test",
+            "@quality"
         ],
         "sync-swagger": "cp ../ci4-api-starter/public/swagger.json swagger_contract.json"
     }

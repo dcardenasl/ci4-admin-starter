@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Libraries;
 
+use App\Support\SessionKeys;
 use CodeIgniter\HTTP\CURLRequest;
 use CodeIgniter\HTTP\Response;
 use CodeIgniter\HTTP\URI;
@@ -199,14 +200,14 @@ class ApiClient implements ApiClientInterface
         $payload = json_decode($response->getBody(), true);
         $data = $payload['data'] ?? $payload;
 
-        $accessToken = $data['access_token'] ?? null;
+        $accessToken = $data[SessionKeys::ACCESS_TOKEN] ?? null;
         if (! is_string($accessToken) || $accessToken === '') {
             $this->clearSessionAuth();
 
             return false;
         }
 
-        $this->session->set('access_token', $accessToken);
+        $this->session->set(SessionKeys::ACCESS_TOKEN, $accessToken);
 
         $refreshTokenResponse = $data['refresh_token'] ?? null;
         if (! empty($refreshTokenResponse)) {
@@ -243,7 +244,7 @@ class ApiClient implements ApiClientInterface
     protected function withAuthorization(array $options): array
     {
         $headers = $options['headers'] ?? [];
-        $token = (string) $this->session->get('access_token');
+        $token = (string) $this->session->get(SessionKeys::ACCESS_TOKEN);
 
         if ($token !== '') {
             $headers['Authorization'] = 'Bearer ' . $token;
@@ -327,7 +328,7 @@ class ApiClient implements ApiClientInterface
     protected function clearSessionAuth(): void
     {
         $this->session->remove([
-            'access_token',
+            SessionKeys::ACCESS_TOKEN,
             'refresh_token',
             'token_expires_at',
             'user',

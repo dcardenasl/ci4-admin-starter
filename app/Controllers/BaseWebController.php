@@ -188,8 +188,11 @@ abstract class BaseWebController extends BaseController
     {
         $normalized = trim($message);
 
+        // TODO: API should return translation keys instead of English prose.
+        // For now, map known API error keys to language strings.
+        // This mapping should be managed in language files for maintainability.
         $knownTranslations = [
-            'This email is already registered' => lang('Auth.email_already_registered'),
+            'email_already_registered' => lang('Auth.email_already_registered'),
         ];
 
         return $knownTranslations[$normalized] ?? $message;
@@ -268,36 +271,6 @@ abstract class BaseWebController extends BaseController
         return is_array($data) ? $data : [];
     }
 
-    /**
-     * Resolve and normalize date range query params.
-     *
-     * @return array{date_from: string, date_to: string}
-     */
-    protected function resolveDateRange(int $defaultDays = 30): array
-    {
-        $date_from = trim((string) $this->request->getGet('date_from'));
-        $date_to = trim((string) $this->request->getGet('date_to'));
-
-        $today = new \DateTimeImmutable('today');
-
-        if ($date_to === '' || ! $this->isValidDate($date_to)) {
-            $date_to = $today->format('Y-m-d');
-        }
-
-        if ($date_from === '' || ! $this->isValidDate($date_from)) {
-            $date_from = $today->sub(new \DateInterval('P' . max(1, $defaultDays - 1) . 'D'))->format('Y-m-d');
-        }
-
-        if ($date_from > $date_to) {
-            [$date_from, $date_to] = [$date_to, $date_from];
-        }
-
-        return [
-            'date_from' => $date_from,
-            'date_to'   => $date_to,
-        ];
-    }
-
     protected function positiveIntFromQuery(string $key, int $default, int $max = 200): int
     {
         $value = (int) $this->request->getGet($key);
@@ -307,13 +280,6 @@ abstract class BaseWebController extends BaseController
         }
 
         return min($value, $max);
-    }
-
-    protected function isValidDate(string $date): bool
-    {
-        $dt = \DateTimeImmutable::createFromFormat('Y-m-d', $date);
-
-        return $dt instanceof \DateTimeImmutable && $dt->format('Y-m-d') === $date;
     }
 
     /**
