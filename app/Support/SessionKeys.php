@@ -9,6 +9,10 @@ namespace App\Support;
  *
  * Centralizes session key strings used for authentication state.
  * Prevents magic strings scattered throughout the codebase.
+ *
+ * @deprecated 2.0.0 Modernize to PHP 8.1 enum when refactoring session handling.
+ *             Currently uses class constants for compatibility. Change to:
+ *             enum SessionKeys: string { case ACCESS_TOKEN = 'access_token'; ... }
  */
 final class SessionKeys
 {

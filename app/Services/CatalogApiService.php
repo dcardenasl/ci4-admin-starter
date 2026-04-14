@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-class CatalogApiService extends BaseApiService
+class CatalogApiService extends BaseApiService implements CatalogApiServiceInterface
 {
     public function index(): array
     {
