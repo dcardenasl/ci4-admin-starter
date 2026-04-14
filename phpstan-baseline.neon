@@ -1,21 +1,5 @@
-# Temporary PHPStan baseline for known legacy debt.
-# Intentionally covered here:
-# - dynamic typing noise in legacy controllers/libraries pending stricter array-shape cleanup
-# - pre-module flat controllers still referenced by historical debt-removal work
-# - framework interaction edges where CI4 request/service types are broader than current app contracts
-# New ignores should be treated as exceptions, documented in the PR, and removed once the related refactor lands.
 parameters:
 	ignoreErrors:
-		-
-			message: "#^Cannot cast array\\|bool\\|float\\|int\\|object\\|string\\|null to string\\.$#"
-			count: 1
-			path: app/Controllers/AuthController.php
-
-		-
-			message: "#^Method App\\\\Controllers\\\\AuthController\\:\\:persistAuthSession\\(\\) has parameter \\$data with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Controllers/AuthController.php
-
 		-
 			message: "#^Call to an undefined method object\\:\\:index\\(\\)\\.$#"
 			count: 1
@@ -122,64 +106,14 @@ parameters:
 			path: app/Controllers/BaseWebController.php
 
 		-
-			message: "#^Call to an undefined method CodeIgniter\\\\HTTP\\\\CLIRequest\\|CodeIgniter\\\\HTTP\\\\IncomingRequest\\:\\:getFile\\(\\)\\.$#"
-			count: 1
-			path: app/Controllers/FileController.php
-
-		-
-			message: "#^Call to an undefined method CodeIgniter\\\\HTTP\\\\CLIRequest\\|CodeIgniter\\\\HTTP\\\\IncomingRequest\\:\\:isAJAX\\(\\)\\.$#"
-			count: 4
-			path: app/Controllers/FileController.php
-
-		-
-			message: "#^Call to static method guessExtensionFromType\\(\\) on an unknown class Config\\\\Mimes\\.$#"
-			count: 1
-			path: app/Controllers/FileController.php
-
-		-
-			message: "#^Parameter \\#1 \\$locale of method CodeIgniter\\\\Language\\\\Language\\:\\:setLocale\\(\\) expects non\\-empty\\-string\\|null, string given\\.$#"
-			count: 1
-			path: app/Controllers/LanguageController.php
-
-		-
-			message: "#^Cannot cast array\\|bool\\|float\\|int\\|object\\|string to string\\.$#"
-			count: 1
-			path: app/Controllers/MetricsController.php
-
-		-
-			message: "#^Parameter \\#1 \\$query of function has_active_filters expects array\\<string, mixed\\>\\|null, array\\|bool\\|float\\|int\\|object\\|string\\|null given\\.$#"
-			count: 1
-			path: app/Controllers/MetricsController.php
-
-		-
-			message: "#^Call to method forgotPassword\\(\\) on an unknown class App\\\\Services\\\\ProfileApiService\\.$#"
-			count: 1
-			path: app/Controllers/ProfileController.php
-
-		-
-			message: "#^Call to method me\\(\\) on an unknown class App\\\\Services\\\\ProfileApiService\\.$#"
-			count: 1
-			path: app/Controllers/ProfileController.php
-
-		-
-			message: "#^Call to method resendVerification\\(\\) on an unknown class App\\\\Services\\\\ProfileApiService\\.$#"
-			count: 1
-			path: app/Controllers/ProfileController.php
-
-		-
-			message: "#^Call to method update\\(\\) on an unknown class App\\\\Services\\\\ProfileApiService\\.$#"
-			count: 1
-			path: app/Controllers/ProfileController.php
-
-		-
-			message: "#^Property App\\\\Controllers\\\\ProfileController\\:\\:\\$profileService has unknown class App\\\\Services\\\\ProfileApiService as its type\\.$#"
-			count: 1
-			path: app/Controllers/ProfileController.php
-
-		-
 			message: "#^Parameter \\#1 \\$locale of method CodeIgniter\\\\Language\\\\Language\\:\\:setLocale\\(\\) expects non\\-empty\\-string\\|null, string given\\.$#"
 			count: 1
 			path: app/Filters/LocaleFilter.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between 'testing' and 'development' will always evaluate to false\\.$#"
+			count: 1
+			path: app/Helpers/ui_helper.php
 
 		-
 			message: "#^Method App\\\\Libraries\\\\ApiClient\\:\\:extractFieldErrors\\(\\) return type has no value type specified in iterable type array\\.$#"
@@ -307,11 +241,6 @@ parameters:
 			path: app/Modules/ApiKeys/Requests/ApiKeyStoreRequest.php
 
 		-
-			message: "#^Method App\\\\Modules\\\\Audit\\\\Services\\\\AuditApiService\\:\\:byEntity\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Modules/Audit/Services/AuditApiService.php
-
-		-
 			message: "#^Cannot cast array\\|bool\\|float\\|int\\|object\\|string\\|null to string\\.$#"
 			count: 1
 			path: app/Modules/Auth/Controllers/AuthController.php
@@ -347,74 +276,29 @@ parameters:
 			path: app/Modules/Auth/Requests/ResetPasswordRequest.php
 
 		-
-			message: "#^Method App\\\\Modules\\\\Auth\\\\Services\\\\AuthApiService\\:\\:forgotPassword\\(\\) return type has no value type specified in iterable type array\\.$#"
+			message: "#^Call to method check\\(\\) on an unknown class App\\\\Services\\\\HealthApiServiceInterface\\.$#"
 			count: 1
-			path: app/Modules/Auth/Services/AuthApiService.php
+			path: app/Modules/Dashboard/Controllers/DashboardController.php
 
 		-
-			message: "#^Method App\\\\Modules\\\\Auth\\\\Services\\\\AuthApiService\\:\\:googleLogin\\(\\) has parameter \\$payload with no value type specified in iterable type array\\.$#"
+			message: "#^Property App\\\\Modules\\\\Dashboard\\\\Controllers\\\\DashboardController\\:\\:\\$healthService has unknown class App\\\\Services\\\\HealthApiServiceInterface as its type\\.$#"
 			count: 1
-			path: app/Modules/Auth/Services/AuthApiService.php
+			path: app/Modules/Dashboard/Controllers/DashboardController.php
 
 		-
-			message: "#^Method App\\\\Modules\\\\Auth\\\\Services\\\\AuthApiService\\:\\:googleLogin\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Modules/Auth/Services/AuthApiService.php
+			message: "#^Method App\\\\Modules\\\\Dashboard\\\\Services\\\\HealthApiService\\:\\:check\\(\\) should return array\\{ok\\: bool, status\\: int, data\\: array\\<string, mixed\\>, raw\\: string, headers\\: array\\<string, string\\>, messages\\: array\\<int, string\\>, fieldErrors\\: array\\<string, string\\>\\} but returns array\\.$#"
+			count: 2
+			path: app/Modules/Dashboard/Services/HealthApiService.php
 
 		-
-			message: "#^Method App\\\\Modules\\\\Auth\\\\Services\\\\AuthApiService\\:\\:login\\(\\) has parameter \\$credentials with no value type specified in iterable type array\\.$#"
+			message: "#^Method App\\\\Modules\\\\Dashboard\\\\Services\\\\HealthApiService\\:\\:normalizeResponse\\(\\) has parameter \\$response with no value type specified in iterable type array\\.$#"
 			count: 1
-			path: app/Modules/Auth/Services/AuthApiService.php
+			path: app/Modules/Dashboard/Services/HealthApiService.php
 
 		-
-			message: "#^Method App\\\\Modules\\\\Auth\\\\Services\\\\AuthApiService\\:\\:login\\(\\) return type has no value type specified in iterable type array\\.$#"
+			message: "#^Method App\\\\Modules\\\\Dashboard\\\\Services\\\\HealthApiService\\:\\:normalizeResponse\\(\\) return type has no value type specified in iterable type array\\.$#"
 			count: 1
-			path: app/Modules/Auth/Services/AuthApiService.php
-
-		-
-			message: "#^Method App\\\\Modules\\\\Auth\\\\Services\\\\AuthApiService\\:\\:logout\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Modules/Auth/Services/AuthApiService.php
-
-		-
-			message: "#^Method App\\\\Modules\\\\Auth\\\\Services\\\\AuthApiService\\:\\:me\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Modules/Auth/Services/AuthApiService.php
-
-		-
-			message: "#^Method App\\\\Modules\\\\Auth\\\\Services\\\\AuthApiService\\:\\:register\\(\\) has parameter \\$payload with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Modules/Auth/Services/AuthApiService.php
-
-		-
-			message: "#^Method App\\\\Modules\\\\Auth\\\\Services\\\\AuthApiService\\:\\:register\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Modules/Auth/Services/AuthApiService.php
-
-		-
-			message: "#^Method App\\\\Modules\\\\Auth\\\\Services\\\\AuthApiService\\:\\:resendVerification\\(\\) has parameter \\$payload with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Modules/Auth/Services/AuthApiService.php
-
-		-
-			message: "#^Method App\\\\Modules\\\\Auth\\\\Services\\\\AuthApiService\\:\\:resendVerification\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Modules/Auth/Services/AuthApiService.php
-
-		-
-			message: "#^Method App\\\\Modules\\\\Auth\\\\Services\\\\AuthApiService\\:\\:resetPassword\\(\\) has parameter \\$payload with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Modules/Auth/Services/AuthApiService.php
-
-		-
-			message: "#^Method App\\\\Modules\\\\Auth\\\\Services\\\\AuthApiService\\:\\:resetPassword\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Modules/Auth/Services/AuthApiService.php
-
-		-
-			message: "#^Method App\\\\Modules\\\\Auth\\\\Services\\\\AuthApiService\\:\\:verifyEmail\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Modules/Auth/Services/AuthApiService.php
+			path: app/Modules/Dashboard/Services/HealthApiService.php
 
 		-
 			message: "#^Call to an undefined method CodeIgniter\\\\HTTP\\\\CLIRequest\\|CodeIgniter\\\\HTTP\\\\IncomingRequest\\:\\:getFile\\(\\)\\.$#"
@@ -432,16 +316,6 @@ parameters:
 			path: app/Modules/Files/Controllers/FileController.php
 
 		-
-			message: "#^Method App\\\\Modules\\\\Files\\\\Services\\\\FileApiService\\:\\:upload\\(\\) has parameter \\$fields with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Modules/Files/Services/FileApiService.php
-
-		-
-			message: "#^Method App\\\\Modules\\\\Files\\\\Services\\\\FileApiService\\:\\:upload\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Modules/Files/Services/FileApiService.php
-
-		-
 			message: "#^Parameter \\#1 \\$locale of method CodeIgniter\\\\Language\\\\Language\\:\\:setLocale\\(\\) expects non\\-empty\\-string\\|null, string given\\.$#"
 			count: 1
 			path: app/Modules/Language/Controllers/LanguageController.php
@@ -457,22 +331,7 @@ parameters:
 			path: app/Modules/Metrics/Controllers/MetricsController.php
 
 		-
-			message: "#^Method App\\\\Modules\\\\Metrics\\\\Services\\\\MetricsApiService\\:\\:summary\\(\\) has parameter \\$filters with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Modules/Metrics/Services/MetricsApiService.php
-
-		-
-			message: "#^Method App\\\\Modules\\\\Metrics\\\\Services\\\\MetricsApiService\\:\\:summary\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Modules/Metrics/Services/MetricsApiService.php
-
-		-
-			message: "#^Method App\\\\Modules\\\\Metrics\\\\Services\\\\MetricsApiService\\:\\:timeseries\\(\\) has parameter \\$filters with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Modules/Metrics/Services/MetricsApiService.php
-
-		-
-			message: "#^Method App\\\\Modules\\\\Metrics\\\\Services\\\\MetricsApiService\\:\\:timeseries\\(\\) return type has no value type specified in iterable type array\\.$#"
+			message: "#^Method App\\\\Modules\\\\Metrics\\\\Services\\\\MetricsApiService\\:\\:timeseries\\(\\) should return array\\{ok\\: bool, status\\: int, data\\: array\\<string, mixed\\>, raw\\: string, headers\\: array\\<string, string\\>, messages\\: array\\<int, string\\>, fieldErrors\\: array\\<string, string\\>\\} but returns array\\{ok\\: bool, status\\: int, data\\: array\\<int\\<0, max\\>\\|string, mixed\\>, raw\\: string, headers\\: array\\<string, string\\>, messages\\: array\\<int, string\\>, fieldErrors\\: array\\<string, string\\>\\}\\.$#"
 			count: 1
 			path: app/Modules/Metrics/Services/MetricsApiService.php
 
@@ -480,36 +339,6 @@ parameters:
 			message: "#^Cannot cast array\\|bool\\|float\\|int\\|object\\|string\\|null to string\\.$#"
 			count: 2
 			path: app/Modules/Profile/Requests/ProfileUpdateRequest.php
-
-		-
-			message: "#^Method App\\\\Modules\\\\Profile\\\\Services\\\\ProfileApiService\\:\\:forgotPassword\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Modules/Profile/Services/ProfileApiService.php
-
-		-
-			message: "#^Method App\\\\Modules\\\\Profile\\\\Services\\\\ProfileApiService\\:\\:me\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Modules/Profile/Services/ProfileApiService.php
-
-		-
-			message: "#^Method App\\\\Modules\\\\Profile\\\\Services\\\\ProfileApiService\\:\\:resendVerification\\(\\) has parameter \\$payload with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Modules/Profile/Services/ProfileApiService.php
-
-		-
-			message: "#^Method App\\\\Modules\\\\Profile\\\\Services\\\\ProfileApiService\\:\\:resendVerification\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Modules/Profile/Services/ProfileApiService.php
-
-		-
-			message: "#^Method App\\\\Modules\\\\Profile\\\\Services\\\\ProfileApiService\\:\\:update\\(\\) has parameter \\$payload with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Modules/Profile/Services/ProfileApiService.php
-
-		-
-			message: "#^Method App\\\\Modules\\\\Profile\\\\Services\\\\ProfileApiService\\:\\:update\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Modules/Profile/Services/ProfileApiService.php
 
 		-
 			message: "#^Cannot cast array\\|bool\\|float\\|int\\|object\\|string\\|null to string\\.$#"
@@ -520,11 +349,6 @@ parameters:
 			message: "#^Cannot cast array\\|bool\\|float\\|int\\|object\\|string\\|null to string\\.$#"
 			count: 5
 			path: app/Modules/Users/Requests/UserUpdateRequest.php
-
-		-
-			message: "#^Method App\\\\Modules\\\\Users\\\\Services\\\\UserApiService\\:\\:approve\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Modules/Users/Services/UserApiService.php
 
 		-
 			message: "#^Cannot cast array\\|bool\\|float\\|int\\|object\\|string\\|null to string\\.$#"
@@ -572,126 +396,6 @@ parameters:
 			path: app/Requests/User/UserUpdateRequest.php
 
 		-
-			message: "#^Method App\\\\Services\\\\AuditApiService\\:\\:byEntity\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Services/AuditApiService.php
-
-		-
-			message: "#^Method App\\\\Services\\\\AuthApiService\\:\\:forgotPassword\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Services/AuthApiService.php
-
-		-
-			message: "#^Method App\\\\Services\\\\AuthApiService\\:\\:googleLogin\\(\\) has parameter \\$payload with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Services/AuthApiService.php
-
-		-
-			message: "#^Method App\\\\Services\\\\AuthApiService\\:\\:googleLogin\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Services/AuthApiService.php
-
-		-
-			message: "#^Method App\\\\Services\\\\AuthApiService\\:\\:login\\(\\) has parameter \\$credentials with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Services/AuthApiService.php
-
-		-
-			message: "#^Method App\\\\Services\\\\AuthApiService\\:\\:login\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Services/AuthApiService.php
-
-		-
-			message: "#^Method App\\\\Services\\\\AuthApiService\\:\\:logout\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Services/AuthApiService.php
-
-		-
-			message: "#^Method App\\\\Services\\\\AuthApiService\\:\\:me\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Services/AuthApiService.php
-
-		-
-			message: "#^Method App\\\\Services\\\\AuthApiService\\:\\:register\\(\\) has parameter \\$payload with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Services/AuthApiService.php
-
-		-
-			message: "#^Method App\\\\Services\\\\AuthApiService\\:\\:register\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Services/AuthApiService.php
-
-		-
-			message: "#^Method App\\\\Services\\\\AuthApiService\\:\\:resendVerification\\(\\) has parameter \\$payload with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Services/AuthApiService.php
-
-		-
-			message: "#^Method App\\\\Services\\\\AuthApiService\\:\\:resendVerification\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Services/AuthApiService.php
-
-		-
-			message: "#^Method App\\\\Services\\\\AuthApiService\\:\\:resetPassword\\(\\) has parameter \\$payload with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Services/AuthApiService.php
-
-		-
-			message: "#^Method App\\\\Services\\\\AuthApiService\\:\\:resetPassword\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Services/AuthApiService.php
-
-		-
-			message: "#^Method App\\\\Services\\\\AuthApiService\\:\\:verifyEmail\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Services/AuthApiService.php
-
-		-
-			message: "#^Method App\\\\Services\\\\CatalogApiService\\:\\:auditFacets\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Services/CatalogApiService.php
-
-		-
-			message: "#^Method App\\\\Services\\\\CatalogApiService\\:\\:index\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Services/CatalogApiService.php
-
-		-
-			message: "#^Method App\\\\Services\\\\FileApiService\\:\\:upload\\(\\) has parameter \\$fields with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Services/FileApiService.php
-
-		-
-			message: "#^Method App\\\\Services\\\\FileApiService\\:\\:upload\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Services/FileApiService.php
-
-		-
-			message: "#^Method App\\\\Services\\\\HealthApiService\\:\\:resolveMessage\\(\\) has parameter \\$response with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Services/HealthApiService.php
-
-		-
-			message: "#^Method App\\\\Services\\\\MetricsApiService\\:\\:summary\\(\\) has parameter \\$filters with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Services/MetricsApiService.php
-
-		-
-			message: "#^Method App\\\\Services\\\\MetricsApiService\\:\\:summary\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Services/MetricsApiService.php
-
-		-
-			message: "#^Method App\\\\Services\\\\MetricsApiService\\:\\:timeseries\\(\\) has parameter \\$filters with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Services/MetricsApiService.php
-
-		-
-			message: "#^Method App\\\\Services\\\\MetricsApiService\\:\\:timeseries\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Services/MetricsApiService.php
-
-		-
 			message: "#^Method App\\\\Services\\\\ResourceApiService\\:\\:create\\(\\) has parameter \\$payload with no value type specified in iterable type array\\.$#"
 			count: 1
 			path: app/Services/ResourceApiService.php
@@ -730,8 +434,3 @@ parameters:
 			message: "#^Method App\\\\Services\\\\ResourceApiService\\:\\:update\\(\\) return type has no value type specified in iterable type array\\.$#"
 			count: 1
 			path: app/Services/ResourceApiService.php
-
-		-
-			message: "#^Method App\\\\Services\\\\UserApiService\\:\\:approve\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Services/UserApiService.php
