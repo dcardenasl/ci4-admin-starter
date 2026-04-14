@@ -1079,6 +1079,14 @@ document.addEventListener('alpine:init', () => {
 
         fileDeleteUrl(id) {
             return `${this.routes.deleteBase}/${encodeURIComponent(String(id ?? ''))}/delete`;
+        },
+
+        apiKeyShowUrl(id) {
+            return `${this.routes.showBase}/${encodeURIComponent(String(id ?? ''))}`;
+        },
+
+        apiKeyEditUrl(id) {
+            return `${this.routes.editBase}/${encodeURIComponent(String(id ?? ''))}/edit`;
         }
     }));
 });
