@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use AppModulesAuditServicesAuditApiService;
+use App\Modules\Audit\Services\AuditApiService;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\FeatureTestTrait;
 use Config\Services;

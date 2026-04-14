@@ -1,14 +1,14 @@
 <?php
 
-namespace AppModulesProfileRequestsProfile;
+namespace App\Modules\Users\Requests;
 
 use App\Requests\BaseFormRequest;
 
-class ProfileUpdateRequest extends BaseFormRequest
+class UserStoreRequest extends BaseFormRequest
 {
     protected function fields(): array
     {
-        return ['first_name', 'last_name'];
+        return ['first_name', 'last_name', 'email', 'role'];
     }
 
     public function rules(): array
@@ -16,6 +16,8 @@ class ProfileUpdateRequest extends BaseFormRequest
         return [
             'first_name' => 'required|min_length[2]|max_length[100]',
             'last_name'  => 'required|min_length[2]|max_length[100]',
+            'email'     => 'required|valid_email',
+            'role'      => 'required|in_list[user,admin,superadmin]',
         ];
     }
 
@@ -24,6 +26,8 @@ class ProfileUpdateRequest extends BaseFormRequest
         return [
             'first_name' => (string) $this->request->getPost('first_name'),
             'last_name'  => (string) $this->request->getPost('last_name'),
+            'email'     => (string) $this->request->getPost('email'),
+            'role'      => (string) $this->request->getPost('role'),
         ];
     }
 }

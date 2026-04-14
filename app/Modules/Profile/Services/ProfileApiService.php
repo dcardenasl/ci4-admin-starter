@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AppModulesProfileServices;
+namespace App\Modules\Profile\Services;
+
+use App\Services\BaseApiService;
 
 /**
  * Profile API Service

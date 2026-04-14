@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace AppModulesApiKeysControllers;
+namespace App\Modules\ApiKeys\Controllers;
 use App\Controllers\BaseWebController;
 
-use AppModulesApiKeysRequestsApiKey\ApiKeyStoreRequest;
-use AppModulesApiKeysRequestsApiKey\ApiKeyUpdateRequest;
-use AppModulesApiKeysServicesApiKeyApiService;
+use App\Modules\ApiKeys\Requests\ApiKeyStoreRequest;
+use App\Modules\ApiKeys\Requests\ApiKeyUpdateRequest;
+use App\Modules\ApiKeys\Services\ApiKeyApiService;
 use App\Services\CatalogApiService;
 use App\Support\CatalogOptions;
 use CodeIgniter\HTTP\RedirectResponse;

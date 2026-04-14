@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AppModulesProfileControllers;
-use App\Controllers\BaseWebController;
+namespace App\Modules\Profile\Controllers;
 
-use AppModulesProfileRequestsProfile\ProfileUpdateRequest;
-use AppModulesProfileServicesProfileApiService;
+use App\Controllers\BaseWebController;
+use App\Modules\Profile\Requests\ProfileUpdateRequest;
+use App\Modules\Profile\Services\ProfileApiService;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;

@@ -4,7 +4,6 @@ namespace Tests\Unit\Services;
 
 use App\Libraries\ApiClientInterface;
 use App\Modules\Users\Services\UserApiService;
-use App\Modules\Users\Services\UserApiService;
 use CodeIgniter\Test\CIUnitTestCase;
 
 /**

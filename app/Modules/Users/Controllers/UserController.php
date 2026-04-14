@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AppModulesUsersControllers;
+namespace App\Modules\Users\Controllers;
 use App\Controllers\BaseWebController;
 
-use AppModulesUsersRequestsUser\UserStoreRequest;
-use AppModulesUsersRequestsUser\UserUpdateRequest;
+use App\Modules\Users\Requests\UserStoreRequest;
+use App\Modules\Users\Requests\UserUpdateRequest;
 use App\Services\CatalogApiService;
-use AppModulesUsersServicesUserApiService;
+use App\Modules\Users\Services\UserApiService;
 use App\Support\CatalogOptions;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;

@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
-use AppModulesFilesServicesFileApiService;
+use App\Modules\Files\Services\FileApiService;
 use App\Services\HealthApiService;
-use AppModulesMetricsServicesMetricsApiService;
-use AppModulesUsersServicesUserApiService;
+use App\Modules\Metrics\Services\MetricsApiService;
+use App\Modules\Users\Services\UserApiService;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\FeatureTestTrait;
 use Config\Services;

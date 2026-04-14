@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AppModulesMetricsServices;
+namespace App\Modules\Metrics\Services;
+
+use App\Services\BaseApiService;
 
 class MetricsApiService extends BaseApiService
 {

@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Modules\Auth\Controllers;
 
 use App\Controllers\BaseWebController;
-use App\Modules\Auth\Requests\Auth\ForgotPasswordRequest;
-use App\Modules\Auth\Requests\Auth\GoogleLoginRequest;
-use App\Modules\Auth\Requests\Auth\LoginRequest;
-use App\Modules\Auth\Requests\Auth\RegisterRequest;
-use App\Modules\Auth\Requests\Auth\ResetPasswordRequest;
+use App\Modules\Auth\Requests\ForgotPasswordRequest;
+use App\Modules\Auth\Requests\GoogleLoginRequest;
+use App\Modules\Auth\Requests\LoginRequest;
+use App\Modules\Auth\Requests\RegisterRequest;
+use App\Modules\Auth\Requests\ResetPasswordRequest;
 use App\Modules\Auth\Services\AuthApiService;
 use App\Support\SessionKeys;
 use CodeIgniter\HTTP\RedirectResponse;

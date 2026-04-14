@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AppModulesUsersServices;
+namespace App\Modules\Users\Services;
+
+use App\Services\ResourceApiService;
 
 class UserApiService extends ResourceApiService
 {

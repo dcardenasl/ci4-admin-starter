@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AppModulesFilesServices;
+namespace App\Modules\Files\Services;
 
+use App\Services\ResourceApiService;
 use RuntimeException;
 
 class FileApiService extends ResourceApiService

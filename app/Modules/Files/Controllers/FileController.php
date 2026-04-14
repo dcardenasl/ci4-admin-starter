@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace AppModulesFilesControllers;
+namespace App\Modules\Files\Controllers;
 use App\Controllers\BaseWebController;
 
-use AppModulesFilesRequestsFile\FileUploadRequest;
+use App\Modules\Files\Requests\FileUploadRequest;
 use App\Services\CatalogApiService;
-use AppModulesFilesServicesFileApiService;
+use App\Modules\Files\Services\FileApiService;
 use App\Support\FileSizeLimits;
 use App\Support\CatalogOptions;
 use CodeIgniter\HTTP\RedirectResponse;

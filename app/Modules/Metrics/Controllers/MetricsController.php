@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AppModulesMetricsControllers;
+namespace App\Modules\Metrics\Controllers;
 use App\Controllers\BaseWebController;
 
 use App\Services\CatalogApiService;
-use AppModulesMetricsServicesMetricsApiService;
+use App\Modules\Metrics\Services\MetricsApiService;
 use App\Support\CatalogOptions;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;

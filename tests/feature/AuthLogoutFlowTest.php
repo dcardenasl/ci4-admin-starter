@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use AppModulesAuthServicesAuthApiService;
+use App\Modules\Auth\Services\AuthApiService;
 use CodeIgniter\Exceptions\PageNotFoundException;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\FeatureTestTrait;

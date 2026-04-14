@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AppModulesApiKeysServices;
+namespace App\Modules\ApiKeys\Services;
+
+use App\Services\ResourceApiService;
 
 class ApiKeyApiService extends ResourceApiService
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace AppModulesFilesRequestsFile;
+namespace App\Modules\Files\Requests;
 
 use App\Requests\BaseFormRequest;
 use App\Support\FileSizeLimits;

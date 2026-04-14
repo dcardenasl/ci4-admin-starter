@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AppModulesAuditControllers;
+namespace App\Modules\Audit\Controllers;
 use App\Controllers\BaseWebController;
 
 use App\Services\CatalogApiService;
-use AppModulesAuditServicesAuditApiService;
+use App\Modules\Audit\Services\AuditApiService;
 use App\Support\CatalogOptions;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;

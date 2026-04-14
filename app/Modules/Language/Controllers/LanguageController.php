@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AppModulesLanguageControllers;
+namespace App\Modules\Language\Controllers;
 
+use App\Controllers\BaseWebController;
 use CodeIgniter\HTTP\RedirectResponse;
 use Config\Services;
 
-class LanguageController extends BaseController
+class LanguageController extends BaseWebController
 {
     public function set(): RedirectResponse
     {

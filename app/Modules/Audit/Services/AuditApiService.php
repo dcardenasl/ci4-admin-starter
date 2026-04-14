@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AppModulesAuditServices;
+namespace App\Modules\Audit\Services;
+
+use App\Services\ResourceApiService;
 
 class AuditApiService extends ResourceApiService
 {

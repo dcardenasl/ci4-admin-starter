@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Requests\ApiKey;
+namespace App\Modules\ApiKeys\Requests;
 
 class ApiKeyUpdateRequest extends ApiKeyStoreRequest
 {

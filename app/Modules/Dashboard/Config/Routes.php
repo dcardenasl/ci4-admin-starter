@@ -7,5 +7,5 @@ use CodeIgniter\Router\RouteCollection;
  */
 
 $routes->group('', ['filter' => 'auth'], static function (RouteCollection $routes): void {
-    $routes->get('/dashboard', 'App\Modules\Dashboard\Controllers\DashboardController::index', ['as' => 'dashboard']);
+    $routes->get('/dashboard', '\App\Modules\Dashboard\Controllers\DashboardController::index', ['as' => 'dashboard']);
 });

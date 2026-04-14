@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Requests\User;
+namespace App\Modules\Users\Requests;
 
 use App\Requests\BaseFormRequest;
 
-class UserStoreRequest extends BaseFormRequest
+class UserUpdateRequest extends BaseFormRequest
 {
     protected function fields(): array
     {
-        return ['first_name', 'last_name', 'email', 'role'];
+        return ['first_name', 'last_name', 'email', 'role', 'original_email'];
     }
 
     public function rules(): array
@@ -23,11 +23,19 @@ class UserStoreRequest extends BaseFormRequest
 
     public function payload(): array
     {
-        return [
+        $payload = [
             'first_name' => (string) $this->request->getPost('first_name'),
             'last_name'  => (string) $this->request->getPost('last_name'),
-            'email'     => (string) $this->request->getPost('email'),
             'role'      => (string) $this->request->getPost('role'),
         ];
+
+        $email = trim((string) $this->request->getPost('email'));
+        $original_email = trim((string) $this->request->getPost('original_email'));
+
+        if ($original_email === '' || mb_strtolower($email) !== mb_strtolower($original_email)) {
+            $payload['email'] = $email;
+        }
+
+        return $payload;
     }
 }
