@@ -770,7 +770,7 @@ document.addEventListener('alpine:init', () => {
                 this.rows = [];
                 this.summary = {};
                 this.error = true;
-                this.errorMessage = text.loadRetry;
+                this.errorMessage = pageText.loadRetry;
                 this.page_input = '1';
             } finally {
                 if (requestId === this.requestId) {
