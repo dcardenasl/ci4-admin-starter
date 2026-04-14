@@ -6,7 +6,7 @@ namespace App\Modules\Metrics\Controllers;
 
 use App\Controllers\BaseWebController;
 use App\Services\CatalogApiService;
-use App\Modules\Metrics\Services\MetricsApiService;
+use App\Modules\Metrics\Services\MetricsApiServiceInterface;
 use App\Support\CatalogOptions;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -14,7 +14,7 @@ use Psr\Log\LoggerInterface;
 
 class MetricsController extends BaseWebController
 {
-    protected MetricsApiService $metricsService;
+    protected MetricsApiServiceInterface $metricsService;
     protected CatalogApiService $catalogService;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)

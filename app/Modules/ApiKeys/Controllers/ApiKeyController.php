@@ -7,7 +7,7 @@ namespace App\Modules\ApiKeys\Controllers;
 use App\Controllers\BaseWebController;
 use App\Modules\ApiKeys\Requests\ApiKeyStoreRequest;
 use App\Modules\ApiKeys\Requests\ApiKeyUpdateRequest;
-use App\Modules\ApiKeys\Services\ApiKeyApiService;
+use App\Modules\ApiKeys\Services\ApiKeyApiServiceInterface;
 use App\Services\CatalogApiService;
 use App\Support\CatalogOptions;
 use CodeIgniter\HTTP\RedirectResponse;
@@ -17,7 +17,7 @@ use Psr\Log\LoggerInterface;
 
 class ApiKeyController extends BaseWebController
 {
-    protected ApiKeyApiService $apiKeyService;
+    protected ApiKeyApiServiceInterface $apiKeyService;
     protected CatalogApiService $catalogService;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)

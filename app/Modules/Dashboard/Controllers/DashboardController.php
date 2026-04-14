@@ -6,8 +6,8 @@ namespace App\Modules\Dashboard\Controllers;
 
 use App\Controllers\BaseWebController;
 use App\Modules\Files\Services\FileApiService;
-use App\Services\HealthApiService;
-use App\Modules\Metrics\Services\MetricsApiService;
+use App\Services\HealthApiServiceInterface;
+use App\Modules\Metrics\Services\MetricsApiServiceInterface;
 use App\Modules\Users\Services\UserApiService;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -16,8 +16,8 @@ use Psr\Log\LoggerInterface;
 class DashboardController extends BaseWebController
 {
     protected FileApiService $fileService;
-    protected HealthApiService $healthService;
-    protected MetricsApiService $metricsService;
+    protected HealthApiServiceInterface $healthService;
+    protected MetricsApiServiceInterface $metricsService;
     protected UserApiService $userService;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)

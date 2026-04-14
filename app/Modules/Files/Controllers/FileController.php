@@ -7,7 +7,7 @@ namespace App\Modules\Files\Controllers;
 use App\Controllers\BaseWebController;
 use App\Modules\Files\Requests\FileUploadRequest;
 use App\Services\CatalogApiService;
-use App\Modules\Files\Services\FileApiService;
+use App\Modules\Files\Services\FileApiServiceInterface;
 use App\Support\FileSizeLimits;
 use App\Support\CatalogOptions;
 use CodeIgniter\HTTP\RedirectResponse;
@@ -17,7 +17,7 @@ use Psr\Log\LoggerInterface;
 
 class FileController extends BaseWebController
 {
-    protected FileApiService $fileService;
+    protected FileApiServiceInterface $fileService;
     protected CatalogApiService $catalogService;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)

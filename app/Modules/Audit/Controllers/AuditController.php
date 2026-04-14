@@ -6,7 +6,7 @@ namespace App\Modules\Audit\Controllers;
 
 use App\Controllers\BaseWebController;
 use App\Services\CatalogApiService;
-use App\Modules\Audit\Services\AuditApiService;
+use App\Modules\Audit\Services\AuditApiServiceInterface;
 use App\Support\CatalogOptions;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;
@@ -15,7 +15,7 @@ use Psr\Log\LoggerInterface;
 
 class AuditController extends BaseWebController
 {
-    protected AuditApiService $auditService;
+    protected AuditApiServiceInterface $auditService;
     protected CatalogApiService $catalogService;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)

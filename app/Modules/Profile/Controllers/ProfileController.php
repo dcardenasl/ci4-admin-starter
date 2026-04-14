@@ -6,7 +6,7 @@ namespace App\Modules\Profile\Controllers;
 
 use App\Controllers\BaseWebController;
 use App\Modules\Profile\Requests\ProfileUpdateRequest;
-use App\Modules\Profile\Services\ProfileApiService;
+use App\Modules\Profile\Services\ProfileApiServiceInterface;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -14,7 +14,7 @@ use Psr\Log\LoggerInterface;
 
 class ProfileController extends BaseWebController
 {
-    protected ProfileApiService $profileService;
+    protected ProfileApiServiceInterface $profileService;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
