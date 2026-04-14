@@ -28,22 +28,48 @@ final class MetricsApiServiceTest extends CIUnitTestCase
         $this->assertSame($expected, $result);
     }
 
-    public function testTimeseriesFallsBackToMetricsWhenSpecificEndpointFails(): void
+    public function testTimeseriesReturnsErrorWhenEndpointFails(): void
     {
         $mock = $this->createMock(ApiClientInterface::class);
 
-        $mock->expects($this->exactly(2))
+        $mock->expects($this->once())
             ->method('get')
-            ->withAnyParameters()
-            ->willReturnOnConsecutiveCalls(
-                ['ok' => false, 'status' => 404, 'data' => []],
-                ['ok' => true, 'status' => 200, 'data' => ['timeseries' => [['period' => '2026-01-01', 'value' => 3]]]],
-            );
+            ->with('/metrics/timeseries', ['group_by' => 'day'])
+            ->willReturn(['ok' => false, 'status' => 404, 'data' => [], 'messages' => ['Not found']]);
 
         $service = new MetricsApiService($mock);
         $result = $service->timeseries(['group_by' => 'day']);
 
+        $this->assertFalse($result['ok']);
+        $this->assertSame(404, $result['status']);
+    }
+
+    public function testTimeseriesTransformsParallelArraysToPointObjects(): void
+    {
+        $mock = $this->createMock(ApiClientInterface::class);
+
+        $mock->expects($this->once())
+            ->method('get')
+            ->with('/metrics/timeseries', ['period' => '24h'])
+            ->willReturn([
+                'ok' => true,
+                'status' => 200,
+                'data' => [
+                    'dates' => ['2026-01-01', '2026-01-02'],
+                    'requests' => [100, 200],
+                    'errors' => [2, 5],
+                    'latency' => [45, 50],
+                ],
+            ]);
+
+        $service = new MetricsApiService($mock);
+        $result = $service->timeseries(['period' => '24h']);
+
         $this->assertTrue($result['ok']);
-        $this->assertSame(200, $result['status']);
+        $this->assertCount(2, $result['data']);
+        $this->assertSame('2026-01-01', $result['data'][0]['period']);
+        $this->assertSame(100, $result['data'][0]['value']);
+        $this->assertSame(2, $result['data'][0]['errors']);
+        $this->assertSame(45, $result['data'][0]['latency']);
     }
 }

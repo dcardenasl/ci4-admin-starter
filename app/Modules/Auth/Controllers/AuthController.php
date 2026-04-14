@@ -162,6 +162,10 @@ class AuthController extends BaseWebController
 
         $response = $this->safeApiCall(fn() => $this->authService->forgotPassword($payload['email'], $payload['client_base_url']));
 
+        if (! $response['ok']) {
+            return redirect()->back()->withInput()->with('error', $this->firstMessage($response, lang('Auth.forgot_failed')));
+        }
+
         return redirect()->to(site_url('login'))->with('success', lang('Auth.forgot_success'));
     }
 

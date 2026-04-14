@@ -17,10 +17,25 @@ class MetricsApiService extends BaseApiService implements MetricsApiServiceInter
     {
         $response = $this->apiClient->get('/metrics/timeseries', $filters);
 
-        if ($response['ok'] ?? false) {
+        if (! ($response['ok'] ?? false)) {
             return $response;
         }
 
-        return $this->apiClient->get('/metrics', $filters);
+        // Transform parallel arrays (dates, requests, etc.) to a list of point objects
+        $data = $response['data'] ?? [];
+        if (is_array($data) && isset($data['dates']) && is_array($data['dates'])) {
+            $points = [];
+            foreach ($data['dates'] as $i => $date) {
+                $points[] = [
+                    'period'  => $date,
+                    'value'   => $data['requests'][$i] ?? 0,
+                    'errors'  => $data['errors'][$i] ?? 0,
+                    'latency' => $data['latency'][$i] ?? 0,
+                ];
+            }
+            $response['data'] = $points;
+        }
+
+        return $response;
     }
 }

@@ -55,7 +55,7 @@ final class MetricsFlowTest extends CIUnitTestCase
             ->willReturn([
                 'ok' => true,
                 'status' => 200,
-                'data' => ['timeseries' => [['period' => '10:00', 'value' => 12]]],
+                'data' => [['period' => '10:00', 'value' => 12, 'errors' => 0, 'latency' => 45]],
                 'raw' => '',
                 'headers' => [],
                 'messages' => [],

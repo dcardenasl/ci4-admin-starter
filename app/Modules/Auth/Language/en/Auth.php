@@ -30,6 +30,7 @@ return [
     'forgot_subtitle'   => 'We will send you a link to reset it',
     'forgot_button'     => 'Send link',
     'forgot_success'    => 'If the email exists, you will receive a link soon.',
+    'forgot_failed'     => 'Could not process password reset request.',
     'reset_title'       => 'New password',
     'reset_subtitle'    => 'Set your new access key',
     'reset_button'      => 'Reset password',

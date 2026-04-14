@@ -54,25 +54,8 @@ class MetricsController extends BaseWebController
         $summaryData = $this->extractData($summaryResponse);
         $timeseriesData = $this->extractData($timeseriesResponse);
 
-        // If timeseries is empty in the items extraction, look for it in the data payload
-        $timeseries = $this->extractItems($timeseriesResponse);
-        if ($timeseries === [] || (is_array($timeseries) && ! isset($timeseries[0]))) {
-            $timeseries = $timeseriesData['timeseries'] ?? $timeseriesData['data'] ?? $timeseriesData['items'] ?? $timeseriesData;
-        }
-
-        // Transform parallel arrays (dates, requests, etc.) to a list of objects for the table
-        if (is_array($timeseries) && isset($timeseries['dates']) && is_array($timeseries['dates'])) {
-            $points = [];
-            foreach ($timeseries['dates'] as $i => $date) {
-                $points[] = [
-                    'period' => $date,
-                    'value' => $timeseries['requests'][$i] ?? 0,
-                    'errors' => $timeseries['errors'][$i] ?? 0,
-                    'latency' => $timeseries['latency'][$i] ?? 0,
-                ];
-            }
-            $timeseries = $points;
-        }
+        // Timeseries is already transformed into point objects by the service
+        $timeseries = is_array($timeseriesData) ? $timeseriesData : [];
 
         return $this->render('metrics/index', [
             'title'          => lang('Metrics.title'),

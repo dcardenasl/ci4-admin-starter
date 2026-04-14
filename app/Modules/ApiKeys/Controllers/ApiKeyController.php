@@ -95,9 +95,14 @@ class ApiKeyController extends BaseWebController
         return $redirect;
     }
 
-    public function edit(string $id): string
+    public function edit(string $id): string|\CodeIgniter\HTTP\RedirectResponse
     {
         $response = $this->safeApiCall(fn() => $this->apiKeyService->get($id));
+
+        if (! $response['ok']) {
+            return redirect()->to(route_to('admin.api_keys'))->with('error', lang('ApiKeys.not_found'));
+        }
+
         $catalogs = $this->resolveCatalogs($this->catalogService);
 
         return $this->render('api_keys/edit', [

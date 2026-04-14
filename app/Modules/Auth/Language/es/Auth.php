@@ -30,6 +30,7 @@ return [
     'forgot_subtitle'   => 'Te enviaremos un enlace para restablecerla',
     'forgot_button'     => 'Enviar enlace',
     'forgot_success'    => 'Si el correo existe, recibirás un enlace pronto.',
+    'forgot_failed'     => 'No se pudo procesar la solicitud de recuperación de contraseña.',
     'reset_title'       => 'Nueva contraseña',
     'reset_subtitle'    => 'Establece tu nueva clave de acceso',
     'reset_button'      => 'Restablecer contraseña',
