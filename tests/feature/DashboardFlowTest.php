@@ -80,13 +80,12 @@ final class DashboardFlowTest extends CIUnitTestCase
         $healthService->expects($this->once())
             ->method('check')
             ->willReturn([
-                'ok' => true,
-                'status' => 200,
-                'data' => ['state' => 'up', 'latency_ms' => 87],
-                'raw' => '',
-                'headers' => [],
-                'messages' => [],
-                'fieldErrors' => [],
+                'ok'         => true,
+                'state'      => 'up',
+                'status'     => 200,
+                'path'       => '/health',
+                'latency_ms' => 87,
+                'message'    => 'API available',
             ]);
 
         Services::injectMock('userApiService', $userService);
@@ -102,7 +101,7 @@ final class DashboardFlowTest extends CIUnitTestCase
         $result->assertStatus(200);
         $this->assertStringContainsString('42', $result->getBody());
         $this->assertStringContainsString('99.9%', $result->getBody());
-        $this->assertStringContainsString('API: up', $result->getBody());
+        $this->assertStringContainsString('En l&iacute;nea', $result->getBody());
     }
 
     public function testDashboardStillRendersWhenUserSummaryFails(): void
@@ -150,13 +149,12 @@ final class DashboardFlowTest extends CIUnitTestCase
         $healthService->expects($this->once())
             ->method('check')
             ->willReturn([
-                'ok' => true,
-                'status' => 200,
-                'data' => ['state' => 'down', 'latency_ms' => 0],
-                'raw' => '',
-                'headers' => [],
-                'messages' => [],
-                'fieldErrors' => [],
+                'ok'         => false,
+                'state'      => 'down',
+                'status'     => 0,
+                'path'       => '/health',
+                'latency_ms' => 0,
+                'message'    => 'API unavailable',
             ]);
 
         Services::injectMock('userApiService', $userService);

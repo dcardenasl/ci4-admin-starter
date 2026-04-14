@@ -69,4 +69,20 @@ final class HealthApiServiceTest extends CIUnitTestCase
         $this->assertSame('down', $result['state']);
         $this->assertSame(0, $result['status']);
     }
+
+    public function testCheckReturnsDownWhenApiClientThrowsException(): void
+    {
+        $mock = $this->createMock(ApiClientInterface::class);
+
+        $mock->expects($this->once())
+            ->method('request')
+            ->willThrowException(new \RuntimeException('Connection failed'));
+
+        $service = new HealthApiService($mock, ['/health']);
+        $result = $service->check();
+
+        $this->assertFalse($result['ok']);
+        $this->assertSame('down', $result['state']);
+        $this->assertSame(0, $result['status']);
+    }
 }
