@@ -205,16 +205,11 @@ trait TableResponseTrait
         $sort = trim((string) ($state['sort'] ?? ''));
         if ($sort !== '') {
             $params['sort'] = $sort;
-
-            // Convert '-field' to order_by=field&order_dir=DESC for standard API compliance
-            $params['order_by'] = ltrim($sort, '-');
-            $params['order_dir'] = str_starts_with($sort, '-') ? 'DESC' : 'ASC';
         }
 
         $limit = (int) ($state['limit'] ?? 25);
         if ($limit > 0) {
             $params['limit'] = $limit;
-            $params['per_page'] = $limit;
         }
 
         $cursor = trim((string) ($state['cursor'] ?? ''));
