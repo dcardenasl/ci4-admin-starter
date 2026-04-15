@@ -629,8 +629,8 @@ document.addEventListener('alpine:init', () => {
                 if (activeSort !== '') {
                     this.query.sort = activeSort;
                 }
-                delete this.query.page;
-                delete this.query.cursor;
+                this.query.page = '';
+                this.query.cursor = '';
                 this.fetchData(true);
             });
 
@@ -648,8 +648,8 @@ document.addEventListener('alpine:init', () => {
                         if (activeSort !== '') {
                             this.query.sort = activeSort;
                         }
-                        delete this.query.page;
-                        delete this.query.cursor;
+                        this.query.page = '';
+                        this.query.cursor = '';
                         this.fetchData(true);
                     }, Number.isFinite(wait) ? wait : 350);
                     this.debounceTimers.set(input, timer);
@@ -971,20 +971,20 @@ document.addEventListener('alpine:init', () => {
             if (current === 'asc') {
                 this.query.sort = `-${field}`;
             } else if (current === 'desc') {
-                delete this.query.sort;
+                this.query.sort = '';
             } else {
                 this.query.sort = field;
             }
 
-            delete this.query.page;
-            delete this.query.cursor;
+            this.query.page = '';
+            this.query.cursor = '';
             this.fetchData(true);
         },
 
         goToPage(page) {
             const boundedPage = Math.max(1, Math.min(this.pagination.last_page || 1, page));
             this.query.page = String(boundedPage);
-            delete this.query.cursor;
+            this.query.cursor = '';
             this.page_input = String(boundedPage);
             this.fetchData(true);
         },
@@ -1022,21 +1022,21 @@ document.addEventListener('alpine:init', () => {
                 return;
             }
             this.query.cursor = String(cursor);
-            delete this.query.page;
+            this.query.page = '';
             this.fetchData(true);
         },
 
         onLimitChange(limit) {
             const parsed = Number.parseInt(String(limit || ''), 10);
             if (!Number.isFinite(parsed) || parsed <= 0) {
-                delete this.query.limit;
+                this.query.limit = '';
             } else {
                 const maxOption = Math.max(...this.paginationLimitOptions());
                 this.query.limit = String(Math.min(maxOption, Math.max(1, parsed)));
             }
 
-            delete this.query.page;
-            delete this.query.cursor;
+            this.query.page = '';
+            this.query.cursor = '';
             this.page_input = '1';
             this.fetchData(true);
         },
