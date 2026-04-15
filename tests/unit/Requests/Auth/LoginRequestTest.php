@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Requests\Auth;
 
 use App\Requests\Auth\LoginRequest;

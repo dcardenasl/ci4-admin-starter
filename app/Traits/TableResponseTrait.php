@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Traits;
 
 use CodeIgniter\HTTP\ResponseInterface;
@@ -90,7 +92,7 @@ trait TableResponseTrait
     ): ResponseInterface {
         $tableState = $this->resolveTableState($allowedFilters, $allowedSorts, $defaultLimit, $maxLimit);
         $params = $this->buildTableApiParams($tableState);
-        $response = $this->safeApiCall(fn() => $listRequest($params));
+        $response = $this->safeApiCall(fn () => $listRequest($params));
 
         return $this->passthroughApiJsonResponse($response);
     }

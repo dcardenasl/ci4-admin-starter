@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Libraries;
 
 use App\Libraries\ApiClient;
@@ -25,7 +27,7 @@ final class ApiClientTest extends CIUnitTestCase
     {
         $reflection = new \ReflectionClass(ApiClientInterface::class);
         $methods = array_map(
-            static fn(\ReflectionMethod $m) => $m->getName(),
+            static fn (\ReflectionMethod $m) => $m->getName(),
             $reflection->getMethods()
         );
 

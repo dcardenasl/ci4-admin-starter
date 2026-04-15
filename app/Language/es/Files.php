@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
     'title'              => 'Gestión de Archivos',
     'upload_title'       => 'Subir Nuevo Archivo',

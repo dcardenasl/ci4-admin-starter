@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Requests\ApiKey;
 
 class ApiKeyUpdateRequest extends ApiKeyStoreRequest

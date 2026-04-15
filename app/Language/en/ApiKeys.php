@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
     'title'               => 'API Keys',
     'details'             => 'API key details',

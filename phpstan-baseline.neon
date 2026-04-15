@@ -266,16 +266,6 @@ parameters:
 			path: app/Modules/Auth/Requests/ResetPasswordRequest.php
 
 		-
-			message: "#^Call to method check\\(\\) on an unknown class App\\\\Services\\\\HealthApiServiceInterface\\.$#"
-			count: 1
-			path: app/Modules/Dashboard/Controllers/DashboardController.php
-
-		-
-			message: "#^Property App\\\\Modules\\\\Dashboard\\\\Controllers\\\\DashboardController\\:\\:\\$healthService has unknown class App\\\\Services\\\\HealthApiServiceInterface as its type\\.$#"
-			count: 1
-			path: app/Modules/Dashboard/Controllers/DashboardController.php
-
-		-
 			message: "#^Call to an undefined method CodeIgniter\\\\HTTP\\\\CLIRequest\\|CodeIgniter\\\\HTTP\\\\IncomingRequest\\:\\:getFile\\(\\)\\.$#"
 			count: 1
 			path: app/Modules/Files/Controllers/FileController.php

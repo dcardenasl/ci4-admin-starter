@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
     'title'                   => 'Perfil',
     'personal_info'           => 'Información personal',

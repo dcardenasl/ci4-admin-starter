@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
     'email_label'       => 'Correo',
     'password_label'    => 'Password',

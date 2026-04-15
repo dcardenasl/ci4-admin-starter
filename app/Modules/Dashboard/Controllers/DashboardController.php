@@ -20,7 +20,7 @@ class DashboardController extends BaseWebController
     protected MetricsApiServiceInterface $metricsService;
     protected UserApiServiceInterface $userService;
 
-    public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
+    public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger): void
     {
         parent::initController($request, $response, $logger);
         $this->fileService = service('fileApiService');
@@ -36,15 +36,15 @@ class DashboardController extends BaseWebController
 
         // 1. Recursos con sus totales reales (según contrato /users y /files -> meta.total)
         $usersResponse = $isAdmin
-            ? $this->safeApiCall(fn() => $this->userService->list(['limit' => 1]))
+            ? $this->safeApiCall(fn () => $this->userService->list(['limit' => 1]))
             : ['ok' => false, 'data' => []];
 
-        $filesResponse = $this->safeApiCall(fn() => $this->fileService->list(['limit' => 5]));
+        $filesResponse = $this->safeApiCall(fn () => $this->fileService->list(['limit' => 5]));
 
         // 2. Métricas de red (según contrato /metrics -> request_stats)
-        $metricsResponse = $this->safeApiCall(fn() => $this->metricsService->summary($dateRange));
+        $metricsResponse = $this->safeApiCall(fn () => $this->metricsService->summary($dateRange));
 
-        $healthResponse = $this->safeApiCall(fn() => $this->healthService->check());
+        $healthResponse = $this->safeApiCall(fn () => $this->healthService->check());
 
         // Procesamiento de datos
         $metrics = $this->extractData($metricsResponse);

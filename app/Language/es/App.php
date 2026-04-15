@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
     'menu'            => 'Menú',
     'panel'           => 'Panel de Administración',

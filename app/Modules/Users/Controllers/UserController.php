@@ -7,8 +7,8 @@ namespace App\Modules\Users\Controllers;
 use App\Controllers\BaseWebController;
 use App\Modules\Users\Requests\UserStoreRequest;
 use App\Modules\Users\Requests\UserUpdateRequest;
-use App\Services\CatalogApiService;
 use App\Modules\Users\Services\UserApiServiceInterface;
+use App\Services\CatalogApiService;
 use App\Support\CatalogOptions;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;
@@ -20,7 +20,7 @@ class UserController extends BaseWebController
     protected UserApiServiceInterface $userService;
     protected CatalogApiService $catalogService;
 
-    public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
+    public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger): void
     {
         parent::initController($request, $response, $logger);
         $this->userService = service('userApiService');
@@ -44,13 +44,13 @@ class UserController extends BaseWebController
         return $this->tableDataResponse(
             ['status', 'role'],
             ['created_at', 'email', 'role', 'status', 'first_name', 'last_name'],
-            fn(array $params) => $this->userService->list($params),
+            fn (array $params) => $this->userService->list($params),
         );
     }
 
     public function show(string $id): string
     {
-        $response = $this->safeApiCall(fn() => $this->userService->get($id));
+        $response = $this->safeApiCall(fn () => $this->userService->get($id));
 
         return $this->renderResourceShow('users/show', lang('Users.details'), 'user', $response, lang('Users.not_found'));
     }
@@ -76,7 +76,7 @@ class UserController extends BaseWebController
 
         $payload = $request->payload();
 
-        $response = $this->safeApiCall(fn() => $this->userService->create($payload));
+        $response = $this->safeApiCall(fn () => $this->userService->create($payload));
 
         if (! $response['ok']) {
             return $this->failApi($response, lang('Users.create_failed'));
@@ -87,7 +87,7 @@ class UserController extends BaseWebController
 
     public function edit(string $id): string|RedirectResponse
     {
-        $response = $this->safeApiCall(fn() => $this->userService->get($id));
+        $response = $this->safeApiCall(fn () => $this->userService->get($id));
 
         if (! $response['ok']) {
             return redirect()->to(route_to('admin.users'))->with('error', lang('Users.not_found'));
@@ -113,7 +113,7 @@ class UserController extends BaseWebController
 
         $payload = $request->payload();
 
-        $response = $this->safeApiCall(fn() => $this->userService->update($id, $payload));
+        $response = $this->safeApiCall(fn () => $this->userService->update($id, $payload));
 
         if (! $response['ok']) {
             return $this->failApi($response, lang('Users.update_failed'));
@@ -124,7 +124,7 @@ class UserController extends BaseWebController
 
     public function delete(string $id): RedirectResponse
     {
-        $response = $this->safeApiCall(fn() => $this->userService->delete($id));
+        $response = $this->safeApiCall(fn () => $this->userService->delete($id));
 
         if (! $response['ok']) {
             return $this->failApi($response, lang('Users.delete_failed'), route_to('admin.users'), false);
@@ -135,7 +135,7 @@ class UserController extends BaseWebController
 
     public function approve(string $id): RedirectResponse
     {
-        $response = $this->safeApiCall(fn() => $this->userService->approve($id));
+        $response = $this->safeApiCall(fn () => $this->userService->approve($id));
 
         if (! $response['ok']) {
             return $this->failApi($response, lang('Users.approve_failed'), route_to('admin.users.show', $id), false);

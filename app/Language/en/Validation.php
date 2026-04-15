@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
     'required'      => 'The {field} field is required.',
     'valid_email'   => 'The {field} field must be a valid email.',

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Config;
 
 use CodeIgniter\Events\Events;
@@ -33,7 +35,7 @@ Events::on('pre_system', static function (): void {
             ob_end_flush();
         }
 
-        ob_start(static fn($buffer) => $buffer);
+        ob_start(static fn ($buffer) => $buffer);
     }
 
     /*

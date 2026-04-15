@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 if (! function_exists('active_nav')) {
     function active_nav(string $uri, string $class = 'bg-brand-50 text-brand-700'): string
     {
@@ -82,7 +84,7 @@ if (! function_exists('query_without_page')) {
 
         return array_filter(
             $query,
-            static fn($key): bool => $key !== 'page' && $key !== 'cursor',
+            static fn ($key): bool => $key !== 'page' && $key !== 'cursor',
             ARRAY_FILTER_USE_KEY,
         );
     }

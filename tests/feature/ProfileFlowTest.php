@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Feature;
 
 use App\Modules\Profile\Services\ProfileApiService;
@@ -100,7 +102,7 @@ final class ProfileFlowTest extends CIUnitTestCase
             ->method('forgotPassword')
             ->with(
                 'user@example.com',
-                $this->callback(static fn(string $baseUrl): bool => $baseUrl !== '')
+                $this->callback(static fn (string $baseUrl): bool => $baseUrl !== '')
             )
             ->willReturn([
                 'ok'          => true,

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Config;
 
+use App\Filters\AdminFilter;
+use App\Filters\AuthFilter;
+use App\Filters\LocaleFilter;
 use CodeIgniter\Config\Filters as BaseFilters;
 use CodeIgniter\Filters\Cors;
 use CodeIgniter\Filters\CSRF;
@@ -14,9 +17,6 @@ use CodeIgniter\Filters\InvalidChars;
 use CodeIgniter\Filters\PageCache;
 use CodeIgniter\Filters\PerformanceMetrics;
 use CodeIgniter\Filters\SecureHeaders;
-use App\Filters\AdminFilter;
-use App\Filters\AuthFilter;
-use App\Filters\LocaleFilter;
 
 class Filters extends BaseFilters
 {

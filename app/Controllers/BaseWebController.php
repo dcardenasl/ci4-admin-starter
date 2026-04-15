@@ -24,7 +24,7 @@ abstract class BaseWebController extends BaseController
 
     protected array $viewData = [];
 
-    public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
+    public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger): void
     {
         parent::initController($request, $response, $logger);
 
@@ -266,7 +266,7 @@ abstract class BaseWebController extends BaseController
      */
     protected function resolveCatalogs(object $service): array
     {
-        $response = $this->safeApiCall(fn() => $service->index());
+        $response = $this->safeApiCall(fn () => $service->index());
         return $this->extractData($response);
     }
 

@@ -6,10 +6,10 @@ namespace App\Modules\Files\Controllers;
 
 use App\Controllers\BaseWebController;
 use App\Modules\Files\Requests\FileUploadRequest;
-use App\Services\CatalogApiService;
 use App\Modules\Files\Services\FileApiServiceInterface;
-use App\Support\FileSizeLimits;
+use App\Services\CatalogApiService;
 use App\Support\CatalogOptions;
+use App\Support\FileSizeLimits;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -20,7 +20,7 @@ class FileController extends BaseWebController
     protected FileApiServiceInterface $fileService;
     protected CatalogApiService $catalogService;
 
-    public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
+    public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger): void
     {
         parent::initController($request, $response, $logger);
         $this->fileService = service('fileApiService');
@@ -46,7 +46,7 @@ class FileController extends BaseWebController
         return $this->tableDataResponse(
             ['original_name', 'mime_type'],
             ['uploaded_at', 'original_name', 'mime_type', 'size'],
-            fn(array $params) => $this->fileService->list($params),
+            fn (array $params) => $this->fileService->list($params),
         );
     }
 
@@ -79,7 +79,7 @@ class FileController extends BaseWebController
 
         $tempPath = $file->getTempName();
 
-        $response = $this->safeApiCall(fn() => $this->fileService->upload(
+        $response = $this->safeApiCall(fn () => $this->fileService->upload(
             'file',
             $tempPath,
             $file->getName(),
@@ -123,7 +123,7 @@ class FileController extends BaseWebController
 
     protected function serveFile(string $id, string $disposition): ResponseInterface
     {
-        $response = $this->safeApiCall(fn() => $this->fileService->get($id));
+        $response = $this->safeApiCall(fn () => $this->fileService->get($id));
 
         if (! $response['ok']) {
             return $this->response->setStatusCode(404)->setBody('File not found');
@@ -181,7 +181,7 @@ class FileController extends BaseWebController
 
     public function delete(string $id): RedirectResponse
     {
-        $response = $this->safeApiCall(fn() => $this->fileService->delete($id));
+        $response = $this->safeApiCall(fn () => $this->fileService->delete($id));
 
         if (! $response['ok']) {
             return $this->failApi($response, lang('Files.delete_failed'), route_to('files'), false);

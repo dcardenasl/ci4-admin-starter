@@ -15,7 +15,6 @@ use App\Support\SessionKeys;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
-use Config\Services;
 
 class AuthController extends BaseWebController
 {
@@ -50,7 +49,7 @@ class AuthController extends BaseWebController
             return $invalid;
         }
 
-        $response = $this->safeApiCall(fn() => $this->authService->login($request->payload()));
+        $response = $this->safeApiCall(fn () => $this->authService->login($request->payload()));
 
         if (! $response['ok']) {
             return $this->failApi($response, lang('Auth.login_failed'), null, true, ['email', 'password']);
@@ -85,7 +84,7 @@ class AuthController extends BaseWebController
 
         $payload['client_base_url'] = $this->clientBaseUrl();
 
-        $response = $this->safeApiCall(fn() => $this->authService->googleLogin($payload));
+        $response = $this->safeApiCall(fn () => $this->authService->googleLogin($payload));
 
         if (! $response['ok']) {
             return redirect()->to(site_url('login'))
@@ -125,7 +124,7 @@ class AuthController extends BaseWebController
         $payload = $request->payload();
         $payload['client_base_url'] = $this->clientBaseUrl();
 
-        $response = $this->safeApiCall(fn() => $this->authService->register($payload));
+        $response = $this->safeApiCall(fn () => $this->authService->register($payload));
 
         if (! $response['ok']) {
             return $this->failApi(
@@ -160,7 +159,7 @@ class AuthController extends BaseWebController
         $payload = $request->payload();
         $payload['client_base_url'] = $this->clientBaseUrl();
 
-        $response = $this->safeApiCall(fn() => $this->authService->forgotPassword($payload['email'], $payload['client_base_url']));
+        $response = $this->safeApiCall(fn () => $this->authService->forgotPassword($payload['email'], $payload['client_base_url']));
 
         if (! $response['ok']) {
             return redirect()->back()->withInput()->with('error', $this->firstMessage($response, lang('Auth.forgot_failed')));
@@ -189,7 +188,7 @@ class AuthController extends BaseWebController
 
         $payload = $request->payload();
 
-        $response = $this->safeApiCall(fn() => $this->authService->resetPassword($payload));
+        $response = $this->safeApiCall(fn () => $this->authService->resetPassword($payload));
 
         if (! $response['ok']) {
             return $this->failApi($response, lang('Auth.reset_failed'), null, true, ['token', 'password', 'password_confirmation']);
@@ -201,7 +200,7 @@ class AuthController extends BaseWebController
     public function verifyEmail(): string
     {
         $token = (string) $this->request->getGet('token');
-        $response = $this->safeApiCall(fn() => $this->authService->verifyEmail($token));
+        $response = $this->safeApiCall(fn () => $this->authService->verifyEmail($token));
 
         return $this->renderAuth('auth/verify_email', [
             'title'    => lang('Auth.verify_title'),
@@ -214,7 +213,7 @@ class AuthController extends BaseWebController
     public function logout(): RedirectResponse
     {
         if ($this->session->has(SessionKeys::ACCESS_TOKEN)) {
-            $this->safeApiCall(fn() => $this->authService->logout());
+            $this->safeApiCall(fn () => $this->authService->logout());
         }
 
         $this->apiClient->clearSessionAuth();

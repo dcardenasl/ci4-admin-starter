@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 if (! function_exists('status_badge')) {
     function status_badge(?string $status): string
     {

@@ -103,11 +103,15 @@ if (! function_exists('is_cli')) {
 }
 
 if (! function_exists('log_message')) {
-    function log_message(string $level, string $message, array $context = []): void {}
+    function log_message(string $level, string $message, array $context = []): void
+    {
+    }
 }
 
 if (! function_exists('helper')) {
-    function helper($filenames = []): void {}
+    function helper($filenames = []): void
+    {
+    }
 }
 
 if (! function_exists('view')) {

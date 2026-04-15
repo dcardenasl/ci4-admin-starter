@@ -16,7 +16,7 @@ class ProfileController extends BaseWebController
 {
     protected ProfileApiServiceInterface $profileService;
 
-    public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
+    public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger): void
     {
         parent::initController($request, $response, $logger);
         $this->profileService = service('profileApiService');
@@ -58,7 +58,7 @@ class ProfileController extends BaseWebController
             return redirect()->to(route_to('profile'))->with('error', lang('Profile.update_failed'));
         }
 
-        $response = $this->safeApiCall(fn() => $this->profileService->update((string) $userId, $payload));
+        $response = $this->safeApiCall(fn () => $this->profileService->update((string) $userId, $payload));
 
         if (! $response['ok']) {
             return $this->failApi($response, lang('Profile.update_failed'));
@@ -76,7 +76,7 @@ class ProfileController extends BaseWebController
             return redirect()->to(route_to('profile'))->with('error', lang('Profile.password_reset_failed'));
         }
 
-        $response = $this->safeApiCall(fn() => $this->profileService->forgotPassword(
+        $response = $this->safeApiCall(fn () => $this->profileService->forgotPassword(
             $email,
             $this->clientBaseUrl(),
         ));
@@ -90,7 +90,7 @@ class ProfileController extends BaseWebController
 
     public function resendVerification(): RedirectResponse
     {
-        $response = $this->safeApiCall(fn() => $this->profileService->resendVerification([
+        $response = $this->safeApiCall(fn () => $this->profileService->resendVerification([
             'client_base_url' => $this->clientBaseUrl(),
         ]));
 
@@ -103,7 +103,7 @@ class ProfileController extends BaseWebController
 
     protected function refreshUserSession(): void
     {
-        $me = $this->safeApiCall(fn() => $this->profileService->me());
+        $me = $this->safeApiCall(fn () => $this->profileService->me());
 
         if (! $me['ok']) {
             return;

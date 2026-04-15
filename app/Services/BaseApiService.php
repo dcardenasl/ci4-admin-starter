@@ -8,5 +8,7 @@ use App\Libraries\ApiClientInterface;
 
 abstract class BaseApiService
 {
-    public function __construct(protected ApiClientInterface $apiClient) {}
+    public function __construct(protected ApiClientInterface $apiClient)
+    {
+    }
 }

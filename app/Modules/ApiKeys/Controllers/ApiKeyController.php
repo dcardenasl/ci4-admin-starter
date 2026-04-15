@@ -20,7 +20,7 @@ class ApiKeyController extends BaseWebController
     protected ApiKeyApiServiceInterface $apiKeyService;
     protected CatalogApiService $catalogService;
 
-    public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
+    public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger): void
     {
         parent::initController($request, $response, $logger);
         $this->apiKeyService = service('apiKeyApiService');
@@ -43,13 +43,13 @@ class ApiKeyController extends BaseWebController
         return $this->tableDataResponse(
             ['name', 'is_active'],
             ['id', 'name', 'is_active', 'created_at', 'rate_limit_requests', 'rate_limit_window'],
-            fn(array $params) => $this->apiKeyService->list($params),
+            fn (array $params) => $this->apiKeyService->list($params),
         );
     }
 
     public function show(string $id): string
     {
-        $response = $this->safeApiCall(fn() => $this->apiKeyService->get($id));
+        $response = $this->safeApiCall(fn () => $this->apiKeyService->get($id));
 
         return $this->renderResourceShow('api_keys/show', lang('ApiKeys.details'), 'apiKey', $response, lang('ApiKeys.not_found'));
     }
@@ -71,7 +71,7 @@ class ApiKeyController extends BaseWebController
         }
 
         $payload = $request->payload();
-        $response = $this->safeApiCall(fn() => $this->apiKeyService->create($payload));
+        $response = $this->safeApiCall(fn () => $this->apiKeyService->create($payload));
 
         if (! $response['ok']) {
             return $this->failApi($response, lang('ApiKeys.create_failed'));
@@ -97,7 +97,7 @@ class ApiKeyController extends BaseWebController
 
     public function edit(string $id): string|\CodeIgniter\HTTP\RedirectResponse
     {
-        $response = $this->safeApiCall(fn() => $this->apiKeyService->get($id));
+        $response = $this->safeApiCall(fn () => $this->apiKeyService->get($id));
 
         if (! $response['ok']) {
             return redirect()->to(route_to('admin.api_keys'))->with('error', lang('ApiKeys.not_found'));
@@ -127,7 +127,7 @@ class ApiKeyController extends BaseWebController
             return redirect()->back()->withInput()->with('error', lang('ApiKeys.at_least_one_field'));
         }
 
-        $response = $this->safeApiCall(fn() => $this->apiKeyService->update($id, $payload));
+        $response = $this->safeApiCall(fn () => $this->apiKeyService->update($id, $payload));
 
         if (! $response['ok']) {
             return $this->failApi($response, lang('ApiKeys.update_failed'));
@@ -138,7 +138,7 @@ class ApiKeyController extends BaseWebController
 
     public function delete(string $id): RedirectResponse
     {
-        $response = $this->safeApiCall(fn() => $this->apiKeyService->delete($id));
+        $response = $this->safeApiCall(fn () => $this->apiKeyService->delete($id));
 
         if (! $response['ok']) {
             return $this->failApi($response, lang('ApiKeys.delete_failed'), route_to('admin.api_keys'), false);

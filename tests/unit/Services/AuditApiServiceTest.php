@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Services;
 
 use App\Libraries\ApiClientInterface;
-use CodeIgniter\Test\CIUnitTestCase;
 use App\Modules\Audit\Services\AuditApiService;
+use CodeIgniter\Test\CIUnitTestCase;
 
 /**
  * @internal

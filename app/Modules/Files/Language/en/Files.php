@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
     'title'              => 'File Management',
     'upload_title'       => 'Upload New File',

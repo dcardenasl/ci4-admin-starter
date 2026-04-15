@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Audit\Controllers;
 
 use App\Controllers\BaseWebController;
-use App\Services\CatalogApiService;
 use App\Modules\Audit\Services\AuditApiServiceInterface;
+use App\Services\CatalogApiService;
 use App\Support\CatalogOptions;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;
@@ -18,7 +18,7 @@ class AuditController extends BaseWebController
     protected AuditApiServiceInterface $auditService;
     protected CatalogApiService $catalogService;
 
-    public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
+    public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger): void
     {
         parent::initController($request, $response, $logger);
         $this->auditService = service('auditApiService');
@@ -29,7 +29,7 @@ class AuditController extends BaseWebController
     {
         $catalogs = $this->resolveCatalogs($this->catalogService);
 
-        $facetsResponse = $this->safeApiCall(fn() => $this->catalogService->auditFacets());
+        $facetsResponse = $this->safeApiCall(fn () => $this->catalogService->auditFacets());
         $facets = $this->extractData($facetsResponse);
 
         $actionOptions = CatalogOptions::options(
@@ -59,13 +59,13 @@ class AuditController extends BaseWebController
         return $this->tableDataResponse(
             ['action', 'user_id', 'entity_type', 'entity_id', 'result', 'severity'],
             ['created_at', 'action', 'user_id', 'entity_type', 'entity_id', 'ip_address', 'user_agent', 'result', 'severity'],
-            fn(array $params) => $this->auditService->list($params),
+            fn (array $params) => $this->auditService->list($params),
         );
     }
 
     public function show(string $id): string
     {
-        $response = $this->safeApiCall(fn() => $this->auditService->get($id));
+        $response = $this->safeApiCall(fn () => $this->auditService->get($id));
 
         return $this->renderResourceShow('audit/show', lang('Audit.details'), 'log', $response, lang('Audit.not_found'));
     }

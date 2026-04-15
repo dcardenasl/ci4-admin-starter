@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use CodeIgniter\CLI\CLI;
 
 // The main Exception
@@ -50,7 +52,7 @@ if (defined('SHOW_DEBUG_BACKTRACE') && SHOW_DEBUG_BACKTRACE) {
             $function .= $padClass . $error['function'];
         }
 
-        $args = implode(', ', array_map(static fn($value): string => match (true) {
+        $args = implode(', ', array_map(static fn ($value): string => match (true) {
             is_object($value) => 'Object(' . $value::class . ')',
             is_array($value)  => $value !== [] ? '[...]' : '[]',
             $value === null   => 'null', // return the lowercased version

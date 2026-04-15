@@ -6,13 +6,13 @@
         <div>
             <?php
             $action = strtolower((string) ($item['action'] ?? ''));
-            $actionIcon = match ($action) {
-                'create', 'upload' => 'plus',
-                'update', 'edit'   => 'edit',
-                'delete', 'remove' => 'trash',
-                default            => 'activity',
-            };
-            ?>
+    $actionIcon = match ($action) {
+        'create', 'upload' => 'plus',
+        'update', 'edit'   => 'edit',
+        'delete', 'remove' => 'trash',
+        default            => 'activity',
+    };
+    ?>
             <span class="h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white <?= audit_action_badge($action) ?>">
                 <?= ui_icon($actionIcon, 'h-4 w-4 text-white') ?>
             </span>

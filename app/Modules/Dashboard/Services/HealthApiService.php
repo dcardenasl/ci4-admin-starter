@@ -79,7 +79,7 @@ class HealthApiService extends BaseApiService implements HealthApiServiceInterfa
         $paths = $this->healthPaths ?? config('ApiClient')->healthPaths ?? ['/health'];
         $resolved = array_values(array_filter(
             $paths,
-            static fn(mixed $path): bool => is_string($path) && trim($path) !== ''
+            static fn (mixed $path): bool => is_string($path) && trim($path) !== ''
         ));
 
         return $resolved !== [] ? $resolved : ['/health'];

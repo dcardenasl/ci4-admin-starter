@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 if (! function_exists('get_field_error')) {
     function get_field_error(string $field): string
     {

@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Requests\ApiKey;
 
 use App\Requests\ApiKey\ApiKeyUpdateRequest;
 use CodeIgniter\Test\CIUnitTestCase;
-use Config\Services;
 use CodeIgniter\Validation\ValidationInterface;
+use Config\Services;
 
 /**
  * @internal

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Requests\User;
 
 use App\Requests\User\UserStoreRequest;

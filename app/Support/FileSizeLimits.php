@@ -31,7 +31,7 @@ final class FileSizeLimits
             self::configuredMaxBytes(),
             self::phpUploadMaxBytes(),
             self::phpPostMaxBytes(),
-        ], static fn(int $value): bool => $value > 0);
+        ], static fn (int $value): bool => $value > 0);
 
         return $limits === [] ? self::DEFAULT_MAX_BYTES : min($limits);
     }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use CodeIgniter\Router\RouteCollection;
 
 /**
@@ -11,4 +13,4 @@ use CodeIgniter\Router\RouteCollection;
  */
 
 // Root redirect
-$routes->get('/', static fn() => redirect()->to(site_url('login')));
+$routes->get('/', static fn () => redirect()->to(site_url('login')));

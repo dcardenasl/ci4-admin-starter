@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
     'title'            => 'Gestión de Usuarios',
     'list'             => 'Lista de usuarios',

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Feature;
 
 use App\Modules\ApiKeys\Services\ApiKeyApiService;
@@ -125,7 +127,7 @@ final class ApiKeyFlowTest extends CIUnitTestCase
 
         $mock->expects($this->once())
             ->method('update')
-            ->with('15', $this->callback(static fn(array $payload): bool => ($payload['name'] ?? '') === 'Renamed'))
+            ->with('15', $this->callback(static fn (array $payload): bool => ($payload['name'] ?? '') === 'Renamed'))
             ->willReturn([
                 'ok'          => true,
                 'status'      => 200,

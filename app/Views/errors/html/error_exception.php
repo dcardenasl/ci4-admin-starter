@@ -1,6 +1,6 @@
 <?php
-use CodeIgniter\HTTP\Header;
 use CodeIgniter\CodeIgniter;
+use CodeIgniter\HTTP\Header;
 
 $errorId = uniqid('error', true);
 ?>
