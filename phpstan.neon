@@ -22,4 +22,5 @@ parameters:
         - app/Config/App.php
         - app/Config/Auth.php
         - app/Config/Services.php
+        - app/Config/Mimes.php
     treatPhpDocTypesAsCertain: false
