@@ -49,9 +49,6 @@
         "ext-xdebug": "If you use CIUnitTestCase::assertHeaderEmitted()"
     },
     "autoload": {
-        "psr-4": {
-            "CodeIgniter\\": "system/"
-        },
         "exclude-from-classmap": [
             "**/Database/Migrations/**"
         ]
