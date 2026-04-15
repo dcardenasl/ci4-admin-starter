@@ -40,16 +40,19 @@ class ApiClient implements ApiClientInterface
         );
     }
 
+    /** @param array<string, mixed> $query */
     public function get(string $path, array $query = []): array
     {
         return $this->request('GET', $path, ['query' => $query], true);
     }
 
+    /** @param array<string, mixed> $data */
     public function post(string $path, array $data = []): array
     {
         return $this->request('POST', $path, ['json' => $data], true);
     }
 
+    /** @param array<string, mixed> $data */
     public function put(string $path, array $data = []): array
     {
         return $this->request('PUT', $path, ['json' => $data], true);
@@ -60,16 +63,22 @@ class ApiClient implements ApiClientInterface
         return $this->request('DELETE', $path, [], true);
     }
 
+    /** @param array<string, mixed> $data */
     public function publicPost(string $path, array $data = []): array
     {
         return $this->request('POST', $path, ['json' => $data], false);
     }
 
+    /** @param array<string, mixed> $query */
     public function publicGet(string $path, array $query = []): array
     {
         return $this->request('GET', $path, ['query' => $query], false);
     }
 
+    /**
+     * @param array<string, mixed> $files
+     * @param array<string, mixed> $fields
+     */
     public function upload(string $path, array $files = [], array $fields = []): array
     {
         $multipart = [];
@@ -99,6 +108,7 @@ class ApiClient implements ApiClientInterface
     }
 
     /**
+     * @param array<string, mixed> $options
      * @return array{ok: bool, status: int, data: array<string, mixed>, raw: string, headers: array<string, string>, messages: list<string>, fieldErrors: array<string, string>}
      */
     public function request(string $method, string $path, array $options = [], bool $authenticated = true): array
@@ -182,7 +192,7 @@ class ApiClient implements ApiClientInterface
             return false;
         }
 
-        $payload = json_decode($response->getBody(), true);
+        $payload = json_decode((string) $response->getBody(), true);
         $data = $payload['data'] ?? $payload;
 
         $accessToken = $data[SessionKeys::ACCESS_TOKEN] ?? null;
@@ -226,6 +236,10 @@ class ApiClient implements ApiClientInterface
         return $path;
     }
 
+    /**
+     * @param array<string, mixed> $options
+     * @return array<string, mixed>
+     */
     protected function withAuthorization(array $options): array
     {
         $headers = $options['headers'] ?? [];
@@ -240,6 +254,10 @@ class ApiClient implements ApiClientInterface
         return $options;
     }
 
+    /**
+     * @param array<string, mixed> $options
+     * @return array<string, mixed>
+     */
     protected function withBaseHeaders(array $options): array
     {
         $headers = $options['headers'] ?? [];
@@ -346,6 +364,7 @@ class ApiClient implements ApiClientInterface
         return [];
     }
 
+    /** @return array<string, string> */
     protected function extractFieldErrors(mixed $payload): array
     {
         if (! is_array($payload)) {

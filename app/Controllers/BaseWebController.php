@@ -22,6 +22,7 @@ abstract class BaseWebController extends BaseController
 
     protected \CodeIgniter\Session\Session $session;
 
+    /** @var array<string, mixed> */
     protected array $viewData = [];
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger): void
@@ -43,6 +44,7 @@ abstract class BaseWebController extends BaseController
         ];
     }
 
+    /** @param array<string, mixed> $data */
     protected function render(string $view, array $data = [], string $layout = 'layouts/app'): string
     {
         return view($layout, array_merge($this->viewData, $data, [
@@ -50,6 +52,7 @@ abstract class BaseWebController extends BaseController
         ]));
     }
 
+    /** @param array<string, mixed> $data */
     protected function renderAuth(string $view, array $data = []): string
     {
         return $this->render($view, $data, 'layouts/auth');
@@ -65,6 +68,7 @@ abstract class BaseWebController extends BaseController
         return redirect()->to($redirectTo)->with('error', $message);
     }
 
+    /** @param array<string, mixed> $errors */
     protected function withFieldErrors(array $errors): RedirectResponse
     {
         return redirect()->back()->withInput()->with('fieldErrors', $errors);
@@ -92,6 +96,7 @@ abstract class BaseWebController extends BaseController
     /**
      * Build a consistent redirect response for failed API calls.
      *
+     * @param array<string, mixed> $response
      * @param array<int, string> $allowedFieldErrors
      */
     protected function failApi(
@@ -144,6 +149,10 @@ abstract class BaseWebController extends BaseController
         return rtrim(site_url('/'), '/');
     }
 
+    /**
+     * @param array<string, mixed> $response
+     * @return array<string, string>
+     */
     protected function getFieldErrors(array $response): array
     {
         $fieldErrors = $response['fieldErrors'] ?? [];
@@ -173,6 +182,8 @@ abstract class BaseWebController extends BaseController
 
     /**
      * Extract the first message from an API response array.
+     *
+     * @param array<string, mixed> $response
      */
     protected function firstMessage(array $response, string $fallback): string
     {
@@ -202,6 +213,9 @@ abstract class BaseWebController extends BaseController
     /**
      * Extract the nested 'data' items from an API list response.
      * Prioritizes the nested 'data' key commonly found in paginated responses.
+     *
+     * @param array<string, mixed> $response
+     * @return array<string, mixed>
      */
     protected function extractItems(array $response): array
     {
@@ -219,6 +233,9 @@ abstract class BaseWebController extends BaseController
     /**
      * Extract the nested 'data' payload from an API response.
      * Supports both single object and paginated list responses.
+     *
+     * @param array<string, mixed> $response
+     * @return array<string, mixed>
      */
     protected function extractData(array $response): array
     {
@@ -237,7 +254,7 @@ abstract class BaseWebController extends BaseController
      * Wrap an API call in a try/catch, returning a graceful error response on failure.
      *
      * @param callable $callback A closure that performs the API call and returns its result.
-     * @return array The API response array, or a synthetic error response on exception.
+     * @return array<string, mixed> The API response array, or a synthetic error response on exception.
      */
     protected function safeApiCall(callable $callback): array
     {
@@ -266,13 +283,15 @@ abstract class BaseWebController extends BaseController
      */
     protected function resolveCatalogs(object $service): array
     {
+        /** @phpstan-ignore method.notFound */
         $response = $this->safeApiCall(fn () => $service->index());
         return $this->extractData($response);
     }
 
     protected function positiveIntFromQuery(string $key, int $default, int $max = 200): int
     {
-        $value = (int) $this->request->getGet($key);
+        $raw = $this->request->getGet($key);
+        $value = is_numeric($raw) ? (int) $raw : $default;
 
         if ($value <= 0) {
             $value = $default;
@@ -283,6 +302,8 @@ abstract class BaseWebController extends BaseController
 
     /**
      * Render a resource detail view with a consistent not-found fallback.
+     *
+     * @param array<string, mixed> $response
      */
     protected function renderResourceShow(
         string $view,
