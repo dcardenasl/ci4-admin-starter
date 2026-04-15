@@ -36,7 +36,7 @@ class AuthController extends BaseWebController
             'title'          => lang('Auth.login_title'),
             'subtitle'       => lang('Auth.login_subtitle'),
             'googleEnabled'  => $this->isGoogleLoginEnabled(),
-            'googleClientId' => trim((string) env('GOOGLE_CLIENT_ID', '')),
+            'googleClientId' => trim(is_string(env('GOOGLE_CLIENT_ID')) ? env('GOOGLE_CLIENT_ID') : ''),
         ]);
     }
 
@@ -199,7 +199,8 @@ class AuthController extends BaseWebController
 
     public function verifyEmail(): string
     {
-        $token = (string) $this->request->getGet('token');
+        $rawToken = $this->request->getGet('token');
+        $token = is_string($rawToken) ? $rawToken : '';
         $response = $this->safeApiCall(fn () => $this->authService->verifyEmail($token));
 
         return $this->renderAuth('auth/verify_email', [
@@ -222,6 +223,7 @@ class AuthController extends BaseWebController
         return redirect()->to(site_url('login'))->with('success', lang('Auth.logout_success'));
     }
 
+    /** @param array<string, mixed> $data */
     protected function persistAuthSession(array $data): void
     {
         $this->session->regenerate(true);
@@ -233,7 +235,8 @@ class AuthController extends BaseWebController
 
     protected function isGoogleLoginEnabled(): bool
     {
-        return trim((string) env('GOOGLE_CLIENT_ID', '')) !== '';
+        $clientId = env('GOOGLE_CLIENT_ID');
+        return is_string($clientId) && trim($clientId) !== '';
     }
 
     protected function hasValidGoogleIdTokenClaims(string $idToken): bool
@@ -249,7 +252,8 @@ class AuthController extends BaseWebController
         }
 
         $audience = $claims['aud'] ?? null;
-        $expectedAudience = trim((string) env('GOOGLE_CLIENT_ID', ''));
+        $rawAudience = env('GOOGLE_CLIENT_ID');
+        $expectedAudience = is_string($rawAudience) ? trim($rawAudience) : '';
         if ($expectedAudience === '') {
             return false;
         }

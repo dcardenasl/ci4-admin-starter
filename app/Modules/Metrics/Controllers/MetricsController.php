@@ -36,7 +36,8 @@ class MetricsController extends BaseWebController
         ]);
 
         $defaultFilters = $this->defaultFilters();
-        $period = trim((string) ($this->request->getGet('period') ?? '24h'));
+        $rawPeriod = $this->request->getGet('period');
+        $period = trim(is_string($rawPeriod) ? $rawPeriod : '24h');
         $allowedPeriods = array_column($periodOptions, 'value');
         if (! in_array($period, $allowedPeriods, true)) {
             $period = '24h';
@@ -60,7 +61,7 @@ class MetricsController extends BaseWebController
             'timeseries'     => $timeseriesData,
             'filters'        => $viewFilters,
             'defaultFilters' => $defaultFilters,
-            'hasFilters'     => has_active_filters($this->request->getGet(), $defaultFilters),
+            'hasFilters'     => has_active_filters(is_array($this->request->getGet()) ? $this->request->getGet() : null, $defaultFilters),
             'periodOptions'  => $periodOptions,
         ]);
     }

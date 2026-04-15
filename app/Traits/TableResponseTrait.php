@@ -24,8 +24,10 @@ trait TableResponseTrait
      */
     protected function resolveDateRange(int $defaultDays = 30): array
     {
-        $date_from = trim((string) $this->request->getGet('date_from'));
-        $date_to = trim((string) $this->request->getGet('date_to'));
+        $rawFrom = $this->request->getGet('date_from');
+        $date_from = trim(is_string($rawFrom) ? $rawFrom : '');
+        $rawTo = $this->request->getGet('date_to');
+        $date_to = trim(is_string($rawTo) ? $rawTo : '');
 
         $today = new \DateTimeImmutable('today');
 
@@ -54,6 +56,7 @@ trait TableResponseTrait
         return $dt instanceof \DateTimeImmutable && $dt->format('Y-m-d') === $date;
     }
 
+    /** @param array<string, mixed> $apiResponse */
     protected function passthroughApiJsonResponse(array $apiResponse): ResponseInterface
     {
         $status = (int) ($apiResponse['status'] ?? 500);
@@ -113,7 +116,8 @@ trait TableResponseTrait
      */
     protected function resolveTableState(array $allowedFilters = [], array $allowedSorts = [], int $defaultLimit = 25, int $maxLimit = 100): array
     {
-        $search = trim((string) ($this->request->getGet('search') ?? ''));
+        $rawSearch = $this->request->getGet('search');
+        $search = trim(is_string($rawSearch) ? $rawSearch : '');
 
         $filters = [];
         foreach ($allowedFilters as $filter) {
@@ -122,13 +126,14 @@ trait TableResponseTrait
             }
 
             $value = $this->request->getGet($filter);
-            $value = trim((string) $value);
+            $value = trim(is_string($value) ? $value : '');
             if ($value !== '') {
                 $filters[$filter] = $value;
             }
         }
 
-        $sort = trim((string) ($this->request->getGet('sort') ?? ''));
+        $rawSort = $this->request->getGet('sort');
+        $sort = trim(is_string($rawSort) ? $rawSort : '');
         if ($sort !== '') {
             $sortField = ltrim($sort, '-');
             if (! in_array($sortField, $allowedSorts, true)) {
@@ -136,16 +141,19 @@ trait TableResponseTrait
             }
         }
 
-        $limit = (int) ($this->request->getGet('limit') ?? 0);
+        $rawLimit = $this->request->getGet('limit');
+        $limit = is_numeric($rawLimit) ? (int) $rawLimit : 0;
         if ($limit <= 0) {
-            $limit = (int) ($this->request->getGet('per_page') ?? 0);
+            $rawPerPage = $this->request->getGet('per_page');
+            $limit = is_numeric($rawPerPage) ? (int) $rawPerPage : 0;
         }
         if ($limit <= 0) {
             $limit = $defaultLimit;
         }
         $limit = min($limit, $maxLimit);
 
-        $cursor = trim((string) ($this->request->getGet('cursor') ?? ''));
+        $rawCursor = $this->request->getGet('cursor');
+        $cursor = trim(is_string($rawCursor) ? $rawCursor : '');
         $page = $this->positiveIntFromQuery('page', 1);
 
         return [
@@ -230,6 +238,7 @@ trait TableResponseTrait
     /**
      * @param array<string, mixed> $response
      * @param array<string, mixed> $state
+     * @return array<string, mixed>
      */
     protected function resolveTablePagination(array $response, array $state, int $visibleCount = 0): array
     {

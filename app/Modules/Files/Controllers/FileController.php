@@ -55,14 +55,16 @@ class FileController extends BaseWebController
         /** @var FileUploadRequest $request */
         $request = service('formRequest', FileUploadRequest::class, false);
         if (! $request->validate()) {
-            if ($this->request->isAJAX()) {
+            if ($this->request instanceof \CodeIgniter\HTTP\IncomingRequest && $this->request->isAJAX()) {
                 return $this->response->setJSON(['ok' => false, 'fieldErrors' => $request->errors()]);
             }
 
             return redirect()->to(route_to('files'))->with('fieldErrors', $request->errors());
         }
 
-        $file = $this->request->getFile('file');
+        $file = $this->request instanceof \CodeIgniter\HTTP\IncomingRequest
+            ? $this->request->getFile('file')
+            : null;
 
         if ($file === null || ! $file->isValid()) {
             $maxSizeMb = FileSizeLimits::bytesToMb(FileSizeLimits::effectiveMaxBytes());
@@ -70,7 +72,7 @@ class FileController extends BaseWebController
                 ? lang('Files.file_too_large', [$maxSizeMb])
                 : lang('Files.invalid_file');
 
-            if ($this->request->isAJAX()) {
+            if ($this->request instanceof \CodeIgniter\HTTP\IncomingRequest && $this->request->isAJAX()) {
                 return $this->response->setJSON(['ok' => false, 'messages' => [$error]]);
             }
 
@@ -88,7 +90,7 @@ class FileController extends BaseWebController
         ));
 
         if (! $response['ok']) {
-            if ($this->request->isAJAX()) {
+            if ($this->request instanceof \CodeIgniter\HTTP\IncomingRequest && $this->request->isAJAX()) {
                 return $this->response->setJSON([
                     'ok'          => false,
                     'messages'    => $response['messages'] ?? [lang('Files.upload_failed')],
@@ -99,7 +101,7 @@ class FileController extends BaseWebController
             return $this->failApi($response, lang('Files.upload_failed'), route_to('files'), false);
         }
 
-        if ($this->request->isAJAX()) {
+        if ($this->request instanceof \CodeIgniter\HTTP\IncomingRequest && $this->request->isAJAX()) {
             session()->setFlashdata('success', lang('Files.upload_success'));
             return $this->response->setJSON([
                 'ok'       => true,

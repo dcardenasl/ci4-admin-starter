@@ -47,6 +47,10 @@ class LocaleFilter implements FilterInterface
 
     private function applyLocale(string $locale): void
     {
+        if ($locale === '') {
+            return;
+        }
+
         service('request')->setLocale($locale);
         Services::language()->setLocale($locale);
     }
