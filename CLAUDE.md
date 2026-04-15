@@ -27,9 +27,26 @@ Browser → CI4 Admin Starter (port 8082) → ci4-api-starter API (port 8080)
 ## Development Commands
 
 ### Setup and Installation
+
+**Quick setup (recommended):**
 ```bash
-# Install dependencies
+# Run the interactive setup script
+bash install.sh
+
+# This automates:
+# - Creating .env from template
+# - Configuring CI_ENVIRONMENT, baseURL, apiClient settings
+# - Installing Composer and npm dependencies (optional prompts)
+# - Updating all template references (API name, port, etc)
+```
+
+**Manual setup:**
+```bash
+# Install PHP dependencies
 composer install
+
+# Install npm dependencies (for Tailwind CSS building)
+npm install
 
 # Create local environment file
 cp env .env
@@ -42,15 +59,25 @@ cp env .env
 ```
 
 ### Running the Application
-```bash
-# Start development server (default port 8080)
-php spark serve
 
+**Terminal 1: Start PHP development server**
+```bash
 # Start on specific port (recommended for this project)
 php spark serve --port 8082
 ```
 
+**Terminal 2: Watch and rebuild CSS**
+```bash
+# Start Tailwind CSS watcher
+npm run dev:css
+```
+
 Application will be available at: `http://localhost:8082`
+
+**Notes:**
+- Both terminal sessions should run in parallel during development
+- CSS must be built via npm (Tailwind) — the styles are not included in the CDN version used in production
+- Production builds use `npm run build:css` to generate minified CSS (see DEPLOYMENT.md)
 
 ### Testing
 ```bash
@@ -69,12 +96,42 @@ vendor/bin/phpunit -d memory_limit=1024m
 ```
 
 ### Code Quality
+
+**PHP:**
 ```bash
+# Run PHPStan (static analysis)
+vendor/bin/phpstan analyse
+
 # Run PHP CS Fixer (code style)
 vendor/bin/php-cs-fixer fix
 
 # Run with dry-run to see what would change
 vendor/bin/php-cs-fixer fix --dry-run --diff
+
+# Run full quality check (analyse + format check)
+composer quality
+```
+
+**JavaScript:**
+```bash
+# Lint JavaScript files
+npm run lint:js
+
+# Lint all JS files (not just app.js)
+npm run lint:all
+```
+
+**Composer scripts:**
+```bash
+composer test            # Run all tests (no coverage)
+composer test:coverage   # Run tests with coverage report
+composer test:unit       # Run unit tests only
+composer test:feature    # Run feature tests only
+composer analyse         # PHPStan analysis
+composer format:check    # Check code style (dry-run)
+composer format          # Auto-fix code style
+composer quality         # Run analyse + format:check
+composer ci              # Full CI suite: tests + quality
 ```
 
 ## Core Architecture Patterns

@@ -122,8 +122,19 @@ For a deep dive into the architecture, frontend conventions, services, and deplo
 
 ## Instalacion
 
+### Opcion 1: Setup rapido (recomendado)
+
+```bash
+bash install.sh
+```
+
+El script `install.sh` automatiza toda la configuracion: crea `.env`, actualiza referencias del template, y opcionalmente ejecuta `composer install` e `npm install`.
+
+### Opcion 2: Setup manual
+
 ```bash
 composer install
+npm install
 cp env .env
 ```
 
@@ -148,11 +159,23 @@ FILE_MAX_SIZE = 10485760
 
 ## Desarrollo
 
+### Iniciar el servidor web
+
 ```bash
 php spark serve --port 8082
 ```
 
 Aplicacion disponible en `http://localhost:8082`.
+
+### Construir estilos CSS (Tailwind)
+
+En otra terminal, inicia el watcher de Tailwind para reconstruir CSS durante desarrollo:
+
+```bash
+npm run dev:css
+```
+
+Esto recompila `src/css/app.css` en `public/assets/css/app.css` automáticamente cuando cambias los ficheros.
 
 ## Pruebas
 

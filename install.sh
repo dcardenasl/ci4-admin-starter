@@ -140,8 +140,8 @@ read -r -p "$(echo -e "  ${BOLD}URL GitHub del API${RESET}\n  [${DEFAULT_GITHUB}
 API_GITHUB_URL="${INPUT_API_GITHUB_URL:-${DEFAULT_GITHUB}}"
 validate_url "$API_GITHUB_URL" "URL GitHub del API"
 
-read -r -p "$(echo -e "  ${BOLD}URL base del API${RESET} (reemplaza 'http://localhost:8080') [http://localhost:8081]: ")" INPUT_API_BASE_URL
-API_BASE_URL="${INPUT_API_BASE_URL:-http://localhost:8081}"
+read -r -p "$(echo -e "  ${BOLD}URL base del API${RESET} (reemplaza 'http://localhost:8080') [http://localhost:8080]: ")" INPUT_API_BASE_URL
+API_BASE_URL="${INPUT_API_BASE_URL:-http://localhost:8080}"
 validate_url "$API_BASE_URL" "URL base del API"
 
 read -r -p "$(echo -e "  ${BOLD}Nombre del panel admin${RESET} (reemplaza 'API Client') [My Admin Panel]: ")" INPUT_APP_NAME
