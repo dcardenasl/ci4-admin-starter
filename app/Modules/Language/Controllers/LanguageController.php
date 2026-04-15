@@ -15,7 +15,7 @@ class LanguageController extends BaseWebController
         $locale = $this->request->getPost('locale');
         $supported = config('App')->supportedLocales;
 
-        if (is_string($locale) && in_array($locale, $supported, true)) {
+        if (is_string($locale) && $locale !== '' && in_array($locale, $supported, true)) {
             session()->set('locale', $locale);
             service('request')->setLocale($locale);
             Services::language()->setLocale($locale);
