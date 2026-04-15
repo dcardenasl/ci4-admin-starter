@@ -24,8 +24,8 @@ class ProfileUpdateRequest extends BaseFormRequest
     public function payload(): array
     {
         return [
-            'first_name' => (string) $this->request->getPost('first_name'),
-            'last_name'  => (string) $this->request->getPost('last_name'),
+            'first_name' => $this->postString('first_name'),
+            'last_name'  => $this->postString('last_name'),
         ];
     }
 }

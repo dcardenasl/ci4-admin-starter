@@ -43,7 +43,7 @@ class ApiKeyStoreRequest extends BaseFormRequest
     {
         $payload = [];
 
-        $name = trim((string) $this->request->getPost('name'));
+        $name = trim($this->postString('name'));
         if ($name !== '') {
             $payload['name'] = $name;
         }
@@ -61,7 +61,7 @@ class ApiKeyStoreRequest extends BaseFormRequest
         ];
 
         foreach ($numericFields as $field) {
-            $value = trim((string) $this->request->getPost($field));
+            $value = trim($this->postString($field));
             if ($value !== '') {
                 $payload[$field] = (int) $value;
             }

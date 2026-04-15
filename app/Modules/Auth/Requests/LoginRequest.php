@@ -24,8 +24,8 @@ class LoginRequest extends BaseFormRequest
     public function payload(): array
     {
         return [
-            'email'    => (string) $this->request->getPost('email'),
-            'password' => (string) $this->request->getPost('password'),
+            'email'    => $this->postString('email'),
+            'password' => $this->postString('password'),
         ];
     }
 }

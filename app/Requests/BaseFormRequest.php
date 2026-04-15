@@ -74,4 +74,14 @@ abstract class BaseFormRequest implements FormRequestInterface
     {
         return $this->validation->getErrors();
     }
+
+    /**
+     * Return a scalar POST field as string, empty string if missing or non-scalar.
+     */
+    protected function postString(string $field): string
+    {
+        $value = $this->request->getPost($field);
+
+        return is_scalar($value) ? (string) $value : '';
+    }
 }

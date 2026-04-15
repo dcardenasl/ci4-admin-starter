@@ -26,13 +26,13 @@ class UserUpdateRequest extends BaseFormRequest
     public function payload(): array
     {
         $payload = [
-            'first_name' => (string) $this->request->getPost('first_name'),
-            'last_name'  => (string) $this->request->getPost('last_name'),
-            'role'      => (string) $this->request->getPost('role'),
+            'first_name' => $this->postString('first_name'),
+            'last_name'  => $this->postString('last_name'),
+            'role'      => $this->postString('role'),
         ];
 
-        $email = trim((string) $this->request->getPost('email'));
-        $original_email = trim((string) $this->request->getPost('original_email'));
+        $email = trim($this->postString('email'));
+        $original_email = trim($this->postString('original_email'));
 
         if ($original_email === '' || mb_strtolower($email) !== mb_strtolower($original_email)) {
             $payload['email'] = $email;

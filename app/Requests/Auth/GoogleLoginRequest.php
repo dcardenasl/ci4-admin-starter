@@ -23,7 +23,7 @@ class GoogleLoginRequest extends BaseFormRequest
     public function payload(): array
     {
         return [
-            'id_token' => trim((string) $this->request->getPost('id_token')),
+            'id_token' => trim($this->postString('id_token')),
         ];
     }
 }

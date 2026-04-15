@@ -27,11 +27,11 @@ class RegisterRequest extends BaseFormRequest
     public function payload(): array
     {
         return [
-            'first_name'            => (string) $this->request->getPost('first_name'),
-            'last_name'             => (string) $this->request->getPost('last_name'),
-            'email'                => (string) $this->request->getPost('email'),
-            'password'             => (string) $this->request->getPost('password'),
-            'password_confirmation' => (string) $this->request->getPost('password_confirmation'),
+            'first_name'            => $this->postString('first_name'),
+            'last_name'             => $this->postString('last_name'),
+            'email'                => $this->postString('email'),
+            'password'             => $this->postString('password'),
+            'password_confirmation' => $this->postString('password_confirmation'),
         ];
     }
 }

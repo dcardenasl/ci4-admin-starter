@@ -26,10 +26,10 @@ class ResetPasswordRequest extends BaseFormRequest
     public function payload(): array
     {
         return [
-            'token'                => (string) $this->request->getPost('token'),
-            'email'                => (string) $this->request->getPost('email'),
-            'password'             => (string) $this->request->getPost('password'),
-            'password_confirmation' => (string) $this->request->getPost('password_confirmation'),
+            'token'                => $this->postString('token'),
+            'email'                => $this->postString('email'),
+            'password'             => $this->postString('password'),
+            'password_confirmation' => $this->postString('password_confirmation'),
         ];
     }
 }

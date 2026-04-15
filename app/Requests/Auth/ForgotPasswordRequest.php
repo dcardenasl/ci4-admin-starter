@@ -23,7 +23,7 @@ class ForgotPasswordRequest extends BaseFormRequest
     public function payload(): array
     {
         return [
-            'email' => (string) $this->request->getPost('email'),
+            'email' => $this->postString('email'),
         ];
     }
 }
