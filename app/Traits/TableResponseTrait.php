@@ -208,9 +208,9 @@ trait TableResponseTrait
         }
 
         $limit = (int) ($state['limit'] ?? 25);
-        if ($limit > 0) {
-            $params['limit'] = $limit;
-        }
+        $limit = max(1, $limit);
+        $params['limit'] = $limit;
+        $params['per_page'] = $limit;
 
         $cursor = trim((string) ($state['cursor'] ?? ''));
         if ($cursor !== '') {
