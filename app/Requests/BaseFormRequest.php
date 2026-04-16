@@ -16,6 +16,16 @@ abstract class BaseFormRequest implements FormRequestInterface
     }
 
     /**
+     * CI4 validation rules for this form.
+     * Keys are field names; values are rule strings or rule arrays.
+     *
+     * @return array<string, array<string>|string>
+     */
+    abstract public function rules(): array;
+
+    /**
+     * Fields whose values will be extracted from the POST body.
+     *
      * @return array<int, string>
      */
     abstract protected function fields(): array;
@@ -83,5 +93,42 @@ abstract class BaseFormRequest implements FormRequestInterface
         $value = $this->request->getPost($field);
 
         return is_scalar($value) ? (string) $value : '';
+    }
+
+    /**
+     * Return a POST field coerced to int. Returns $default when missing or non-numeric.
+     */
+    protected function postInt(string $field, int $default = 0): int
+    {
+        $value = $this->request->getPost($field);
+
+        if (is_numeric($value)) {
+            return (int) $value;
+        }
+
+        return $default;
+    }
+
+    /**
+     * Return a POST field as bool.
+     * Truthy values: '1', 'true', 'on', 'yes' (case-insensitive).
+     */
+    protected function postBool(string $field): bool
+    {
+        $value = strtolower(trim($this->postString($field)));
+
+        return in_array($value, ['1', 'true', 'on', 'yes'], true);
+    }
+
+    /**
+     * Return a POST field as array. Returns empty array when missing or non-array.
+     *
+     * @return array<mixed>
+     */
+    protected function postArray(string $field): array
+    {
+        $value = $this->request->getPost($field);
+
+        return is_array($value) ? $value : [];
     }
 }
