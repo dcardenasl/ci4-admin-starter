@@ -272,6 +272,89 @@ final class ApiClientTest extends CIUnitTestCase
         $this->assertSame(['data' => ['uploaded' => true]], $result['data']);
     }
 
+    public function testUploadUsesExplicitMimeTypeWhenProvided(): void
+    {
+        session()->set(SessionKeys::ACCESS_TOKEN, 'test-token');
+        $client   = new ApiClient(new ApiClientConfig());
+        $filePath = tempnam(sys_get_temp_dir(), 'api-client-upload');
+        file_put_contents($filePath, 'plain text content');
+
+        $response = $this->createResponseMock(201, ['data' => ['uploaded' => true]]);
+        $http     = $this->createMock(\CodeIgniter\HTTP\CURLRequest::class);
+        $http->expects($this->once())
+            ->method('request')
+            ->with(
+                'POST',
+                '/api/v1/test',
+                $this->callback(function (array $options) use ($filePath): bool {
+                    /** @var \CURLFile $curlFile */
+                    $curlFile = $options['multipart']['file'];
+                    $this->assertInstanceOf(\CURLFile::class, $curlFile);
+                    // Explicit mimeType must take priority over finfo detection
+                    $this->assertSame('application/pdf', $curlFile->getMimeType());
+                    $this->assertSame('report.pdf', $curlFile->getPostFilename());
+
+                    return true;
+                })
+            )
+            ->willReturn($response);
+
+        $this->setProtectedProperty($client, 'http', $http);
+
+        try {
+            $result = $client->upload('/test', [
+                'file' => [
+                    'path'     => $filePath,
+                    'mimeType' => 'application/pdf',
+                    'filename' => 'report.pdf',
+                ],
+            ]);
+        } finally {
+            @unlink($filePath);
+        }
+
+        $this->assertTrue($result['ok']);
+    }
+
+    public function testUploadFallsBackToOctetStreamForUnknownMimeType(): void
+    {
+        session()->set(SessionKeys::ACCESS_TOKEN, 'test-token');
+        $client   = new ApiClient(new ApiClientConfig());
+
+        // Create a temp file with no extension and ambiguous binary content
+        $filePath = tempnam(sys_get_temp_dir(), 'api-client-bin');
+        file_put_contents($filePath, "\x00\x01\x02\x03\xff\xfe\xfd");
+
+        $response = $this->createResponseMock(201, ['data' => ['uploaded' => true]]);
+        $http     = $this->createMock(\CodeIgniter\HTTP\CURLRequest::class);
+        $http->expects($this->once())
+            ->method('request')
+            ->with(
+                'POST',
+                '/api/v1/test',
+                $this->callback(function (array $options): bool {
+                    /** @var \CURLFile $curlFile */
+                    $curlFile = $options['multipart']['file'];
+                    $this->assertInstanceOf(\CURLFile::class, $curlFile);
+                    // finfo may detect a type or fall back to octet-stream — either is a non-empty string
+                    $this->assertNotSame('', $curlFile->getMimeType());
+
+                    return true;
+                })
+            )
+            ->willReturn($response);
+
+        $this->setProtectedProperty($client, 'http', $http);
+
+        try {
+            $result = $client->upload('/test', ['file' => $filePath]);
+        } finally {
+            @unlink($filePath);
+        }
+
+        $this->assertTrue($result['ok']);
+    }
+
     // ─── Token Refresh Flow (401 → Retry) ──────────────────────────
 
     public function testAttemptTokenRefreshFailsWithoutRefreshToken(): void
