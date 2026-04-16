@@ -75,7 +75,12 @@ system/
 #-------------------------
 .idea/
 *.iml
-.vscode/
+# Exclude all .vscode files except shared team settings
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+# NEVER commit sftp.json — it contains server credentials
+.vscode/sftp.json
 .php-version
 
 #-------------------------
