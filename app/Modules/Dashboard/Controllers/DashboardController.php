@@ -34,19 +34,19 @@ class DashboardController extends BaseWebController
         $dateRange = $this->resolveDateRange();
         $isAdmin = has_admin_access((string) (session('user.role') ?? ''));
 
-        // 1. Recursos con sus totales reales (según contrato /users y /files -> meta.total)
+        // 1. Resource totals from API contract: /users and /files return meta.total
         $usersResponse = $isAdmin
             ? $this->safeApiCall(fn () => $this->userService->list(['limit' => 1]))
             : ['ok' => false, 'data' => []];
 
         $filesResponse = $this->safeApiCall(fn () => $this->fileService->list(['limit' => 5]));
 
-        // 2. Métricas de red (según contrato /metrics -> request_stats)
+        // 2. Network metrics from /metrics -> request_stats
         $metricsResponse = $this->safeApiCall(fn () => $this->metricsService->summary($dateRange));
 
         $healthResponse = $this->safeApiCall(fn () => $this->healthService->check());
 
-        // Procesamiento de datos
+        // Data processing
         $metrics = $this->extractData($metricsResponse);
         $health = $healthResponse;
 
@@ -60,7 +60,7 @@ class DashboardController extends BaseWebController
         $totalFiles = $payloadFiles['meta']['total'] ?? $payloadFiles['data']['meta']['total'] ?? $payloadFiles['total'] ?? 0;
         $recentFiles = $this->extractItems($filesResponse);
 
-        // Definición de estadísticas basadas en información REAL y EXISTENTE
+        // Build stats from real, available data only
         $stats = [
             'users' => [
                 'label' => lang('Dashboard.total_users'),
@@ -74,7 +74,7 @@ class DashboardController extends BaseWebController
             ],
         ];
 
-        // Añadir métricas de red solo si el contrato o la respuesta las provee (con fallbacks robustos)
+        // Include availability metric only when the API contract provides it
         $uptime = $metrics['request_stats']['availability_percent']
                ?? $metrics['slo']['availability_percent']
                ?? null;

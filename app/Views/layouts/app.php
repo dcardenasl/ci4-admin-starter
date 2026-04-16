@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="<?= esc($currentLocale ?? 'es') ?>">
+<html lang="<?= esc($currentLocale ?? 'es') ?>" data-env="<?= esc(ENVIRONMENT) ?>">
 <head>
     <?= $this->include('layouts/partials/head') ?>
 </head>

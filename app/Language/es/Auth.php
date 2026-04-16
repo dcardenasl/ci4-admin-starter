@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 return [
     'email_label'       => 'Correo',
-    'password_label'    => 'Password',
+    'password_label'    => 'Contraseña',
     'first_name_label'   => 'Nombre',
     'last_name_label'    => 'Apellido',
     'login_title'       => 'Iniciar sesión',
