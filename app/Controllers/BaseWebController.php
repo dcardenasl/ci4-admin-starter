@@ -155,9 +155,15 @@ abstract class BaseWebController extends BaseController
      */
     protected function getFieldErrors(array $response): array
     {
-        $fieldErrors = $response['fieldErrors'] ?? [];
+        if (! isset($response['fieldErrors'])) {
+            return [];
+        }
+
+        $fieldErrors = $response['fieldErrors'];
 
         if (! is_array($fieldErrors)) {
+            log_message('warning', '[BaseWebController] Unexpected fieldErrors type: ' . gettype($fieldErrors));
+
             return [];
         }
 
@@ -168,16 +174,10 @@ abstract class BaseWebController extends BaseController
                 continue;
             }
 
-            $normalizedKey = $this->normalizeErrorKey($key);
-            $normalized[$normalizedKey] = $this->localizeApiMessage((string) $value);
+            $normalized[$key] = $this->localizeApiMessage((string) $value);
         }
 
         return $normalized;
-    }
-
-    protected function normalizeErrorKey(string $key): string
-    {
-        return $key;
     }
 
     /**
@@ -196,18 +196,25 @@ abstract class BaseWebController extends BaseController
         return $fallback;
     }
 
+    /**
+     * Map known API error codes to localized strings.
+     *
+     * The API (ci4-api-starter) returns snake_case error codes as message strings.
+     * Translations live in app/Language/{locale}/ApiErrors.php so they stay in sync
+     * with both supported locales. Add entries there when you discover new API codes.
+     */
     protected function localizeApiMessage(string $message): string
     {
-        $normalized = trim($message);
+        $normalized = strtolower(trim($message));
+        $localized  = lang('ApiErrors.' . $normalized);
 
-        // TODO: API should return translation keys instead of English prose.
-        // For now, map known API error keys to language strings.
-        // This mapping should be managed in language files for maintainability.
-        $knownTranslations = [
-            'email_already_registered' => lang('Auth.email_already_registered'),
-        ];
+        // lang() returns the key string (e.g. "ApiErrors.some_code") when not found.
+        // Fall back to the original message to avoid showing raw key strings.
+        if (is_string($localized) && ! str_starts_with($localized, 'ApiErrors.')) {
+            return $localized;
+        }
 
-        return $knownTranslations[$normalized] ?? $message;
+        return $message;
     }
 
     /**
