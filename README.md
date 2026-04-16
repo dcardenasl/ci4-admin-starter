@@ -1,288 +1,317 @@
-# CI4 Admin Starter Template
+# CI4 Admin Starter
 
-Template base en CodeIgniter 4 para levantar nuevos proyectos de **frontend administrativo** server-rendered.
+A production-ready **CodeIgniter 4 administrative dashboard template** designed to consume and interact with the [ci4-api-starter](https://github.com/dcardenasl/ci4-api-starter) backend API.
 
-Este repositorio **no implementa reglas de negocio ni acceso directo a base de datos**.
-Su funcion es consumir un backend API y representar vistas, formularios y flujos de administracion.
+## 🎯 Purpose
 
-## Proposito del template
+This is a **server-rendered frontend** (SRF) that provides a complete administrative panel. It does NOT implement business logic or direct database access—it's a client application that orchestrates HTTP requests to a backend API and renders server-side views.
 
-Este proyecto existe para estandarizar nuevos frontends administrativos con la misma arquitectura, convenciones y contrato de integracion.
+**Architectural Design:**
+```
+Browser → CI4 Admin Starter (this repo) → Backend API (ci4-api-starter)
+```
 
-Arquitectura objetivo:
+## 📋 Key Principles
 
-`Browser -> CI4 Admin Starter (este repo) -> Backend API`
+1. **Decoupled Architecture:** Business logic and persistence live in the backend (`ci4-api-starter`). This frontend is stateless except for session JWT storage.
+2. **Server-Rendered Views:** Uses PHP views with Tailwind CSS and Alpine.js for interactivity. No frontend build pipeline required for production.
+3. **Centralized API Communication:** All HTTP requests go through `app/Libraries/ApiClient.php`, which handles token refresh, error handling, and response normalization.
+4. **Service Layer Pattern:** Controllers call Services, which use the ApiClient. Keeps code organized and testable.
+5. **FormRequest Validation:** Form validation is centralized in `app/Requests/` classes, keeping controllers thin.
 
-## Backend oficial y responsabilidad de capas
+## ⚡ Quick Start
 
-Regla obligatoria para cualquier proyecto nuevo creado desde este template:
+For first-time setup, see **[QUICK-START.md](./docs/QUICK-START.md)** for step-by-step instructions.
 
-- El backend de datos y reglas de negocio vive en **`ci4-api-starter`**.
-- La estructura y contrato de endpoints deben mantenerse alineados con **`ci4-api-starter`**.
-- Este repositorio es solo la capa web/admin (UI + orquestacion de requests + manejo de sesion JWT).
+**TL;DR:**
+```bash
+# 1. Clone and install
+bash install.sh
 
-En otras palabras:
+# 2. Start development servers (two terminals)
+php spark serve --port 8082    # Terminal 1
+npm run dev:css                # Terminal 2
 
-- `ci4-api-starter` = fuente de verdad de negocio y persistencia.
-- `ci4-admin-starter` = cliente web administrativo, sin logica de dominio persistente.
+# 3. Open in browser
+# http://localhost:8082
+```
 
-## Compatibilidad obligatoria con `ci4-api-starter`
+## 📚 Documentation
 
-Todo proyecto derivado de este template debe conservar compatibilidad total con el contrato API:
+Complete documentation is available in the **[Documentation Hub](./docs/INDEX.md)**. Key topics:
 
-- Prefix API: `/api/v1`.
-- Autenticacion por `Bearer JWT`.
-- Refresh token con endpoint de refresh.
-- Soporte completo para respuestas JSON exitosas y de error de todos los endpoints.
-- No modificar unilateralmente nombres de campos JSON, codigos HTTP ni envelopes de respuesta sin coordinar backend.
+| Guide | Purpose |
+|-------|---------|
+| **[Quick Start](./docs/QUICK-START.md)** | First-time setup and verification |
+| **[Architecture](./docs/ARCHITECTURE.md)** | System design, ApiClient, security patterns |
+| **[Services & Validation](./docs/SERVICES.md)** | Service layer, FormRequest pattern |
+| **[Frontend Guide](./docs/FRONTEND.md)** | UI components, Tailwind, Alpine.js |
+| **[Testing](./docs/TESTING.md)** | Unit and feature test strategies |
+| **[Deployment](./docs/DEPLOYMENT.md)** | Production checklist and configuration |
+| **[Troubleshooting](./docs/TROUBLESHOOTING.md)** | Common issues and solutions |
+| **[FAQ](./docs/FAQ.md)** | Frequently asked questions |
 
-Documento de referencia: `docs/COMPATIBILIDAD-API.md`.
-Incluye contrato explicito de `search`, `filter[...]`, `sort`, `limit`, `page/cursor` y estructura de respuesta para listados.
+## 🔐 API Contract & Backend Integration
 
-## Manejo JSON estandar en este template
+This template is designed to work seamlessly with [ci4-api-starter](https://github.com/dcardenasl/ci4-api-starter). The backend contract is mandatory:
 
-El cliente HTTP (`app/Libraries/ApiClient.php`) normaliza cada respuesta en esta estructura:
+- **API Prefix:** `/api/v1`
+- **Authentication:** Bearer JWT with automatic refresh token handling
+- **Response Format:** Standard JSON envelope with data, messages, and field errors
+- **Headers:** Automatic `X-App-Key` injection for elevated rate limiting (optional)
+
+See **[API Compatibility Guide](./docs/API-COMPATIBILITY.md)** for the complete contract.
+
+## 🏗️ Standard Response Format
+
+The `ApiClient` normalizes all API responses to this structure:
 
 ```php
 [
-    'ok'          => bool,
-    'status'      => int,
-    'data'        => array,
-    'raw'         => string,
-    'messages'    => array,
-    'fieldErrors' => array,
+    'ok'          => bool,           // true for 2xx, false otherwise
+    'status'      => int,            // HTTP status code
+    'data'        => array,          // Main payload
+    'messages'    => array,          // [success|error messages]
+    'fieldErrors' => array,          // Field-level validation errors
+    'raw'         => string,         // Original JSON body
 ]
 ```
 
-Reglas clave:
+## ✅ Form Validation & Request Layer
 
-- `messages` se extrae desde `message`, `messages[]` o `errors.general`.
-- `fieldErrors` se extrae desde `errors.<campo>`.
-- En endpoints `data` para tablas/listados (`/files/data`, `/admin/users/data`, etc.), el frontend puede reenviar el JSON crudo del backend para mantener contrato intacto.
+All form validation is handled through `app/Requests/*Request.php` classes:
 
-## Capa de validaciones (FormRequest)
+- **rules():** UI-level validation rules (`required`, `valid_email`, `max_length`)
+- **payload():** Normalization to API-expected format
+- **validate():** Automatic error collection and field mapping
+- **No database validation:** Business logic validation belongs in the backend
 
-La validacion web se centraliza en `app/Requests` para mantener controladores delgados y consistentes.
-
-Objetivo de esta capa:
-
-- Evitar reglas inline en controladores.
-- Reutilizar reglas y normalizacion de payload por caso de uso.
-- Mantener separacion de responsabilidades: validacion UI/sintaxis en frontend, reglas de negocio en backend.
-
-Componentes:
-
-- `app/Requests/FormRequestInterface.php`: contrato comun (`rules()`, `data()`, `payload()`, `validate()`, `errors()`).
-- `app/Requests/BaseFormRequest.php`: implementacion base con integracion a `ValidationInterface`.
-- `app/Config/Services.php`: `formRequest(string $class, bool $getShared = true)` para instanciar requests tipados.
-- `app/Controllers/BaseWebController.php`: helper `validateRequest()` para respuesta de error uniforme.
-
-Flujo estandar en controladores:
-
-1. Resolver request class via `service('formRequest', <RequestClass>::class, false)`.
-2. Validar con `validateRequest()` o `request->validate()`.
-3. Construir payload final con `request->payload()`.
-4. Delegar llamada HTTP en `app/Services/*ApiService.php`.
-5. Resolver errores del backend con `failApi()` y errores de formulario con `fieldErrors`.
-
-Ejemplo corto:
-
+Example controller usage:
 ```php
-/** @var \App\Requests\Auth\LoginRequest $request */
-$request = service('formRequest', \App\Requests\Auth\LoginRequest::class, false);
+$request = service('formRequest', UserCreateRequest::class, false);
 $invalid = $this->validateRequest($request);
-if ($invalid !== null) {
-    return $invalid;
-}
+if ($invalid !== null) return $invalid;
 
-$response = $this->safeApiCall(fn() => $this->authService->login($request->payload()));
+$response = $this->safeApiCall(
+    fn() => $this->userService->create($request->payload())
+);
 ```
 
-Convenciones importantes:
+See **[Validation Layer Guide](./docs/VALIDATION-LAYER.md)** for detailed patterns.
 
-- `rules()` define solo validaciones sintacticas/UI (`required`, `valid_email`, `max_length`, `in_list`, etc.).
-- `payload()` debe normalizar tipos y omitir campos vacios cuando aplique.
-- Los mensajes de UI deben usar `lang('...')`.
-- No duplicar validaciones de dominio que pertenecen al backend.
+## 🛠️ Requirements
 
-## 📚 Documentation Hub
+- **PHP** 8.1 or higher
+- **Composer** 2.x
+- **Node.js** 16+ (for Tailwind CSS builds)
+- **PHP Extensions:**
+  - `intl` (required)
+  - `mbstring` (required)
+  - `curl` (recommended)
+  - `json` (recommended)
 
-For a deep dive into the architecture, frontend conventions, services, and deployment, please refer to our **[Documentation Hub](./docs/INDEX.md)**.
+## 📦 Installation
 
-## Requisitos
-
-- PHP `^8.1`
-- Composer 2.x
-- Extensiones PHP minimas:
-  - `intl`
-  - `mbstring`
-- Recomendadas:
-  - `curl`
-  - `json`
-
-## Instalacion
-
-### Opcion 1: Setup rapido (recomendado)
+### Option 1: Automated Setup (Recommended)
 
 ```bash
 bash install.sh
 ```
 
-El script `install.sh` automatiza toda la configuracion: crea `.env`, actualiza referencias del template, y opcionalmente ejecuta `composer install` e `npm install`.
+This script handles:
+- Environment file creation and configuration
+- Composer dependencies
+- npm dependencies
+- Template variable replacement (app name, API URL, etc.)
 
-### Opcion 2: Setup manual
+### Option 2: Manual Setup
 
 ```bash
+# Install PHP dependencies
 composer install
+
+# Install npm dependencies
 npm install
+
+# Copy environment template
 cp env .env
 ```
 
-Configurar en `.env`:
+Edit `.env` with your configuration:
 
 ```dotenv
+# Application
 CI_ENVIRONMENT = development
 app.baseURL = 'http://localhost:8082/'
+
+# Backend API
 apiClient.baseUrl = 'http://localhost:8080'
-GOOGLE_CLIENT_ID = 'your-google-oauth-client-id.apps.googleusercontent.com'
+apiClient.apiPrefix = '/api/v1'
+
+# Optional: Google OAuth (for "Login with Google" button)
+GOOGLE_CLIENT_ID = 'your-client-id.apps.googleusercontent.com'
+
+# Optional: File upload limit
 FILE_MAX_SIZE = 10485760
-# Recomendado en produccion HTTPS:
-# app.forceGlobalSecureRequests = true
-# app.CSPEnabled = true
-# cookie.secure = true
-# Opcional: API key para rate limit elevado (600 req/min vs 60 req/min por IP)
-# Crear una via /admin/api-keys o POST /api/v1/api-keys
-# apiClient.appKey = apk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# Optional: App API key for elevated rate limiting
+# Create via /admin/api-keys or POST /api/v1/api-keys on the backend
+# apiClient.appKey = apk_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-`GOOGLE_CLIENT_ID` habilita el boton "Continuar con Google" en la pantalla de login y debe coincidir con el client ID configurado en `ci4-api-starter`.
+See **[Quick Start](./docs/QUICK-START.md)** for detailed setup instructions.
 
-## Desarrollo
+## 🚀 Development
 
-### Iniciar el servidor web
+Start both servers in separate terminal windows:
 
+**Terminal 1 — PHP Development Server:**
 ```bash
 php spark serve --port 8082
+# Application available at http://localhost:8082
 ```
 
-Aplicacion disponible en `http://localhost:8082`.
-
-### Construir estilos CSS (Tailwind)
-
-En otra terminal, inicia el watcher de Tailwind para reconstruir CSS durante desarrollo:
-
+**Terminal 2 — Tailwind CSS Watcher:**
 ```bash
 npm run dev:css
+# Recompiles CSS on file changes
 ```
 
-Esto recompila `src/css/app.css` en `public/assets/css/app.css` automáticamente cuando cambias los ficheros.
+Both must run during development. In production, CSS is pre-compiled.
 
-## Pruebas
-
-```bash
-vendor/bin/phpunit
-```
-
-Checks utiles:
+## ✔️ Quality & Testing
 
 ```bash
+# Run all tests
+composer test
+
+# Run specific test suites
 composer test:unit
 composer test:feature
+
+# Static analysis (PHPStan)
+composer analyse
+
+# Code style check
+composer format:check
+
+# Auto-fix code style
+composer format
+
+# Full quality check (tests + analysis + style)
+composer quality
 ```
 
-Cobertura (opcional):
+## 📁 Project Structure
 
-```bash
-vendor/bin/phpunit --colors --coverage-text=tests/coverage.txt --coverage-html=tests/coverage/
+```
+app/
+├── Modules/                    # Feature modules (Auth, Users, Files, etc)
+│   ├── Auth/
+│   │   ├── Config/Routes.php
+│   │   ├── Controllers/
+│   │   ├── Requests/
+│   │   ├── Services/
+│   │   ├── Views/
+│   │   └── Language/
+│   ├── Users/
+│   ├── Files/
+│   ├── Dashboard/
+│   ├── Profile/
+│   ├── Audit/
+│   ├── ApiKeys/
+│   ├── Metrics/
+│   └── Language/
+│
+├── Filters/                    # Auth, Admin, Locale filters
+├── Libraries/                  # ApiClient & custom libraries
+├── Helpers/                    # UI & form helpers
+├── Config/                     # Framework & application config
+├── Language/                   # Global i18n files (fallback)
+├── Models/                     # (Unused — all data from API)
+└── Traits/                     # Shared traits
+
+docs/
+├── INDEX.md             # Documentation hub
+├── QUICK-START.md       # Setup guide
+├── ARCHITECTURE.md      # System design & ApiClient
+├── SERVICES.md          # Service pattern & validation
+├── FRONTEND.md          # UI/UX components & patterns
+├── TESTING.md           # Test strategies
+├── DEPLOYMENT.md        # Production checklist
+├── TROUBLESHOOTING.md   # Common issues
+└── FAQ.md              # Frequently asked questions
+
+tests/
+├── unit/                # Unit tests (libraries, filters, services)
+├── feature/             # Feature tests (controller workflows)
+└── README.md            # Test documentation
 ```
 
-## Estructura relevante
+## 🛡️ Security
 
-- `app/Controllers`: flujo web y coordinacion de llamadas al API.
-- `app/Requests`: validacion de formularios y normalizacion de payload por caso de uso.
-- `app/Services`: servicios por dominio para encapsular endpoints (extienden `BaseApiService`).
-- `app/Libraries/ApiClient.php`: cliente HTTP con auth/refresh, header `X-App-Key` y normalizacion de respuestas JSON.
-- `app/Libraries/ApiClientInterface.php`: contrato del cliente HTTP.
-- `app/Filters`: `AuthFilter`, `AdminFilter`, `LocaleFilter`.
-- `app/Helpers`: `ui_helper.php` (utilidades de vista), `form_helper.php` (errores de campo).
-- `app/Language/en/`, `app/Language/es/`: archivos de idioma (i18n).
-- `app/Views`: interfaz administrativa server-rendered.
-- `app/Config/ApiClient.php`: configuracion del backend API (baseUrl, timeouts, apiPrefix, appKey).
-- `app/Config/Services.php`: factory de servicios compartidos y constructor de `FormRequest`.
-- `docs/plan/PLAN-CI4-CLIENT.md`: historial de implementacion y referencia de arquitectura.
-- `docs/COMPATIBILIDAD-API.md`: lineamientos de compatibilidad backend/frontend.
-- `docs/VALIDATION-LAYER.md`: guia de la capa de validaciones (`FormRequest`) y convenciones.
-- `docs/GOOGLE-LOGIN-SETUP.md`: pasos de Google Cloud + `.env` para activar login con Google.
+- JWT tokens stored **only in server-side PHP sessions**, never in localStorage or cookies
+- CSRF protection enabled by default
+- Content Security Policy (CSP) headers configurable
+- File uploads validated on size before API submission
+- API app key stored in `.env`, never exposed to client-side code
+- Never commit `.env` files or hardcode secrets
 
-## Regla para nuevos proyectos basados en este template
+**Production Security Checklist:**
+- ✅ Set `CI_ENVIRONMENT = production`
+- ✅ Set `app.forceGlobalSecureRequests = true`
+- ✅ Enable `app.CSPEnabled = true`
+- ✅ Set `cookie.secure = true`
+- ✅ Verify `app.baseURL` uses HTTPS
+- ✅ Run `composer install --no-dev --optimize-autoloader`
+- ✅ Build CSS: `npm ci && npm run build:css`
+- ✅ Ensure `public/` is DocumentRoot
+- ✅ Set correct permissions on `writable/`
 
-Si creas un nuevo proyecto desde este repositorio:
+See **[Deployment Guide](./docs/DEPLOYMENT.md)** for complete checklist.
 
-1. Mantener el frontend desacoplado de DB y reglas de negocio.
-2. Implementar funcionalidades consumiendo endpoints existentes del backend.
-3. Conservar y validar compatibilidad JSON/HTTP con `ci4-api-starter`.
-4. Mantener validaciones de formularios en `app/Requests` (no inline en controllers).
-5. Evitar cambios que rompan contratos sin versionamiento coordinado.
+## 🎯 Template Usage
 
-## Seguridad y despliegue
+To create a new project from this template:
 
-- `DocumentRoot` debe apuntar a `public/`.
-- Nunca commitear secretos (`.env`, tokens, credenciales).
-- `writable/` es solo runtime (logs, cache, sesiones, uploads).
-- `POST /logout` reemplaza el antiguo `GET /logout`.
-- La configuracion de produccion debe activar HTTPS, CSP y cookies seguras.
-- No existe ruta publica de debug en el template.
+1. **Branding:** Update app name and colors in `head.php`
+2. **API Configuration:** Set `apiClient.baseUrl` in `.env`
+3. **Modules:** Remove unused modules (Audit, ApiKeys, Metrics, Files) from routes and sidebar
+4. **Localization:** Keep only needed locales (English/Spanish)
+5. **Quality Gates:** Run `composer quality` to ensure standards
+6. **Pre-commit Hooks:** Run `npm run prepare` to install git hooks
 
-## Using as a Template
+## 🔗 External Resources
 
-This project is designed to be cloned and customized for new admin panel projects. Follow this checklist when starting a new project from this template:
+- **[CodeIgniter 4 Documentation](https://codeigniter.com/user_guide/)** — Framework reference
+- **[ci4-api-starter](https://github.com/dcardenasl/ci4-api-starter)** — Backend API template
+- **[Tailwind CSS Docs](https://tailwindcss.com/)** — Utility-first CSS framework
+- **[Alpine.js Docs](https://alpinejs.dev/)** — Lightweight JavaScript framework
+- **[Lucide Icons](https://lucide.dev/)** — Icon library
 
-### Step 1 — Brand & Identity
-- [ ] Update `app.appName` in `app/Config/App.php`.
-- [ ] Change the brand color palette in `app/Views/layouts/partials/head.php` (CSS custom properties `--color-brand-*`).
-- [ ] Replace the logo/icon in `app/Views/layouts/partials/sidebar.php`.
+## 📝 License
 
-### Step 2 — Configure the API Connection
-- [ ] Set `apiClient.baseUrl` in `.env` to point to your backend API.
-- [ ] Set `apiClient.apiPrefix` if your API uses a different prefix than `/api/v1`.
-- [ ] Create an API app key and set `apiClient.appKey` (optional, raises rate limit).
+This project is open source. See LICENSE file for details.
 
-### Step 3 — Remove or Keep Modules
-Each module lives in `app/Modules/{ModuleName}/`. Delete any you don't need:
-- `Audit/` — audit log viewer (admin only)
-- `ApiKeys/` — API key management (admin only)
-- `Metrics/` — metrics dashboard (admin only)
-- `Files/` — file manager
+## 🤝 Contributing
 
-After removing a module: delete its route file, remove the sidebar link, and remove the service from `app/Config/Services.php`.
+Contributions are welcome! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
-### Step 4 — Internationalization
-- [ ] Keep only the locales your project needs. Remove unused locales from `app/Language/`.
-- [ ] Update `app/Filters/LocaleFilter.php` to list only supported locales.
+## ❓ Need Help?
 
-### Step 5 — Quality Gates
-- [ ] Run `make ci` to confirm all tests pass, PHPStan is clean, and code style is correct.
-- [ ] Install pre-commit hooks: `npm install && npm run prepare`.
+- **First time?** Start with **[QUICK-START.md](./docs/QUICK-START.md)**
+- **Something broken?** Check **[TROUBLESHOOTING.md](./docs/TROUBLESHOOTING.md)**
+- **Have a question?** See **[FAQ.md](./docs/FAQ.md)**
+- **Want to understand the system?** Read **[ARCHITECTURE.md](./docs/ARCHITECTURE.md)**
 
 ---
 
-## Production Deployment Checklist
+## 🌐 Languages / Idiomas
 
-- Configurar `CI_ENVIRONMENT = production`.
-- Configurar `app.baseURL` con el dominio final y HTTPS.
-- Activar `app.forceGlobalSecureRequests = true`.
-- Activar `app.CSPEnabled = true`.
-- Activar `cookie.secure = true`.
-- Revisar `apiClient.baseUrl`, `apiClient.apiPrefix` y `apiClient.appKey`.
-- Configurar `GOOGLE_CLIENT_ID` solo si el login Google estará habilitado.
-- Ejecutar `composer install --no-dev --prefer-dist --optimize-autoloader`.
-- Ejecutar `npm ci && npm run build:css` antes del deploy.
-- Confirmar que `public/` sea el document root y que `writable/` tenga permisos correctos.
-- Verificar `vendor/bin/phpunit`, `vendor/bin/phpstan analyse --debug`, `npm run lint:js` y `vendor/bin/php-cs-fixer fix --dry-run --diff`.
+- **English** — [Documentation](./docs/INDEX.md) (Official)
+- **Español** — [Documentación](./docs/es/README.md)
 
-## Referencias
+---
 
-- CodeIgniter 4 User Guide: <https://codeigniter.com/user_guide/>
-- CI4 API Starter: <https://github.com/dcardenasl/ci4-api-starter>
-- Plan del cliente admin: `docs/plan/PLAN-CI4-CLIENT.md`
-- Guia de validaciones: `docs/VALIDATION-LAYER.md`
+**Last Updated:** 2026-04-16  
+**Status:** Production Ready ✅
