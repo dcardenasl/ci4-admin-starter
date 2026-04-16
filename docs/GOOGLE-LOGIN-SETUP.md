@@ -1,103 +1,103 @@
-# Configuracion de Google Login (CI4 Admin + CI4 API)
+# Google Login Configuration (CI4 Admin + CI4 API)
 
-Guia oficial para activar login con Google usando el flujo implementado en este proyecto:
+Official guide to enable Google login using the flow implemented in this project:
 
-- `ci4-admin-starter`: renderiza boton Google y envia `id_token`.
-- `ci4-api-starter`: valida `id_token` con `GOOGLE_CLIENT_ID` y resuelve login/alta pendiente.
+- `ci4-admin-starter`: renders Google button and sends `id_token`.
+- `ci4-api-starter`: validates `id_token` with `GOOGLE_CLIENT_ID` and resolves login/signup pending.
 
-## 1) Requisito clave del flujo actual
+## 1) Key Requirement of the Current Flow
 
-Este proyecto usa **Google Identity Services con `id_token` (popup/callback JS)**.  
-No usa OAuth Authorization Code con redirect backend.
+This project uses **Google Identity Services with `id_token` (popup/callback JS)**.  
+It does not use OAuth Authorization Code with backend redirect.
 
-Por eso:
+Therefore:
 
-- Si necesitas completar campos en Google Cloud, **lo importante es `Authorized JavaScript origins`**.
-- **`Authorized redirect URIs` no es parte del flujo actual**.
+- If you need to complete fields in Google Cloud, **what matters is `Authorized JavaScript origins`**.
+- **`Authorized redirect URIs` is not part of the current flow**.
 
-## 2) Crear OAuth Client ID en Google Cloud
+## 2) Create OAuth Client ID in Google Cloud
 
-1. Ir a **Google Cloud Console**.
-2. Seleccionar o crear proyecto.
-3. Configurar **OAuth consent screen** (si aun no existe).
-4. Ir a **APIs & Services -> Credentials**.
-5. Crear credencial: **OAuth Client ID**.
-6. Tipo de aplicacion: **Web application**.
-7. En **Authorized JavaScript origins** agregar:
-8. Local admin: `http://localhost:8082`
-9. Produccion admin: `https://admin.tudominio.com` (ajusta a tu dominio real)
-10. Guardar y copiar el **Client ID** (`...apps.googleusercontent.com`).
+1. Go to **Google Cloud Console**.
+2. Select or create a project.
+3. Configure **OAuth consent screen** (if it doesn't exist yet).
+4. Go to **APIs & Services → Credentials**.
+5. Create credential: **OAuth Client ID**.
+6. Application type: **Web application**.
+7. Add to **Authorized JavaScript origins**:
+   - Local admin: `http://localhost:8082`
+   - Production admin: `https://admin.yourdomain.com` (adjust to your real domain)
+8. Save and copy the **Client ID** (`...apps.googleusercontent.com`).
 
-## 3) Configurar `ci4-admin-starter`
+## 3) Configure `ci4-admin-starter`
 
-En `.env` del admin:
+In the admin's `.env`:
 
 ```dotenv
-GOOGLE_CLIENT_ID='tu-client-id.apps.googleusercontent.com'
+GOOGLE_CLIENT_ID='your-client-id.apps.googleusercontent.com'
 app.baseURL='http://localhost:8082/'
 apiClient.baseUrl='http://localhost:8080'
 ```
 
-Notas:
+Notes:
 
-- El boton Google solo aparece si `GOOGLE_CLIENT_ID` tiene valor.
-- El login Google del admin hace POST a `/login/google` (ruta web interna).
+- The Google button only appears if `GOOGLE_CLIENT_ID` has a value.
+- The admin's Google login makes a POST to `/login/google` (internal web route).
 
-## 4) Configurar `ci4-api-starter`
+## 4) Configure `ci4-api-starter`
 
-En `.env` del API:
-
-```dotenv
-GOOGLE_CLIENT_ID='tu-client-id.apps.googleusercontent.com'
-```
-
-Debe ser **exactamente el mismo Client ID** que usa el admin.
-
-Ademas, asegurar CORS para el origen del admin:
+In the API's `.env`:
 
 ```dotenv
-CORS_ALLOWED_ORIGINS='http://localhost:8082,https://admin.tudominio.com'
+GOOGLE_CLIENT_ID='your-client-id.apps.googleusercontent.com'
 ```
 
-## 5) Checklist local
+It must be **exactly the same Client ID** used by the admin.
 
-1. Admin corriendo en `http://localhost:8082`.
-2. API corriendo en `http://localhost:8080`.
-3. Mismo `GOOGLE_CLIENT_ID` en ambos `.env`.
-4. Origen `http://localhost:8082` cargado en Google Cloud.
-5. CORS del API permite `http://localhost:8082`.
-6. En `/login`, aparece boton Google.
-7. Al autenticar:
-8. `200`: crea sesion y entra a dashboard.
-9. `202/403/409`: vuelve a login con mensaje del API.
+Also, ensure CORS for the admin's origin:
 
-## 6) Checklist produccion
+```dotenv
+CORS_ALLOWED_ORIGINS='http://localhost:8082,https://admin.yourdomain.com'
+```
 
-1. Agregar origen final del admin en Google Cloud:
-2. `https://admin.tudominio.com`
-3. Configurar en admin:
-4. `app.baseURL='https://admin.tudominio.com/'`
-5. `GOOGLE_CLIENT_ID='...'`
-6. Configurar en API:
-7. `GOOGLE_CLIENT_ID='...'` (mismo valor)
-8. `CORS_ALLOWED_ORIGINS` incluye `https://admin.tudominio.com`
-9. Deploy de ambos servicios y reinicio de procesos.
-10. Prueba real desde dominio final.
+## 5) Local Checklist
 
-## 7) Problemas comunes
+1. Admin running on `http://localhost:8082`.
+2. API running on `http://localhost:8080`.
+3. Same `GOOGLE_CLIENT_ID` in both `.env` files.
+4. Origin `http://localhost:8082` loaded in Google Cloud.
+5. API CORS allows `http://localhost:8082`.
+6. Google button appears on `/login`.
+7. When authenticating:
+   - `200`: creates session and enters dashboard.
+   - `202/403/409`: returns to login with message from API.
 
-- **No aparece boton Google**:
-  - `GOOGLE_CLIENT_ID` vacio o mal cargado en admin.
-- **Error de origen no autorizado**:
-  - Falta `http://localhost:8082` o dominio final en `Authorized JavaScript origins`.
-- **API rechaza token Google**:
-  - `GOOGLE_CLIENT_ID` distinto entre admin y API.
-- **Falla por CORS en produccion**:
-  - API no incluye el origen del admin en `CORS_ALLOWED_ORIGINS`.
+## 6) Production Checklist
 
-## 8) Configuración de Seguridad (CSRF)
+1. Add the final admin origin to Google Cloud:
+   - `https://admin.yourdomain.com`
+2. Configure in admin:
+   - `app.baseURL='https://admin.yourdomain.com/'`
+   - `GOOGLE_CLIENT_ID='...'`
+3. Configure in API:
+   - `GOOGLE_CLIENT_ID='...'` (same value)
+   - `CORS_ALLOWED_ORIGINS` includes `https://admin.yourdomain.com`
+4. Deploy both services and restart processes.
+5. Test from the final domain.
 
-Como el callback de Google se realiza mediante un POST desde un origen externo (google.com) hacia la ruta `/login/google` de la aplicación, es necesario exceptuar esta ruta de la protección CSRF en `app/Config/Filters.php`:
+## 7) Common Issues
+
+- **Google button doesn't appear**:
+  - `GOOGLE_CLIENT_ID` is empty or not loaded in admin.
+- **Unauthorized origin error**:
+  - Missing `http://localhost:8082` or final domain in `Authorized JavaScript origins`.
+- **API rejects Google token**:
+  - `GOOGLE_CLIENT_ID` is different between admin and API.
+- **CORS failure in production**:
+  - API doesn't include the admin's origin in `CORS_ALLOWED_ORIGINS`.
+
+## 8) CSRF Security Configuration
+
+Since the Google callback is performed via a POST from an external origin (google.com) to the `/login/google` route of the application, it's necessary to exempt this route from CSRF protection in `app/Config/Filters.php`:
 
 ```php
 public array $globals = [
@@ -109,16 +109,16 @@ public array $globals = [
 ];
 ```
 
-## 9) Contrato funcional esperado
+## 9) Expected Functional Contract
 
-Endpoint backend usado por admin:
+Backend endpoint used by admin:
 
 - `POST /api/v1/auth/google-login`
-- payload: `id_token`, `client_base_url`
+- Payload: `id_token`, `client_base_url`
 
-Respuestas relevantes:
+Relevant responses:
 
-- `200`: login exitoso con `access_token` + `refresh_token`
-- `202`: alta/login recibido, cuenta pendiente de aprobacion
-- `403`: cuenta pendiente/no habilitada
-- `409`: conflicto de proveedor/identidad
+- `200`: successful login with `access_token` + `refresh_token`
+- `202`: signup/login received, account pending approval
+- `403`: account pending/disabled
+- `409`: provider/identity conflict

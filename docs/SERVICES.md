@@ -4,12 +4,17 @@ This document explains how the **CI4 Admin Starter** communicates with the backe
 
 ## 🔌 The Service Pattern
 
-To keep controllers thin and focused on UI orchestration, all API communication is encapsulated in **Services** (`app/Services/`).
+To keep controllers thin and focused on UI orchestration, all API communication is encapsulated in **Services** located in **`app/Modules/{ModuleName}/Services/`**.
+
+Example locations:
+- `app/Modules/Users/Services/UserApiService.php`
+- `app/Modules/Files/Services/FileApiService.php`
+- `app/Modules/Auth/Services/AuthApiService.php`
 
 ### Core Characteristics:
-- **Interfaces:** Every service should have a corresponding Interface (e.g., `HealthApiServiceInterface.php`). This allows for easier mocking during tests.
+- **Interfaces:** Every service should have a corresponding Interface (e.g., `UserApiServiceInterface.php`). This allows for easier mocking during tests.
 - **Base Class:** Most services extend `BaseApiService`, which provides the `apiClient`.
-- **Registration:** Services are registered in `app/Config/Services.php` as shared instances.
+- **Registration:** Services are registered in `app/Config/Services.php` as shared instances (via `service('usersApi')`).
 
 ### Example Service Call in a Controller:
 ```php
@@ -30,7 +35,12 @@ $user = $this->extractData($response);
 
 ## ✅ Validation Layer (`FormRequest`)
 
-We use a dedicated validation layer (`app/Requests/`) to separate UI/Form validation from business logic.
+We use a dedicated validation layer located in **`app/Modules/{ModuleName}/Requests/`** to separate UI/Form validation from business logic.
+
+Example locations:
+- `app/Modules/Users/Requests/UserStoreRequest.php`
+- `app/Modules/Files/Requests/FileUploadRequest.php`
+- `app/Modules/Auth/Requests/LoginRequest.php`
 
 ### 1. `rules()`
 Defines the CodeIgniter 4 validation rules. This should focus on **syntax and UI constraints** (e.g., `required`, `valid_email`, `max_length`).

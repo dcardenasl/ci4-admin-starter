@@ -1,39 +1,39 @@
 # Validation Layer Guide (`app/Requests`)
 
-## Objetivo
+## Objective
 
-Estandarizar validaciones web en una capa dedicada para:
+Standardize web validations in a dedicated layer to:
 
-- Mantener controladores delgados.
-- Reutilizar reglas por caso de uso.
-- Normalizar payloads antes de llamar servicios API.
-- Evitar duplicar reglas de negocio del backend.
+- Keep controllers thin.
+- Reuse rules by use case.
+- Normalize payloads before calling API services.
+- Avoid duplicating backend business logic rules.
 
-## Principios
+## Principles
 
-- Frontend valida sintaxis/UI: `required`, formato, longitud, enums simples.
-- Backend valida negocio: unicidad, estado, permisos, invariantes de dominio.
-- Mensajes visibles al usuario deben usar `lang('...')`.
-- Errores de formulario se exponen como `fieldErrors` en sesión.
+- Frontend validates syntax/UI: `required`, format, length, simple enums.
+- Backend validates business logic: uniqueness, state, permissions, domain invariants.
+- User-facing messages must use `lang('...')`.
+- Form errors are exposed as `fieldErrors` in the session.
 
-## Arquitectura
+## Architecture
 
-Piezas principales:
+Main pieces:
 
 - `app/Requests/FormRequestInterface.php`
 - `app/Requests/BaseFormRequest.php`
 - `app/Config/Services.php` (`formRequest(...)`)
 - `app/Controllers/BaseWebController.php` (`validateRequest(...)`)
 
-Flujo estándar:
+Standard flow:
 
-1. Resolver request class con `service('formRequest', RequestClass::class, false)`.
-2. Validar request.
-3. Obtener payload normalizado con `payload()`.
-4. Consumir API service.
-5. Resolver errores backend con `failApi()`.
+1. Resolve request class with `service('formRequest', RequestClass::class, false)`.
+2. Validate request.
+3. Get normalized payload with `payload()`.
+4. Consume API service.
+5. Handle backend errors with `failApi()`.
 
-## Ejemplo mínimo en Controller
+## Minimal Example in Controller
 
 ```php
 /** @var \App\Requests\Auth\LoginRequest $request */
@@ -46,7 +46,7 @@ if ($invalid !== null) {
 $response = $this->safeApiCall(fn() => $this->authService->login($request->payload()));
 ```
 
-## Módulos actuales
+## Current Modules
 
 ### Auth
 
@@ -57,11 +57,11 @@ Requests:
 - `app/Requests/Auth/ForgotPasswordRequest.php`
 - `app/Requests/Auth/ResetPasswordRequest.php`
 
-Reglas clave:
+Key rules:
 
-- `email` con `valid_email`.
-- Password mínimo según flujo (`login` vs `register/reset`).
-- Confirmación de password con `matches[password]`.
+- `email` with `valid_email`.
+- Password minimum based on flow (`login` vs `register/reset`).
+- Password confirmation with `matches[password]`.
 
 ### Users
 
@@ -70,14 +70,14 @@ Requests:
 - `app/Requests/User/UserStoreRequest.php`
 - `app/Requests/User/UserUpdateRequest.php`
 
-Reglas clave:
+Key rules:
 
 - `first_name`, `last_name`, `email`, `role`.
-- `role` limitado a `user,admin`.
+- `role` limited to `user,admin`.
 
-Normalización clave:
+Key normalization:
 
-- En update, `email` se omite del payload si no cambió (`original_email`).
+- On update, `email` is omitted from payload if unchanged (`original_email`).
 
 ### API Keys
 
@@ -86,17 +86,17 @@ Requests:
 - `app/Requests/ApiKey/ApiKeyStoreRequest.php`
 - `app/Requests/ApiKey/ApiKeyUpdateRequest.php`
 
-Reglas clave:
+Key rules:
 
-- Create: `name` requerido.
-- Update: campos `permit_empty`.
-- Límites numéricos con `is_natural_no_zero`.
+- Create: `name` required.
+- Update: fields `permit_empty`.
+- Numeric limits with `is_natural_no_zero`.
 
-Normalización clave:
+Key normalization:
 
-- `name` con `trim`.
-- `is_active` convertido a boolean.
-- Rate limits convertidos a `int`.
+- `name` with `trim`.
+- `is_active` converted to boolean.
+- Rate limits converted to `int`.
 
 ### Profile
 
@@ -104,9 +104,9 @@ Request:
 
 - `app/Requests/Profile/ProfileUpdateRequest.php`
 
-Reglas clave:
+Key rules:
 
-- `first_name` y `last_name` requeridos con longitud mínima/máxima.
+- `first_name` and `last_name` required with min/max length.
 
 ### Files
 
@@ -114,47 +114,47 @@ Request:
 
 - `app/Requests/File/FileUploadRequest.php`
 
-Reglas clave:
+Key rules:
 
-- `uploaded[file]` + `max_size[file,X]` (donde `X` se calcula desde el límite efectivo).
-- Límite efectivo: `min(FILE_MAX_SIZE, upload_max_filesize, post_max_size)`.
-- Soporte para validación AJAX con respuesta JSON (`ok: false, fieldErrors: [...]`).
+- `uploaded[file]` + `max_size[file,X]` (where `X` is calculated from the effective limit).
+- Effective limit: `min(FILE_MAX_SIZE, upload_max_filesize, post_max_size)`.
+- Support for AJAX validation with JSON response (`ok: false, fieldErrors: [...]`).
 
-Normalización clave:
+Key normalization:
 
-- `payload()` devuelve `visibility` con default `private`.
-- Mensajes de error dinámicos que incluyen el tamaño máximo permitido en MB.
+- `payload()` returns `visibility` with default `private`.
+- Dynamic error messages that include the maximum allowed file size in MB.
 
-## Cómo agregar un nuevo FormRequest
+## How to Add a New FormRequest
 
-1. Crear clase en `app/Requests/<Dominio>/<Caso>Request.php` extendiendo `BaseFormRequest`.
-2. Definir `fields()`.
-3. Definir `rules()`.
-4. Sobrescribir `payload()` si se requiere normalización.
-5. Usar request en controller vía `service('formRequest', ..., false)`.
-6. Evitar reglas inline en controller.
+1. Create a class in `app/Requests/<Domain>/<Case>Request.php` extending `BaseFormRequest`.
+2. Define `fields()`.
+3. Define `rules()`.
+4. Override `payload()` if normalization is required.
+5. Use request in controller via `service('formRequest', ..., false)`.
+6. Avoid inline rules in controller.
 
-## Testing recomendado
+## Recommended Testing
 
 Unit tests:
 
-- Verificar normalización de `payload()`.
-- Verificar reglas/escenarios condicionales relevantes.
+- Verify `payload()` normalization.
+- Verify rules and relevant conditional scenarios.
 
 Feature tests:
 
-- Validar redirects y `fieldErrors`.
-- Validar que payload enviado a API service preserve contrato esperado.
+- Validate redirects and `fieldErrors`.
+- Validate that payload sent to API service preserves expected contract.
 
-Referencias actuales:
+Current references:
 
 - `tests/unit/Requests/User/UserUpdateRequestTest.php`
 - `tests/unit/Requests/ApiKey/ApiKeyUpdateRequestTest.php`
 
-## Checklist de revisión (PR)
+## PR Review Checklist
 
-- No hay reglas inline nuevas en controladores.
-- Existe request class para cada formulario nuevo/modificado.
-- Se preserva contrato con backend (campos, tipos, semántica HTTP).
-- Mensajes user-facing usan `lang()`.
-- Se añadieron/actualizaron tests.
+- No new inline rules in controllers.
+- Request class exists for each new/modified form.
+- Contract with backend is preserved (fields, types, semantic HTTP).
+- User-facing messages use `lang()`.
+- Tests are added/updated.

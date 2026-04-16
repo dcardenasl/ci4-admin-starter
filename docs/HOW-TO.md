@@ -12,6 +12,7 @@ This project uses a **modular architecture**. To add a new feature (e.g., "Produ
 Ensure the corresponding API endpoints exist in the Backend (`ci4-api-starter`).
 
 ### Step 2: Create Module Structure
+
 Create the directory structure under `app/Modules/Products/`:
 
 ```
@@ -31,6 +32,18 @@ app/Modules/Products/
 └── Services/
     ├── ProductApiService.php      # Extends BaseApiService
     └── ProductApiServiceInterface.php  # (REQUIRED) Interface for DI
+```
+
+Also create views in a separate location:
+```
+app/Views/products/                 # Views are outside modules (shared location)
+├── index.php                       # List view
+├── show.php                        # Detail view
+├── create.php                      # Create form
+├── edit.php                        # Edit form
+└── partials/
+    ├── filters.php                 # Filter panel
+    └── toolbar.php                 # Action buttons
 ```
 
 ### Step 3: Create Service Interface & Class
@@ -205,7 +218,7 @@ If you need a custom date format for a specific locale:
 
 ## 🖼️ How to Upload a New Type of File
 
-1.  **Frontend Validation:** Open `app/Requests/File/FileUploadRequest.php` and update the `rules()` for allowed extensions.
+1.  **Frontend Validation:** Open `app/Modules/Files/Requests/FileUploadRequest.php` and update the `rules()` for allowed extensions.
 2.  **API Contract:** Ensure the Backend accepts the new MIME type.
 3.  **Icons:** If you want a specific icon for the file type in the list, update `app/Helpers/ui_helper.php` icon mapping.
 
