@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Config;
 
 use CodeIgniter\Modules\Modules as BaseModules;
@@ -35,7 +37,7 @@ class Modules extends BaseModules
      *
      * @var bool
      */
-    public $discoverInComposer = true;
+    public $discoverInComposer = false;
 
     /**
      * The Composer package list for Auto-Discovery

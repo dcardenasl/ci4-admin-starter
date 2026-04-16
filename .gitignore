@@ -50,6 +50,7 @@ writable/database/*
 #-------------------------
 # Test / Coverage Artifacts
 #-------------------------
+build/
 tests/coverage*
 phpunit
 .phpunit.result.cache
@@ -60,9 +61,30 @@ phpunit*.xml
 .phpintel
 
 #-------------------------
+# Runtime (public)
+#-------------------------
+public/writable/
+
+#-------------------------
+# CodeIgniter System (managed by Composer)
+#-------------------------
+system/
+
+#-------------------------
 # IDE / Editor
 #-------------------------
 .idea/
 *.iml
-.vscode/
+# Exclude all .vscode files except shared team settings
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+# NEVER commit sftp.json — it contains server credentials
+.vscode/sftp.json
 .php-version
+
+#-------------------------
+# Node / Frontend
+#-------------------------
+node_modules/
+npm-debug.log*

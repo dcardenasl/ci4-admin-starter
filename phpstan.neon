@@ -1,0 +1,26 @@
+includes:
+    - phpstan-baseline.neon
+
+parameters:
+    level: 8
+    paths:
+        - app/Controllers
+        - app/Filters
+        - app/Helpers
+        - app/Libraries
+        - app/Modules
+        - app/Requests
+        - app/Services
+        - app/Support
+        - app/Traits
+    excludePaths:
+        - app/Views
+    bootstrapFiles:
+        - phpstan-bootstrap.php
+    scanFiles:
+        - app/Config/ApiClient.php
+        - app/Config/App.php
+        - app/Config/Auth.php
+        - app/Config/Services.php
+        - app/Config/Mimes.php
+    treatPhpDocTypesAsCertain: false

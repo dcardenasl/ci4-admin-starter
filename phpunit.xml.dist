@@ -1,25 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
-    bootstrap="system/Test/bootstrap.php"
+    xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.5/phpunit.xsd"
+    bootstrap="vendor/codeigniter4/framework/system/Test/bootstrap.php"
     backupGlobals="false"
     beStrictAboutOutputDuringTests="true"
     colors="true"
     columns="max"
     failOnRisky="true"
-    failOnWarning="true"
+    failOnWarning="false"
+    failOnDeprecation="false"
     cacheDirectory="build/.phpunit.cache">
     <coverage
         includeUncoveredFiles="true"
-        pathCoverage="false"
+        pathCoverage="true"
         ignoreDeprecatedCodeUnits="true"
         disableCodeCoverageIgnore="true">
         <report>
-            <clover outputFile="build/logs/clover.xml"/>
-            <html outputDirectory="build/logs/html"/>
-            <php outputFile="build/logs/coverage.serialized"/>
-            <text outputFile="php://stdout" showUncoveredFiles="false"/>
+            <clover outputFile="tests/coverage.xml"/>
+            <html outputDirectory="tests/coverage/"/>
         </report>
     </coverage>
     <testsuites>

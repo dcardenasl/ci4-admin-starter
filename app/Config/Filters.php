@@ -1,7 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Config;
 
+use App\Filters\AdminFilter;
+use App\Filters\AuthFilter;
+use App\Filters\LocaleFilter;
+use App\Filters\RateLimitFilter;
 use CodeIgniter\Config\Filters as BaseFilters;
 use CodeIgniter\Filters\Cors;
 use CodeIgniter\Filters\CSRF;
@@ -34,6 +40,10 @@ class Filters extends BaseFilters
         'forcehttps'    => ForceHTTPS::class,
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
+        'auth'          => AuthFilter::class,
+        'admin'         => AdminFilter::class,
+        'locale'        => LocaleFilter::class,
+        'ratelimit'     => RateLimitFilter::class,
     ];
 
     /**
@@ -73,12 +83,16 @@ class Filters extends BaseFilters
     public array $globals = [
         'before' => [
             // 'honeypot',
-            // 'csrf',
+            // Google Identity Services posts the credential directly to this endpoint from
+            // Google's origin. CSRF stays enabled everywhere else, and the controller also
+            // rejects malformed, expired, wrong-issuer, or wrong-audience ID tokens.
+            'csrf' => ['except' => ['login/google']],
+            'locale',
             // 'invalidchars',
         ],
         'after' => [
             // 'honeypot',
-            // 'secureheaders',
+            'secureheaders',
         ],
     ];
 
@@ -106,5 +120,20 @@ class Filters extends BaseFilters
      *
      * @var array<string, array<string, list<string>>>
      */
-    public array $filters = [];
+    public array $filters = [
+        // Apply rate limiting to all authenticated routes.
+        // Public auth routes (login, register, password reset) are excluded
+        // because they are already protected by CSRF and have no session user.
+        'ratelimit' => [
+            'before' => [
+                'dashboard',
+                'profile',
+                'profile/*',
+                'files',
+                'files/*',
+                'admin/*',
+                'language/*',
+            ],
+        ],
+    ];
 }

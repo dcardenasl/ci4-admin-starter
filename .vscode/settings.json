@@ -1,0 +1,39 @@
+{
+  "editor.formatOnSave": false,
+  "editor.tabSize": 4,
+  "editor.rulers": [120],
+  "editor.trimAutoWhitespace": true,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.eol": "\n",
+  "[javascript]": {
+    "editor.tabSize": 2
+  },
+  "[json]": {
+    "editor.tabSize": 2
+  },
+  "[yaml]": {
+    "editor.tabSize": 2
+  },
+  "[css]": {
+    "editor.tabSize": 2
+  },
+  "php.validate.run": "onSave",
+  "intelephense.environment.phpVersion": "8.2.0",
+  "intelephense.files.exclude": [
+    "**/vendor/**",
+    "**/node_modules/**",
+    "**/writable/**",
+    "**/system/**"
+  ],
+  "tailwindCSS.includeLanguages": {
+    "php": "html"
+  },
+  "search.exclude": {
+    "**/vendor": true,
+    "**/node_modules": true,
+    "**/writable": true,
+    "**/system": true,
+    "public/assets/app.css": true
+  }
+}

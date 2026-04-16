@@ -1,0 +1,141 @@
+<?php $csrfName = csrf_token();
+$csrfHash = csrf_hash(); ?>
+<section class="mt-6 bg-white border border-gray-200 rounded-xl shadow-sm p-5"
+    x-data="remoteTable({
+        apiUrl: '<?= site_url('files/data') ?>',
+        pageUrl: '<?= route_to('files') ?>',
+        mode: 'files',
+        routes: {
+            downloadBase: '<?= route_to('files') ?>',
+            deleteBase: '<?= route_to('files') ?>'
+        },
+        csrf: {
+            name: '<?= esc($csrfName) ?>',
+            hash: '<?= esc($csrfHash) ?>'
+        },
+        confirmDelete: '<?= esc(lang('Files.confirm_delete')) ?>',
+        limitOptions: <?= esc(json_encode(array_map('strval', $limitOptions ?? [10, 25, 50, 100]))) ?>
+    })" x-init="init()">
+    <?= view('layouts/partials/table_toolbar', [
+        'title' => lang('Files.my_files'),
+    ]) ?>
+    <?= view('layouts/partials/filter_panel', [
+        'actionUrl' => route_to('files'),
+        'clearUrl' => route_to('files'),
+        'hasFilters' => has_active_filters(request()->getGet(), ['limit' => '25']),
+        'reactiveHasFilters' => true,
+        'filterDefaults' => ['limit' => '25'],
+        'fieldsView' => 'files/partials/filters',
+        'fieldsData' => ['limitOptions' => $limitOptions ?? [10, 25, 50, 100]],
+        'submitLabel' => lang('App.search'),
+    ]) ?>
+
+    <div class="mt-6 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600" x-show="loading">
+        <?= lang('App.loading') ?>
+    </div>
+    <div class="mt-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700" x-show="error" x-text="errorMessage"></div>
+
+    <template x-if="!loading && !error && rows.length === 0">
+        <div class="mt-4 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4">
+            <p class="text-sm text-gray-600"><?= lang('Files.no_files') ?></p>
+            <p class="mt-1 text-xs text-gray-500"><?= lang('Files.drag_drop') ?></p>
+        </div>
+    </template>
+    <template x-if="!loading && !error && rows.length > 0">
+        <div class="<?= esc(table_wrapper_class()) ?>">
+            <div class="<?= esc(table_scroll_class()) ?>">
+            <table class="<?= esc(table_class()) ?>">
+                <thead class="<?= esc(table_head_class()) ?>">
+                    <tr>
+                        <th class="<?= esc(table_th_class()) ?> w-16"><?= lang('TableColumns.preview') ?></th>
+                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('original_name')">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('original_name')" aria-label="<?= esc(lang('TableA11y.sort_by', [lang('TableColumns.file_name')])) ?>">
+                                <span><?= lang('TableColumns.file_name') ?></span>
+                                <span aria-hidden="true" x-text="sortIcon('original_name')"></span>
+                            </button>
+                        </th>
+                        <th class="<?= esc(table_th_class()) ?>"><?= lang('TableColumns.size') ?></th>
+                        <th class="<?= esc(table_th_class()) ?>"><?= lang('TableColumns.type') ?></th>
+                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('uploaded_at')">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('uploaded_at')" aria-label="<?= esc(lang('TableA11y.sort_by', [lang('TableColumns.date')])) ?>">
+                                <span><?= lang('TableColumns.date') ?></span>
+                                <span aria-hidden="true" x-text="sortIcon('uploaded_at')"></span>
+                            </button>
+                        </th>
+                        <th class="<?= esc(table_th_class()) ?>"><?= lang('TableColumns.actions') ?></th>
+                    </tr>
+                </thead>
+                <tbody class="<?= esc(table_body_class()) ?>">
+                    <template x-for="row in rows" :key="String(row.id ?? Math.random())">
+                        <tr class="<?= esc(table_row_class()) ?>">
+                            <td class="<?= esc(table_td_class()) ?>">
+                                <template x-if="row.is_image">
+                                    <button type="button" @click="$dispatch('open-preview', '<?= route_to('files') ?>/' + (row.id ?? '') + '/view')">
+                                        <img :src="'<?= route_to('files') ?>/' + (row.id ?? '') + '/view'" 
+                                             class="h-10 w-10 rounded-lg object-cover border border-gray-200 hover:scale-110 transition-transform shadow-sm" 
+                                             :alt="row.original_name">
+                                    </button>
+                                </template>
+                                <template x-if="!row.is_image">
+                                    <div class="h-10 w-10 flex items-center justify-center rounded-lg bg-gray-100 border border-gray-200">
+                                        <?= ui_icon('file', 'h-5 w-5 text-gray-400') ?>
+                                    </div>
+                                </template>
+                            </td>
+                            <td class="<?= esc(table_td_class('primary')) ?>" x-text="String(row.original_name || '-')"></td>
+                            <td class="<?= esc(table_td_class('muted')) ?>" x-text="String(row.human_size || '-')"></td>
+                            <td class="<?= esc(table_td_class('subtle')) ?> text-xs uppercase" x-text="row.mime_type ? row.mime_type.split('/')[1] : '-'"></td>
+                            <td class="<?= esc(table_td_class('muted')) ?>" x-text="formatDate(row.uploaded_at)"></td>
+                            <td class="<?= esc(table_td_class()) ?>">
+                                <div class="flex items-center gap-2">
+                                    <a :href="fileDownloadUrl(row.id)" class="<?= esc(action_button_class()) ?>" :title="'<?= esc(lang('App.download')) ?>'">
+                                        <?= ui_icon('download', 'h-3.5 w-3.5') ?>
+                                        <span class="hidden md:inline"><?= lang('App.download') ?></span>
+                                    </a>
+                                    <form method="post" :action="fileDeleteUrl(row.id)" @submit="return confirm(confirmDelete)">
+                                        <input type="hidden" :name="csrf.name" :value="csrf.hash">
+                                        <button type="submit" class="<?= esc(action_button_class('danger')) ?>" :title="'<?= esc(lang('App.delete')) ?>'">
+                                            <?= ui_icon('trash', 'h-3.5 w-3.5') ?>
+                                            <span class="hidden md:inline"><?= lang('App.delete') ?></span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </template>
+
+    <?= view('layouts/partials/remote_pagination') ?>
+
+    <!-- Image Preview Modal (Lightbox) -->
+    <div x-data="{ show: false, url: '' }"
+         x-show="show"
+         x-cloak
+         @open-preview.window="url = $event.detail; show = true"
+         @keydown.escape.window="show = false"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+         @click="show = false">
+        
+        <div class="relative max-h-full max-w-full" @click.stop>
+            <button type="button" @click="show = false" 
+                    class="absolute -top-12 right-0 p-2 text-white hover:text-gray-300 focus:outline-none transition-colors"
+                    aria-label="<?= lang('App.close') ?>">
+                <?= ui_icon('x', 'h-8 w-8') ?>
+            </button>
+            
+            <img :src="url" 
+                 class="max-h-[85vh] max-w-[90vw] rounded-lg shadow-2xl object-contain border border-white/10"
+                 @click.stop>
+        </div>
+    </div>
+</section>

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title><?= lang('Errors.badRequest') ?></title>
+    <title><?= lang('Errors.bad_request') ?></title>
 
     <style>
         div.logo {
@@ -76,7 +76,7 @@
         <?php if (ENVIRONMENT !== 'production') : ?>
             <?= nl2br(esc($message)) ?>
         <?php else : ?>
-            <?= lang('Errors.sorryBadRequest') ?>
+            <?= lang('Errors.sorry_bad_request') ?>
         <?php endif; ?>
     </p>
 </div>

@@ -1,11 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Config;
 
 use CodeIgniter\Config\BaseConfig;
 
 class App extends BaseConfig
 {
+    /**
+     * --------------------------------------------------------------------------
+     * Application Name
+     * --------------------------------------------------------------------------
+     */
+    public string $appName = 'API Client';
+
     /**
      * --------------------------------------------------------------------------
      * Base Site URL
@@ -16,7 +25,7 @@ class App extends BaseConfig
      *
      * E.g., http://example.com/
      */
-    public string $baseURL = 'http://localhost:8080/';
+    public string $baseURL = '';
 
     /**
      * Allowed Hostnames in the Site URL other than the hostname in the baseURL.
@@ -93,7 +102,7 @@ class App extends BaseConfig
      * strings (like currency markers, numbers, etc), that your program
      * should run under for this request.
      */
-    public string $defaultLocale = 'en';
+    public string $defaultLocale = 'es';
 
     /**
      * --------------------------------------------------------------------------
@@ -120,7 +129,7 @@ class App extends BaseConfig
      *
      * @var list<string>
      */
-    public array $supportedLocales = ['en'];
+    public array $supportedLocales = ['es', 'en'];
 
     /**
      * --------------------------------------------------------------------------
@@ -134,6 +143,29 @@ class App extends BaseConfig
      *      supported by PHP.
      */
     public string $appTimezone = 'UTC';
+
+    /**
+     * --------------------------------------------------------------------------
+     * Default Date Format
+     * --------------------------------------------------------------------------
+     *
+     * Base format used by the format_date() helper when the active locale does
+     * not define an override.
+     */
+    public string $dateFormat = 'd/m/Y H:i';
+
+    /**
+     * --------------------------------------------------------------------------
+     * Date Format Strings by Locale
+     * --------------------------------------------------------------------------
+     *
+     * Date format strings used by the format_date() helper when no explicit
+     * format is passed. Keyed by locale code.
+     */
+    public array $dateFormats = [
+        'es' => 'd/m/Y H:i',
+        'en' => 'm/d/Y H:i',
+    ];
 
     /**
      * --------------------------------------------------------------------------
@@ -157,7 +189,22 @@ class App extends BaseConfig
      * secure, the user will be redirected to a secure version of the page
      * and the HTTP Strict Transport Security (HSTS) header will be set.
      */
-    public bool $forceGlobalSecureRequests = false;
+    public bool $forceGlobalSecureRequests = ENVIRONMENT === 'production';
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        $appName = env('APP_NAME');
+        if (is_string($appName) && trim($appName) !== '') {
+            $this->appName = $appName;
+        }
+
+        $dateFormat = env('APP_DATE_FORMAT');
+        if (is_string($dateFormat) && trim($dateFormat) !== '') {
+            $this->dateFormat = $dateFormat;
+        }
+    }
 
     /**
      * --------------------------------------------------------------------------
@@ -198,5 +245,5 @@ class App extends BaseConfig
      * @see http://www.html5rocks.com/en/tutorials/security/content-security-policy/
      * @see http://www.w3.org/TR/CSP/
      */
-    public bool $CSPEnabled = false;
+    public bool $CSPEnabled = ENVIRONMENT === 'production';
 }

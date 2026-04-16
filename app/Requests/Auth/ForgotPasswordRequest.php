@@ -1,0 +1,29 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Requests\Auth;
+
+use App\Requests\BaseFormRequest;
+
+class ForgotPasswordRequest extends BaseFormRequest
+{
+    protected function fields(): array
+    {
+        return ['email'];
+    }
+
+    public function rules(): array
+    {
+        return [
+            'email' => 'required|valid_email',
+        ];
+    }
+
+    public function payload(): array
+    {
+        return [
+            'email' => $this->postString('email'),
+        ];
+    }
+}

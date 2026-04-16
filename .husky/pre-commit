@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+# Run lint-staged on changed files before every commit.
+# PHP files: php-cs-fixer (style check only, not auto-fix)
+# JS files:  eslint
+npx lint-staged

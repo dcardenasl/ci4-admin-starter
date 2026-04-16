@@ -1,0 +1,34 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'id'               => 'ID',
+    'name'             => 'Name',
+    'email'            => 'Email',
+    'role'             => 'Role',
+    'status'           => 'Status',
+    'actions'          => 'Actions',
+    'date'             => 'Date',
+    'created_at'       => 'Created at',
+    'updated_at'       => 'Last updated',
+    'preview'          => 'Preview',
+    'file_name'        => 'File name',
+    'size'             => 'Size',
+    'type'             => 'Type',
+    'user'             => 'User',
+    'action'           => 'Action',
+    'entity'           => 'Entity',
+    'ip_address'       => 'IP address',
+    'key_prefix'       => 'Prefix',
+    'method'           => 'Method',
+    'path'             => 'Path',
+    'duration_ms'      => 'Duration (ms)',
+    'period'           => 'Period',
+    'value'            => 'Value',
+    'count'            => 'Count',
+    'slo_metric'       => 'SLO metric',
+    'slo_target'       => 'Target',
+    'slo_current'      => 'Current',
+    'error_budget'     => 'Error budget',
+];

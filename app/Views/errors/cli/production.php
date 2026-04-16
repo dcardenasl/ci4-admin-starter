@@ -1,5 +1,10 @@
 <?php
 
-// On the CLI, we still want errors in productions
-// so just use the exception template.
-include __DIR__ . '/error_exception.php';
+declare(strict_types=1);
+
+use CodeIgniter\CLI\CLI;
+
+CLI::error('ERROR: 500');
+CLI::write(lang('App.error500Title'));
+CLI::write(lang('App.error500Body'));
+CLI::newLine();
