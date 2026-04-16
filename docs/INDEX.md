@@ -26,6 +26,7 @@ Step-by-step instructions for common tasks like adding a new module or modifying
 
 ## 🔗 Quick References
 
+- **[Component Library](./COMPONENTS.md):** UI components catalog — buttons, badges, forms, tables, modals.
 - **[API Compatibility](./COMPATIBILIDAD-API.md):** Mandatory rules for Backend/Frontend integration.
 - **[Critical Flows](./FLUJOS-CRITICOS.md):** Detailed logic for file uploads and JWT refresh.
 - **[Validation Layer](./VALIDATION-LAYER.md):** Specific guide for the `app/Requests` layer.

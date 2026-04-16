@@ -233,6 +233,39 @@ Si creas un nuevo proyecto desde este repositorio:
 - La configuracion de produccion debe activar HTTPS, CSP y cookies seguras.
 - No existe ruta publica de debug en el template.
 
+## Using as a Template
+
+This project is designed to be cloned and customized for new admin panel projects. Follow this checklist when starting a new project from this template:
+
+### Step 1 — Brand & Identity
+- [ ] Update `app.appName` in `app/Config/App.php`.
+- [ ] Change the brand color palette in `app/Views/layouts/partials/head.php` (CSS custom properties `--color-brand-*`).
+- [ ] Replace the logo/icon in `app/Views/layouts/partials/sidebar.php`.
+
+### Step 2 — Configure the API Connection
+- [ ] Set `apiClient.baseUrl` in `.env` to point to your backend API.
+- [ ] Set `apiClient.apiPrefix` if your API uses a different prefix than `/api/v1`.
+- [ ] Create an API app key and set `apiClient.appKey` (optional, raises rate limit).
+
+### Step 3 — Remove or Keep Modules
+Each module lives in `app/Modules/{ModuleName}/`. Delete any you don't need:
+- `Audit/` — audit log viewer (admin only)
+- `ApiKeys/` — API key management (admin only)
+- `Metrics/` — metrics dashboard (admin only)
+- `Files/` — file manager
+
+After removing a module: delete its route file, remove the sidebar link, and remove the service from `app/Config/Services.php`.
+
+### Step 4 — Internationalization
+- [ ] Keep only the locales your project needs. Remove unused locales from `app/Language/`.
+- [ ] Update `app/Filters/LocaleFilter.php` to list only supported locales.
+
+### Step 5 — Quality Gates
+- [ ] Run `make ci` to confirm all tests pass, PHPStan is clean, and code style is correct.
+- [ ] Install pre-commit hooks: `npm install && npm run prepare`.
+
+---
+
 ## Production Deployment Checklist
 
 - Configurar `CI_ENVIRONMENT = production`.
