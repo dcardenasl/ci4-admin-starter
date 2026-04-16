@@ -1,4 +1,4 @@
-# Validation Layer Guide (`app/Requests`)
+# Validation Layer Guide (`app/Modules/*/Requests`)
 
 ## Objective
 
@@ -18,12 +18,12 @@ Standardize web validations in a dedicated layer to:
 
 ## Architecture
 
-Main pieces:
+Each module has its own dedicated request validation classes. Main pieces:
 
-- `app/Requests/FormRequestInterface.php`
-- `app/Requests/BaseFormRequest.php`
-- `app/Config/Services.php` (`formRequest(...)`)
-- `app/Controllers/BaseWebController.php` (`validateRequest(...)`)
+- `app/Modules/{ModuleName}/Requests/` — All FormRequest classes for this module
+- `app/Modules/{ModuleName}/Controllers/` — Controllers that use these requests
+- `app/Config/Services.php` (`formRequest(...)`) — Service factory for resolving requests
+- `app/Controllers/BaseWebController.php` (`validateRequest(...)`) — Helper method for validation
 
 Standard flow:
 
@@ -36,8 +36,10 @@ Standard flow:
 ## Minimal Example in Controller
 
 ```php
-/** @var \App\Requests\Auth\LoginRequest $request */
-$request = service('formRequest', \App\Requests\Auth\LoginRequest::class, false);
+// File: app/Modules/Auth/Controllers/AuthController.php
+
+/** @var \App\Modules\Auth\Requests\LoginRequest $request */
+$request = service('formRequest', \App\Modules\Auth\Requests\LoginRequest::class, false);
 $invalid = $this->validateRequest($request);
 if ($invalid !== null) {
     return $invalid;
@@ -48,14 +50,17 @@ $response = $this->safeApiCall(fn() => $this->authService->login($request->paylo
 
 ## Current Modules
 
-### Auth
+### Auth Module
+
+Location: `app/Modules/Auth/Requests/`
 
 Requests:
 
-- `app/Requests/Auth/LoginRequest.php`
-- `app/Requests/Auth/RegisterRequest.php`
-- `app/Requests/Auth/ForgotPasswordRequest.php`
-- `app/Requests/Auth/ResetPasswordRequest.php`
+- `LoginRequest.php`
+- `RegisterRequest.php`
+- `ForgotPasswordRequest.php`
+- `ResetPasswordRequest.php`
+- `ResetPasswordConfirmRequest.php`
 
 Key rules:
 
@@ -63,12 +68,14 @@ Key rules:
 - Password minimum based on flow (`login` vs `register/reset`).
 - Password confirmation with `matches[password]`.
 
-### Users
+### Users Module
+
+Location: `app/Modules/Users/Requests/`
 
 Requests:
 
-- `app/Requests/User/UserStoreRequest.php`
-- `app/Requests/User/UserUpdateRequest.php`
+- `UserStoreRequest.php`
+- `UserUpdateRequest.php`
 
 Key rules:
 
@@ -79,12 +86,14 @@ Key normalization:
 
 - On update, `email` is omitted from payload if unchanged (`original_email`).
 
-### API Keys
+### API Keys Module
+
+Location: `app/Modules/ApiKeys/Requests/`
 
 Requests:
 
-- `app/Requests/ApiKey/ApiKeyStoreRequest.php`
-- `app/Requests/ApiKey/ApiKeyUpdateRequest.php`
+- `ApiKeyStoreRequest.php`
+- `ApiKeyUpdateRequest.php`
 
 Key rules:
 
@@ -98,21 +107,27 @@ Key normalization:
 - `is_active` converted to boolean.
 - Rate limits converted to `int`.
 
-### Profile
+### Profile Module
 
-Request:
+Location: `app/Modules/Profile/Requests/`
 
-- `app/Requests/Profile/ProfileUpdateRequest.php`
+Requests:
+
+- `ProfileUpdateRequest.php`
+- `ChangePasswordRequest.php`
 
 Key rules:
 
 - `first_name` and `last_name` required with min/max length.
+- Password validation with confirmation.
 
-### Files
+### Files Module
 
-Request:
+Location: `app/Modules/Files/Requests/`
 
-- `app/Requests/File/FileUploadRequest.php`
+Requests:
+
+- `FileUploadRequest.php`
 
 Key rules:
 
@@ -127,11 +142,12 @@ Key normalization:
 
 ## How to Add a New FormRequest
 
-1. Create a class in `app/Requests/<Domain>/<Case>Request.php` extending `BaseFormRequest`.
-2. Define `fields()`.
-3. Define `rules()`.
-4. Override `payload()` if normalization is required.
-5. Use request in controller via `service('formRequest', ..., false)`.
+1. Create a class in `app/Modules/{ModuleName}/Requests/{CaseName}Request.php` extending `BaseFormRequest`.
+   - Example: `app/Modules/Users/Requests/UserStoreRequest.php`
+2. Define the validation rules in `rules()` method.
+3. Define the normalized payload in `payload()` method (if needed).
+4. Add language strings to `app/Modules/{ModuleName}/Language/{en,es}/{ModuleName}.php` for error messages.
+5. Use request in controller via `service('formRequest', \App\Modules\{ModuleName}\Requests\{RequestName}::class, false)`.
 6. Avoid inline rules in controller.
 
 ## Recommended Testing
@@ -140,16 +156,18 @@ Unit tests:
 
 - Verify `payload()` normalization.
 - Verify rules and relevant conditional scenarios.
+- Test edge cases and boundary conditions.
 
 Feature tests:
 
-- Validate redirects and `fieldErrors`.
+- Validate redirects and `fieldErrors` in session.
 - Validate that payload sent to API service preserves expected contract.
+- Test form submission with valid and invalid data.
 
-Current references:
+Current test references:
 
-- `tests/unit/Requests/User/UserUpdateRequestTest.php`
-- `tests/unit/Requests/ApiKey/ApiKeyUpdateRequestTest.php`
+- `tests/unit/Requests/` — Unit tests for FormRequest classes
+- `tests/feature/` — Feature tests for complete workflows including form submission
 
 ## PR Review Checklist
 

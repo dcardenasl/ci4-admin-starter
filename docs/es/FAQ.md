@@ -67,7 +67,7 @@ Este enfoque es más seguro que almacenar tokens en el navegador.
 
 ### ¿Qué es el patrón FormRequest?
 
-FormRequest es una capa de validación que centraliza la validación de formularios en clases dedicadas (`app/Requests/*Request.php`).
+FormRequest es una capa de validación que centraliza la validación de formularios en clases dedicadas dentro de cada módulo (`app/Modules/{ModuleName}/Requests/*Request.php`).
 
 Beneficios:
 - Los controladores permanecen delgados y enfocados

@@ -217,7 +217,8 @@ See `docs/HOW-TO.md` for the full step-by-step guide. Quick summary:
 1. Create `app/Modules/{ModuleName}/Controllers/{ModuleName}Controller.php` (extend `BaseWebController`).
 2. Create `app/Modules/{ModuleName}/Config/Routes.php` with `['filter' => 'auth']` (add `'admin'` for admin-only routes).
 3. Create `app/Modules/{ModuleName}/Services/{ModuleName}ApiService.php` (extend `BaseApiService`).
-4. Register the service in `app/Config/Services.php`.
-5. Create views in `app/Views/{module_name}/`.
-6. Add sidebar link in `app/Views/layouts/partials/sidebar.php`.
-7. Add language strings to `app/Language/en/{ModuleName}.php` and `app/Language/es/{ModuleName}.php`.
+4. Create `app/Modules/{ModuleName}/Requests/` with FormRequest validation classes (extend `BaseFormRequest`).
+5. Register the service in `app/Config/Services.php`.
+6. Create views in `app/Views/{module_name}/`.
+7. Add sidebar link in `app/Views/layouts/partials/sidebar.php`.
+8. Add language strings to `app/Modules/{ModuleName}/Language/en/{ModuleName}.php` and `app/Modules/{ModuleName}/Language/es/{ModuleName}.php`.

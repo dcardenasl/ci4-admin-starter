@@ -17,7 +17,7 @@ Navegador → CI4 Admin Starter (este repo) → API Backend (ci4-api-starter)
 2. **Vistas Renderizadas en Servidor:** Usa vistas PHP con Tailwind CSS y Alpine.js para interactividad. No requiere pipeline de construcción frontend para producción.
 3. **Comunicación API Centralizada:** Todas las solicitudes HTTP pasan por `app/Libraries/ApiClient.php`, que maneja refresco de tokens, manejo de errores y normalización de respuestas.
 4. **Patrón de Capa de Servicios:** Los controladores llaman a Servicios, que usan ApiClient. Mantiene el código organizado y comprobable.
-5. **Validación FormRequest:** La validación de formularios está centralizada en clases `app/Requests/`, manteniendo los controladores delgados.
+5. **Validación FormRequest:** La validación de formularios está centralizada en clases dentro de cada módulo (`app/Modules/{ModuleName}/Requests/`), manteniendo los controladores delgados.
 
 ## ⚡ Inicio Rápido
 
@@ -79,7 +79,7 @@ El `ApiClient` normaliza todas las respuestas de la API a esta estructura:
 
 ## ✅ Validación de Formularios y Capa de Solicitud
 
-Toda la validación de formularios se maneja a través de clases `app/Requests/*Request.php`:
+Toda la validación de formularios se maneja a través de clases en `app/Modules/{ModuleName}/Requests/*Request.php`:
 
 - **rules():** Reglas de validación a nivel UI (`required`, `valid_email`, `max_length`)
 - **payload():** Normalización al formato esperado por la API

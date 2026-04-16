@@ -1,4 +1,4 @@
-# Guía de Capa de Validación (`app/Requests`)
+# Guía de Capa de Validación (`app/Modules/*/Requests`)
 
 ## Objetivo
 
@@ -18,12 +18,12 @@ Estandarizar validaciones web en una capa dedicada para:
 
 ## Arquitectura
 
-Piezas principales:
+Cada módulo tiene sus propias clases de validación de request. Piezas principales:
 
-- `app/Requests/FormRequestInterface.php`
-- `app/Requests/BaseFormRequest.php`
-- `app/Config/Services.php` (`formRequest(...)`)
-- `app/Controllers/BaseWebController.php` (`validateRequest(...)`)
+- `app/Modules/{ModuleName}/Requests/` — Todas las clases FormRequest para este módulo
+- `app/Modules/{ModuleName}/Controllers/` — Controladores que utilizan estos requests
+- `app/Config/Services.php` (`formRequest(...)`) — Factory de servicio para resolver requests
+- `app/Controllers/BaseWebController.php` (`validateRequest(...)`) — Método helper para validación
 
 Flujo estándar:
 
@@ -36,8 +36,10 @@ Flujo estándar:
 ## Ejemplo Mínimo en Controlador
 
 ```php
-/** @var \App\Requests\Auth\LoginRequest $request */
-$request = service('formRequest', \App\Requests\Auth\LoginRequest::class, false);
+// Archivo: app/Modules/Auth/Controllers/AuthController.php
+
+/** @var \App\Modules\Auth\Requests\LoginRequest $request */
+$request = service('formRequest', \App\Modules\Auth\Requests\LoginRequest::class, false);
 $invalid = $this->validateRequest($request);
 if ($invalid !== null) {
     return $invalid;
@@ -48,33 +50,51 @@ $response = $this->safeApiCall(fn() => $this->authService->login($request->paylo
 
 ## Módulos Actuales
 
-### Auth
-- `app/Requests/Auth/LoginRequest.php`
-- `app/Requests/Auth/RegisterRequest.php`
-- `app/Requests/Auth/ForgotPasswordRequest.php`
-- `app/Requests/Auth/ResetPasswordRequest.php`
+### Módulo Auth
 
-### Users
-- `app/Requests/User/UserStoreRequest.php`
-- `app/Requests/User/UserUpdateRequest.php`
+Ubicación: `app/Modules/Auth/Requests/`
 
-### API Keys
-- `app/Requests/ApiKey/ApiKeyStoreRequest.php`
-- `app/Requests/ApiKey/ApiKeyUpdateRequest.php`
+- `LoginRequest.php`
+- `RegisterRequest.php`
+- `ForgotPasswordRequest.php`
+- `ResetPasswordRequest.php`
+- `ResetPasswordConfirmRequest.php`
 
-### Profile
-- `app/Requests/Profile/ProfileUpdateRequest.php`
+### Módulo Users
 
-### Files
-- `app/Requests/File/FileUploadRequest.php`
+Ubicación: `app/Modules/Users/Requests/`
+
+- `UserStoreRequest.php`
+- `UserUpdateRequest.php`
+
+### Módulo API Keys
+
+Ubicación: `app/Modules/ApiKeys/Requests/`
+
+- `ApiKeyStoreRequest.php`
+- `ApiKeyUpdateRequest.php`
+
+### Módulo Profile
+
+Ubicación: `app/Modules/Profile/Requests/`
+
+- `ProfileUpdateRequest.php`
+- `ChangePasswordRequest.php`
+
+### Módulo Files
+
+Ubicación: `app/Modules/Files/Requests/`
+
+- `FileUploadRequest.php`
 
 ## Cómo Agregar un Nuevo FormRequest
 
-1. Crear clase en `app/Requests/<Dominio>/<Caso>Request.php` extendiendo `BaseFormRequest`.
-2. Definir `fields()`.
-3. Definir `rules()`.
-4. Sobrescribir `payload()` si se requiere normalización.
-5. Usar request en controller vía `service('formRequest', ..., false)`.
+1. Crear clase en `app/Modules/{ModuleName}/Requests/{CaseName}Request.php` extendiendo `BaseFormRequest`.
+   - Ejemplo: `app/Modules/Users/Requests/UserStoreRequest.php`
+2. Definir las reglas de validación en el método `rules()`.
+3. Definir el payload normalizado en el método `payload()` (si es necesario).
+4. Agregar strings de idioma en `app/Modules/{ModuleName}/Language/{en,es}/{ModuleName}.php` para mensajes de error.
+5. Usar request en controller vía `service('formRequest', \App\Modules\{ModuleName}\Requests\{RequestName}::class, false)`.
 6. Evitar reglas inline en controller.
 
 ## Testing Recomendado

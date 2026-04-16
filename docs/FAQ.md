@@ -77,7 +77,7 @@ This approach is more secure than storing tokens in the browser.
 
 ### What is the FormRequest pattern?
 
-FormRequest is a validation layer that centralizes form validation in dedicated classes (`app/Requests/*Request.php`).
+FormRequest is a validation layer that centralizes form validation in dedicated classes within each module (`app/Modules/{ModuleName}/Requests/*Request.php`).
 
 Benefits:
 - Controllers stay thin and focused
@@ -116,18 +116,23 @@ $response = $this->safeApiCall(
 
 ### How is the Service layer organized?
 
-Services encapsulate API communication for a specific domain:
+Services encapsulate API communication for a specific domain. Each module has its own services:
 
 ```
-app/Services/
-├── BaseApiService.php        # Base class with ApiClient injection
-├── AuthApiService.php         # Authentication endpoints
-├── UserApiService.php         # User management endpoints
-├── FileApiService.php         # File management endpoints
-└── ... (more services)
+app/Modules/
+├── Auth/Services/
+│   ├── AuthApiService.php                # Authentication endpoints
+│   └── AuthApiServiceInterface.php       # Interface contract
+├── Users/Services/
+│   ├── UserApiService.php                # User management endpoints
+│   └── UserApiServiceInterface.php       # Interface contract
+├── Files/Services/
+│   ├── FileApiService.php                # File management endpoints
+│   └── FileApiServiceInterface.php       # Interface contract
+└── ... (more modules)
 ```
 
-Each service extends `BaseApiService` and is registered in `app/Config/Services.php`.
+All services extend `BaseApiService` (in `app/Services/`) and are registered in `app/Config/Services.php` as shared singletons.
 
 **Pattern:**
 1. Controller calls a Service method
@@ -145,12 +150,14 @@ This separation keeps concerns distinct.
 
 See [How-To Guides](./HOW-TO.md) for detailed instructions. Generally:
 
-1. **Create a FormRequest** in `app/Requests/` with validation rules
-2. **Create/extend a Service** in `app/Services/` to call the API
-3. **Create a Controller** that uses the Service and renders a view
-4. **Add routes** to `app/Config/Routes.php`
-5. **Create views** in `app/Views/`
-6. **Write tests** in `tests/unit/` and `tests/feature/`
+1. **Create a new Module** in `app/Modules/{ModuleName}/`
+2. **Create FormRequest classes** in `app/Modules/{ModuleName}/Requests/` with validation rules
+3. **Create/extend a Service** in `app/Modules/{ModuleName}/Services/` to call the API
+4. **Create a Controller** in `app/Modules/{ModuleName}/Controllers/` that uses the Service
+5. **Add routes** to `app/Modules/{ModuleName}/Config/Routes.php`
+6. **Create views** in `app/Views/{module_name}/`
+7. **Add language strings** to `app/Modules/{ModuleName}/Language/{en,es}/{ModuleName}.php`
+8. **Write tests** in `tests/unit/` and `tests/feature/`
 
 Example: [How-To: Add a New Module](./HOW-TO.md#add-a-new-module)
 

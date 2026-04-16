@@ -308,14 +308,36 @@ All modules are fully implemented:
 
 ## File Locations & Patterns
 
-- Controllers: `app/Controllers/` (extend BaseWebController)
+### Module-Based Organization
+
+The project uses a **modular architecture** where each feature is self-contained in `app/Modules/{ModuleName}/`:
+
+**Per-module structure:**
+- Controllers: `app/Modules/{ModuleName}/Controllers/` (extend BaseWebController)
+- Services: `app/Modules/{ModuleName}/Services/` (extend BaseApiService, implement interfaces)
+- Requests: `app/Modules/{ModuleName}/Requests/` (form validation, extend BaseFormRequest)
+- Language: `app/Modules/{ModuleName}/Language/{en,es}/` (module-specific language strings)
+- Config: `app/Modules/{ModuleName}/Config/Routes.php` (module routes)
+
+**Module list:**
+- `app/Modules/Auth/` — Authentication (login, register, password reset, email verification)
+- `app/Modules/Dashboard/` — Admin dashboard with statistics
+- `app/Modules/Profile/` — User profile and password management
+- `app/Modules/Files/` — File upload, download, and management
+- `app/Modules/Users/` — User CRUD (admin-only)
+- `app/Modules/Audit/` — Audit logs (admin-only)
+- `app/Modules/ApiKeys/` — API key management (admin-only)
+- `app/Modules/Metrics/` — Metrics and analytics dashboards (admin-only)
+- `app/Modules/Language/` — Internationalization (locale switching)
+
+### Shared Infrastructure (Outside Modules)
+
+- Views: `app/Views/{module_name}/` (organized by module, not inside `app/Modules/`)
 - Models: `app/Models/` (not used; all data comes from external API)
-- Views: `app/Views/` (organized by feature module)
 - Libraries: `app/Libraries/` (`ApiClient.php`, `ApiClientInterface.php`)
-- Services: `app/Services/` (`BaseApiService.php` + one file per domain)
 - Filters: `app/Filters/` (`AuthFilter`, `AdminFilter`, `LocaleFilter`)
 - Helpers: `app/Helpers/` (`ui_helper.php` for view utilities, `form_helper.php` for field error rendering)
-- Language: `app/Language/en/` and `app/Language/es/`
+- Language: `app/Language/{en,es}/` (global strings, app-wide messages)
 - Config: `app/Config/` (`Routes.php`, `Filters.php`, `Autoload.php`, `ApiClient.php`, `Services.php`)
 - Tests: `tests/unit/` (libraries, filters, helpers, services, views) and `tests/feature/` (controller flows)
 
@@ -367,7 +389,7 @@ This app consumes **ci4-api-starter** (https://github.com/dcardenasl/ci4-api-sta
 
 - **Documentation Hub:** `docs/INDEX.md` — Complete guides for architecture, frontend, services, testing, deployment, and how-to guides
 - **Architecture Deep Dive:** `docs/ARCHITECTURE.md` — ApiClient, security patterns, and data flow
-- **API Compatibility Contract:** `docs/COMPATIBILIDAD-API.md` — Mandatory backend/frontend integration rules
+- **API Compatibility Contract:** `docs/API-COMPATIBILITY.md` — Mandatory backend/frontend integration rules
 - **Services & Validation:** `docs/SERVICES.md` — Service layer pattern and FormRequest validation
 - **Testing Guide:** `tests/README.md` and `docs/TESTING.md` — Unit/feature test strategies
 - **Frontend Guidelines:** `docs/FRONTEND.md` — UI/UX patterns, Tailwind, Alpine.js
