@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "bmewburn.vscode-intelephense-client",
+    "bradlc.vscode-tailwindcss",
+    "dbaeumer.vscode-eslint",
+    "EditorConfig.EditorConfig",
+    "mikestead.dotenv",
+    "neilbrayfield.php-docblocker",
+    "onecentlin.laravel-blade"
+  ]
+}
