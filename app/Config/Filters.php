@@ -7,6 +7,7 @@ namespace Config;
 use App\Filters\AdminFilter;
 use App\Filters\AuthFilter;
 use App\Filters\LocaleFilter;
+use App\Filters\RateLimitFilter;
 use CodeIgniter\Config\Filters as BaseFilters;
 use CodeIgniter\Filters\Cors;
 use CodeIgniter\Filters\CSRF;
@@ -42,6 +43,7 @@ class Filters extends BaseFilters
         'auth'          => AuthFilter::class,
         'admin'         => AdminFilter::class,
         'locale'        => LocaleFilter::class,
+        'ratelimit'     => RateLimitFilter::class,
     ];
 
     /**
@@ -118,5 +120,20 @@ class Filters extends BaseFilters
      *
      * @var array<string, array<string, list<string>>>
      */
-    public array $filters = [];
+    public array $filters = [
+        // Apply rate limiting to all authenticated routes.
+        // Public auth routes (login, register, password reset) are excluded
+        // because they are already protected by CSRF and have no session user.
+        'ratelimit' => [
+            'before' => [
+                'dashboard',
+                'profile',
+                'profile/*',
+                'files',
+                'files/*',
+                'admin/*',
+                'language/*',
+            ],
+        ],
+    ];
 }
