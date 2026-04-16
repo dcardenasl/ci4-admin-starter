@@ -1,3 +1,27 @@
+/**
+ * CI4 Admin Starter — Application JavaScript
+ *
+ * All code is wrapped in an IIFE to avoid polluting the global scope.
+ * Only symbols required by Alpine.js (component factories, stores) and
+ * the Google Identity callback are exposed on `window`.
+ *
+ * Alpine components are registered via Alpine.data() / Alpine.store() inside
+ * the 'alpine:init' event listener and do NOT need to be on window.
+ */
+(() => {
+
+// ── Dev-only logging ────────────────────────────────────────────────────────
+// Reads the data-env attribute injected by head.php (<?= ENVIRONMENT ?>).
+// Errors are suppressed in production to avoid leaking internal details.
+const isDev = String(document.documentElement.dataset.env || '').toLowerCase() === 'development';
+/** @param {...unknown} args */
+const devError = (...args) => { if (isDev) console.error(...args); };
+
+/**
+ * Hydrates Lucide icon placeholders in the DOM.
+ *
+ * @returns {boolean} True if Lucide was available and icons were rendered, false otherwise
+ */
 const renderLucideIcons = () => {
     if (!window.lucide || typeof window.lucide.createIcons !== 'function') {
         return false;
@@ -12,6 +36,12 @@ const renderLucideIcons = () => {
     return true;
 };
 
+/**
+ * Retries icon hydration until the Lucide CDN script is ready.
+ * Polls up to 20 times at 150 ms intervals, then gives up gracefully.
+ *
+ * @returns {void}
+ */
 const bootLucideIcons = () => {
     if (renderLucideIcons()) {
         return;
@@ -26,6 +56,12 @@ const bootLucideIcons = () => {
     }, 150);
 };
 
+/**
+ * Converts a URL query string to a plain object, discarding empty values.
+ *
+ * @param {string} search - A query string (e.g. `window.location.search`)
+ * @returns {Record<string, string>} Key/value pairs with blank entries removed
+ */
 const queryToObject = (search) => {
     const params = new URLSearchParams(search);
     const query = {};
@@ -40,6 +76,12 @@ const queryToObject = (search) => {
     return query;
 };
 
+/**
+ * Converts a plain object to a URL query string, skipping blank string values.
+ *
+ * @param {Record<string, unknown>} query - Object of query parameters
+ * @returns {string} URL-encoded query string (without leading `?`)
+ */
 const objectToQueryString = (query) => {
     const params = new URLSearchParams();
 
@@ -52,6 +94,12 @@ const objectToQueryString = (query) => {
     return params.toString();
 };
 
+/**
+ * Extracts all non-empty named string fields from an HTMLFormElement.
+ *
+ * @param {HTMLFormElement} form - The form to read values from
+ * @returns {Record<string, string>} Key/value pairs for non-blank fields
+ */
 const formToQuery = (form) => {
     const formData = new FormData(form);
     const query = {};
@@ -70,8 +118,21 @@ const formToQuery = (form) => {
     return query;
 };
 
+/**
+ * Returns true if value is a non-null, non-array plain object.
+ *
+ * @param {unknown} value - Value to test
+ * @returns {boolean}
+ */
 const isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 
+/**
+ * Normalises an API list response to the object that contains `{items, pagination}`.
+ * Handles both top-level arrays and nested `{ data: { data: [], meta: {} } }` wrappers.
+ *
+ * @param {unknown} payload - Raw API response body
+ * @returns {Record<string, unknown>} Normalised root object
+ */
 const tablePayloadRoot = (payload) => {
     if (Array.isArray(payload)) {
         return { data: payload };
@@ -98,6 +159,12 @@ const tablePayloadRoot = (payload) => {
     return payload;
 };
 
+/**
+ * Returns Tailwind CSS classes for a user/resource status badge.
+ *
+ * @param {string} status - Status value (e.g. 'active', 'pending', 'suspended')
+ * @returns {string} Tailwind CSS class string
+ */
 const statusBadgeClass = (status) => {
     const val = String(status || '').toLowerCase();
 
@@ -114,10 +181,22 @@ const statusBadgeClass = (status) => {
     return 'bg-gray-100 text-gray-800';
 };
 
+/**
+ * Returns Tailwind CSS classes for a user role badge.
+ *
+ * @param {string} role - Role value (e.g. 'admin', 'superadmin', 'user')
+ * @returns {string} Tailwind CSS class string
+ */
 const roleBadgeClass = (role) => ['admin', 'superadmin'].includes(String(role || '').toLowerCase())
     ? 'bg-brand-100 text-brand-800'
     : 'bg-gray-100 text-gray-700';
 
+/**
+ * Returns Tailwind CSS classes for an audit action badge.
+ *
+ * @param {string} action - Audit action value (e.g. 'create', 'update', 'delete', 'login')
+ * @returns {string} Tailwind CSS class string
+ */
 const auditActionBadgeClass = (action) => {
     const val = String(action || '').toLowerCase();
 
@@ -132,6 +211,12 @@ const auditActionBadgeClass = (action) => {
     return 'bg-gray-100 text-gray-700';
 };
 
+/**
+ * Returns Tailwind CSS classes for an audit result badge.
+ *
+ * @param {string} result - Audit result value (e.g. 'success', 'failure', 'denied')
+ * @returns {string} Tailwind CSS class string
+ */
 const auditResultBadgeClass = (result) => {
     const val = String(result || '').toLowerCase();
 
@@ -142,6 +227,12 @@ const auditResultBadgeClass = (result) => {
     return 'bg-gray-100 text-gray-700';
 };
 
+/**
+ * Returns Tailwind CSS classes for an audit severity badge.
+ *
+ * @param {string} severity - Severity level (e.g. 'info', 'warning', 'critical')
+ * @returns {string} Tailwind CSS class string
+ */
 const auditSeverityBadgeClass = (severity) => {
     const val = String(severity || '').toLowerCase();
 
@@ -271,6 +362,12 @@ const paginationLabels = {
     }
 };
 
+/**
+ * Returns the localised display label for a status value.
+ *
+ * @param {string} status - Status value (e.g. 'active', 'pending')
+ * @returns {string} Human-readable label in the current page locale
+ */
 const statusLabel = (status) => {
     const value = String(status || '').trim();
     if (value === '') {
@@ -283,6 +380,12 @@ const statusLabel = (status) => {
     return statusLabels[locale]?.[key] || value;
 };
 
+/**
+ * Returns the localised display label for a user role value.
+ *
+ * @param {string} role - Role value (e.g. 'admin', 'user')
+ * @returns {string} Human-readable label in the current page locale
+ */
 const roleLabel = (role) => {
     const value = String(role || '').trim();
     if (value === '') {
@@ -295,6 +398,12 @@ const roleLabel = (role) => {
     return roleLabels[locale]?.[key] || value;
 };
 
+/**
+ * Returns the localised display label for an audit action value.
+ *
+ * @param {string} action - Audit action value (e.g. 'create', 'login')
+ * @returns {string} Human-readable label in the current page locale
+ */
 const auditActionLabel = (action) => {
     const value = String(action || '').trim();
     if (value === '') {
@@ -307,6 +416,12 @@ const auditActionLabel = (action) => {
     return auditActionLabels[locale]?.[key] || value;
 };
 
+/**
+ * Returns the localised display label for an audit result value.
+ *
+ * @param {string} result - Audit result value (e.g. 'success', 'failure', 'denied')
+ * @returns {string} Human-readable label in the current page locale
+ */
 const auditResultLabel = (result) => {
     const value = String(result || '').trim();
     if (value === '') {
@@ -319,6 +434,12 @@ const auditResultLabel = (result) => {
     return auditResultLabels[locale]?.[key] || value;
 };
 
+/**
+ * Returns the localised display label for an audit severity level.
+ *
+ * @param {string} severity - Severity level (e.g. 'info', 'warning', 'critical')
+ * @returns {string} Human-readable label in the current page locale
+ */
 const auditSeverityLabel = (severity) => {
     const value = String(severity || '').trim();
     if (value === '') {
@@ -331,6 +452,13 @@ const auditSeverityLabel = (severity) => {
     return auditSeverityLabels[locale]?.[key] || value;
 };
 
+/**
+ * Converts various date representations to a scalar suitable for `<input type="date">`.
+ * Handles strings, numbers, arrays, and objects with common date-field names.
+ *
+ * @param {unknown} value - Input value to normalise
+ * @returns {string|number|null} ISO date string, numeric timestamp, or null if not convertible
+ */
 const toDateInput = (value) => {
     if (value === null || value === undefined) {
         return null;
@@ -362,6 +490,13 @@ const toDateInput = (value) => {
     return null;
 };
 
+/**
+ * Formats a date value to a locale-aware human-readable string (dd/mm/yyyy hh:mm).
+ * Returns `'-'` for null/empty input and the raw candidate string if parsing fails.
+ *
+ * @param {unknown} value - Date value accepted by `toDateInput()`
+ * @returns {string} Formatted date string or `'-'`
+ */
 const formatDate = (value) => {
     const candidate = toDateInput(value);
     if (candidate === null || candidate === '') {
@@ -386,6 +521,12 @@ document.addEventListener('alpine:init', () => {
     const locale = localePrefix();
     const text = uiLabels[locale] || uiLabels.es;
 
+    /**
+     * Global confirmation modal store.
+     * Call `$store.confirm.show(message, onAccept)` to open the modal and trigger a callback on acceptance.
+     *
+     * @type {{ open: boolean, title: string, message: string, onAccept: Function|null, show: Function, close: Function, accept: Function, handleTab: Function }}
+     */
     Alpine.store('confirm', {
         open: false,
         title: text.confirmAction,
@@ -451,6 +592,12 @@ document.addEventListener('alpine:init', () => {
         }
     });
 
+    /**
+     * Global toast notification queue.
+     * Call `$store.toast.push(type, message)` to enqueue a notification (auto-dismissed after 5 s).
+     *
+     * @type {{ items: Array<{id: number, type: string, message: string}>, push: Function, remove: Function }}
+     */
     Alpine.store('toast', {
         items: [],
         push(type, message) {
@@ -465,10 +612,24 @@ document.addEventListener('alpine:init', () => {
         }
     });
 
+    /**
+     * Root shell component. Manages sidebar open/close state.
+     * Sidebar defaults to open on viewports ≥ 768 px (md breakpoint).
+     *
+     * @returns {{ sidebarOpen: boolean }}
+     */
     Alpine.data('appShell', () => ({
         sidebarOpen: window.innerWidth >= 768
     }));
 
+    /**
+     * Server-driven data table component.
+     * Fetches rows from `config.apiUrl`, manages sort/filter/pagination state,
+     * and pushes URL history via `config.pageUrl`.
+     *
+     * @param {{ apiUrl?: string, pageUrl?: string, mode?: string, routes?: object, csrf?: { name: string, hash: string }, limitOptions?: string[], confirmDelete?: string }} config
+     * @returns {object} Alpine.js component data object
+     */
     Alpine.data('remoteTable', (config = {}) => ({
         apiUrl: config.apiUrl || window.location.pathname,
         pageUrl: config.pageUrl || window.location.pathname,
@@ -714,7 +875,7 @@ document.addEventListener('alpine:init', () => {
                     try {
                         payload = JSON.parse(rawBody);
                     } catch (e) {
-                        console.error('JSON Parse error in fetchData:', e);
+                        devError('JSON Parse error in fetchData:', e);
                         if (requestId === this.requestId) {
                             this.rows = [];
                             this.error = true;
@@ -763,7 +924,7 @@ document.addEventListener('alpine:init', () => {
                     window.history.pushState({}, '', pageUrl);
                 }
             } catch (err) {
-                console.error('Fetch error in fetchData:', err);
+                devError('Fetch error in fetchData:', err);
                 if (requestId !== this.requestId) {
                     return;
                 }
@@ -1099,18 +1260,30 @@ window.addEventListener('load', () => {
     bootLucideIcons();
 });
 
+/**
+ * Google Identity Services callback.
+ * Must be on `window` because it is referenced by the Google GSI script
+ * via the data-callback attribute on the sign-in button.
+ *
+ * @param {{ credential: string }} response - The Google credential response object
+ */
 window.handleGoogleCredentialResponse = (response) => {
     const token = response && typeof response.credential === 'string' ? response.credential : '';
     if (token === '') {
+        devError('[Google Auth] Empty credential in response');
         return;
     }
 
     const tokenInput = document.getElementById('google-id-token');
     const loginForm = document.getElementById('google-login-form');
     if (!(tokenInput instanceof HTMLInputElement) || !(loginForm instanceof HTMLFormElement)) {
+        devError('[Google Auth] Required form elements not found in DOM');
         return;
     }
 
     tokenInput.value = token;
     loginForm.submit();
 };
+
+// End of IIFE — close the scope wrapper
+})();
