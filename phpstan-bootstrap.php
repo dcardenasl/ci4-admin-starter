@@ -120,3 +120,14 @@ if (! function_exists('view')) {
         return $name;
     }
 }
+
+if (! function_exists('cache')) {
+    /**
+     * @param string|null $key
+     * @return \CodeIgniter\Cache\CacheInterface|mixed|null
+     */
+    function cache(?string $key = null)
+    {
+        return null;
+    }
+}
