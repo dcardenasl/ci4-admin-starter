@@ -21,6 +21,9 @@ class ApiClient implements ApiClientInterface
 
     protected \CodeIgniter\Session\Session $session;
 
+    /** Prevents concurrent 401 responses from triggering simultaneous token refresh attempts. */
+    private static bool $isRefreshing = false;
+
     public function __construct(?ApiClientConfig $config = null)
     {
         $this->config = $config ?? config('ApiClient');
@@ -99,7 +102,7 @@ class ApiClient implements ApiClientInterface
 
             $mimeType = is_array($file) && isset($file['mimeType']) && is_string($file['mimeType'])
                 ? $file['mimeType']
-                : mime_content_type($filePath);
+                : (new \finfo(FILEINFO_MIME_TYPE))->file($filePath);
 
             $multipart[(string) $name] = new \CURLFile($filePath, $mimeType ?: 'application/octet-stream', $filename);
         }
@@ -139,10 +142,16 @@ class ApiClient implements ApiClientInterface
         $status = $response->getStatusCode();
         $latency = (int) round((microtime(true) - $startedAt) * 1000);
 
-        if ($authenticated && $status === 401 && $this->attemptTokenRefresh()) {
-            $options = $this->withAuthorization($options);
-            $response = $this->http->request($method, $uri, $options);
-            $status = $response->getStatusCode();
+        if ($authenticated && $status === 401 && ! self::$isRefreshing && $this->attemptTokenRefresh()) {
+            self::$isRefreshing = true;
+
+            try {
+                $options  = $this->withAuthorization($options);
+                $response = $this->http->request($method, $uri, $options);
+                $status   = $response->getStatusCode();
+            } finally {
+                self::$isRefreshing = false;
+            }
         }
 
         $body = (string) $response->getBody();
