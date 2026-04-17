@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Libraries\ApiClientInterface;
-use App\Requests\FormRequestInterface;
+use App\Support\Requests\FormRequestInterface;
 use App\Support\SessionKeys;
 use App\Traits\TableResponseTrait;
 use CodeIgniter\HTTP\RedirectResponse;

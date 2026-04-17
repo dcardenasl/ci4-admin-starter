@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Requests\ApiKey;
 
-use App\Requests\ApiKey\ApiKeyUpdateRequest;
+use App\Modules\ApiKeys\Requests\ApiKeyUpdateRequest;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Validation\ValidationInterface;
 use Config\Services;

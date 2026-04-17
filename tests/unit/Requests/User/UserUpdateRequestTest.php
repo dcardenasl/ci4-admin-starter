@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Requests\User;
 
-use App\Requests\User\UserUpdateRequest;
+use App\Modules\Users\Requests\UserUpdateRequest;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Validation\ValidationInterface;
 use Config\Services;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Requests\User;
 
-use App\Requests\User\UserStoreRequest;
+use App\Modules\Users\Requests\UserStoreRequest;
 use CodeIgniter\Test\CIUnitTestCase;
 use Config\Services;
 

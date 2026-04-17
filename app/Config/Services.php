@@ -22,9 +22,9 @@ use App\Modules\Profile\Services\ProfileApiService;
 use App\Modules\Profile\Services\ProfileApiServiceInterface;
 use App\Modules\Users\Services\UserApiService;
 use App\Modules\Users\Services\UserApiServiceInterface;
-use App\Requests\FormRequestInterface;
 use App\Services\CatalogApiService;
 use App\Services\CatalogApiServiceInterface;
+use App\Support\Requests\FormRequestInterface;
 use CodeIgniter\Config\BaseService;
 use InvalidArgumentException;
 

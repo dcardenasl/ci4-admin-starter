@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Requests\Auth;
 
-use App\Requests\Auth\LoginRequest;
+use App\Modules\Auth\Requests\LoginRequest;
 use CodeIgniter\Test\CIUnitTestCase;
 use Config\Services;
 
