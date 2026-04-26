@@ -1,4 +1,4 @@
-<div class="mt-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
+<div class="mt-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
     <div class="xl:col-span-2">
         <label class="<?= esc(filter_label_class()) ?>"><?= lang('App.search') ?></label>
         <input type="text" name="search" value="<?= esc((string) request()->getGet('search')) ?>" placeholder="<?= lang('Audit.search_placeholder') ?>"
@@ -24,6 +24,26 @@
     <div>
         <label class="<?= esc(filter_label_class()) ?>"><?= lang('Audit.user_id') ?></label>
         <input type="text" name="user_id" value="<?= esc((string) request()->getGet('user_id')) ?>" class="<?= esc(filter_input_class()) ?>">
+    </div>
+    <div>
+        <label class="<?= esc(filter_label_class()) ?>"><?= lang('Audit.result') ?></label>
+        <select name="result" class="<?= esc(filter_input_class()) ?>">
+            <option value=""><?= lang('Audit.all_results') ?></option>
+            <?php $result = (string) request()->getGet('result'); ?>
+            <option value="success" <?= $result === 'success' ? 'selected' : '' ?>>Success</option>
+            <option value="failure" <?= $result === 'failure' ? 'selected' : '' ?>>Failure</option>
+            <option value="denied" <?= $result === 'denied' ? 'selected' : '' ?>>Denied</option>
+        </select>
+    </div>
+    <div>
+        <label class="<?= esc(filter_label_class()) ?>"><?= lang('Audit.severity') ?></label>
+        <select name="severity" class="<?= esc(filter_input_class()) ?>">
+            <option value=""><?= lang('Audit.all_severities') ?></option>
+            <?php $severity = (string) request()->getGet('severity'); ?>
+            <option value="info" <?= $severity === 'info' ? 'selected' : '' ?>>Info</option>
+            <option value="warning" <?= $severity === 'warning' ? 'selected' : '' ?>>Warning</option>
+            <option value="critical" <?= $severity === 'critical' ? 'selected' : '' ?>>Critical</option>
+        </select>
     </div>
     <?= view('layouts/partials/filter_limit', ['limitOptions' => $limitOptions ?? [10, 25, 50, 100]]) ?>
 </div>

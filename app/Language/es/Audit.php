@@ -20,6 +20,8 @@ return [
     'entity_history'      => 'Historial de entidad',
     'search_placeholder'  => 'Buscar en auditoría...',
     'all_actions'         => 'Todas las acciones',
+    'all_results'         => 'Todos los resultados',
+    'all_severities'      => 'Todas las severidades',
     'action_create'       => 'Crear',
     'action_update'       => 'Actualizar',
     'action_delete'       => 'Eliminar',
