@@ -26,4 +26,10 @@ return [
     'update_failed'           => 'No se pudo actualizar el perfil.',
     'resend_success'          => 'Te reenviamos el correo de verificación.',
     'resend_failed'           => 'No se pudo reenviar la verificación.',
+    'avatar'                  => 'Foto de perfil',
+    'avatar_help'             => 'Sube una foto para personalizar tu cuenta.',
+    'avatar_upload'           => 'Subir foto',
+    'avatar_update_success'   => 'Foto de perfil actualizada.',
+    'avatar_update_failed'    => 'No se pudo actualizar la foto de perfil.',
+    'avatar_invalid_file'     => 'Selecciona una imagen válida (JPG, PNG, GIF o WebP).',
 ];

@@ -59,6 +59,7 @@ return [
     'close'           => 'Cerrar',
     'close_navigation' => 'Cerrar navegación',
     'confirm'         => 'Confirmar',
+    'remove'          => 'Quitar',
     'skip_to_content' => 'Saltar al contenido principal',
     'error404Title'   => 'Página no encontrada',
     'error404Body'    => 'La página que buscas no existe o fue movida.',

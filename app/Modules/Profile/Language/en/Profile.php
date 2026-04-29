@@ -26,4 +26,10 @@ return [
     'update_failed'           => 'Could not update profile.',
     'resend_success'          => 'Verification email resent.',
     'resend_failed'           => 'Could not resend verification.',
+    'avatar'                  => 'Profile photo',
+    'avatar_help'             => 'Upload a photo to personalize your account.',
+    'avatar_upload'           => 'Upload photo',
+    'avatar_update_success'   => 'Profile photo updated.',
+    'avatar_update_failed'    => 'Could not update profile photo.',
+    'avatar_invalid_file'     => 'Please select a valid image (JPG, PNG, GIF or WebP).',
 ];
