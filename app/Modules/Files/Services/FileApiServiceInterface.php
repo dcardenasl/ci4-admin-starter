@@ -38,4 +38,52 @@ interface FileApiServiceInterface
      * @return ApiResponse
      */
     public function upload(string $inputName, string $filePath, string $filename, ?string $mimeType = null, array $fields = []): array;
+
+    /**
+     * @param array<string, mixed> $filters
+     * @return ApiResponse
+     */
+    public function listForPicker(array $filters = []): array;
+
+    /** @return ApiResponse */
+    public function getInfo(int|string $id): array;
+
+    /**
+     * @param array<string, mixed> $payload
+     * @return ApiResponse
+     */
+    public function updateMetadata(int|string $id, array $payload): array;
+
+    /** @return ApiResponse */
+    public function restore(int|string $id): array;
+
+    /** @return ApiResponse */
+    public function forceDelete(int|string $id): array;
+
+    /** @return ApiResponse */
+    public function usages(int|string $id): array;
+
+    /** @return ApiResponse */
+    public function replace(int|string $id, string $filePath, string $filename, ?string $mimeType = null): array;
+
+    /** @return ApiResponse */
+    public function regenerateVariants(int|string $id): array;
+
+    /**
+     * @param list<int|string> $ids
+     * @return ApiResponse
+     */
+    public function bulkDelete(array $ids): array;
+
+    /**
+     * @param list<int|string> $ids
+     * @return ApiResponse
+     */
+    public function bulkRestore(array $ids): array;
+
+    /**
+     * @param list<int|string> $ids
+     * @return ApiResponse
+     */
+    public function bulkForceDelete(array $ids): array;
 }
