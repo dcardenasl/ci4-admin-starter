@@ -29,6 +29,17 @@ if (! function_exists('field_error_class')) {
     }
 }
 
+if (! function_exists('input_class')) {
+    function input_class(string $field): string
+    {
+        $base   = 'mt-1 w-full rounded-lg border px-3 py-2 focus-visible:outline-none focus-visible:ring-2';
+        $normal = 'border-gray-300 focus:border-brand-500 focus:ring-brand-500';
+        $error  = 'border-red-500 focus:border-red-500 focus:ring-red-500';
+
+        return $base . ' ' . (has_field_error($field) ? $error : $normal);
+    }
+}
+
 if (! function_exists('render_field_error')) {
     function render_field_error(string $field): string
     {

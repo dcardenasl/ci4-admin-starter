@@ -249,8 +249,15 @@ if (! function_exists('ui_icon')) {
             'download'  => 'download',
             'trash'     => 'trash-2',
             'x'         => 'x',
-            'file'      => 'file',
-            'file-plus' => 'file-plus',
+            'file'        => 'file',
+            'file-plus'   => 'file-plus',
+            'database'    => 'database',
+            'hard-drive'  => 'hard-drive',
+            'folder-lock' => 'folder-lock',
+            'list'        => 'list',
+            'grid'        => 'grid-2x2',
+            'upload'      => 'upload',
+            'refresh-ccw' => 'refresh-ccw',
         ];
 
         if (! isset($icons[$name])) {
