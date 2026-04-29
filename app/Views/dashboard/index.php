@@ -55,39 +55,55 @@
                                     <tr>
                                         <th class="<?= esc(table_th_class()) ?> w-16"><?= lang('TableColumns.preview') ?></th>
                                         <th class="<?= esc(table_th_class()) ?>"><?= lang('TableColumns.file_name') ?></th>
+                                        <th class="<?= esc(table_th_class()) ?>"><?= lang('TableColumns.category') ?></th>
                                         <th class="<?= esc(table_th_class()) ?>"><?= lang('TableColumns.size') ?></th>
-                                        <th class="<?= esc(table_th_class()) ?>"><?= lang('TableColumns.type') ?></th>
                                         <th class="<?= esc(table_th_class()) ?>"><?= lang('TableColumns.date') ?></th>
+                                        <th class="<?= esc(table_th_class()) ?>"><?= lang('TableColumns.actions') ?></th>
                                     </tr>
                                 </thead>
                                 <tbody class="<?= esc(table_body_class()) ?>">
                                     <?php foreach ($recentFiles as $file): ?>
+                                        <?php
+                                        $fileId   = $file['id'] ?? '';
+                                        $thumbUrl = $file['variants']['sm']['url'] ?? ($file['is_image'] ? route_to('files.view', $fileId) : null);
+                                        $largeUrl = $file['variants']['lg']['url'] ?? ($file['is_image'] ? route_to('files.view', $fileId) : null);
+                                        ?>
                                         <tr class="<?= esc(table_row_class()) ?>">
                                             <td class="<?= esc(table_td_class()) ?>">
-                                                <?php if (! empty($file['is_image'])): ?>
-                                                    <?php $viewUrl = route_to('files.view', $file['id'] ?? ''); ?>
-                                                    <button type="button" @click="previewUrl = '<?= $viewUrl ?>'; previewShow = true">
-                                                        <img src="<?= $viewUrl ?>" 
-                                                             class="h-8 w-8 rounded-lg object-cover border border-gray-200 hover:scale-110 transition-transform shadow-sm" 
+                                                <?php if ($thumbUrl !== null): ?>
+                                                    <button type="button" @click="previewUrl = '<?= esc($largeUrl ?? $thumbUrl) ?>'; previewShow = true">
+                                                        <img src="<?= esc($thumbUrl) ?>"
+                                                             class="h-10 w-10 rounded-lg object-cover border border-gray-200 hover:scale-110 transition-transform shadow-sm"
                                                              alt="<?= esc((string) ($file['original_name'] ?? '')) ?>">
                                                     </button>
                                                 <?php else: ?>
-                                                    <div class="h-8 w-8 flex items-center justify-center rounded-lg bg-gray-100 border border-gray-200">
-                                                        <?= ui_icon('file', 'h-4 w-4 text-gray-400') ?>
+                                                    <div class="h-10 w-10 flex items-center justify-center rounded-lg bg-gray-100 border border-gray-200">
+                                                        <?= ui_icon('file', 'h-5 w-5 text-gray-400') ?>
                                                     </div>
                                                 <?php endif; ?>
                                             </td>
                                             <td class="<?= esc(table_td_class('primary')) ?>">
                                                 <?= esc((string) ($file['original_name'] ?? $file['filename'] ?? '-')) ?>
                                             </td>
+                                            <td class="<?= esc(table_td_class('subtle')) ?> text-xs uppercase">
+                                                <?= esc((string) ($file['category'] ?? '-')) ?>
+                                            </td>
                                             <td class="<?= esc(table_td_class('muted')) ?>">
                                                 <?= esc((string) ($file['human_size'] ?? '-')) ?>
                                             </td>
-                                            <td class="<?= esc(table_td_class('subtle')) ?> text-xs">
-                                                <?= esc(strtoupper(explode('/', (string) ($file['mime_type'] ?? 'unk/'))[1] ?? '-')) ?>
-                                            </td>
                                             <td class="<?= esc(table_td_class('muted')) ?>">
                                                 <?= esc(format_date($file['uploaded_at'] ?? null)) ?>
+                                            </td>
+                                            <td class="<?= esc(table_td_class()) ?>">
+                                                <div class="flex items-center gap-2">
+                                                    <a href="<?= route_to('files.view', $fileId) ?>" class="<?= esc(action_button_class()) ?>" title="<?= esc(lang('App.view')) ?>">
+                                                        <?= ui_icon('eye', 'h-3.5 w-3.5') ?>
+                                                        <span class="hidden md:inline"><?= lang('App.view') ?></span>
+                                                    </a>
+                                                    <a href="<?= route_to('files.download', $fileId) ?>" class="<?= esc(action_button_class()) ?>" title="<?= esc(lang('App.download')) ?>">
+                                                        <?= ui_icon('download', 'h-3.5 w-3.5') ?>
+                                                    </a>
+                                                </div>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
