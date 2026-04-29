@@ -35,6 +35,12 @@ interface ApiClientInterface
      */
     public function put(string $path, array $data = []): array;
 
+    /**
+     * @param array<string, mixed> $data
+     * @return ApiResponse
+     */
+    public function patch(string $path, array $data = []): array;
+
     /** @return ApiResponse */
     public function delete(string $path): array;
 

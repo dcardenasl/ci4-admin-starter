@@ -61,6 +61,12 @@ class ApiClient implements ApiClientInterface
         return $this->request('PUT', $path, ['json' => $data], true);
     }
 
+    /** @param array<string, mixed> $data */
+    public function patch(string $path, array $data = []): array
+    {
+        return $this->request('PATCH', $path, ['json' => $data], true);
+    }
+
     public function delete(string $path): array
     {
         return $this->request('DELETE', $path, [], true);
