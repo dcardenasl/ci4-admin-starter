@@ -97,7 +97,7 @@
                                             </td>
                                             <td class="<?= esc(table_td_class()) ?>">
                                                 <div class="flex items-center gap-2">
-                                                    <a href="<?= route_to('files.view', $fileId) ?>" class="<?= esc(action_button_class()) ?>" title="<?= esc(lang('App.view')) ?>">
+                                                    <a href="<?= route_to('files.show', $fileId) ?>" class="<?= esc(action_button_class()) ?>" title="<?= esc(lang('App.view')) ?>">
                                                         <?= ui_icon('eye', 'h-3.5 w-3.5') ?>
                                                         <span class="hidden md:inline"><?= lang('App.view') ?></span>
                                                     </a>
