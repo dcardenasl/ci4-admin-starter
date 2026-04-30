@@ -36,14 +36,18 @@ if (str_contains($content, "function {$serviceKey}(")) {
 }
 
 // ─── 1. Inject use statements ────────────────────────────────────────────────
+//
+// Strategy: locate the last `use ` line and splice the two new ones immediately
+// after it. This preserves blank-line separators between namespace groups, the
+// existing ordering, and any inline comments — non-destructive by design.
 
 $useClass = "use App\\Modules\\{$module}\\Services\\{$serviceClass};";
 $useIface = "use App\\Modules\\{$module}\\Services\\{$serviceInterface};";
 
 if (! str_contains($content, $useClass)) {
-    // Insert the two use lines in alphabetical order before the first non-App use, or before class declaration
-    $lines = explode("\n", $content);
+    $lines        = explode("\n", $content);
     $lastUseIndex = null;
+
     foreach ($lines as $i => $line) {
         if (str_starts_with(trim($line), 'use ')) {
             $lastUseIndex = $i;
@@ -51,46 +55,11 @@ if (! str_contains($content, $useClass)) {
     }
 
     if ($lastUseIndex !== null) {
-        // Collect all use lines, add new ones, sort, deduplicate, put back
-        $useLines = [];
-        $otherLines = [];
-        $inUseBlock = false;
-        $firstUseIndex = null;
-
-        foreach ($lines as $i => $line) {
-            if (str_starts_with(trim($line), 'use ') && ! str_contains($line, 'use \\')) {
-                if ($firstUseIndex === null) {
-                    $firstUseIndex = $i;
-                }
-                $useLines[] = trim($line);
-            }
-        }
-
-        $useLines[] = $useClass;
-        $useLines[] = $useIface;
-        $useLines = array_unique($useLines);
-        sort($useLines);
-
-        // Rebuild: replace the use block
-        $rebuilt = [];
-        $usePlaced = false;
-        foreach ($lines as $i => $line) {
-            if (str_starts_with(trim($line), 'use ') && ! $usePlaced) {
-                if (! $usePlaced) {
-                    foreach ($useLines as $ul) {
-                        $rebuilt[] = $ul;
-                    }
-                    $usePlaced = true;
-                }
-                // Skip original use lines (we've replaced them)
-            } elseif (str_starts_with(trim($line), 'use ') && $usePlaced) {
-                // skip duplicate original use lines
-            } else {
-                $rebuilt[] = $line;
-            }
-        }
-        $content = implode("\n", $rebuilt);
+        array_splice($lines, $lastUseIndex + 1, 0, [$useClass, $useIface]);
+        $content = implode("\n", $lines);
     }
+    // If no use lines were found at all, the method injection below still runs
+    // and the developer sees the manual instructions in make-module.sh's summary.
 }
 
 // ─── 2. Inject the service method before the closing } ───────────────────────
