@@ -145,6 +145,81 @@ To seed against future regressions of these findings:
 4. **`tests/unit/Scaffolding/IdempotencyMatrixTest.php`** — runs `make-module.sh Resource Module /api` twice and asserts that `Autoload.php`, `Services.php`, and `Routes.php` are unchanged after the second run (except with `--force`).
 5. **`tests/unit/Scaffolding/PlaceholderSubstitutionTest.php`** — hardcode the expected placeholder set (`VIEW_ROUTE_NAME`, `VIEW_MODULE`, `VIEW_LANG_PREFIX_`, `VIEW_VIEW_PATH`) and assert no generated file contains any of them post-scaffold (catches the bug where a view forgets a placeholder and leaves `VIEW_ROUTE_NAME` literal at runtime).
 
+## Re-verification round (2026-04-30)
+
+After commit `f9ed0b4` implemented the recommendations above, the same matrix was re-run against the disposable env at `/tmp/ci4-audit/audit-kit-admin/` (logs in `_audit/reverify/`).
+
+### Closed findings
+
+| Finding | Status | Evidence |
+|---|---|---|
+| M07 P0 — acronym `APIKey` produces `a_p_i_keys` | ✅ Closed | `to_snake()` rewritten in Python to treat uppercase runs as one word. Verified outputs: lang prefix `api_keys_*`, route `api-keys`, view dir `security/api_keys/`. |
+| P2 — no API endpoint check | ✅ Closed | `--check-api[=URL]` added (HEAD with 2s timeout). |
+| P2 — no inverse script | ✅ Closed | `bin/remove-module.sh` added (files + routes + service registration; PSR-4 preserved by design). |
+
+Idempotence (M05) and `Services.php` robustness (M12) remained green: a second invocation of `Product/Catalog` left `Autoload.php`/`Services.php`/`Routes.php` unchanged; `productApiService(` count stayed at exactly 1.
+
+### New finding · 🔴 P0 · Acronym collision with starter not detected; `remove-module.sh` then damages the starter
+
+This was hidden in the original M07 because the assertion only looked at the output strings (`a_p_i_keys`). It surfaces only when the resource name's `to_camel()` form matches a service factory the starter already ships, **and** when the filesystem is case-insensitive (macOS HFS+/APFS, Windows NTFS).
+
+**Reproduction:**
+
+```bash
+# Step 1 — generate
+bash bin/make-module.sh APIKey Security /security/api-keys
+# → exit 0
+# Output (relevant lines):
+#   ⚠ Skipped (exists):  tests/feature/APIKeyFlowTest.php          ← actually the starter's ApiKeyFlowTest.php
+#   ⚠ Skipped (exists):  tests/unit/Services/APIKeyApiServiceTest.php
+#   ✓ SKIP: apiKeyApiService already registered in Services.php   ← actually the starter's factory
+
+# The generated controller wires to the wrong service:
+grep apiKeyApiService app/Modules/Security/Controllers/APIKeyController.php
+# → $this->apiKeyService = service('apiKeyApiService');
+#   …which resolves to App\Modules\ApiKeys\Services\ApiKeyApiService (starter), NOT
+#   App\Modules\Security\Services\APIKeyApiService (just generated). Silent miswire.
+
+# Step 2 — try to clean up
+bash bin/remove-module.sh APIKey Security
+# → exit 0, output:
+#   ✓ Deleted: tests/feature/APIKeyFlowTest.php           ← deletes STARTER's test
+#   ✓ Deleted: tests/unit/Services/APIKeyApiServiceTest.php  ← deletes STARTER's test
+#   ✓ Un-registered apiKeyApiService from app/Config/Services.php  ← breaks STARTER's ApiKeys module
+
+git status --short
+# →  M app/Config/Services.php
+#    D tests/feature/ApiKeyFlowTest.php             ← starter file, lost
+#    D tests/unit/Services/ApiKeyApiServiceTest.php
+```
+
+The starter's `App\Modules\ApiKeys\Controllers\ApiKeyController` now calls `service('apiKeyApiService')` against a factory that no longer exists. The admin's `/admin/api-keys` page is broken until the developer notices and reverts.
+
+**Root cause #1 — `make-module.sh` doesn't check for case-insensitive collisions.** `bin/make-module.sh:1147-1182` (the `_write` wrappers) call `[[ -f "$path" ]]` to decide skip-vs-create. On HFS+/APFS this returns true for `APIKeyFlowTest.php` because the path resolves to the starter's `ApiKeyFlowTest.php`. The script treats that as a benign "already exists, skipping" case, never warning that the resolved file belongs to a different resource. **The API equivalent (`MakeCrud`) does the symmetric check** (`ScaffoldingOrchestrator::validateFilesDoNotExist()` raises with explicit suggestion) — admin lacks this.
+
+**Root cause #2 — `register-service.php` matches on factory name only.** `bin/register-service.php:33` does `grep -q "function ${serviceKey}("` against `Services.php`. For `APIKey`, `to_camel()` produces `apiKey`, the factory key is `apiKeyApiService`, and the starter already exposes `apiKeyApiService(): App\Modules\ApiKeys\Services\ApiKeyApiServiceInterface`. Match found ⇒ skip. The check never compares the FQCN of the existing factory's return type against the FQCN of the class the new module just generated.
+
+**Root cause #3 — `remove-module.sh` is symmetric to root cause #1 but in the destructive direction.** `bin/remove-module.sh:110-127` builds an absolute path list (`tests/feature/${RESOURCE}FlowTest.php` etc.) and calls `rm -f` on each. On a case-insensitive FS, `${RESOURCE}` = `APIKey` resolves to the starter's `ApiKeyFlowTest.php` and the file is deleted. Same shape for the `Services.php` un-registration: `bin/remove-module.sh:225-258` searches for the factory name in `Services.php`, finds the starter's, and removes it.
+
+**Impact:** Any resource name whose `to_camel` form collides with a starter-shipped factory (`apiKey`, `auditLog`, `user`, `file`, `metric`, `health`) on a case-insensitive FS produces a silently-wrong scaffold. Running `remove-module.sh` to clean up then breaks the starter. On Linux ext4 (case-sensitive) the failure mode is different — the new tests get written, but the controller still wires to the wrong service factory because root cause #2 still triggers. The wrong-service wiring is the more dangerous form because it isn't visible in `git status`.
+
+**Proposed fix (for the follow-up parche conversation):**
+
+| Layer | Fix | Files |
+|---|---|---|
+| Detection (`make-module.sh`) | Before the first `_write`, walk `app/Modules/*/Services/` and `tests/feature/`+`tests/unit/Services/` looking for filenames whose `realpath` equals the path the new resource would write to. If found, abort with: *"Resource '{X}' would shadow {existing-fqcn} on case-insensitive filesystems. Use a different name (e.g. {canonical}) or remove the conflicting module first."* Mirror `ScaffoldingOrchestrator::validateFilesDoNotExist()` from API. | `bin/make-module.sh:1147-1182` |
+| Service-registration check (`register-service.php`) | Don't only match on factory name. Also resolve the existing factory's return type FQCN and compare to the FQCN the new module would inject. If they differ, abort with: *"Factory `{key}` already registered for `{otherFqcn}`. Refusing to skip silently — pick a different resource name or remove the conflicting registration first."* | `bin/register-service.php:33-45` |
+| Removal safety (`remove-module.sh`) | Before each `rm`, read the target file's first PHP `namespace`/`class` declaration. Refuse to delete unless the namespace matches `App\Modules\{MODULE}\…`. Same gate before un-registering: refuse to un-register a factory whose return type FQCN doesn't live under the target module. | `bin/remove-module.sh:131-138` and `:223-259` |
+| Documentation | The CLAUDE.md "Module-Based Organization" section can call out: *"Resource names whose camelCase form (`to_camel`) matches an existing service factory key are rejected — see the make-module.sh / remove-module.sh contracts for the full list."* | `ci4-admin-starter/CLAUDE.md` |
+
+**Recommended regression tests (extend the existing list above):**
+
+6. **`tests/unit/Scaffolding/CaseInsensitiveCollisionTest.php`** — invoke `make-module.sh APIKey Security /security/api-keys` against a synthetic starter that ships `ApiKey*` files; assert exit ≠ 0 and zero working-tree changes.
+7. **`tests/unit/Scaffolding/RemoveModuleNamespaceGuardTest.php`** — generate a `Foo/Bar` module, then invoke `remove-module.sh Foo Other` (wrong module). Assert the script refuses to touch the files.
+8. **`tests/unit/Scaffolding/ServiceFactoryFqcnMismatchTest.php`** — pre-seed `Services.php` with a `productApiService` factory whose return type FQCN points to module `Inventory`; then run `make-module.sh Product Catalog /…`. Assert the script aborts instead of silently skipping registration.
+
+**Severity rationale (why P0 and not P1):** The original audit logged M07 as P0 because the symptom was visible (`a p i keys` in the UI). The new manifestation is **invisible** to the developer — the scaffold reports success, the smoke test passes (mocked), the broken wiring shows up only when the page is rendered against a real API and silently calls the wrong domain. P0 stays P0; the surface just moved from string formatting to module isolation.
+
 ## Appendix — how to reproduce
 
 ```bash
