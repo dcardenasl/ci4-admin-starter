@@ -129,6 +129,13 @@ class ApiClient implements ApiClientInterface
         $options = $this->withBaseHeaders($options);
 
         if ($authenticated) {
+            // Proactively refresh token if it expires within 30 seconds, avoiding a round-trip 401.
+            if (! self::$isRefreshing) {
+                $expiresAt = $this->session->get(SessionKeys::EXPIRES_AT->value);
+                if (is_int($expiresAt) && $expiresAt <= time() + 30) {
+                    $this->attemptTokenRefresh();
+                }
+            }
             $options = $this->withAuthorization($options);
         }
 
@@ -143,10 +150,19 @@ class ApiClient implements ApiClientInterface
             }
         }
 
-        $startedAt = microtime(true);
-        $response = $this->http->request($method, $uri, $options);
-        $status = $response->getStatusCode();
-        $latency = (int) round((microtime(true) - $startedAt) * 1000);
+        // Retry up to 2 times on 5xx errors with exponential backoff (250ms, 500ms).
+        $maxRetries = 2;
+        $attempt    = 0;
+        do {
+            if ($attempt > 0) {
+                usleep((int) (250000 * (2 ** ($attempt - 1))));
+            }
+            $startedAt = microtime(true);
+            $response  = $this->http->request($method, $uri, $options);
+            $status    = $response->getStatusCode();
+            $latency   = (int) round((microtime(true) - $startedAt) * 1000);
+            $attempt++;
+        } while ($status >= 500 && $attempt <= $maxRetries);
 
         if ($authenticated && $status === 401 && ! self::$isRefreshing && $this->attemptTokenRefresh()) {
             self::$isRefreshing = true;
