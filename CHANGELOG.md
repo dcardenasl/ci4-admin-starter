@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-04-30
+
 ### Added
 - `bin/make-module.sh` scaffolding script for generating new admin modules with case-insensitive collision detection and FQCN-aware idempotency check
 - `bin/remove-module.sh` with symmetric namespace guard to safely remove generated modules
@@ -62,6 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Unit and feature test suite: auth flows, file upload/download/delete, API key CRUD, filter and sort forwarding
   - Docker environment and Makefile for development
 
-[unreleased]: https://github.com/dcardenasl/ci4-admin-starter/compare/v1.0.1...HEAD
+[unreleased]: https://github.com/dcardenasl/ci4-admin-starter/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/dcardenasl/ci4-admin-starter/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/dcardenasl/ci4-admin-starter/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/dcardenasl/ci4-admin-starter/releases/tag/v1.0.0
