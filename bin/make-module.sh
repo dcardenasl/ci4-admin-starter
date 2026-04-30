@@ -218,6 +218,7 @@ pluralize() {
 
 RESOURCE_SNAKE=$(to_snake "$RESOURCE")                        # school_category
 RESOURCE_CAMEL=$(to_camel "$RESOURCE")                        # audience / schoolCategory
+RESOURCE_CANONICAL=$(to_canonical_studly "$RESOURCE")         # ApiKey (from APIKey)
 RESOURCE_PLURAL=$(pluralize "$RESOURCE_SNAKE")                # school_categories
 MODULE_LOWER=$(echo "$MODULE" | tr '[:upper:]' '[:lower:]')  # shows
 
@@ -324,6 +325,75 @@ write_heredoc() {
     content=$(cat)
     _write "$path" "$content"
 }
+
+# ─── Pre-flight: case-insensitive collision detection ────────────────────────
+# Mirror of API's ScaffoldingOrchestrator::validateFilesDoNotExist().
+# On case-insensitive filesystems (macOS HFS+/APFS, Windows NTFS) `[[ -f X ]]`
+# returns true for siblings whose lowercased basename matches X. Without this
+# guard, planned writes like 'tests/feature/APIKeyFlowTest.php' silently
+# resolve to the starter's 'ApiKeyFlowTest.php' and the script reports
+# "Skipped (exists)" while the new module is left half-wired against another
+# module's namespace. Always check, even with --force, because the destructive
+# overwrite is on a different module's file.
+
+PLANNED_FILES=(
+    "${MODULE_DIR}/Services/${SERVICE_IFACE}.php"
+    "${MODULE_DIR}/Services/${SERVICE_CLASS}.php"
+    "${MODULE_DIR}/Requests/${STORE_REQUEST}.php"
+    "${MODULE_DIR}/Requests/${UPDATE_REQUEST}.php"
+    "${MODULE_DIR}/Controllers/${CONTROLLER_CLASS}.php"
+    "${MODULE_DIR}/Language/en/${MODULE}.php"
+    "${MODULE_DIR}/Language/es/${MODULE}.php"
+    "tests/feature/${RESOURCE}FlowTest.php"
+    "tests/unit/Services/${SERVICE_CLASS}Test.php"
+)
+
+COLLISION_REPORT=$(python3 - "${PLANNED_FILES[@]}" <<'PYEOF'
+import os, sys
+collisions = []
+for path in sys.argv[1:]:
+    parent = os.path.dirname(path) or '.'
+    if not os.path.isdir(parent):
+        continue
+    target = os.path.basename(path)
+    target_lower = target.lower()
+    try:
+        entries = os.listdir(parent)
+    except OSError:
+        continue
+    exact_match = False
+    case_match = None
+    for entry in entries:
+        if entry == target:
+            exact_match = True
+            break
+        if entry.lower() == target_lower:
+            case_match = entry
+    if not exact_match and case_match is not None:
+        collisions.append((path, os.path.join(parent, case_match)))
+if collisions:
+    for planned, actual in collisions:
+        print(f"  planned: {planned}")
+        print(f"  actual:  {actual}")
+    sys.exit(1)
+PYEOF
+) || COLLISION_EXIT=$?
+COLLISION_EXIT=${COLLISION_EXIT:-0}
+
+if [[ $COLLISION_EXIT -ne 0 ]]; then
+    echo -e "${RED}❌ Case-insensitive filesystem collision detected.${NC}"
+    echo ""
+    echo "$COLLISION_REPORT"
+    echo ""
+    echo -e "${YELLOW}Resource '${RESOURCE}' would shadow existing files belonging to another module.${NC}"
+    echo -e "${YELLOW}On macOS/Windows the planned writes silently target those files instead, leaving${NC}"
+    echo -e "${YELLOW}the new module half-wired.${NC}"
+    echo ""
+    echo -e "${YELLOW}Use a different StudlyCase name (e.g. ${RESOURCE_CANONICAL}) or remove the conflicting${NC}"
+    echo -e "${YELLOW}module first via:${NC}"
+    echo -e "${YELLOW}    bash bin/remove-module.sh <Resource> <Module>${NC}"
+    exit 1
+fi
 
 # ─── PSR-4 registration ────────────────────────────────────────────────────────
 
