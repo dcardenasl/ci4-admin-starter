@@ -15,7 +15,7 @@ Browser → CI4 Admin Starter (port 8082) → ci4-api-starter API (port 8080)
 
 ## Technology Stack
 
-- **Framework:** CodeIgniter 4 (PHP 8.1+)
+- **Framework:** CodeIgniter 4 (PHP 8.2+)
 - **Rendering:** Server-side PHP views
 - **Styling:** Tailwind CSS (CDN-based)
 - **Icons:** Lucide Icons (CDN-based)

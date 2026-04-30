@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `pre-commit` hook script (PHPStan + CS-Fixer) installed automatically via `composer install`
+- Retry logic with exponential backoff (250ms / 500ms) for 5xx errors in `ApiClient`
+- Proactive token refresh in `ApiClient` when token expires within 30 seconds (avoids unnecessary 401 round-trips)
+- `SessionKeys` migrated from class constants to PHP 8.1 backed `enum SessionKeys: string`
+
+### Changed
+- PHP requirement raised from `^8.1` to `^8.2` (aligns with `ci4-api-starter`)
+- Updated `CLAUDE.md`: technology stack now documents PHP 8.2+
+- All `SessionKeys::CASE` references updated to `SessionKeys::CASE->value` across filters, controllers, library, views, and tests
+
+---
+
 - Type safety improvements: `declare(strict_types=1)` in all FormRequest classes
 - `@param array<string, mixed>` type hints in all service interfaces
 - `auth_helper.php` with authentication utility functions (`has_admin_access()`, `is_email_verified()`)
