@@ -12,7 +12,7 @@
 | M04 | `--force` overwrite                       | ✅ PASS            | —         |
 | M05 | idempotence without `--force`             | ✅ PASS            | —         |
 | M06 | second resource in same module            | ✅ PASS            | —         |
-| M07 | acronym `APIKey` in `Security`            | ⚠ exit 0 yet module unusable | **P0** |
+| M07 | acronym `APIKey` in `Security`            | ⚠ service key ambiguity ~~exit 0/unusable module~~ | ~~P0~~ **PARTIALLY FIXED** (see Re-verification §) |
 | M08 | invalid arguments (lowercase, no `/`)     | ✅ clean rejection  | —         |
 | M09 | non-existent API endpoint                 | ✅ PASS (no validation) | P2 |
 | M10 | smoke browser (route + auth filter)       | ✅ PASS (302 → /login) | —     |
@@ -219,6 +219,25 @@ The starter's `App\Modules\ApiKeys\Controllers\ApiKeyController` now calls `serv
 8. **`tests/unit/Scaffolding/ServiceFactoryFqcnMismatchTest.php`** — pre-seed `Services.php` with a `productApiService` factory whose return type FQCN points to module `Inventory`; then run `make-module.sh Product Catalog /…`. Assert the script aborts instead of silently skipping registration.
 
 **Severity rationale (why P0 and not P1):** The original audit logged M07 as P0 because the symptom was visible (`a p i keys` in the UI). The new manifestation is **invisible** to the developer — the scaffold reports success, the smoke test passes (mocked), the broken wiring shows up only when the page is rendered against a real API and silently calls the wrong domain. P0 stays P0; the surface just moved from string formatting to module isolation.
+
+## Fix phase (2026-04-30)
+
+### Closed
+
+| Finding | Fix | File | Commit |
+|---|---|---|---|
+| **P0** — case-insensitive collision detection incomplete (view + route files missing from pre-flight scan) | Added `${MODULE_DIR}/Config/Routes.php`, `app/Views/${VIEW_PATH}/index.php`, `show.php`, `create.php`, `edit.php`, `partials/filters.php`, `partials/toolbar_actions.php` to `PLANNED_FILES` array | `bin/make-module.sh:339-349` | — |
+| **P0** — `register-service.php` skips silently when factory name matches but FQCN differs | Already implemented: `resolveFqcn()` resolves return-type FQCN via `use` block; exit 4 when FQCNs differ | `bin/register-service.php:32–56` | pre-existing |
+| **P0** — `remove-module.sh` deletes starter files when resource name collides | Already implemented: `namespace_guard` checks `namespace App\Modules\{MODULE}\` before deleting; FQCN guard checks factory return type before un-registering | `bin/remove-module.sh:147–180`, `275–358` | pre-existing |
+
+### Remaining open P2s
+
+| Finding |
+|---|
+| Views and form templates hardcoded to single `name` field — accept `--fields` arg (large feature) |
+| Spanish translation template always emits TODO — only needed when resource is multi-word/ambiguous gender |
+| UPDATED/CREATED output consistency in `_write`/wrappers (currently uses `✓ Created` vs `✓ PSR-4 already registered`) |
+| No `--check-api[=URL]` pre-scaffold validation (lower priority, no safety risk) |
 
 ## Appendix — how to reproduce
 
