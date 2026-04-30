@@ -29,10 +29,64 @@ if (! file_exists($servicesFile)) {
 
 $content = file_get_contents($servicesFile);
 
-// Idempotency: skip if already registered
-if (str_contains($content, "function {$serviceKey}(")) {
-    echo "SKIP: {$serviceKey} already registered in Services.php\n";
-    exit(0);
+$expectedFqcn = "App\\Modules\\{$module}\\Services\\{$serviceInterface}";
+
+// Idempotency: skip only when an existing factory points to the SAME FQCN.
+// Matching purely on factory name is unsafe — two resources from different
+// modules can map to the same camelCase key (e.g. APIKey/ApiKeys both yield
+// 'apiKeyApiService') and silently mis-wire the new controller to the wrong
+// module's service.
+if (preg_match('/function\s+' . preg_quote($serviceKey, '/') . '\s*\([^)]*\)\s*:\s*([\\\\A-Za-z0-9_]+)/', $content, $m) === 1) {
+    $existingShortType = $m[1];
+    $existingFqcn      = resolveFqcn($content, $existingShortType);
+
+    if ($existingFqcn === ltrim($expectedFqcn, '\\')) {
+        echo "SKIP: {$serviceKey} already registered in Services.php\n";
+        exit(0);
+    }
+
+    fwrite(STDERR, sprintf(
+        "ERROR: factory '%s' is already registered for '%s', refusing to overwrite with '%s'.\n"
+        . "Pick a different resource name or remove the conflicting registration first.\n",
+        $serviceKey,
+        $existingFqcn ?? $existingShortType,
+        $expectedFqcn,
+    ));
+    exit(4);
+}
+
+/**
+ * Resolve a short class name to its FQCN by inspecting the file's `use` block.
+ * Falls back to null when the alias cannot be resolved.
+ */
+function resolveFqcn(string $content, string $shortType): ?string
+{
+    $shortType = ltrim($shortType, '\\');
+
+    if (str_contains($shortType, '\\')) {
+        return $shortType;
+    }
+
+    $pattern = '/^use\s+([A-Za-z0-9_\\\\]+)(?:\s+as\s+([A-Za-z0-9_]+))?\s*;/m';
+    if (preg_match_all($pattern, $content, $matches, PREG_SET_ORDER) > 0) {
+        foreach ($matches as $match) {
+            $fqcn  = $match[1];
+            $alias = $match[2] ?? null;
+
+            if ($alias !== null && $alias === $shortType) {
+                return $fqcn;
+            }
+
+            if ($alias === null) {
+                $segments = explode('\\', $fqcn);
+                if (end($segments) === $shortType) {
+                    return $fqcn;
+                }
+            }
+        }
+    }
+
+    return null;
 }
 
 // ─── 1. Inject use statements ────────────────────────────────────────────────
