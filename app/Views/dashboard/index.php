@@ -65,8 +65,9 @@
                                     <?php foreach ($recentFiles as $file): ?>
                                         <?php
                                         $fileId   = $file['id'] ?? '';
-                                        $thumbUrl = $file['variants']['sm']['url'] ?? ($file['is_image'] ? route_to('files.view', $fileId) : null);
-                                        $largeUrl = $file['variants']['lg']['url'] ?? ($file['is_image'] ? route_to('files.view', $fileId) : null);
+                                        $isImage  = (bool) ($file['is_image'] ?? false);
+                                        $thumbUrl = $file['variants']['sm']['url'] ?? ($isImage ? route_to('files.view', $fileId) : null);
+                                        $largeUrl = $file['variants']['lg']['url'] ?? ($isImage ? route_to('files.view', $fileId) : null);
                                         ?>
                                         <tr class="<?= esc(table_row_class()) ?>">
                                             <td class="<?= esc(table_td_class()) ?>">
