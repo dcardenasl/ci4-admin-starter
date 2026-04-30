@@ -137,11 +137,57 @@ action() {
     fi
 }
 
+# Refuse to delete a file whose PHP namespace lives outside App\Modules\{MODULE}\.
+# Catches case-insensitive collisions where 'tests/feature/APIKeyFlowTest.php'
+# resolves to the starter's 'ApiKeyFlowTest.php' (different module).
+#
+# - For module files: the namespace itself must be App\Modules\{MODULE}\...
+# - For test files (Tests\Feature, Tests\Unit\Services\): the file must
+#   reference the target module via 'use App\Modules\{MODULE}\...'.
+namespace_guard() {
+    local file="$1"
+    python3 - "$file" "$MODULE" <<'PYEOF'
+import re, sys
+file_path, module = sys.argv[1], sys.argv[2]
+try:
+    with open(file_path, 'r') as f:
+        content = f.read()
+except OSError as exc:
+    print(f"unreadable: {exc}", file=sys.stderr)
+    sys.exit(1)
+
+ns_match = re.search(r'^\s*namespace\s+([A-Za-z0-9_\\]+)\s*;', content, re.MULTILINE)
+if ns_match is None:
+    print("no namespace declaration", file=sys.stderr)
+    sys.exit(1)
+
+namespace = ns_match.group(1)
+expected_module_ns = f"App\\Modules\\{module}"
+
+if namespace.startswith(expected_module_ns + "\\") or namespace == expected_module_ns:
+    sys.exit(0)
+
+# Test files: namespace is Tests\... — require a use App\Modules\{MODULE}\...
+if namespace.startswith("Tests\\"):
+    if re.search(rf'^\s*use\s+App\\Modules\\{re.escape(module)}\\', content, re.MULTILINE):
+        sys.exit(0)
+    print(f"test file does not reference App\\Modules\\{module}", file=sys.stderr)
+    sys.exit(1)
+
+print(f"namespace '{namespace}' is outside App\\Modules\\{module}", file=sys.stderr)
+sys.exit(1)
+PYEOF
+}
+
 deleted_any=false
 for f in "${ALL_FILES[@]}"; do
     if [[ -f "$f" ]]; then
-        action "$f"
-        deleted_any=true
+        if GUARD_REASON=$(namespace_guard "$f" 2>&1); then
+            action "$f"
+            deleted_any=true
+        else
+            echo -e "  ${RED}✗ Refused to delete (${GUARD_REASON}): $f${NC}"
+        fi
     fi
 done
 
@@ -226,7 +272,7 @@ if grep -q "function ${SERVICE_NAME}(" "$SERVICES_FILE" 2>/dev/null; then
     if [[ "$DRY_RUN" == true ]]; then
         echo -e "  ${YELLOW}[dry-run] Would un-register ${SERVICE_NAME} from ${SERVICES_FILE}${NC}"
     else
-        python3 - "$SERVICES_FILE" "$SERVICE_NAME" "${RESOURCE}ApiService" "${RESOURCE}ApiServiceInterface" "$MODULE" <<'PYEOF'
+        UNREGISTER_OUTPUT=$(python3 - "$SERVICES_FILE" "$SERVICE_NAME" "${RESOURCE}ApiService" "${RESOURCE}ApiServiceInterface" "$MODULE" 2>&1 <<'PYEOF'
 import sys, re
 
 services_file = sys.argv[1]
@@ -237,6 +283,51 @@ module = sys.argv[5]
 
 with open(services_file, 'r') as f:
     content = f.read()
+
+# Guard: refuse to un-register if the existing factory's return type FQCN
+# does not live under App\Modules\{module}\Services\. Catches the case where
+# 'apiKeyApiService' was registered by the starter for App\Modules\ApiKeys\
+# and we'd otherwise destroy it while removing 'APIKey' from 'Security'.
+sig_pat = re.compile(
+    r'function\s+' + re.escape(service_name) + r'\s*\([^)]*\)\s*:\s*([\\A-Za-z0-9_]+)'
+)
+sig_match = sig_pat.search(content)
+if sig_match is None:
+    print(f"ERROR: could not locate signature of {service_name} in {services_file}", file=sys.stderr)
+    sys.exit(1)
+
+short_type = sig_match.group(1).lstrip('\\')
+expected_ns = f"App\\Modules\\{module}\\Services"
+
+# Resolve the short type to its FQCN via the file's `use` block.
+fqcn = None
+if '\\' in short_type:
+    fqcn = short_type
+else:
+    use_pat = re.compile(r'^use\s+([A-Za-z0-9_\\]+)(?:\s+as\s+([A-Za-z0-9_]+))?\s*;', re.MULTILINE)
+    for use_match in use_pat.finditer(content):
+        full, alias = use_match.group(1), use_match.group(2)
+        if alias is not None:
+            if alias == short_type:
+                fqcn = full
+                break
+        else:
+            if full.split('\\')[-1] == short_type:
+                fqcn = full
+                break
+
+if fqcn is None:
+    print(f"ERROR: could not resolve FQCN for return type '{short_type}' of {service_name}", file=sys.stderr)
+    sys.exit(2)
+
+if not fqcn.startswith(expected_ns + "\\"):
+    print(
+        f"REFUSED: factory '{service_name}' returns '{fqcn}', which lives outside "
+        f"'{expected_ns}\\'. Refusing to un-register a factory that belongs to "
+        f"another module.",
+        file=sys.stderr,
+    )
+    sys.exit(3)
 
 # Drop the public static factory method block.
 pattern = re.compile(
@@ -252,9 +343,18 @@ for ident in (service_class, service_iface):
 
 with open(services_file, 'w') as f:
     f.write(content)
+
+print(f"OK: un-registered {service_name}")
 PYEOF
-        echo -e "  ${GREEN}✓ Un-registered ${SERVICE_NAME} from ${SERVICES_FILE}${NC}"
-        deleted_any=true
+        ) || UNREGISTER_EXIT=$?
+        UNREGISTER_EXIT=${UNREGISTER_EXIT:-0}
+
+        if [[ $UNREGISTER_EXIT -eq 0 ]]; then
+            echo -e "  ${GREEN}✓ Un-registered ${SERVICE_NAME} from ${SERVICES_FILE}${NC}"
+            deleted_any=true
+        else
+            echo -e "  ${RED}✗ ${UNREGISTER_OUTPUT}${NC}"
+        fi
     fi
 fi
 
