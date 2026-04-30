@@ -256,8 +256,13 @@ if (! function_exists('ui_icon')) {
             'folder-lock' => 'folder-lock',
             'list'        => 'list',
             'grid'        => 'grid-2x2',
-            'upload'      => 'upload',
-            'refresh-ccw' => 'refresh-ccw',
+            'layout-grid' => 'layout-grid',
+            'upload'        => 'upload',
+            'upload-cloud'  => 'upload-cloud',
+            'refresh-ccw'   => 'refresh-ccw',
+            'check'         => 'check',
+            'folder-open'   => 'folder-open',
+            'image'         => 'image',
         ];
 
         if (! isset($icons[$name])) {
