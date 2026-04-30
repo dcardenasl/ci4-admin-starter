@@ -6,7 +6,6 @@ namespace App\Modules\Audit\Controllers;
 
 use App\Controllers\BaseWebController;
 use App\Modules\Audit\Services\AuditApiServiceInterface;
-use App\Services\CatalogApiService;
 use App\Support\CatalogOptions;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;
@@ -16,26 +15,18 @@ use Psr\Log\LoggerInterface;
 class AuditController extends BaseWebController
 {
     protected AuditApiServiceInterface $auditService;
-    protected CatalogApiService $catalogService;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger): void
     {
         parent::initController($request, $response, $logger);
         $this->auditService = service('auditApiService');
-        $this->catalogService = service('catalogApiService');
     }
 
     public function index(): string
     {
-        $catalogs = $this->resolveCatalogs($this->catalogService);
-
-        $facetsResponse = $this->safeApiCall(fn () => $this->catalogService->auditFacets());
-        $facets = $this->extractData($facetsResponse);
-
-        $actionOptions = CatalogOptions::options(
-            ['audit' => ['actions' => $facets['actions'] ?? []]],
-            'audit.actions',
-            [
+        return $this->render('audit/index', [
+            'title'         => lang('Audit.title'),
+            'actionOptions' => [
                 ['value' => 'create', 'label' => lang('Audit.action_create')],
                 ['value' => 'update', 'label' => lang('Audit.action_update')],
                 ['value' => 'delete', 'label' => lang('Audit.action_delete')],
@@ -44,13 +35,8 @@ class AuditController extends BaseWebController
                 ['value' => 'login_failure', 'label' => lang('Audit.action_login_failure')],
                 ['value' => 'logout', 'label' => lang('Audit.action_logout')],
                 ['value' => 'approve', 'label' => lang('Audit.action_approve')],
-            ]
-        );
-
-        return $this->render('audit/index', [
-            'title'         => lang('Audit.title'),
-            'actionOptions' => $actionOptions,
-            'limitOptions'  => CatalogOptions::limitOptions($catalogs),
+            ],
+            'limitOptions'  => CatalogOptions::limitOptions([]),
         ]);
     }
 

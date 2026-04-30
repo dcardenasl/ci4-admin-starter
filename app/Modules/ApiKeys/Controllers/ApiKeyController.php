@@ -8,7 +8,6 @@ use App\Controllers\BaseWebController;
 use App\Modules\ApiKeys\Requests\ApiKeyStoreRequest;
 use App\Modules\ApiKeys\Requests\ApiKeyUpdateRequest;
 use App\Modules\ApiKeys\Services\ApiKeyApiServiceInterface;
-use App\Services\CatalogApiService;
 use App\Support\CatalogOptions;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;
@@ -18,23 +17,19 @@ use Psr\Log\LoggerInterface;
 class ApiKeyController extends BaseWebController
 {
     protected ApiKeyApiServiceInterface $apiKeyService;
-    protected CatalogApiService $catalogService;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger): void
     {
         parent::initController($request, $response, $logger);
         $this->apiKeyService = service('apiKeyApiService');
-        $this->catalogService = service('catalogApiService');
     }
 
     public function index(): string
     {
-        $catalogs = $this->resolveCatalogs($this->catalogService);
-
         return $this->render('api_keys/index', [
             'title'         => lang('ApiKeys.title'),
-            'statusOptions' => CatalogOptions::options($catalogs, 'api_keys.statuses', $this->defaultStatusOptions()),
-            'limitOptions'  => CatalogOptions::limitOptions($catalogs),
+            'statusOptions' => CatalogOptions::options([], 'api_keys.statuses', $this->defaultStatusOptions()),
+            'limitOptions'  => CatalogOptions::limitOptions([]),
         ]);
     }
 
@@ -103,12 +98,10 @@ class ApiKeyController extends BaseWebController
             return redirect()->to(route_to('admin.api_keys'))->with('error', lang('ApiKeys.not_found'));
         }
 
-        $catalogs = $this->resolveCatalogs($this->catalogService);
-
         return $this->render('api_keys/edit', [
             'title'         => lang('ApiKeys.edit'),
             'apiKey'        => $this->extractData($response),
-            'statusOptions' => CatalogOptions::options($catalogs, 'api_keys.statuses', $this->defaultStatusOptions()),
+            'statusOptions' => CatalogOptions::options([], 'api_keys.statuses', $this->defaultStatusOptions()),
         ]);
     }
 

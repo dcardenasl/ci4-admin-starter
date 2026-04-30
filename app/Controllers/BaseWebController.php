@@ -282,19 +282,6 @@ abstract class BaseWebController extends BaseController
         }
     }
 
-    /**
-     * Resolve catalog data from a service's index() method.
-     *
-     * @param object $service Service with an index() method that returns an ApiResponse.
-     * @return array<string, mixed>
-     */
-    protected function resolveCatalogs(object $service): array
-    {
-        /** @phpstan-ignore method.notFound */
-        $response = $this->safeApiCall(fn () => $service->index());
-        return $this->extractData($response);
-    }
-
     protected function positiveIntFromQuery(string $key, int $default, int $max = 200): int
     {
         $raw = $this->request->getGet($key);

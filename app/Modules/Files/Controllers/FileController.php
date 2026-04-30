@@ -7,7 +7,6 @@ namespace App\Modules\Files\Controllers;
 use App\Controllers\BaseWebController;
 use App\Modules\Files\Requests\FileUploadRequest;
 use App\Modules\Files\Services\FileApiServiceInterface;
-use App\Services\CatalogApiService;
 use App\Support\CatalogOptions;
 use App\Support\FileSizeLimits;
 use CodeIgniter\HTTP\RedirectResponse;
@@ -18,26 +17,22 @@ use Psr\Log\LoggerInterface;
 class FileController extends BaseWebController
 {
     protected FileApiServiceInterface $fileService;
-    protected CatalogApiService $catalogService;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger): void
     {
         parent::initController($request, $response, $logger);
-        $this->fileService   = service('fileApiService');
-        $this->catalogService = service('catalogApiService');
+        $this->fileService = service('fileApiService');
     }
 
     public function index(): string
     {
-        $catalogs = $this->resolveCatalogs($this->catalogService);
-
         return $this->render('files/index', [
             'title'             => lang('Files.title'),
-            'visibilityOptions' => CatalogOptions::options($catalogs, 'files.visibility', [
+            'visibilityOptions' => CatalogOptions::options([], 'files.visibility', [
                 ['value' => 'private', 'label' => lang('Files.private')],
                 ['value' => 'public',  'label' => lang('Files.public')],
             ]),
-            'limitOptions'      => CatalogOptions::limitOptions($catalogs),
+            'limitOptions'      => CatalogOptions::limitOptions([]),
             'categoryOptions'   => $this->categoryOptions(),
         ]);
     }
@@ -57,11 +52,9 @@ class FileController extends BaseWebController
 
     public function trash(): string
     {
-        $catalogs = $this->resolveCatalogs($this->catalogService);
-
         return $this->render('files/trash', [
             'title'           => lang('Files.trash_title'),
-            'limitOptions'    => CatalogOptions::limitOptions($catalogs),
+            'limitOptions'    => CatalogOptions::limitOptions([]),
             'categoryOptions' => $this->categoryOptions(),
         ]);
     }
