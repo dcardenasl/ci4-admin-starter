@@ -24,23 +24,30 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 usage() {
-    echo "Usage:"
-    echo "  bash bin/make-module.sh <Resource> <Module> <ApiPath> [RouteSegment] [--dry-run] [--force]"
-    echo ""
-    echo "Arguments:"
-    echo "  <Resource>      StudlyCase resource name  (e.g. Product, SchoolCategory)"
-    echo "  <Module>        StudlyCase module name    (e.g. Catalog, Education)"
-    echo "  <ApiPath>       API path for the resource (e.g. /catalog/products)"
-    echo "  [RouteSegment]  URL segment override      (default: resource_plural with dashes)"
-    echo ""
-    echo "Flags:"
-    echo "  --dry-run       Print what would be generated without writing any file"
-    echo "  --force         Overwrite existing files (skipped by default)"
-    echo ""
-    echo "Examples:"
-    echo "  bash bin/make-module.sh Product Catalog /catalog/products"
-    echo "  bash bin/make-module.sh SchoolCategory Education /education/school-categories school-categories"
-    echo "  bash bin/make-module.sh Product Catalog /catalog/products --dry-run"
+    cat <<'USAGE'
+Usage:
+  bash bin/make-module.sh <Resource> <Module> <ApiPath> [RouteSegment] [flags]
+
+Arguments:
+  <Resource>      StudlyCase resource name  (e.g. Product, SchoolCategory)
+  <Module>        StudlyCase module name    (e.g. Catalog, Education)
+  <ApiPath>       API path for the resource (e.g. /catalog/products)
+  [RouteSegment]  URL segment override      (default: resource_plural with dashes)
+
+Flags:
+  --dry-run         Print what would be generated without writing any file
+  --force           Overwrite existing files (skipped by default)
+  --check-api[=URL] Probe the API endpoint with a 2s HEAD request before scaffolding
+                    and warn if it doesn't respond. Default URL is read from
+                    apiClient.baseUrl in .env.
+
+Examples:
+  bash bin/make-module.sh Product Catalog /catalog/products
+  bash bin/make-module.sh SchoolCategory Education /education/school-categories school-categories
+  bash bin/make-module.sh Product Catalog /catalog/products --dry-run
+  bash bin/make-module.sh Product Catalog /catalog/products --check-api
+  bash bin/make-module.sh Product Catalog /catalog/products --check-api=http://localhost:8080
+USAGE
 }
 
 # ─── Argument parsing (positionals + flags interleaved) ────────────────────────
@@ -48,11 +55,15 @@ usage() {
 POSITIONAL=()
 DRY_RUN=false
 FORCE=false
+CHECK_API_URL=""
+CHECK_API_REQUESTED=false
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --dry-run) DRY_RUN=true; shift ;;
         --force)   FORCE=true;   shift ;;
+        --check-api) CHECK_API_REQUESTED=true; shift ;;
+        --check-api=*) CHECK_API_REQUESTED=true; CHECK_API_URL="${1#--check-api=}"; shift ;;
         --help|-h) usage; exit 0 ;;
         --*)
             echo -e "${RED}❌ Unknown flag: $1${NC}"
@@ -97,19 +108,100 @@ fi
 # Change to project root (ci4-admin-starter/)
 cd "$(dirname "$0")/.."
 
+# ─── Optional API endpoint probe (--check-api) ─────────────────────────────────
+if [[ "$CHECK_API_REQUESTED" == true ]]; then
+    if [[ -z "$CHECK_API_URL" && -f .env ]]; then
+        CHECK_API_URL=$(grep -E '^[[:space:]]*apiClient\.baseUrl' .env | head -1 | sed -E "s/.*=\s*['\"]?([^'\"]+)['\"]?.*/\1/" | tr -d ' ')
+    fi
+    if [[ -z "$CHECK_API_URL" ]]; then
+        echo -e "${YELLOW}⚠ --check-api requested but no URL provided and apiClient.baseUrl not found in .env. Skipping.${NC}"
+    else
+        FULL_URL="${CHECK_API_URL%/}${API_PATH}"
+        echo -e "${BLUE}Probing API endpoint:${NC} ${FULL_URL}"
+        # -I = HEAD; -m 2 = 2s timeout; -o /dev/null silences body; -w prints status
+        STATUS=$(curl -sI -m 2 -o /dev/null -w '%{http_code}' "$FULL_URL" 2>/dev/null || echo '000')
+        case "$STATUS" in
+            2*|3*|401|403)
+                echo -e "  ${GREEN}✓ Endpoint reachable (HTTP ${STATUS})${NC}"
+                ;;
+            404)
+                echo -e "  ${YELLOW}⚠ Endpoint returned 404 — check that ${API_PATH} exists in the API.${NC}"
+                ;;
+            000)
+                echo -e "  ${YELLOW}⚠ Endpoint unreachable (connection refused or timeout). The scaffold will continue, but the module will fail at runtime.${NC}"
+                ;;
+            *)
+                echo -e "  ${YELLOW}⚠ Endpoint returned HTTP ${STATUS} — verify it's behaving as expected.${NC}"
+                ;;
+        esac
+        echo ""
+    fi
+fi
+
+# ─── Acronym warning ───────────────────────────────────────────────────────────
+# Detect uppercase runs (≥2 consecutive caps followed by lowercase, or all-caps suffix)
+# that previously generated broken outputs like 'a_p_i_keys' / 'A p i key'.
+if [[ "$RESOURCE" =~ [A-Z]{2,}[a-z] ]] || [[ "$RESOURCE" =~ [A-Z]{2,}$ ]]; then
+    CANONICAL=$(python3 -c '
+import sys, re
+v = sys.argv[1]
+v = re.sub(r"([A-Z]+)([A-Z][a-z])", lambda m: m.group(1).capitalize() + m.group(2), v)
+v = re.sub(r"([A-Z]+)$", lambda m: m.group(1).capitalize(), v)
+print(v[:1].upper() + v[1:])
+' "$RESOURCE")
+    echo -e "${YELLOW}⚠ Resource '${RESOURCE}' contains a run of consecutive uppercase letters.${NC}"
+    echo -e "${YELLOW}  Derived names will keep the acronym intact (e.g. snake='api_key' instead of 'a_p_i_key').${NC}"
+    echo -e "${YELLOW}  Class/file names preserve the resource as-typed (e.g. ${RESOURCE}Controller.php).${NC}"
+    echo -e "${YELLOW}  If you prefer canonical StudlyCase, re-run with: ${CANONICAL}${NC}"
+    echo ""
+fi
+
 # ─── Name derivations ──────────────────────────────────────────────────────────
 
-# StudlyCase → snake_case  (SchoolCategory → school_category)
+# StudlyCase → snake_case, treating runs of uppercase as one word.
+#   SchoolCategory → school_category
+#   APIKey         → api_key      (not a_p_i_key — see audit P0)
+#   HTTPRequest    → http_request
+#   OAuth2Token    → o_auth2_token
 to_snake() {
-    echo "$1" | sed 's/\([A-Z]\)/_\1/g' | tr '[:upper:]' '[:lower:]' | sed 's/^_//'
+    python3 -c '
+import sys, re
+v = sys.argv[1]
+v = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", v)
+v = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1_\2", v)
+print(v.lower())
+' "$1"
 }
 
-# StudlyCase → lower camelCase  (Audience → audience, SchoolCategory → schoolCategory)
+# StudlyCase → lower camelCase, normalizing acronym runs to a single capitalized word.
+#   Audience       → audience
+#   SchoolCategory → schoolCategory
+#   APIKey         → apiKey         (not aPIKey)
 to_camel() {
-    local s="$1"
-    local first
-    first=$(printf '%s' "${s:0:1}" | tr '[:upper:]' '[:lower:]')
-    echo "${first}${s:1}"
+    python3 -c '
+import sys, re
+v = sys.argv[1]
+# Normalize acronym runs: APIKey → ApiKey, HTTPRequest → HttpRequest
+v = re.sub(r"([A-Z]+)([A-Z][a-z])", lambda m: m.group(1).capitalize() + m.group(2), v)
+v = re.sub(r"([A-Z]+)$", lambda m: m.group(1).capitalize(), v)
+# Lowercase first character
+print(v[:1].lower() + v[1:])
+' "$1"
+}
+
+# StudlyCase → canonical StudlyCase, normalizing acronym runs.
+#   APIKey       → ApiKey
+#   HTTPRequest  → HttpRequest
+#   OAuth2Token  → Oauth2Token
+#   SchoolCategory → SchoolCategory  (no-op)
+to_canonical_studly() {
+    python3 -c '
+import sys, re
+v = sys.argv[1]
+v = re.sub(r"([A-Z]+)([A-Z][a-z])", lambda m: m.group(1).capitalize() + m.group(2), v)
+v = re.sub(r"([A-Z]+)$", lambda m: m.group(1).capitalize(), v)
+print(v[:1].upper() + v[1:])
+' "$1"
 }
 
 # Naive plural: handles -y→-ies, keeps the rest predictable
@@ -239,7 +331,7 @@ AUTOLOAD_FILE="app/Config/Autoload.php"
 IS_NEW_MODULE=false
 
 if grep -qF "'App\\Modules\\${MODULE}'" "$AUTOLOAD_FILE"; then
-    echo -e "${GREEN}✓ PSR-4 already registered (existing module)${NC}"
+    echo -e "${GREEN}✓ NO-OP: PSR-4 already registered for module ${MODULE}${NC}"
 else
     IS_NEW_MODULE=true
 
@@ -271,7 +363,7 @@ with open(autoload_file, 'w') as f:
     f.write(new_content)
 PYEOF
         then
-            echo -e "${GREEN}✓ PSR-4 entry added to Autoload.php${NC}"
+            echo -e "${GREEN}✓ UPDATED: app/Config/Autoload.php (PSR-4 entry for ${MODULE})${NC}"
         else
             echo -e "${YELLOW}⚠ PSR-4 auto-inject failed. Add manually to ${AUTOLOAD_FILE}:${NC}"
             echo "    'App\\Modules\\${MODULE}'  => APPPATH . 'Modules/${MODULE}',"
@@ -1219,10 +1311,21 @@ if [[ "$DRY_RUN" != true ]]; then
         echo -e "  ${YELLOW}⚠ Service '${SERVICE_NAME}' not found in Services.php — add manually${NC}"
     fi
 
+    # Semantic safety net: catch a regression in to_snake() that would produce
+    # the `a_p_i_keys` pattern. Two or more single-letter underscored segments
+    # in a row mean the acronym fix has broken upstream.
+    if [[ "$RESOURCE_SNAKE" =~ (^|_)[a-z](_[a-z])+(_|$) ]]; then
+        echo -e "${RED}✗ Resource snake form '${RESOURCE_SNAKE}' looks like split-acronym garbage."
+        echo -e "  Regression in to_snake()? Expected acronyms to remain intact."
+        echo -e "  Re-run with a canonical StudlyCase resource name (e.g. ApiKey instead of APIKey).${NC}"
+        VALIDATION_FAILED=true
+    fi
+
     if [[ "$VALIDATION_FAILED" == true ]]; then
-        echo -e "${RED}✗ Validation failed — some files are missing or have syntax errors.${NC}"
+        echo -e "${RED}✗ Validation failed — some files are missing, have syntax errors, or contain split-acronym artifacts.${NC}"
+        echo -e "${YELLOW}  Recover with: bash bin/remove-module.sh ${RESOURCE} ${MODULE}${NC}"
     else
-        echo -e "${GREEN}✓ All generated files present and syntax-clean${NC}"
+        echo -e "${GREEN}✓ All generated files present, syntax-clean, and semantically sane${NC}"
     fi
 fi
 
