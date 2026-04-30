@@ -59,6 +59,14 @@
         "sort-packages": true
     },
     "scripts": {
+        "post-install-cmd": [
+            "chmod +x pre-commit",
+            "cp pre-commit .git/hooks/pre-commit"
+        ],
+        "post-update-cmd": [
+            "chmod +x pre-commit",
+            "cp pre-commit .git/hooks/pre-commit"
+        ],
         "test": "phpunit --no-coverage",
         "test:coverage": "phpunit",
         "test:unit": "phpunit tests/unit",
