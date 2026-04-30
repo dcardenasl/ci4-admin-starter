@@ -1,5 +1,5 @@
 <?php
-$isAuthed = (string) session(\App\Support\SessionKeys::ACCESS_TOKEN) !== '';
+$isAuthed = (string) session(\App\Support\SessionKeys::ACCESS_TOKEN->value) !== '';
 $primaryUrl = $isAuthed ? site_url(route_to('dashboard')) : site_url('login');
 $primaryLabel = $isAuthed ? lang('App.go_dashboard') : lang('App.go_login');
 ?>

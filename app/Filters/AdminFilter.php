@@ -14,7 +14,7 @@ class AdminFilter implements FilterInterface
 {
     public function before(RequestInterface $request, $arguments = null)
     {
-        $user = session()->get(SessionKeys::USER);
+        $user = session()->get(SessionKeys::USER->value);
         $role = null;
 
         if (is_array($user)) {

@@ -112,7 +112,7 @@ final class ApiClientTest extends CIUnitTestCase
 
     public function testGetForwardsToRequestAsGetMethod(): void
     {
-        session()->set(SessionKeys::ACCESS_TOKEN, 'test-token');
+        session()->set(SessionKeys::ACCESS_TOKEN->value, 'test-token');
         $client = new ApiClient(new ApiClientConfig());
         $response = $this->createResponseMock(200, ['data' => ['items' => []]]);
 
@@ -143,7 +143,7 @@ final class ApiClientTest extends CIUnitTestCase
 
     public function testPostForwardsToRequestAsPostMethod(): void
     {
-        session()->set(SessionKeys::ACCESS_TOKEN, 'test-token');
+        session()->set(SessionKeys::ACCESS_TOKEN->value, 'test-token');
         $client = new ApiClient(new ApiClientConfig());
         $response = $this->createResponseMock(201, ['data' => ['id' => 9]]);
 
@@ -173,7 +173,7 @@ final class ApiClientTest extends CIUnitTestCase
 
     public function testPutForwardsToRequestAsPutMethod(): void
     {
-        session()->set(SessionKeys::ACCESS_TOKEN, 'test-token');
+        session()->set(SessionKeys::ACCESS_TOKEN->value, 'test-token');
         $client = new ApiClient(new ApiClientConfig());
         $response = $this->createResponseMock(200, ['data' => ['updated' => true]]);
 
@@ -203,7 +203,7 @@ final class ApiClientTest extends CIUnitTestCase
 
     public function testDeleteForwardsToRequestAsDeleteMethod(): void
     {
-        session()->set(SessionKeys::ACCESS_TOKEN, 'test-token');
+        session()->set(SessionKeys::ACCESS_TOKEN->value, 'test-token');
         $client = new ApiClient(new ApiClientConfig());
         $response = $this->createResponseMock(204, null, '');
 
@@ -232,7 +232,7 @@ final class ApiClientTest extends CIUnitTestCase
 
     public function testUploadForwardsToRequestAsPostMethod(): void
     {
-        session()->set(SessionKeys::ACCESS_TOKEN, 'test-token');
+        session()->set(SessionKeys::ACCESS_TOKEN->value, 'test-token');
         $client = new ApiClient(new ApiClientConfig());
         $filePath = tempnam(sys_get_temp_dir(), 'api-client-upload');
         file_put_contents($filePath, 'demo');
@@ -274,7 +274,7 @@ final class ApiClientTest extends CIUnitTestCase
 
     public function testUploadUsesExplicitMimeTypeWhenProvided(): void
     {
-        session()->set(SessionKeys::ACCESS_TOKEN, 'test-token');
+        session()->set(SessionKeys::ACCESS_TOKEN->value, 'test-token');
         $client   = new ApiClient(new ApiClientConfig());
         $filePath = tempnam(sys_get_temp_dir(), 'api-client-upload');
         file_put_contents($filePath, 'plain text content');
@@ -318,7 +318,7 @@ final class ApiClientTest extends CIUnitTestCase
 
     public function testUploadFallsBackToOctetStreamForUnknownMimeType(): void
     {
-        session()->set(SessionKeys::ACCESS_TOKEN, 'test-token');
+        session()->set(SessionKeys::ACCESS_TOKEN->value, 'test-token');
         $client   = new ApiClient(new ApiClientConfig());
 
         // Create a temp file with no extension and ambiguous binary content
@@ -359,7 +359,7 @@ final class ApiClientTest extends CIUnitTestCase
 
     public function testAttemptTokenRefreshFailsWithoutRefreshToken(): void
     {
-        session()->remove(SessionKeys::REFRESH_TOKEN);
+        session()->remove(SessionKeys::REFRESH_TOKEN->value);
         $client = new ApiClient(new ApiClientConfig());
 
         $result = $client->attemptTokenRefresh();
@@ -369,7 +369,7 @@ final class ApiClientTest extends CIUnitTestCase
 
     public function testAttemptTokenRefreshReturnsFalseWhenNoAccessTokenInResponse(): void
     {
-        session()->set(SessionKeys::REFRESH_TOKEN, 'refresh-token');
+        session()->set(SessionKeys::REFRESH_TOKEN->value, 'refresh-token');
 
         $mockResponse = $this->createMock(Response::class);
         $mockResponse->expects($this->once())
@@ -392,9 +392,9 @@ final class ApiClientTest extends CIUnitTestCase
 
     public function testAttemptTokenRefreshClearsSessionOnUnauthorized(): void
     {
-        session()->set(SessionKeys::REFRESH_TOKEN, 'refresh-token');
-        session()->set(SessionKeys::ACCESS_TOKEN, 'old-token');
-        session()->set(SessionKeys::USER, ['id' => 1]);
+        session()->set(SessionKeys::REFRESH_TOKEN->value, 'refresh-token');
+        session()->set(SessionKeys::ACCESS_TOKEN->value, 'old-token');
+        session()->set(SessionKeys::USER->value, ['id' => 1]);
 
         $mockResponse = $this->createMock(Response::class);
         $mockResponse->expects($this->once())
@@ -408,15 +408,15 @@ final class ApiClientTest extends CIUnitTestCase
 
         $this->assertFalse($result);
         // clearSessionAuth should have been called
-        $this->assertNull(session()->get(SessionKeys::ACCESS_TOKEN));
-        $this->assertNull(session()->get(SessionKeys::REFRESH_TOKEN));
-        $this->assertNull(session()->get(SessionKeys::USER));
+        $this->assertNull(session()->get(SessionKeys::ACCESS_TOKEN->value));
+        $this->assertNull(session()->get(SessionKeys::REFRESH_TOKEN->value));
+        $this->assertNull(session()->get(SessionKeys::USER->value));
     }
 
     public function testRequestRetriesAfterRefreshingTokenOnUnauthorized(): void
     {
-        session()->set(SessionKeys::ACCESS_TOKEN, 'expired-token');
-        session()->set(SessionKeys::REFRESH_TOKEN, 'refresh-token');
+        session()->set(SessionKeys::ACCESS_TOKEN->value, 'expired-token');
+        session()->set(SessionKeys::REFRESH_TOKEN->value, 'refresh-token');
 
         $responses = [
             $this->createResponseMock(401, ['message' => 'Expired token']),
@@ -464,27 +464,27 @@ final class ApiClientTest extends CIUnitTestCase
 
         $this->assertTrue($result['ok']);
         $this->assertSame(200, $result['status']);
-        $this->assertSame('fresh-token', session()->get(SessionKeys::ACCESS_TOKEN));
-        $this->assertSame('fresh-refresh-token', session()->get(SessionKeys::REFRESH_TOKEN));
-        $this->assertIsInt(session()->get(SessionKeys::EXPIRES_AT));
+        $this->assertSame('fresh-token', session()->get(SessionKeys::ACCESS_TOKEN->value));
+        $this->assertSame('fresh-refresh-token', session()->get(SessionKeys::REFRESH_TOKEN->value));
+        $this->assertIsInt(session()->get(SessionKeys::EXPIRES_AT->value));
     }
 
     // ─── Session Clearing ──────────────────────────────────────────
 
     public function testClearSessionAuthRemovesAllAuthenticationKeys(): void
     {
-        session()->set(SessionKeys::ACCESS_TOKEN, 'token');
-        session()->set(SessionKeys::REFRESH_TOKEN, 'refresh');
-        session()->set(SessionKeys::EXPIRES_AT, time() + 3600);
-        session()->set(SessionKeys::USER, ['id' => 1]);
+        session()->set(SessionKeys::ACCESS_TOKEN->value, 'token');
+        session()->set(SessionKeys::REFRESH_TOKEN->value, 'refresh');
+        session()->set(SessionKeys::EXPIRES_AT->value, time() + 3600);
+        session()->set(SessionKeys::USER->value, ['id' => 1]);
 
         $client = new ApiClient(new ApiClientConfig());
         $client->clearSessionAuth();
 
-        $this->assertNull(session()->get(SessionKeys::ACCESS_TOKEN));
-        $this->assertNull(session()->get(SessionKeys::REFRESH_TOKEN));
-        $this->assertNull(session()->get(SessionKeys::EXPIRES_AT));
-        $this->assertNull(session()->get(SessionKeys::USER));
+        $this->assertNull(session()->get(SessionKeys::ACCESS_TOKEN->value));
+        $this->assertNull(session()->get(SessionKeys::REFRESH_TOKEN->value));
+        $this->assertNull(session()->get(SessionKeys::EXPIRES_AT->value));
+        $this->assertNull(session()->get(SessionKeys::USER->value));
     }
 
     protected function tearDown(): void

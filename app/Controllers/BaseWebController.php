@@ -38,7 +38,7 @@ abstract class BaseWebController extends BaseController
 
         $this->viewData = [
             'appName'          => $apiConfig->appName,
-            'user'             => $this->session->get(SessionKeys::USER),
+            'user'             => $this->session->get(SessionKeys::USER->value),
             'currentLocale'    => Services::language()->getLocale(),
             'supportedLocales' => config('App')->supportedLocales,
         ];
