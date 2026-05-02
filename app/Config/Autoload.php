@@ -50,6 +50,7 @@ class Autoload extends AutoloadConfig
         'App\Modules\ApiKeys'   => APPPATH . 'Modules/ApiKeys',
         'App\Modules\Metrics'   => APPPATH . 'Modules/Metrics',
         'App\Modules\Language'  => APPPATH . 'Modules/Language',
+        'App\Modules\Iam'  => APPPATH . 'Modules/Iam',
     ];
 
     /**

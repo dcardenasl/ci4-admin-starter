@@ -16,6 +16,8 @@ use App\Modules\Dashboard\Services\HealthApiService;
 use App\Modules\Dashboard\Services\HealthApiServiceInterface;
 use App\Modules\Files\Services\FileApiService;
 use App\Modules\Files\Services\FileApiServiceInterface;
+use App\Modules\Iam\Services\RoleApiService;
+use App\Modules\Iam\Services\RoleApiServiceInterface;
 use App\Modules\Metrics\Services\MetricsApiService;
 use App\Modules\Metrics\Services\MetricsApiServiceInterface;
 use App\Modules\Profile\Services\ProfileApiService;
@@ -151,4 +153,13 @@ class Services extends BaseService
         return new ProfileApiService(static::apiClient());
     }
 
+    public static function roleApiService(bool $getShared = true): RoleApiServiceInterface
+    {
+        if ($getShared) {
+            /** @var RoleApiService */
+            return static::getSharedInstance('roleApiService');
+        }
+
+        return new RoleApiService(static::apiClient());
+    }
 }
