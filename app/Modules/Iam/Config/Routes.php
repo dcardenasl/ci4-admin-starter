@@ -28,4 +28,14 @@ $routes->group('admin/iam', ['filter' => ['auth', 'admin']], static function (Ro
     $routes->get('permissions/(:segment)/edit', '\App\Modules\Iam\Controllers\PermissionController::edit/$1', ['as' => 'admin.iam.permissions.edit']);
     $routes->post('permissions/(:segment)', '\App\Modules\Iam\Controllers\PermissionController::update/$1', ['as' => 'admin.iam.permissions.update']);
     $routes->post('permissions/(:segment)/delete', '\App\Modules\Iam\Controllers\PermissionController::delete/$1', ['as' => 'admin.iam.permissions.delete']);
+
+    // AppUserMembership
+    $routes->get('memberships', '\App\Modules\Iam\Controllers\AppUserMembershipController::index', ['as' => 'admin.iam.memberships']);
+    $routes->get('memberships/data', '\App\Modules\Iam\Controllers\AppUserMembershipController::data', ['as' => 'admin.iam.memberships.data']);
+    $routes->get('memberships/create', '\App\Modules\Iam\Controllers\AppUserMembershipController::create', ['as' => 'admin.iam.memberships.create']);
+    $routes->post('memberships', '\App\Modules\Iam\Controllers\AppUserMembershipController::store', ['as' => 'admin.iam.memberships.store']);
+    $routes->get('memberships/(:segment)', '\App\Modules\Iam\Controllers\AppUserMembershipController::show/$1', ['as' => 'admin.iam.memberships.show']);
+    $routes->get('memberships/(:segment)/edit', '\App\Modules\Iam\Controllers\AppUserMembershipController::edit/$1', ['as' => 'admin.iam.memberships.edit']);
+    $routes->post('memberships/(:segment)', '\App\Modules\Iam\Controllers\AppUserMembershipController::update/$1', ['as' => 'admin.iam.memberships.update']);
+    $routes->post('memberships/(:segment)/delete', '\App\Modules\Iam\Controllers\AppUserMembershipController::delete/$1', ['as' => 'admin.iam.memberships.delete']);
 });
