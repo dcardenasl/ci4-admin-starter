@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Users\Requests;
 
-use App\Requests\BaseFormRequest;
+use App\Support\Requests\BaseFormRequest;
 
 class UserUpdateRequest extends BaseFormRequest
 {

@@ -6,7 +6,6 @@ namespace App\Modules\Metrics\Controllers;
 
 use App\Controllers\BaseWebController;
 use App\Modules\Metrics\Services\MetricsApiServiceInterface;
-use App\Services\CatalogApiService;
 use App\Support\CatalogOptions;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -15,20 +14,16 @@ use Psr\Log\LoggerInterface;
 class MetricsController extends BaseWebController
 {
     protected MetricsApiServiceInterface $metricsService;
-    protected CatalogApiService $catalogService;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger): void
     {
         parent::initController($request, $response, $logger);
         $this->metricsService = service('metricsApiService');
-        $this->catalogService = service('catalogApiService');
     }
 
     public function index(): string
     {
-        $catalogs = $this->resolveCatalogs($this->catalogService);
-
-        $periodOptions = CatalogOptions::options($catalogs, 'metrics.periods', [
+        $periodOptions = CatalogOptions::options([], 'metrics.periods', [
             ['value' => '1h', 'label' => '1h'],
             ['value' => '24h', 'label' => '24h'],
             ['value' => '7d', 'label' => '7d'],

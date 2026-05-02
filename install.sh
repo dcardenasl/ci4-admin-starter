@@ -131,33 +131,61 @@ echo ""
 # =============================================================================
 section "Configuración"
 
-read -r -p "$(echo -e "  ${BOLD}Nombre del repo API${RESET} (reemplaza 'ci4-api-starter') [my-api]: ")" INPUT_API_NAME
-API_NAME="${INPUT_API_NAME:-my-api}"
+if [ -n "${CI4_API_NAME:-}" ]; then
+  API_NAME="$CI4_API_NAME"
+else
+  read -r -p "$(echo -e "  ${BOLD}Nombre del repo API${RESET} (reemplaza 'ci4-api-starter') [my-api]: ")" INPUT_API_NAME
+  API_NAME="${INPUT_API_NAME:-my-api}"
+fi
 require_non_empty "$API_NAME" "Nombre del repo API"
 
 DEFAULT_GITHUB="https://github.com/yourusername/${API_NAME}"
-read -r -p "$(echo -e "  ${BOLD}URL GitHub del API${RESET}\n  [${DEFAULT_GITHUB}]: ")" INPUT_API_GITHUB_URL
-API_GITHUB_URL="${INPUT_API_GITHUB_URL:-${DEFAULT_GITHUB}}"
+if [ -n "${CI4_API_GITHUB_URL:-}" ]; then
+  API_GITHUB_URL="$CI4_API_GITHUB_URL"
+else
+  read -r -p "$(echo -e "  ${BOLD}URL GitHub del API${RESET}\n  [${DEFAULT_GITHUB}]: ")" INPUT_API_GITHUB_URL
+  API_GITHUB_URL="${INPUT_API_GITHUB_URL:-${DEFAULT_GITHUB}}"
+fi
 validate_url "$API_GITHUB_URL" "URL GitHub del API"
 
-read -r -p "$(echo -e "  ${BOLD}URL base del API${RESET} (reemplaza 'http://localhost:8080') [http://localhost:8080]: ")" INPUT_API_BASE_URL
-API_BASE_URL="${INPUT_API_BASE_URL:-http://localhost:8080}"
+if [ -n "${CI4_API_BASE_URL:-}" ]; then
+  API_BASE_URL="$CI4_API_BASE_URL"
+else
+  read -r -p "$(echo -e "  ${BOLD}URL base del API${RESET} (reemplaza 'http://localhost:8080') [http://localhost:8080]: ")" INPUT_API_BASE_URL
+  API_BASE_URL="${INPUT_API_BASE_URL:-http://localhost:8080}"
+fi
 validate_url "$API_BASE_URL" "URL base del API"
 
-read -r -p "$(echo -e "  ${BOLD}Nombre del panel admin${RESET} (reemplaza 'API Client') [My Admin Panel]: ")" INPUT_APP_NAME
-APP_NAME="${INPUT_APP_NAME:-My Admin Panel}"
+if [ -n "${CI4_APP_NAME:-}" ]; then
+  APP_NAME="$CI4_APP_NAME"
+else
+  read -r -p "$(echo -e "  ${BOLD}Nombre del panel admin${RESET} (reemplaza 'API Client') [My Admin Panel]: ")" INPUT_APP_NAME
+  APP_NAME="${INPUT_APP_NAME:-My Admin Panel}"
+fi
 require_non_empty "$APP_NAME" "Nombre del panel admin"
 
-read -r -p "$(echo -e "  ${BOLD}Puerto del panel admin${RESET} (reemplaza '8082') [8082]: ")" INPUT_ADMIN_PORT
-ADMIN_PORT="${INPUT_ADMIN_PORT:-8082}"
+if [ -n "${CI4_ADMIN_PORT:-}" ]; then
+  ADMIN_PORT="$CI4_ADMIN_PORT"
+else
+  read -r -p "$(echo -e "  ${BOLD}Puerto del panel admin${RESET} (reemplaza '8082') [8082]: ")" INPUT_ADMIN_PORT
+  ADMIN_PORT="${INPUT_ADMIN_PORT:-8082}"
+fi
 validate_port "$ADMIN_PORT"
 
 echo ""
-read -r -p "$(echo -e "  ${BOLD}¿Ejecutar 'composer install' al finalizar?${RESET} [Y/n]: ")" INPUT_COMPOSER
-RUN_COMPOSER="${INPUT_COMPOSER:-Y}"
+if [ -n "${CI4_RUN_COMPOSER:-}" ]; then
+  RUN_COMPOSER="$CI4_RUN_COMPOSER"
+else
+  read -r -p "$(echo -e "  ${BOLD}¿Ejecutar 'composer install' al finalizar?${RESET} [Y/n]: ")" INPUT_COMPOSER
+  RUN_COMPOSER="${INPUT_COMPOSER:-Y}"
+fi
 
-read -r -p "$(echo -e "  ${BOLD}¿Eliminar este script al finalizar?${RESET} [y/N]: ")" INPUT_REMOVE_SELF
-REMOVE_SELF="${INPUT_REMOVE_SELF:-N}"
+if [ -n "${CI4_REMOVE_SELF:-}" ]; then
+  REMOVE_SELF="$CI4_REMOVE_SELF"
+else
+  read -r -p "$(echo -e "  ${BOLD}¿Eliminar este script al finalizar?${RESET} [y/N]: ")" INPUT_REMOVE_SELF
+  REMOVE_SELF="${INPUT_REMOVE_SELF:-N}"
+fi
 
 # =============================================================================
 # Confirmación
@@ -171,12 +199,15 @@ echo -e "                     →  ${GREEN}${API_GITHUB_URL}${RESET}"
 echo -e "  ${BOLD}URL base API:${RESET}      http://localhost:8080  →  ${GREEN}${API_BASE_URL}${RESET}"
 echo -e "  ${BOLD}Nombre de app:${RESET}     API Client  →  ${GREEN}${APP_NAME}${RESET}"
 echo -e "  ${BOLD}Puerto admin:${RESET}      8082  →  ${GREEN}${ADMIN_PORT}${RESET}"
-echo -e "  ${BOLD}composer install:${RESET}  $([[ "${RUN_COMPOSER,,}" != "n" ]] && echo "Sí" || echo "No")"
-echo -e "  ${BOLD}Eliminar script:${RESET}   $([[ "${REMOVE_SELF,,}" == "y" ]] && echo "Sí" || echo "No")"
+_rc_lower="$(printf '%s' "$RUN_COMPOSER" | tr '[:upper:]' '[:lower:]')"
+echo -e "  ${BOLD}composer install:${RESET}  $([ "$_rc_lower" != "n" ] && echo "Sí" || echo "No")"
+_rs_lower="$(printf '%s' "$REMOVE_SELF" | tr '[:upper:]' '[:lower:]')"
+echo -e "  ${BOLD}Eliminar script:${RESET}   $([ "$_rs_lower" = "y" ] && echo "Sí" || echo "No")"
 echo ""
 read -r -p "$(echo -e "  ${BOLD}¿Continuar? [y/N]:${RESET} ")" CONFIRM
 
-[[ "${CONFIRM,,}" == "y" ]] || { warn "Cancelado. No se realizaron cambios."; exit 0; }
+_confirm_lower="$(printf '%s' "$CONFIRM" | tr '[:upper:]' '[:lower:]')"
+[ "$_confirm_lower" = "y" ] || { warn "Cancelado. No se realizaron cambios."; exit 0; }
 
 # =============================================================================
 # Pre-escape de todos los valores
@@ -339,7 +370,8 @@ fi
 # =============================================================================
 # composer install (opcional)
 # =============================================================================
-if [[ "${RUN_COMPOSER,,}" != "n" ]]; then
+_rc_lower="$(printf '%s' "$RUN_COMPOSER" | tr '[:upper:]' '[:lower:]')"
+if [ "$_rc_lower" != "n" ]; then
     section "Instalando dependencias Composer"
     if command -v composer &>/dev/null; then
         composer install --no-interaction
@@ -382,7 +414,8 @@ echo ""
 # =============================================================================
 # Autoeliminación opcional
 # =============================================================================
-if [[ "${REMOVE_SELF,,}" == "y" ]]; then
+_rs_lower="$(printf '%s' "$REMOVE_SELF" | tr '[:upper:]' '[:lower:]')"
+if [ "$_rs_lower" = "y" ]; then
     SCRIPT_PATH="${BASH_SOURCE[0]}"
     rm -- "$SCRIPT_PATH"
     ok "install.sh eliminado."

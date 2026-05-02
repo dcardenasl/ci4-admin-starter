@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Libraries\ApiClientInterface;
-use App\Requests\FormRequestInterface;
+use App\Support\Requests\FormRequestInterface;
 use App\Support\SessionKeys;
 use App\Traits\TableResponseTrait;
 use CodeIgniter\HTTP\RedirectResponse;
@@ -38,7 +38,7 @@ abstract class BaseWebController extends BaseController
 
         $this->viewData = [
             'appName'          => $apiConfig->appName,
-            'user'             => $this->session->get(SessionKeys::USER),
+            'user'             => $this->session->get(SessionKeys::USER->value),
             'currentLocale'    => Services::language()->getLocale(),
             'supportedLocales' => config('App')->supportedLocales,
         ];
@@ -280,19 +280,6 @@ abstract class BaseWebController extends BaseController
                 'fieldErrors' => [],
             ];
         }
-    }
-
-    /**
-     * Resolve catalog data from a service's index() method.
-     *
-     * @param object $service Service with an index() method that returns an ApiResponse.
-     * @return array<string, mixed>
-     */
-    protected function resolveCatalogs(object $service): array
-    {
-        /** @phpstan-ignore method.notFound */
-        $response = $this->safeApiCall(fn () => $service->index());
-        return $this->extractData($response);
     }
 
     protected function positiveIntFromQuery(string $key, int $default, int $max = 200): int

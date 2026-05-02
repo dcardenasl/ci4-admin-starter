@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Files\Requests;
 
-use App\Requests\BaseFormRequest;
 use App\Support\FileSizeLimits;
+use App\Support\Requests\BaseFormRequest;
 
 class FileUploadRequest extends BaseFormRequest
 {

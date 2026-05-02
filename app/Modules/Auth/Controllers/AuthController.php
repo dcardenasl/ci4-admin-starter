@@ -28,7 +28,7 @@ class AuthController extends BaseWebController
 
     public function login(): ResponseInterface|string
     {
-        if ($this->session->has(SessionKeys::ACCESS_TOKEN)) {
+        if ($this->session->has(SessionKeys::ACCESS_TOKEN->value)) {
             return redirect()->to(route_to('dashboard'));
         }
 
@@ -62,7 +62,7 @@ class AuthController extends BaseWebController
 
     public function attemptGoogleLogin(): RedirectResponse
     {
-        if ($this->session->has(SessionKeys::ACCESS_TOKEN)) {
+        if ($this->session->has(SessionKeys::ACCESS_TOKEN->value)) {
             return redirect()->to(route_to('dashboard'));
         }
 
@@ -94,7 +94,7 @@ class AuthController extends BaseWebController
         $data = $this->extractData($response);
 
         // Handle 202 Accepted (Pending approval)
-        if ($response['status'] === 202 || ! isset($data[SessionKeys::ACCESS_TOKEN])) {
+        if ($response['status'] === 202 || ! isset($data[SessionKeys::ACCESS_TOKEN->value])) {
             return redirect()->to(site_url('login'))
                 ->with('error', $this->firstMessage($response, lang('Auth.google_login_pending_approval')));
         }
@@ -213,7 +213,7 @@ class AuthController extends BaseWebController
 
     public function logout(): RedirectResponse
     {
-        if ($this->session->has(SessionKeys::ACCESS_TOKEN)) {
+        if ($this->session->has(SessionKeys::ACCESS_TOKEN->value)) {
             $this->safeApiCall(fn () => $this->authService->logout());
         }
 
@@ -227,10 +227,10 @@ class AuthController extends BaseWebController
     protected function persistAuthSession(array $data): void
     {
         $this->session->regenerate(true);
-        $this->session->set(SessionKeys::ACCESS_TOKEN, $data[SessionKeys::ACCESS_TOKEN] ?? null);
-        $this->session->set(SessionKeys::REFRESH_TOKEN, $data['refresh_token'] ?? null);
-        $this->session->set(SessionKeys::EXPIRES_AT, time() + (int) ($data['expires_in'] ?? 3600));
-        $this->session->set(SessionKeys::USER, $data['user'] ?? []);
+        $this->session->set(SessionKeys::ACCESS_TOKEN->value, $data[SessionKeys::ACCESS_TOKEN->value] ?? null);
+        $this->session->set(SessionKeys::REFRESH_TOKEN->value, $data['refresh_token'] ?? null);
+        $this->session->set(SessionKeys::EXPIRES_AT->value, time() + (int) ($data['expires_in'] ?? 3600));
+        $this->session->set(SessionKeys::USER->value, $data['user'] ?? []);
     }
 
     protected function isGoogleLoginEnabled(): bool

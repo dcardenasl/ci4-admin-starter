@@ -15,7 +15,7 @@ Browser → CI4 Admin Starter (port 8082) → ci4-api-starter API (port 8080)
 
 ## Technology Stack
 
-- **Framework:** CodeIgniter 4 (PHP 8.1+)
+- **Framework:** CodeIgniter 4 (PHP 8.2+)
 - **Rendering:** Server-side PHP views
 - **Styling:** Tailwind CSS (CDN-based)
 - **Icons:** Lucide Icons (CDN-based)
@@ -329,6 +329,12 @@ The project uses a **modular architecture** where each feature is self-contained
 - `app/Modules/ApiKeys/` — API key management (admin-only)
 - `app/Modules/Metrics/` — Metrics and analytics dashboards (admin-only)
 - `app/Modules/Language/` — Internationalization (locale switching)
+
+**Scaffolding contract — collision rejection (`bin/make-module.sh` / `bin/remove-module.sh`):**
+
+- Resource names whose `to_camel` form collides with an existing service factory key in `app/Config/Services.php` (e.g. `APIKey` → `apiKeyApiService`, already shipped by `App\Modules\ApiKeys`) are rejected. `make-module.sh` runs a case-insensitive sibling scan against the planned target paths and aborts before writing if any sibling on disk differs only in case (the macOS HFS+/APFS or Windows NTFS scenario where `[[ -f ... ]]` would silently shadow another module's file). `bin/register-service.php` resolves the existing factory's return-type FQCN against the new module's FQCN and refuses to skip silently when they differ (exit 4).
+- `remove-module.sh` enforces the symmetric guard: it refuses to delete any file whose `namespace` declaration does not start with `App\Modules\{Module}\` (test files must reference the target module via a `use App\Modules\{Module}\…` clause), and refuses to un-register a factory whose return-type FQCN lives outside `App\Modules\{Module}\Services\` (exit 3 from the embedded helper).
+- When the rejection fires, prefer renaming the resource to its canonical StudlyCase form (e.g. `APIKey` → `ApiKey`) before retrying, or remove the conflicting module first.
 
 ### Shared Infrastructure (Outside Modules)
 

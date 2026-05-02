@@ -15,11 +15,11 @@ class AuthFilter implements FilterInterface
     public function before(RequestInterface $request, $arguments = null)
     {
         $session = session();
-        $accessToken = $session->get(SessionKeys::ACCESS_TOKEN);
-        $expiresAt = (int) ($session->get(SessionKeys::EXPIRES_AT) ?? 0);
+        $accessToken = $session->get(SessionKeys::ACCESS_TOKEN->value);
+        $expiresAt = (int) ($session->get(SessionKeys::EXPIRES_AT->value) ?? 0);
 
         if ($expiresAt > 0 && $expiresAt <= time()) {
-            $session->remove([SessionKeys::ACCESS_TOKEN, SessionKeys::REFRESH_TOKEN, SessionKeys::EXPIRES_AT, SessionKeys::USER]);
+            $session->remove([SessionKeys::ACCESS_TOKEN->value, SessionKeys::REFRESH_TOKEN->value, SessionKeys::EXPIRES_AT->value, SessionKeys::USER->value]);
             log_message('debug', 'AuthFilter: token expired before request.');
 
             if ($request instanceof IncomingRequest && $request->isAJAX()) {

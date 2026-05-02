@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Requests;
+namespace App\Support\Requests;
 
 use CodeIgniter\HTTP\IncomingRequest;
 use CodeIgniter\Validation\ValidationInterface;

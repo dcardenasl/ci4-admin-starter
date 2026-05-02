@@ -26,7 +26,7 @@ final class RateLimitFilterTest extends CIUnitTestCase
     protected function tearDown(): void
     {
         cache()->clean();
-        session()->remove(SessionKeys::USER);
+        session()->remove(SessionKeys::USER->value);
         Services::reset();
         parent::tearDown();
     }
@@ -73,7 +73,7 @@ final class RateLimitFilterTest extends CIUnitTestCase
 
     public function testUsesUserIdWhenSessionHasAuthenticatedUser(): void
     {
-        session()->set(SessionKeys::USER, ['id' => 'user-42', 'role' => 'user']);
+        session()->set(SessionKeys::USER->value, ['id' => 'user-42', 'role' => 'user']);
 
         $filter  = new RateLimitFilter();
         $request = $this->makeRequest();

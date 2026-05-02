@@ -46,3 +46,30 @@ npm run dev:css
 - No introducir nuevas dependencias a implementaciones concretas cuando exista interfaz.
 - Toda correccion de bug debe traer al menos un test que capture la regresion.
 - Mantener README, tests/README y documentacion tecnica alineados cuando cambie el flujo de trabajo.
+
+## Proceso de release
+
+Los releases siempre se cortan desde `main`. Como `main` solo acepta merges via PR, la actualizacion del changelog **debe hacerse en `dev` como el ultimo commit antes de abrir el PR**.
+
+### Pasos
+
+1. **En `dev`, prepara el commit de release:**
+
+   a. En `CHANGELOG.md`, renombra `[Unreleased]` a `[x.y.z] — YYYY-MM-DD` y añade una nueva seccion `[Unreleased]` vacia encima. Actualiza los enlaces del footer.
+
+   b. Commit:
+   ```bash
+   git commit -m "chore: release vx.y.z"
+   ```
+
+2. **Abre el PR `dev → main`.**
+
+3. **Despues del merge, tagea `main`:**
+   ```bash
+   git checkout main
+   git pull origin main
+   git tag vx.y.z
+   git push origin vx.y.z
+   ```
+
+> **Nunca tagear en `dev`** — los tags marcan releases estables y pertenecen a `main` despues del merge.

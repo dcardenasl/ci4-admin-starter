@@ -61,6 +61,12 @@ class ApiClient implements ApiClientInterface
         return $this->request('PUT', $path, ['json' => $data], true);
     }
 
+    /** @param array<string, mixed> $data */
+    public function patch(string $path, array $data = []): array
+    {
+        return $this->request('PATCH', $path, ['json' => $data], true);
+    }
+
     public function delete(string $path): array
     {
         return $this->request('DELETE', $path, [], true);
@@ -123,6 +129,13 @@ class ApiClient implements ApiClientInterface
         $options = $this->withBaseHeaders($options);
 
         if ($authenticated) {
+            // Proactively refresh token if it expires within 30 seconds, avoiding a round-trip 401.
+            if (! self::$isRefreshing) {
+                $expiresAt = $this->session->get(SessionKeys::EXPIRES_AT->value);
+                if (is_int($expiresAt) && $expiresAt <= time() + 30) {
+                    $this->attemptTokenRefresh();
+                }
+            }
             $options = $this->withAuthorization($options);
         }
 
@@ -137,10 +150,19 @@ class ApiClient implements ApiClientInterface
             }
         }
 
-        $startedAt = microtime(true);
-        $response = $this->http->request($method, $uri, $options);
-        $status = $response->getStatusCode();
-        $latency = (int) round((microtime(true) - $startedAt) * 1000);
+        // Retry up to 2 times on 5xx errors with exponential backoff (250ms, 500ms).
+        $maxRetries = 2;
+        $attempt    = 0;
+        do {
+            if ($attempt > 0) {
+                usleep((int) (250000 * (2 ** ($attempt - 1))));
+            }
+            $startedAt = microtime(true);
+            $response  = $this->http->request($method, $uri, $options);
+            $status    = $response->getStatusCode();
+            $latency   = (int) round((microtime(true) - $startedAt) * 1000);
+            $attempt++;
+        } while ($status >= 500 && $attempt <= $maxRetries);
 
         if ($authenticated && $status === 401 && ! self::$isRefreshing && $this->attemptTokenRefresh()) {
             self::$isRefreshing = true;
@@ -177,7 +199,7 @@ class ApiClient implements ApiClientInterface
 
     public function attemptTokenRefresh(): bool
     {
-        $refreshToken = $this->session->get(SessionKeys::REFRESH_TOKEN);
+        $refreshToken = $this->session->get(SessionKeys::REFRESH_TOKEN->value);
 
         if (! is_string($refreshToken) || $refreshToken === '') {
             log_message('debug', 'Token refresh failed: No refresh token in session.');
@@ -204,27 +226,27 @@ class ApiClient implements ApiClientInterface
         $payload = json_decode((string) $response->getBody(), true);
         $data = $payload['data'] ?? $payload;
 
-        $accessToken = $data[SessionKeys::ACCESS_TOKEN] ?? null;
+        $accessToken = $data[SessionKeys::ACCESS_TOKEN->value] ?? null;
         if (! is_string($accessToken) || $accessToken === '') {
             $this->clearSessionAuth();
 
             return false;
         }
 
-        $this->session->set(SessionKeys::ACCESS_TOKEN, $accessToken);
+        $this->session->set(SessionKeys::ACCESS_TOKEN->value, $accessToken);
 
         $refreshTokenResponse = $data['refresh_token'] ?? null;
         if (! empty($refreshTokenResponse)) {
-            $this->session->set(SessionKeys::REFRESH_TOKEN, $refreshTokenResponse);
+            $this->session->set(SessionKeys::REFRESH_TOKEN->value, $refreshTokenResponse);
         }
 
         $expiresIn = $data['expires_in'] ?? null;
         if (! empty($expiresIn)) {
-            $this->session->set(SessionKeys::EXPIRES_AT, time() + (int) $expiresIn);
+            $this->session->set(SessionKeys::EXPIRES_AT->value, time() + (int) $expiresIn);
         }
 
         if (! empty($data['user']) && is_array($data['user'])) {
-            $this->session->set(SessionKeys::USER, $data['user']);
+            $this->session->set(SessionKeys::USER->value, $data['user']);
         }
 
         return true;
@@ -252,7 +274,7 @@ class ApiClient implements ApiClientInterface
     protected function withAuthorization(array $options): array
     {
         $headers = $options['headers'] ?? [];
-        $token = (string) $this->session->get(SessionKeys::ACCESS_TOKEN);
+        $token = (string) $this->session->get(SessionKeys::ACCESS_TOKEN->value);
 
         if ($token !== '') {
             $headers['Authorization'] = 'Bearer ' . $token;
@@ -304,7 +326,7 @@ class ApiClient implements ApiClientInterface
             return $matchedCurrentLocale;
         }
 
-        $sessionLocale = $this->session->get(SessionKeys::LOCALE);
+        $sessionLocale = $this->session->get(SessionKeys::LOCALE->value);
         if (is_string($sessionLocale)) {
             $matchedSessionLocale = $this->matchSupportedLocale($sessionLocale, $supportedLocales);
             if ($matchedSessionLocale !== null) {
@@ -340,10 +362,10 @@ class ApiClient implements ApiClientInterface
     public function clearSessionAuth(): void
     {
         $this->session->remove([
-            SessionKeys::ACCESS_TOKEN,
-            SessionKeys::REFRESH_TOKEN,
-            SessionKeys::EXPIRES_AT,
-            SessionKeys::USER,
+            SessionKeys::ACCESS_TOKEN->value,
+            SessionKeys::REFRESH_TOKEN->value,
+            SessionKeys::EXPIRES_AT->value,
+            SessionKeys::USER->value,
         ]);
         $this->session->regenerate(true);
     }

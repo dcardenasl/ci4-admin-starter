@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Requests\File;
 
-use App\Requests\File\FileUploadRequest;
+use App\Modules\Files\Requests\FileUploadRequest;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Validation\ValidationInterface;
 use Config\Services;

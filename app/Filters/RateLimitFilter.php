@@ -62,7 +62,7 @@ class RateLimitFilter implements FilterInterface
      */
     private function resolveKey(RequestInterface $request): string
     {
-        $user = session()->get(SessionKeys::USER);
+        $user = session()->get(SessionKeys::USER->value);
         $id   = is_array($user) && isset($user['id']) ? (string) $user['id'] : null;
 
         if ($id !== null && $id !== '') {

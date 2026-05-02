@@ -59,6 +59,7 @@ return [
     'close'           => 'Close',
     'close_navigation' => 'Close navigation',
     'confirm'         => 'Confirm',
+    'remove'          => 'Remove',
     'skip_to_content' => 'Skip to main content',
     'error404Title'   => 'Page not found',
     'error404Body'    => 'The page you are looking for does not exist or has been moved.',

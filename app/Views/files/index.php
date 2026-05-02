@@ -143,4 +143,7 @@
     </form>
 </section>
 
-<?= view('files/partials/list_section') ?>
+<?= view('files/partials/list_section', [
+    'categoryOptions' => $categoryOptions ?? [],
+    'limitOptions'    => $limitOptions ?? [10, 25, 50, 100],
+]) ?>

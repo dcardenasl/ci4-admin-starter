@@ -13,4 +13,5 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->post('/profile', '\App\Modules\Profile\Controllers\ProfileController::update', ['as' => 'profile.update']);
     $routes->post('/profile/request-password-reset', '\App\Modules\Profile\Controllers\ProfileController::requestPasswordReset', ['as' => 'profile.requestPasswordReset']);
     $routes->post('/profile/resend-verification', '\App\Modules\Profile\Controllers\ProfileController::resendVerification', ['as' => 'profile.resendVerification']);
+    $routes->post('/profile/avatar', '\App\Modules\Profile\Controllers\ProfileController::updateAvatar', ['as' => 'profile.avatar']);
 });

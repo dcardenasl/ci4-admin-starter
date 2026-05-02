@@ -22,9 +22,7 @@ use App\Modules\Profile\Services\ProfileApiService;
 use App\Modules\Profile\Services\ProfileApiServiceInterface;
 use App\Modules\Users\Services\UserApiService;
 use App\Modules\Users\Services\UserApiServiceInterface;
-use App\Requests\FormRequestInterface;
-use App\Services\CatalogApiService;
-use App\Services\CatalogApiServiceInterface;
+use App\Support\Requests\FormRequestInterface;
 use CodeIgniter\Config\BaseService;
 use InvalidArgumentException;
 
@@ -141,16 +139,6 @@ class Services extends BaseService
         }
 
         return new HealthApiService(static::apiClient(), config('ApiClient')->healthPaths);
-    }
-
-    public static function catalogApiService(bool $getShared = true): CatalogApiServiceInterface
-    {
-        if ($getShared) {
-            /** @var CatalogApiService */
-            return static::getSharedInstance('catalogApiService');
-        }
-
-        return new CatalogApiService(static::apiClient());
     }
 
     public static function profileApiService(bool $getShared = true): ProfileApiServiceInterface

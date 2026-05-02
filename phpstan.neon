@@ -9,7 +9,6 @@ parameters:
         - app/Helpers
         - app/Libraries
         - app/Modules
-        - app/Requests
         - app/Services
         - app/Support
         - app/Traits

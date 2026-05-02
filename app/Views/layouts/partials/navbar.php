@@ -30,9 +30,14 @@
 
         <div class="relative" x-data="{ open: false }">
             <button class="flex items-center gap-2 text-sm text-gray-700 hover:text-gray-900" @click="open = !open" @click.away="open = false">
-                <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-brand-700 font-semibold">
-                    <?= esc(substr((string) (session('user.first_name') ?? 'U'), 0, 1)) ?>
-                </span>
+                <?php $avatarUrl = (string) (session('user.avatar_url') ?? ''); ?>
+                <?php if ($avatarUrl !== ''): ?>
+                    <img src="<?= esc($avatarUrl) ?>" alt="" class="h-8 w-8 rounded-full object-cover border border-gray-200">
+                <?php else: ?>
+                    <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-brand-700 font-semibold">
+                        <?= esc(substr((string) (session('user.first_name') ?? 'U'), 0, 1)) ?>
+                    </span>
+                <?php endif; ?>
                 <span><?= esc(trim((string) (session('user.first_name') ?? '') . ' ' . (string) (session('user.last_name') ?? ''))) ?></span>
             </button>
             <div x-show="open" x-cloak class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden z-50">

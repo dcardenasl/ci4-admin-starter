@@ -174,3 +174,20 @@ if (! function_exists('health_tone_badge')) {
         };
     }
 }
+
+if (! function_exists('check_tone_badge')) {
+    /**
+     * Per-check status tones for individual API health checks (database, disk, writable).
+     *
+     * @return array{dot: string, text: string}
+     */
+    function check_tone_badge(?string $status): array
+    {
+        return match ($status) {
+            'healthy'               => ['dot' => 'bg-green-500', 'text' => 'text-green-700'],
+            'warning'               => ['dot' => 'bg-amber-500', 'text' => 'text-amber-700'],
+            'critical', 'unhealthy' => ['dot' => 'bg-red-500',   'text' => 'text-red-700'],
+            default                 => ['dot' => 'bg-gray-400',  'text' => 'text-gray-500'],
+        };
+    }
+}

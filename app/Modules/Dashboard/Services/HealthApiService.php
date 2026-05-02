@@ -28,7 +28,7 @@ class HealthApiService extends BaseApiService implements HealthApiServiceInterfa
         try {
             foreach ($paths as $path) {
                 $startedAt = microtime(true);
-                $response = $this->apiClient->request('GET', $path, [], false);
+                $response = $this->apiClient->request('GET', $path, ['skip_prefix' => true], false);
                 $latencyMs = (int) round((microtime(true) - $startedAt) * 1000);
 
                 if ($response['ok'] ?? false) {

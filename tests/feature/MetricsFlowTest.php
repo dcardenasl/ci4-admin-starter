@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Modules\Metrics\Services\MetricsApiService;
-use App\Services\CatalogApiService;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\FeatureTestTrait;
 use Config\Services;
@@ -25,19 +24,6 @@ final class MetricsFlowTest extends CIUnitTestCase
 
     public function testMetricsPageRendersSummaryAndTimeseries(): void
     {
-        $catalogService = $this->createMock(CatalogApiService::class);
-        $catalogService->expects($this->once())
-            ->method('index')
-            ->willReturn([
-                'ok' => true,
-                'status' => 200,
-                'data' => ['metrics' => ['periods' => ['1h', '24h', '7d']]],
-                'raw' => '',
-                'headers' => [],
-                'messages' => [],
-                'fieldErrors' => [],
-            ]);
-
         $metricsService = $this->createMock(MetricsApiService::class);
         $metricsService->expects($this->once())
             ->method('summary')
@@ -64,7 +50,6 @@ final class MetricsFlowTest extends CIUnitTestCase
                 'fieldErrors' => [],
             ]);
 
-        Services::injectMock('catalogApiService', $catalogService);
         Services::injectMock('metricsApiService', $metricsService);
 
         $result = $this->withSession([
@@ -79,17 +64,6 @@ final class MetricsFlowTest extends CIUnitTestCase
 
     public function testMetricsPageFallsBackToDefaultPeriodWhenFilterIsInvalid(): void
     {
-        $catalogService = $this->createMock(CatalogApiService::class);
-        $catalogService->method('index')->willReturn([
-            'ok' => true,
-            'status' => 200,
-            'data' => ['metrics' => ['periods' => ['24h']]],
-            'raw' => '',
-            'headers' => [],
-            'messages' => [],
-            'fieldErrors' => [],
-        ]);
-
         $metricsService = $this->createMock(MetricsApiService::class);
         $metricsService->expects($this->once())
             ->method('summary')
@@ -116,7 +90,6 @@ final class MetricsFlowTest extends CIUnitTestCase
                 'fieldErrors' => [],
             ]);
 
-        Services::injectMock('catalogApiService', $catalogService);
         Services::injectMock('metricsApiService', $metricsService);
 
         $result = $this->withSession([

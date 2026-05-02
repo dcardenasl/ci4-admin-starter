@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Requests;
 
-use App\Requests\BaseFormRequest;
+use App\Support\Requests\BaseFormRequest;
 use CodeIgniter\Test\CIUnitTestCase;
 use Config\Services;
 

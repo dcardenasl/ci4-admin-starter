@@ -1,3 +1,40 @@
+<!-- Avatar -->
+<section class="mb-6 bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+    <h3 class="text-lg font-semibold text-gray-900"><?= lang('Profile.avatar') ?></h3>
+    <p class="mt-1 text-sm text-gray-500"><?= lang('Profile.avatar_help') ?></p>
+    <div class="mt-4 flex items-center gap-5" x-data="{
+        preview: '<?= esc((string) ($user['avatar_url'] ?? '')) ?>',
+        onChange(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            if (!allowed.includes(file.type)) { this.preview = ''; return; }
+            this.preview = URL.createObjectURL(file);
+        }
+    }">
+        <div class="flex-shrink-0">
+            <template x-if="preview">
+                <img :src="preview" alt="<?= esc(lang('Profile.avatar')) ?>"
+                     class="h-20 w-20 rounded-full object-cover border border-gray-200 shadow-sm">
+            </template>
+            <template x-if="!preview">
+                <div class="h-20 w-20 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center">
+                    <?= ui_icon('user', 'h-10 w-10 text-gray-400') ?>
+                </div>
+            </template>
+        </div>
+        <form method="post" action="<?= route_to('profile.avatar') ?>" enctype="multipart/form-data" class="flex flex-col sm:flex-row sm:items-center gap-3">
+            <?= csrf_field() ?>
+            <input type="file" name="avatar" accept="image/jpeg,image/png,image/gif,image/webp" required
+                   class="block text-sm text-gray-700 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-brand-700 hover:file:bg-brand-100"
+                   @change="onChange($event)">
+            <button type="submit" class="<?= esc(action_button_class('primary')) ?>">
+                <?= ui_icon('upload', 'h-3.5 w-3.5') ?> <?= esc(lang('Profile.avatar_upload')) ?>
+            </button>
+        </form>
+    </div>
+</section>
+
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <section class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
         <h3 class="text-lg font-semibold text-gray-900"><?= $isAdmin ? lang('Profile.personal_info') : lang('Profile.personal_info_readonly') ?></h3>

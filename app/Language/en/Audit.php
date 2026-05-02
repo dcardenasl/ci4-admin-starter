@@ -20,6 +20,8 @@ return [
     'entity_history'      => 'Entity history',
     'search_placeholder'  => 'Search audit logs...',
     'all_actions'         => 'All actions',
+    'all_results'         => 'All results',
+    'all_severities'      => 'All severities',
     'action_create'       => 'Create',
     'action_update'       => 'Update',
     'action_delete'       => 'Delete',

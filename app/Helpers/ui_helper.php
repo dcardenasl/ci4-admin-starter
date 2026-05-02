@@ -249,8 +249,20 @@ if (! function_exists('ui_icon')) {
             'download'  => 'download',
             'trash'     => 'trash-2',
             'x'         => 'x',
-            'file'      => 'file',
-            'file-plus' => 'file-plus',
+            'file'        => 'file',
+            'file-plus'   => 'file-plus',
+            'database'    => 'database',
+            'hard-drive'  => 'hard-drive',
+            'folder-lock' => 'folder-lock',
+            'list'        => 'list',
+            'grid'        => 'grid-2x2',
+            'layout-grid' => 'layout-grid',
+            'upload'        => 'upload',
+            'upload-cloud'  => 'upload-cloud',
+            'refresh-ccw'   => 'refresh-ccw',
+            'check'         => 'check',
+            'folder-open'   => 'folder-open',
+            'image'         => 'image',
         ];
 
         if (! isset($icons[$name])) {

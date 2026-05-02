@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Profile\Controllers;
 
 use App\Controllers\BaseWebController;
+use App\Modules\Files\Services\FileApiServiceInterface;
 use App\Modules\Profile\Requests\ProfileUpdateRequest;
 use App\Modules\Profile\Services\ProfileApiServiceInterface;
 use CodeIgniter\HTTP\RedirectResponse;
@@ -15,11 +16,13 @@ use Psr\Log\LoggerInterface;
 class ProfileController extends BaseWebController
 {
     protected ProfileApiServiceInterface $profileService;
+    protected FileApiServiceInterface $fileService;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger): void
     {
         parent::initController($request, $response, $logger);
         $this->profileService = service('profileApiService');
+        $this->fileService    = service('fileApiService');
     }
 
     public function index(): string
@@ -99,6 +102,58 @@ class ProfileController extends BaseWebController
         }
 
         return redirect()->to(route_to('profile'))->with('success', lang('Profile.resend_success'));
+    }
+
+    public function updateAvatar(): RedirectResponse
+    {
+        $file = $this->request instanceof \CodeIgniter\HTTP\IncomingRequest
+            ? $this->request->getFile('avatar')
+            : null;
+
+        if ($file === null || ! $file->isValid()) {
+            return redirect()->to(route_to('profile'))->with('error', lang('Profile.avatar_invalid_file'));
+        }
+
+        $mime     = $file->getMimeType();
+        $allowed  = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (! in_array($mime, $allowed, true)) {
+            return redirect()->to(route_to('profile'))->with('error', lang('Profile.avatar_invalid_file'));
+        }
+
+        $uploadResponse = $this->safeApiCall(fn () => $this->fileService->upload(
+            'file',
+            $file->getTempName(),
+            $file->getName(),
+            $mime,
+            ['visibility' => 'public'],
+        ));
+
+        if (! ($uploadResponse['ok'] ?? false)) {
+            return $this->failApi($uploadResponse, lang('Profile.avatar_update_failed'), route_to('profile'), false);
+        }
+
+        $fileData  = $this->extractData($uploadResponse);
+        $avatarUrl = (string) ($fileData['url'] ?? '');
+
+        if ($avatarUrl === '') {
+            return redirect()->to(route_to('profile'))->with('error', lang('Profile.avatar_update_failed'));
+        }
+
+        $sessionUser = session('user') ?? [];
+        $userId      = $sessionUser['id'] ?? null;
+        if (! is_scalar($userId) || (string) $userId === '') {
+            return redirect()->to(route_to('profile'))->with('error', lang('Profile.avatar_update_failed'));
+        }
+
+        $updateResponse = $this->safeApiCall(fn () => $this->profileService->update((string) $userId, ['avatar_url' => $avatarUrl]));
+
+        if (! ($updateResponse['ok'] ?? false)) {
+            return $this->failApi($updateResponse, lang('Profile.avatar_update_failed'), route_to('profile'), false);
+        }
+
+        $this->refreshUserSession();
+
+        return redirect()->to(route_to('profile'))->with('success', lang('Profile.avatar_update_success'));
     }
 
     protected function refreshUserSession(): void

@@ -8,7 +8,6 @@ use App\Controllers\BaseWebController;
 use App\Modules\Users\Requests\UserStoreRequest;
 use App\Modules\Users\Requests\UserUpdateRequest;
 use App\Modules\Users\Services\UserApiServiceInterface;
-use App\Services\CatalogApiService;
 use App\Support\CatalogOptions;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;
@@ -18,24 +17,20 @@ use Psr\Log\LoggerInterface;
 class UserController extends BaseWebController
 {
     protected UserApiServiceInterface $userService;
-    protected CatalogApiService $catalogService;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger): void
     {
         parent::initController($request, $response, $logger);
         $this->userService = service('userApiService');
-        $this->catalogService = service('catalogApiService');
     }
 
     public function index(): string
     {
-        $catalogs = $this->resolveCatalogs($this->catalogService);
-
         return $this->render('users/index', [
             'title'         => lang('Users.title'),
-            'roleOptions'   => CatalogOptions::options($catalogs, 'users.roles', $this->defaultRoleOptions()),
-            'statusOptions' => CatalogOptions::options($catalogs, 'users.statuses', $this->defaultStatusOptions()),
-            'limitOptions'  => CatalogOptions::limitOptions($catalogs),
+            'roleOptions'   => CatalogOptions::options([], 'users.roles', $this->defaultRoleOptions()),
+            'statusOptions' => CatalogOptions::options([], 'users.statuses', $this->defaultStatusOptions()),
+            'limitOptions'  => CatalogOptions::limitOptions([]),
         ]);
     }
 
@@ -57,11 +52,9 @@ class UserController extends BaseWebController
 
     public function create(): string
     {
-        $catalogs = $this->resolveCatalogs($this->catalogService);
-
         return $this->render('users/create', [
             'title'       => lang('Users.create'),
-            'roleOptions' => CatalogOptions::options($catalogs, 'users.roles', $this->defaultRoleOptions()),
+            'roleOptions' => CatalogOptions::options([], 'users.roles', $this->defaultRoleOptions()),
         ]);
     }
 
@@ -93,12 +86,10 @@ class UserController extends BaseWebController
             return redirect()->to(route_to('admin.users'))->with('error', lang('Users.not_found'));
         }
 
-        $catalogs = $this->resolveCatalogs($this->catalogService);
-
         return $this->render('users/edit', [
             'title'       => lang('Users.edit_user'),
             'editUser'    => $this->extractData($response),
-            'roleOptions' => CatalogOptions::options($catalogs, 'users.roles', $this->defaultRoleOptions()),
+            'roleOptions' => CatalogOptions::options([], 'users.roles', $this->defaultRoleOptions()),
         ]);
     }
 
