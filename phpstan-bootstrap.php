@@ -131,3 +131,17 @@ if (! function_exists('cache')) {
         return null;
     }
 }
+
+if (! function_exists('csrf_token')) {
+    function csrf_token(): string
+    {
+        return '';
+    }
+}
+
+if (! function_exists('csrf_hash')) {
+    function csrf_hash(): string
+    {
+        return '';
+    }
+}

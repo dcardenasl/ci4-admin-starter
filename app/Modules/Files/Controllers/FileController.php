@@ -450,9 +450,6 @@ class FileController extends BaseWebController
         };
 
         if ($mimePrefix !== null) {
-            if (! isset($params['filter']) || ! is_array($params['filter'])) {
-                $params['filter'] = [];
-            }
             $params['filter']['mime_type'] = ['like' => $mimePrefix];
         }
 

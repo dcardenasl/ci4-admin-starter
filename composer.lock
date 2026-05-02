@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "94d6843ccb8871241aae8c863b99f975",
+    "content-hash": "af881fbb266c09c6d4573ee055c48ffd",
     "packages": [
         {
             "name": "codeigniter4/framework",
@@ -1058,16 +1058,16 @@
         },
         {
             "name": "nexusphp/cs-config",
-            "version": "v3.28.2",
+            "version": "v3.28.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/NexusPHP/cs-config.git",
-                "reference": "764a5550ffafd8d517c7f7afe6ba767cd051d6d4"
+                "reference": "fb6bd0d2e1a51bd2908b1a1032f0049a6465df2e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/NexusPHP/cs-config/zipball/764a5550ffafd8d517c7f7afe6ba767cd051d6d4",
-                "reference": "764a5550ffafd8d517c7f7afe6ba767cd051d6d4",
+                "url": "https://api.github.com/repos/NexusPHP/cs-config/zipball/fb6bd0d2e1a51bd2908b1a1032f0049a6465df2e",
+                "reference": "fb6bd0d2e1a51bd2908b1a1032f0049a6465df2e",
                 "shasum": ""
             },
             "require": {
@@ -1105,7 +1105,7 @@
                 "slack": "https://nexusphp.slack.com",
                 "source": "https://github.com/NexusPHP/cs-config.git"
             },
-            "time": "2026-04-11T19:32:22+00:00"
+            "time": "2026-04-17T10:46:08+00:00"
         },
         {
             "name": "nikic/php-parser",
@@ -1285,11 +1285,11 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "2.1.49",
+            "version": "2.1.54",
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/d0082955396e7f5ba19cf298224b85e1099f0ed8",
-                "reference": "d0082955396e7f5ba19cf298224b85e1099f0ed8",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/8be50c3992107dc837b17da4d140fbbdf9a5c5bd",
+                "reference": "8be50c3992107dc837b17da4d140fbbdf9a5c5bd",
                 "shasum": ""
             },
             "require": {
@@ -1334,7 +1334,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-04-16T21:10:58+00:00"
+            "time": "2026-04-29T13:31:09+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -5056,7 +5056,7 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.1",
+        "php": "^8.2",
         "ext-curl": "*",
         "ext-fileinfo": "*",
         "ext-intl": "*",

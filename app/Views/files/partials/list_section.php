@@ -64,15 +64,15 @@ $currentCategory = (string) request()->getGet('category');
     <!-- Type tabs (URL-driven) -->
     <?php
     $tabsBaseQuery = request()->getGet();
-    if (! is_array($tabsBaseQuery)) {
-        $tabsBaseQuery = [];
-    }
-    unset($tabsBaseQuery['page'], $tabsBaseQuery['cursor'], $tabsBaseQuery['category']);
-    ?>
+if (! is_array($tabsBaseQuery)) {
+    $tabsBaseQuery = [];
+}
+unset($tabsBaseQuery['page'], $tabsBaseQuery['cursor'], $tabsBaseQuery['category']);
+?>
     <div class="mt-3 flex flex-wrap gap-2 text-sm">
         <?php foreach ($categoryOptions as $opt): ?>
             <?php
-            $val   = (string) ($opt['value'] ?? '');
+        $val   = (string) ($opt['value'] ?? '');
             $label = (string) ($opt['label'] ?? $val);
             $query = $tabsBaseQuery;
             if ($val !== '') {

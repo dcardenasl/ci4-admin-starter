@@ -71,13 +71,13 @@ $smUrl    = is_array($variants['sm'] ?? null) ? (string) ($variants['sm']['url']
                     <dd class="font-medium text-gray-900">
                         <?php
                         $secs = (int) $file['duration_seconds'];
-                        $h    = intdiv($secs, 3600);
-                        $m    = intdiv($secs % 3600, 60);
-                        $s    = $secs % 60;
-                        echo $h > 0
-                            ? sprintf('%d:%02d:%02d', $h, $m, $s)
-                            : sprintf('%d:%02d', $m, $s);
-                        ?>
+                $h    = intdiv($secs, 3600);
+                $m    = intdiv($secs % 3600, 60);
+                $s    = $secs % 60;
+                echo $h > 0
+                    ? sprintf('%d:%02d:%02d', $h, $m, $s)
+                    : sprintf('%d:%02d', $m, $s);
+                ?>
                     </dd>
                 </div>
             <?php endif; ?>
