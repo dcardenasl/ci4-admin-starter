@@ -42,4 +42,8 @@ $routes->group('admin/iam', ['filter' => ['auth', 'admin']], static function (Ro
     $routes->get('memberships/(:segment)/edit', '\App\Modules\Iam\Controllers\AppUserMembershipController::edit/$1', ['as' => 'admin.iam.memberships.edit']);
     $routes->post('memberships/(:segment)', '\App\Modules\Iam\Controllers\AppUserMembershipController::update/$1', ['as' => 'admin.iam.memberships.update']);
     $routes->post('memberships/(:segment)/delete', '\App\Modules\Iam\Controllers\AppUserMembershipController::delete/$1', ['as' => 'admin.iam.memberships.delete']);
+
+    // Membership ↔ Role relations
+    $routes->post('memberships/(:segment)/roles/attach', '\App\Modules\Iam\Controllers\AppUserMembershipController::attachRoles/$1', ['as' => 'admin.iam.memberships.roles.attach']);
+    $routes->post('memberships/(:segment)/roles/(:segment)/detach', '\App\Modules\Iam\Controllers\AppUserMembershipController::detachRole/$1/$2', ['as' => 'admin.iam.memberships.roles.detach']);
 });
