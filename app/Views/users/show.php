@@ -1,3 +1,4 @@
+<?php $memberships = $memberships ?? []; ?>
 <div class="mb-4">
     <a href="<?= route_to('admin.users') ?>" class="text-sm text-brand-600 hover:text-brand-700">&larr; <?= lang('Users.back_to_list') ?></a>
 </div>
@@ -36,14 +37,6 @@
                     <dd class="mt-1 text-gray-900"><?= esc((string) ($user['email'] ?? '-')) ?></dd>
                 </div>
                 <div>
-                    <dt class="text-gray-500"><?= lang('Users.role') ?></dt>
-                    <dd class="mt-1">
-                        <span class="inline-flex rounded-full px-2 py-1 text-xs <?= role_badge($user['role'] ?? 'user') ?>">
-                            <?= esc(localized_role((string) ($user['role'] ?? 'user'))) ?>
-                        </span>
-                    </dd>
-                </div>
-                <div>
                     <dt class="text-gray-500"><?= lang('Users.status') ?></dt>
                     <dd class="mt-1">
                         <span class="inline-flex rounded-full px-2 py-1 text-xs <?= status_badge($user['status'] ?? '') ?>">
@@ -70,6 +63,30 @@
                     <dd class="mt-1 text-gray-900"><?= esc(format_date($user['updated_at'] ?? null)) ?></dd>
                 </div>
             </dl>
+
+            <div class="mt-6 border-t border-gray-100 pt-4">
+                <h4 class="text-sm font-semibold text-gray-900"><?= lang('Users.apps_and_roles') ?></h4>
+                <?php if ($memberships === []): ?>
+                    <p class="mt-2 text-sm text-gray-500"><?= lang('Users.no_memberships') ?></p>
+                <?php else: ?>
+                    <ul class="mt-3 divide-y divide-gray-100 border border-gray-100 rounded-lg">
+                        <?php foreach ($memberships as $membership): ?>
+                            <?php $mid = (string) ($membership['id'] ?? ''); ?>
+                            <li class="flex items-center justify-between p-3 text-sm">
+                                <div>
+                                    <span class="text-gray-900 font-medium">App #<?= esc((string) ($membership['application_id'] ?? '-')) ?></span>
+                                    <span class="ml-2 inline-flex rounded-full px-2 py-1 text-xs <?= status_badge((string) ($membership['status'] ?? '')) ?>">
+                                        <?= esc(localized_status((string) ($membership['status'] ?? '-'))) ?>
+                                    </span>
+                                </div>
+                                <a href="<?= route_to('admin.iam.memberships.show', $mid) ?>" class="text-xs text-brand-600 hover:text-brand-700">
+                                    <?= lang('Users.manage_roles') ?> &rarr;
+                                </a>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php endif; ?>
+            </div>
         </section>
 
         <section class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">

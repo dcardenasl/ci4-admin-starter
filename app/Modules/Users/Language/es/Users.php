@@ -46,4 +46,7 @@ return [
     'not_found'        => 'Usuario no encontrado.',
     'search_placeholder' => 'Buscar por nombre o email...',
     'no_users'         => 'No se encontraron usuarios.',
+    'apps_and_roles'   => 'Apps y roles',
+    'no_memberships'   => 'Este usuario aún no tiene membresías en ninguna aplicación.',
+    'manage_roles'     => 'Administrar roles',
 ];

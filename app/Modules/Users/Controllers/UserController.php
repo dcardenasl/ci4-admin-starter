@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Users\Controllers;
 
 use App\Controllers\BaseWebController;
+use App\Modules\Iam\Services\AppUserMembershipApiServiceInterface;
 use App\Modules\Users\Requests\UserStoreRequest;
 use App\Modules\Users\Requests\UserUpdateRequest;
 use App\Modules\Users\Services\UserApiServiceInterface;
@@ -17,11 +18,13 @@ use Psr\Log\LoggerInterface;
 class UserController extends BaseWebController
 {
     protected UserApiServiceInterface $userService;
+    protected AppUserMembershipApiServiceInterface $membershipService;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger): void
     {
         parent::initController($request, $response, $logger);
         $this->userService = service('userApiService');
+        $this->membershipService = service('appUserMembershipApiService');
     }
 
     public function index(): string
@@ -47,7 +50,22 @@ class UserController extends BaseWebController
     {
         $response = $this->safeApiCall(fn () => $this->userService->get($id));
 
-        return $this->renderResourceShow('users/show', lang('Users.details'), 'user', $response, lang('Users.not_found'));
+        if (! ($response['ok'] ?? false)) {
+            return $this->render('users/show', [
+                'title'       => lang('Users.details'),
+                'user'        => [],
+                'memberships' => [],
+                'error'       => $this->firstMessage($response, lang('Users.not_found')),
+            ]);
+        }
+
+        $membershipsResponse = $this->safeApiCall(fn () => $this->membershipService->listForUser($id));
+
+        return $this->render('users/show', [
+            'title'       => lang('Users.details'),
+            'user'        => $this->extractData($response),
+            'memberships' => $this->extractItems($membershipsResponse),
+        ]);
     }
 
     public function create(): string

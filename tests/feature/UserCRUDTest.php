@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Modules\Iam\Services\AppUserMembershipApiService;
 use App\Modules\Users\Services\UserApiService;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\FeatureTestTrait;
@@ -189,7 +190,22 @@ final class UserCRUDTest extends CIUnitTestCase
                 'fieldErrors' => [],
             ]);
 
+        $membershipService = $this->createMock(AppUserMembershipApiService::class);
+        $membershipService->expects($this->once())
+            ->method('listForUser')
+            ->with('123')
+            ->willReturn([
+                'ok'          => true,
+                'status'      => 200,
+                'data'        => ['data' => []],
+                'raw'         => '',
+                'headers'     => [],
+                'messages'    => [],
+                'fieldErrors' => [],
+            ]);
+
         Services::injectMock('userApiService', $userService);
+        Services::injectMock('appUserMembershipApiService', $membershipService);
 
         $result = $this->withSession([
             'access_token' => 'token',
