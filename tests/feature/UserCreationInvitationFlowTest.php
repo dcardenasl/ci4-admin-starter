@@ -47,7 +47,7 @@ final class UserCreationInvitationFlowTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['iam.admin-access']],
         ])->post('/admin/users', [
             csrf_token() => csrf_hash(),
             'first_name'     => 'Jane',
@@ -88,7 +88,7 @@ final class UserCreationInvitationFlowTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['iam.admin-access']],
         ])->post('/admin/users/101', [
             csrf_token() => csrf_hash(),
             'first_name'     => 'Jane',
@@ -130,7 +130,7 @@ final class UserCreationInvitationFlowTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['iam.admin-access']],
         ])->post('/admin/users/101', [
             csrf_token() => csrf_hash(),
             'first_name'     => 'Jane',

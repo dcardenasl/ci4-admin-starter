@@ -32,7 +32,7 @@ final class PermissionFlowTest extends CIUnitTestCase
     {
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'user'],
+            'user'         => ['permissions' => []],
         ])->get('/admin/iam/permissions');
 
         $result->assertRedirectTo(site_url('dashboard'));
@@ -42,7 +42,7 @@ final class PermissionFlowTest extends CIUnitTestCase
     {
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['iam.admin-access']],
         ])->get('/admin/iam/permissions');
 
         $result->assertStatus(200);
@@ -52,7 +52,7 @@ final class PermissionFlowTest extends CIUnitTestCase
     {
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['iam.admin-access']],
         ])->post('/admin/iam/permissions', [
             csrf_token() => csrf_hash(),
         ]);
@@ -75,7 +75,7 @@ final class PermissionFlowTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['iam.admin-access']],
         ])->post('/admin/iam/permissions/test-uuid/delete', [
             csrf_token() => csrf_hash(),
         ]);

@@ -32,7 +32,7 @@ final class AppUserMembershipFlowTest extends CIUnitTestCase
     {
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'user'],
+            'user'         => ['permissions' => []],
         ])->get('/admin/iam/memberships');
 
         $result->assertRedirectTo(site_url('dashboard'));
@@ -42,7 +42,7 @@ final class AppUserMembershipFlowTest extends CIUnitTestCase
     {
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['iam.admin-access']],
         ])->get('/admin/iam/memberships');
 
         $result->assertStatus(200);
@@ -52,7 +52,7 @@ final class AppUserMembershipFlowTest extends CIUnitTestCase
     {
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['iam.admin-access']],
         ])->post('/admin/iam/memberships', [
             csrf_token() => csrf_hash(),
         ]);
@@ -75,7 +75,7 @@ final class AppUserMembershipFlowTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['iam.admin-access']],
         ])->post('/admin/iam/memberships/test-uuid/delete', [
             csrf_token() => csrf_hash(),
         ]);

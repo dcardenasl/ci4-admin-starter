@@ -13,9 +13,9 @@ use CodeIgniter\Test\CIUnitTestCase;
  */
 final class AdminFilterTest extends CIUnitTestCase
 {
-    public function testAllowsAdminUser(): void
+    public function testAllowsUserWithIamAdminAccessPermission(): void
     {
-        session()->set('user', ['role' => 'admin']);
+        session()->set('user', ['permissions' => ['iam.admin-access']]);
 
         $filter = new AdminFilter();
         $result = $filter->before(service('request'));
@@ -23,9 +23,19 @@ final class AdminFilterTest extends CIUnitTestCase
         $this->assertNull($result);
     }
 
-    public function testRedirectsNonAdminUser(): void
+    public function testRedirectsUserWithoutIamAdminAccess(): void
     {
-        session()->set('user', ['role' => 'user']);
+        session()->set('user', ['permissions' => ['files.read']]);
+
+        $filter = new AdminFilter();
+        $result = $filter->before(service('request'));
+
+        $this->assertInstanceOf(RedirectResponse::class, $result);
+    }
+
+    public function testRedirectsUserWithMissingPermissionsKey(): void
+    {
+        session()->set('user', ['email' => 'someone@example.com']);
 
         $filter = new AdminFilter();
         $result = $filter->before(service('request'));
@@ -35,7 +45,7 @@ final class AdminFilterTest extends CIUnitTestCase
 
     public function testAjaxRequestGetsForbiddenJson(): void
     {
-        session()->set('user', ['role' => 'user']);
+        session()->set('user', ['permissions' => []]);
 
         $request = service('request');
         $request->setHeader('X-Requested-With', 'XMLHttpRequest');

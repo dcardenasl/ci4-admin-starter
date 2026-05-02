@@ -20,7 +20,7 @@ final class FileUploadFlowTest extends CIUnitTestCase
 
     private array $authSession = [
         'access_token' => 'test-token',
-        'user'         => ['id' => 1, 'email' => 'user@test.com', 'role' => 'user'],
+        'user'         => ['id' => 1, 'email' => 'user@test.com', 'permissions' => []],
     ];
 
     protected function tearDown(): void

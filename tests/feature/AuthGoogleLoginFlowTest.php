@@ -62,7 +62,7 @@ final class AuthGoogleLoginFlowTest extends CIUnitTestCase
                         'access_token' => 'access-token',
                         'refresh_token' => 'refresh-token',
                         'expires_in' => 3600,
-                        'user' => ['id' => 1, 'email' => 'google@example.com', 'role' => 'admin'],
+                        'user' => ['id' => 1, 'email' => 'google@example.com', 'permissions' => ['iam.admin-access']],
                     ],
                 ],
                 'raw' => '',

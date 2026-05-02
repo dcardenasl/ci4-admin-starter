@@ -46,7 +46,7 @@ final class ProfileFlowTest extends CIUnitTestCase
             ->willReturn([
                 'ok'          => true,
                 'status'      => 200,
-                'data'        => ['data' => ['id' => 15, 'first_name' => 'Admin', 'last_name' => 'Updated', 'email' => 'admin@example.com', 'role' => 'admin']],
+                'data'        => ['data' => ['id' => 15, 'first_name' => 'Admin', 'last_name' => 'Updated', 'email' => 'admin@example.com', 'permissions' => ['iam.admin-access']]],
                 'raw'         => '',
                 'headers'     => [],
                 'messages'    => [],
@@ -57,7 +57,7 @@ final class ProfileFlowTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['id' => 15, 'email' => 'admin@example.com', 'role' => 'admin'],
+            'user'         => ['id' => 15, 'email' => 'admin@example.com', 'permissions' => ['iam.admin-access']],
         ])->post('/profile', [
             csrf_token() => csrf_hash(),
             'first_name'     => 'Admin',
@@ -72,7 +72,7 @@ final class ProfileFlowTest extends CIUnitTestCase
     {
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['id' => 22, 'email' => 'user@example.com', 'role' => 'user'],
+            'user'         => ['id' => 22, 'email' => 'user@example.com', 'permissions' => []],
         ])->post('/profile', [
             csrf_token() => csrf_hash(),
             'first_name'     => 'User',
@@ -87,7 +87,7 @@ final class ProfileFlowTest extends CIUnitTestCase
     {
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['id' => 22, 'email' => 'user@example.com', 'first_name' => 'Jane', 'last_name' => 'Doe', 'role' => 'user'],
+            'user'         => ['id' => 22, 'email' => 'user@example.com', 'first_name' => 'Jane', 'last_name' => 'Doe', 'permissions' => []],
         ])->get('/profile');
 
         $result->assertStatus(200);
@@ -118,7 +118,7 @@ final class ProfileFlowTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['id' => 22, 'email' => 'user@example.com', 'role' => 'user'],
+            'user'         => ['id' => 22, 'email' => 'user@example.com', 'permissions' => []],
         ])->post('/profile/request-password-reset', [
             csrf_token() => csrf_hash(),
         ]);

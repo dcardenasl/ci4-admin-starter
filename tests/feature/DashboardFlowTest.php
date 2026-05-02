@@ -97,7 +97,7 @@ final class DashboardFlowTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user' => ['id' => 1, 'first_name' => 'Admin', 'role' => 'admin'],
+            'user' => ['id' => 1, 'first_name' => 'Admin', 'permissions' => ['iam.admin-access']],
         ])->get('/dashboard');
 
         $result->assertStatus(200);
@@ -168,7 +168,7 @@ final class DashboardFlowTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user' => ['id' => 1, 'first_name' => 'Admin', 'role' => 'admin'],
+            'user' => ['id' => 1, 'first_name' => 'Admin', 'permissions' => ['iam.admin-access']],
         ])->get('/dashboard');
 
         $result->assertStatus(200);

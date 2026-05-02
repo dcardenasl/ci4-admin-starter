@@ -41,7 +41,7 @@ final class UserCRUDTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['iam.admin-access']],
         ])->post('/admin/users', [
             csrf_token() => csrf_hash(),
             'first_name' => 'Jane',
@@ -73,7 +73,7 @@ final class UserCRUDTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['iam.admin-access']],
         ])->post('/admin/users', [
             csrf_token() => csrf_hash(),
             'first_name' => 'Jane',
@@ -111,7 +111,7 @@ final class UserCRUDTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['iam.admin-access']],
         ])->post('/admin/users/123', [
             csrf_token()     => csrf_hash(),
             'first_name'     => 'Jane',
@@ -144,7 +144,7 @@ final class UserCRUDTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['iam.admin-access']],
         ])->post('/admin/users/123', [
             csrf_token()     => csrf_hash(),
             'first_name'     => 'Jane',
@@ -193,7 +193,7 @@ final class UserCRUDTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['iam.admin-access']],
         ])->get('/admin/users/123');
 
         $result->assertOK();
@@ -222,7 +222,7 @@ final class UserCRUDTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['iam.admin-access']],
         ])->get('/admin/users/999');
 
         $result->assertOK();
@@ -249,7 +249,7 @@ final class UserCRUDTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['iam.admin-access']],
         ])->get('/admin/users/999/edit');
 
         $result->assertRedirect();
@@ -277,7 +277,7 @@ final class UserCRUDTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['iam.admin-access']],
         ])->post('/admin/users/123/approve', [
             csrf_token() => csrf_hash(),
         ]);
@@ -307,7 +307,7 @@ final class UserCRUDTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['iam.admin-access']],
         ])->post('/admin/users/123/approve', [
             csrf_token() => csrf_hash(),
         ]);
@@ -337,7 +337,7 @@ final class UserCRUDTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['iam.admin-access']],
         ])->post('/admin/users/123/delete', [
             csrf_token() => csrf_hash(),
         ]);
@@ -367,7 +367,7 @@ final class UserCRUDTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['iam.admin-access']],
         ])->post('/admin/users/123/delete', [
             csrf_token() => csrf_hash(),
         ]);

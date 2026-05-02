@@ -112,7 +112,7 @@ final class AuthFlowTest extends CIUnitTestCase
         $result = $this->withSession([
             'access_token'  => 'existing-token',
             'refresh_token' => 'existing-refresh',
-            'user'          => ['id' => 1, 'email' => 'user@example.com', 'role' => 'user'],
+            'user'          => ['id' => 1, 'email' => 'user@example.com', 'permissions' => []],
         ])->get('/login');
 
         $result->assertRedirect();

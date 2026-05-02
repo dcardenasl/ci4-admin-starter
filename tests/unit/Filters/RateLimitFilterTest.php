@@ -73,7 +73,7 @@ final class RateLimitFilterTest extends CIUnitTestCase
 
     public function testUsesUserIdWhenSessionHasAuthenticatedUser(): void
     {
-        session()->set(SessionKeys::USER->value, ['id' => 'user-42', 'role' => 'user']);
+        session()->set(SessionKeys::USER->value, ['id' => 'user-42', 'permissions' => []]);
 
         $filter  = new RateLimitFilter();
         $request = $this->makeRequest();
