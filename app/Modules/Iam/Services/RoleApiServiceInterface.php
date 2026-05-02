@@ -32,4 +32,16 @@ interface RoleApiServiceInterface
 
     /** @return ApiResponse */
     public function delete(int|string $id): array;
+
+    /** @return ApiResponse */
+    public function listPermissions(int|string $id): array;
+
+    /**
+     * @param list<int> $permissionIds
+     * @return ApiResponse
+     */
+    public function attachPermissions(int|string $id, array $permissionIds): array;
+
+    /** @return ApiResponse */
+    public function detachPermission(int|string $id, int|string $permissionId): array;
 }

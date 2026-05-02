@@ -19,6 +19,10 @@ $routes->group('admin/iam', ['filter' => ['auth', 'admin']], static function (Ro
     $routes->post('roles/(:segment)', '\\App\\Modules\\Iam\\Controllers\\RoleController::update/$1', ['as' => 'admin.iam.roles.update']);
     $routes->post('roles/(:segment)/delete', '\\App\\Modules\\Iam\\Controllers\\RoleController::delete/$1', ['as' => 'admin.iam.roles.delete']);
 
+    // Role ↔ Permission relations
+    $routes->post('roles/(:segment)/permissions/attach', '\\App\\Modules\\Iam\\Controllers\\RoleController::attachPermissions/$1', ['as' => 'admin.iam.roles.permissions.attach']);
+    $routes->post('roles/(:segment)/permissions/(:segment)/detach', '\\App\\Modules\\Iam\\Controllers\\RoleController::detachPermission/$1/$2', ['as' => 'admin.iam.roles.permissions.detach']);
+
     // Permission
     $routes->get('permissions', '\App\Modules\Iam\Controllers\PermissionController::index', ['as' => 'admin.iam.permissions']);
     $routes->get('permissions/data', '\App\Modules\Iam\Controllers\PermissionController::data', ['as' => 'admin.iam.permissions.data']);
