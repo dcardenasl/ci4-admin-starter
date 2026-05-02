@@ -16,6 +16,8 @@ return [
     'roles'           => 'Roles',
     'permissions'     => 'Permissions',
     'memberships'     => 'Memberships',
+    'confirm_delete'  => 'Are you sure you want to delete this item?',
+    'confirm_remove'  => 'Are you sure you want to remove this item?',
     'profile'         => 'Profile',
     'logout'          => 'Log out',
     'my_profile'      => 'My profile',

@@ -16,6 +16,8 @@ return [
     'roles'           => 'Roles',
     'permissions'     => 'Permisos',
     'memberships'     => 'Membresías',
+    'confirm_delete'  => '¿Seguro que quieres eliminar este elemento?',
+    'confirm_remove'  => '¿Seguro que quieres quitar este elemento?',
     'profile'         => 'Perfil',
     'logout'          => 'Cerrar sesión',
     'my_profile'      => 'Mi perfil',
