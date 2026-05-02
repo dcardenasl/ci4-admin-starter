@@ -21,7 +21,7 @@
             <span><?= lang('App.files') ?></span>
         </a>
 
-        <?php if (has_admin_access((string) (session('user.role') ?? ''))): ?>
+        <?php if (has_permission('iam.admin-access')): ?>
             <div class="pt-3 mt-3 border-t border-gray-800 text-xs uppercase text-gray-500"><?= lang('App.administration') ?></div>
             <a href="<?= route_to('admin.users') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/users*') ?>">
                 <?= ui_icon('users') ?>
@@ -38,6 +38,20 @@
             <a href="<?= route_to('admin.metrics') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/metrics') ?>">
                 <?= ui_icon('metrics') ?>
                 <span><?= lang('App.metrics') ?></span>
+            </a>
+
+            <div class="pt-3 mt-3 border-t border-gray-800 text-xs uppercase text-gray-500"><?= lang('App.identity_access') ?></div>
+            <a href="<?= route_to('admin.iam.roles') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/iam/roles*') ?>">
+                <?= ui_icon('shield') ?>
+                <span><?= lang('App.roles') ?></span>
+            </a>
+            <a href="<?= route_to('admin.iam.permissions') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/iam/permissions*') ?>">
+                <?= ui_icon('lock') ?>
+                <span><?= lang('App.permissions') ?></span>
+            </a>
+            <a href="<?= route_to('admin.iam.memberships') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/iam/memberships*') ?>">
+                <?= ui_icon('user-check') ?>
+                <span><?= lang('App.memberships') ?></span>
             </a>
         <?php endif; ?>
     </nav>
