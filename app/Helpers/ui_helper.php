@@ -38,7 +38,7 @@ if (! function_exists('format_date')) {
 }
 
 // Authentication helpers are in app/Helpers/auth_helper.php
-// See: is_email_verified(), has_admin_access()
+// See: is_email_verified(), has_permission()
 
 if (! function_exists('filter_label_class')) {
     function filter_label_class(): string

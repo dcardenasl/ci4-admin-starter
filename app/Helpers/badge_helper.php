@@ -138,7 +138,7 @@ if (! function_exists('localized_audit_severity')) {
 if (! function_exists('role_badge')) {
     function role_badge(?string $role): string
     {
-        return has_admin_access($role)
+        return in_array(strtolower((string) $role), ['admin', 'superadmin'], true)
             ? 'bg-brand-100 text-brand-800'
             : 'bg-gray-100 text-gray-700';
     }

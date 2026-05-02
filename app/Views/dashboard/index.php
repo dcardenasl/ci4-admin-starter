@@ -279,7 +279,7 @@
             <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-2"><?= lang('Dashboard.quick_start') ?></h3>
             <p class="text-xs text-gray-500 mb-4"><?= lang('Dashboard.quick_start_desc') ?></p>
             <div class="grid grid-cols-2 gap-2">
-                <?php if (has_admin_access((string) (session('user.role') ?? ''))): ?>
+                <?php if (has_permission('iam.admin-access')): ?>
                     <a href="<?= route_to('admin.users') ?>" class="flex items-center justify-center gap-2 p-2 rounded-lg border border-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                         <?= ui_icon('users', 'h-3.5 w-3.5 text-gray-400') ?>
                         <?= lang('Dashboard.users') ?>

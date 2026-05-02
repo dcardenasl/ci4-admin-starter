@@ -46,11 +46,22 @@ if (! function_exists('is_email_verified')) {
     }
 }
 
-if (! function_exists('has_admin_access')) {
-    function has_admin_access(?string $role): bool
+if (! function_exists('has_permission')) {
+    /**
+     * Check whether the authenticated user has a specific permission code
+     * (e.g. 'iam.admin-access', 'users.write').
+     *
+     * Reads from `session('user.permissions')`, an array of permission codes
+     * populated at login from the API's session response.
+     */
+    function has_permission(string $code): bool
     {
-        /** @var \Config\Auth $authConfig */
-        $authConfig = config('Auth');
-        return in_array(strtolower((string) $role), $authConfig->adminRoles, true);
+        $permissions = session('user.permissions');
+
+        if (! is_array($permissions)) {
+            return false;
+        }
+
+        return in_array($code, $permissions, true);
     }
 }
