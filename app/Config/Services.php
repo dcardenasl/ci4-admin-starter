@@ -16,6 +16,8 @@ use App\Modules\Dashboard\Services\HealthApiService;
 use App\Modules\Dashboard\Services\HealthApiServiceInterface;
 use App\Modules\Files\Services\FileApiService;
 use App\Modules\Files\Services\FileApiServiceInterface;
+use App\Modules\Iam\Services\PermissionApiService;
+use App\Modules\Iam\Services\PermissionApiServiceInterface;
 use App\Modules\Iam\Services\RoleApiService;
 use App\Modules\Iam\Services\RoleApiServiceInterface;
 use App\Modules\Metrics\Services\MetricsApiService;
@@ -161,5 +163,14 @@ class Services extends BaseService
         }
 
         return new RoleApiService(static::apiClient());
+    }
+    public static function permissionApiService(bool $getShared = true): PermissionApiServiceInterface
+    {
+        if ($getShared) {
+            /** @var PermissionApiService */
+            return static::getSharedInstance('permissionApiService');
+        }
+
+        return new PermissionApiService(static::apiClient());
     }
 }
