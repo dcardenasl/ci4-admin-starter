@@ -22,13 +22,15 @@ $availableItems = array_values(array_filter($allPermissions, static fn (array $p
             <h3 class="text-lg font-semibold text-gray-900"><?= lang('Iam.roles_details') ?></h3>
             <div class="flex items-center gap-2">
                 <a href="<?= route_to('admin.iam.roles.edit', $itemId) ?>" class="<?= esc(action_button_class()) ?>"><?= lang('App.edit') ?></a>
-                <form method="post" action="<?= route_to('admin.iam.roles.delete', $itemId) ?>" onsubmit="return confirm('<?= esc(lang('App.confirm_delete')) ?>');">
-                    <?= csrf_field() ?>
-                    <button type="submit" class="<?= esc(action_button_class('danger')) ?>">
-                        <?= ui_icon('trash', 'h-3.5 w-3.5') ?>
-                        <?= esc(lang('App.delete')) ?>
-                    </button>
-                </form>
+                <?php if (empty($role['is_system'])): ?>
+                    <form method="post" action="<?= route_to('admin.iam.roles.delete', $itemId) ?>" onsubmit="return confirm('<?= esc(lang('App.confirm_delete')) ?>');">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="<?= esc(action_button_class('danger')) ?>">
+                            <?= ui_icon('trash', 'h-3.5 w-3.5') ?>
+                            <?= esc(lang('App.delete')) ?>
+                        </button>
+                    </form>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -41,6 +43,25 @@ $availableItems = array_values(array_filter($allPermissions, static fn (array $p
                 <dt class="text-gray-500"><?= lang('Iam.field_name') ?></dt>
                 <dd class="mt-1 text-gray-900"><?= esc((string) ($role['name'] ?? '-')) ?></dd>
             </div>
+            <div>
+                <dt class="text-gray-500"><?= lang('Iam.field_application') ?></dt>
+                <dd class="mt-1 text-gray-900">
+                    <?php if (! empty($role['application_name'])): ?>
+                        <?= esc((string) $role['application_name']) ?>
+                        <span class="text-gray-500 text-xs">(#<?= (int) $role['application_id'] ?>)</span>
+                    <?php elseif (! empty($role['application_id'])): ?>
+                        #<?= (int) $role['application_id'] ?>
+                    <?php else: ?>
+                        <span class="text-gray-500"><?= esc(lang('Iam.role_global_label')) ?></span>
+                    <?php endif; ?>
+                </dd>
+            </div>
+            <?php if (! empty($role['is_system'])): ?>
+                <div>
+                    <dt class="text-gray-500"><?= esc(lang('App.warning')) ?></dt>
+                    <dd class="mt-1 text-gray-900"><?= esc(lang('Iam.system_role_notice')) ?></dd>
+                </div>
+            <?php endif; ?>
             <?php if (! empty($role['description'])): ?>
                 <div class="md:col-span-2">
                     <dt class="text-gray-500"><?= lang('Iam.field_description') ?></dt>

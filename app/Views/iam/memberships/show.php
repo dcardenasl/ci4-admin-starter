@@ -34,12 +34,26 @@ $availableItems = array_values(array_filter($allRoles, static fn (array $r): boo
 
         <dl class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm">
             <div>
-                <dt class="text-gray-500"><?= lang('Iam.field_user_id') ?></dt>
-                <dd class="mt-1 text-gray-900"><?= esc((string) ($appUserMembership['user_id'] ?? '-')) ?></dd>
+                <dt class="text-gray-500"><?= lang('Iam.field_user') ?></dt>
+                <dd class="mt-1 text-gray-900">
+                    <?= esc((string) ($appUserMembership['user_label'] ?? '')) ?>
+                    <?php if (! empty($appUserMembership['user_id'])): ?>
+                        <span class="text-gray-500 text-xs">(#<?= (int) $appUserMembership['user_id'] ?>)</span>
+                    <?php else: ?>
+                        -
+                    <?php endif; ?>
+                </dd>
             </div>
             <div>
-                <dt class="text-gray-500"><?= lang('Iam.field_application_id') ?></dt>
-                <dd class="mt-1 text-gray-900"><?= esc((string) ($appUserMembership['application_id'] ?? '-')) ?></dd>
+                <dt class="text-gray-500"><?= lang('Iam.field_application') ?></dt>
+                <dd class="mt-1 text-gray-900">
+                    <?= esc((string) ($appUserMembership['application_name'] ?? '')) ?>
+                    <?php if (! empty($appUserMembership['application_id'])): ?>
+                        <span class="text-gray-500 text-xs">(#<?= (int) $appUserMembership['application_id'] ?>)</span>
+                    <?php else: ?>
+                        -
+                    <?php endif; ?>
+                </dd>
             </div>
             <div>
                 <dt class="text-gray-500"><?= lang('Iam.field_status') ?></dt>

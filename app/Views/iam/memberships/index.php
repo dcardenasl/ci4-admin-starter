@@ -43,10 +43,22 @@
             <table class="<?= esc(table_class()) ?>">
                 <thead class="<?= esc(table_head_class()) ?>">
                     <tr>
-                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('name')">
-                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('name')" aria-label="<?= esc(lang('TableA11y.sort_by', [lang('Iam.field_name')])) ?>">
-                                <span><?= lang('Iam.field_name') ?></span>
-                                <span aria-hidden="true" x-text="sortIcon('name')"></span>
+                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('user_id')">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('user_id')" aria-label="<?= esc(lang('TableA11y.sort_by', [lang('Iam.field_user')])) ?>">
+                                <span><?= lang('Iam.field_user') ?></span>
+                                <span aria-hidden="true" x-text="sortIcon('user_id')"></span>
+                            </button>
+                        </th>
+                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('application_id')">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('application_id')" aria-label="<?= esc(lang('TableA11y.sort_by', [lang('Iam.field_application')])) ?>">
+                                <span><?= lang('Iam.field_application') ?></span>
+                                <span aria-hidden="true" x-text="sortIcon('application_id')"></span>
+                            </button>
+                        </th>
+                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('status')">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('status')" aria-label="<?= esc(lang('TableA11y.sort_by', [lang('Iam.field_status')])) ?>">
+                                <span><?= lang('Iam.field_status') ?></span>
+                                <span aria-hidden="true" x-text="sortIcon('status')"></span>
                             </button>
                         </th>
                         <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('created_at')">
@@ -61,7 +73,11 @@
                 <tbody class="<?= esc(table_body_class()) ?>">
                     <template x-for="row in rows" :key="String(row.id ?? Math.random())">
                         <tr class="<?= esc(table_row_class()) ?>">
-                            <td class="<?= esc(table_td_class('primary')) ?>" x-text="String(row.name ?? '-')"></td>
+                            <td class="<?= esc(table_td_class('primary')) ?>" x-text="row.user_label || ('#' + (row.user_id ?? '?'))"></td>
+                            <td class="<?= esc(table_td_class('muted')) ?>" x-text="row.application_name || ('#' + (row.application_id ?? '?'))"></td>
+                            <td class="<?= esc(table_td_class('muted')) ?>">
+                                <span class="inline-flex rounded-full px-2 py-0.5 text-xs" :class="statusBadgeClass(row.status)" x-text="statusLabel(row.status)"></span>
+                            </td>
                             <td class="<?= esc(table_td_class('muted')) ?>" x-text="formatDate(row.created_at)"></td>
                             <td class="<?= esc(table_td_class()) ?>">
                                 <div class="flex items-center gap-2">

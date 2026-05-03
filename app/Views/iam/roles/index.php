@@ -49,6 +49,13 @@
                                 <span aria-hidden="true" x-text="sortIcon('name')"></span>
                             </button>
                         </th>
+                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('code')">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('code')" aria-label="<?= esc(lang('TableA11y.sort_by', [lang('Iam.field_code')])) ?>">
+                                <span><?= lang('Iam.field_code') ?></span>
+                                <span aria-hidden="true" x-text="sortIcon('code')"></span>
+                            </button>
+                        </th>
+                        <th class="<?= esc(table_th_class()) ?>"><?= lang('Iam.field_application') ?></th>
                         <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('created_at')">
                             <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('created_at')" aria-label="<?= esc(lang('TableA11y.sort_by', [lang('TableColumns.created_at')])) ?>">
                                 <span><?= lang('TableColumns.created_at') ?></span>
@@ -62,6 +69,8 @@
                     <template x-for="row in rows" :key="String(row.id ?? Math.random())">
                         <tr class="<?= esc(table_row_class()) ?>">
                             <td class="<?= esc(table_td_class('primary')) ?>" x-text="String(row.name ?? '-')"></td>
+                            <td class="<?= esc(table_td_class('muted')) ?>"><code class="text-xs" x-text="String(row.code ?? '-')"></code></td>
+                            <td class="<?= esc(table_td_class('muted')) ?>" x-text="row.application_name || (row.application_id ? '#' + row.application_id : '<?= esc(lang('Iam.role_global_label')) ?>')"></td>
                             <td class="<?= esc(table_td_class('muted')) ?>" x-text="formatDate(row.created_at)"></td>
                             <td class="<?= esc(table_td_class()) ?>">
                                 <div class="flex items-center gap-2">

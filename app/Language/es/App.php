@@ -36,6 +36,7 @@ return [
     'preview'         => 'Vista previa',
     'view'            => 'Ver',
     'back'            => 'Volver',
+    'select'          => 'Seleccionar…',
     'yes'             => 'Sí',
     'no'              => 'No',
     'loading'         => 'Cargando...',

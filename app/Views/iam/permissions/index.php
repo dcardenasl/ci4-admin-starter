@@ -43,10 +43,23 @@
             <table class="<?= esc(table_class()) ?>">
                 <thead class="<?= esc(table_head_class()) ?>">
                     <tr>
-                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('name')">
-                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('name')" aria-label="<?= esc(lang('TableA11y.sort_by', [lang('Iam.field_name')])) ?>">
-                                <span><?= lang('Iam.field_name') ?></span>
-                                <span aria-hidden="true" x-text="sortIcon('name')"></span>
+                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('code')">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('code')" aria-label="<?= esc(lang('TableA11y.sort_by', [lang('Iam.field_code')])) ?>">
+                                <span><?= lang('Iam.field_code') ?></span>
+                                <span aria-hidden="true" x-text="sortIcon('code')"></span>
+                            </button>
+                        </th>
+                        <th class="<?= esc(table_th_class()) ?>"><?= lang('Iam.field_application') ?></th>
+                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('resource')">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('resource')" aria-label="<?= esc(lang('TableA11y.sort_by', [lang('Iam.field_resource')])) ?>">
+                                <span><?= lang('Iam.field_resource') ?></span>
+                                <span aria-hidden="true" x-text="sortIcon('resource')"></span>
+                            </button>
+                        </th>
+                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('action')">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('action')" aria-label="<?= esc(lang('TableA11y.sort_by', [lang('Iam.field_action')])) ?>">
+                                <span><?= lang('Iam.field_action') ?></span>
+                                <span aria-hidden="true" x-text="sortIcon('action')"></span>
                             </button>
                         </th>
                         <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('created_at')">
@@ -61,7 +74,10 @@
                 <tbody class="<?= esc(table_body_class()) ?>">
                     <template x-for="row in rows" :key="String(row.id ?? Math.random())">
                         <tr class="<?= esc(table_row_class()) ?>">
-                            <td class="<?= esc(table_td_class('primary')) ?>" x-text="String(row.name ?? '-')"></td>
+                            <td class="<?= esc(table_td_class('primary')) ?>"><code class="text-xs" x-text="String(row.code ?? '-')"></code></td>
+                            <td class="<?= esc(table_td_class('muted')) ?>" x-text="row.application_name || ('#' + (row.application_id ?? '?'))"></td>
+                            <td class="<?= esc(table_td_class('muted')) ?>" x-text="String(row.resource ?? '-')"></td>
+                            <td class="<?= esc(table_td_class('muted')) ?>" x-text="String(row.action ?? '-')"></td>
                             <td class="<?= esc(table_td_class('muted')) ?>" x-text="formatDate(row.created_at)"></td>
                             <td class="<?= esc(table_td_class()) ?>">
                                 <div class="flex items-center gap-2">

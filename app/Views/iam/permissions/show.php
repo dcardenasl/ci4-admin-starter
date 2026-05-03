@@ -27,8 +27,31 @@
 
         <dl class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm">
             <div>
-                <dt class="text-gray-500"><?= lang('Iam.field_name') ?></dt>
-                <dd class="mt-1 text-gray-900"><?= esc((string) ($permission['name'] ?? '-')) ?></dd>
+                <dt class="text-gray-500"><?= lang('Iam.field_code') ?></dt>
+                <dd class="mt-1 text-gray-900"><code class="text-xs"><?= esc((string) ($permission['code'] ?? '-')) ?></code></dd>
+            </div>
+            <div>
+                <dt class="text-gray-500"><?= lang('Iam.field_application') ?></dt>
+                <dd class="mt-1 text-gray-900">
+                    <?= esc((string) ($permission['application_name'] ?? '')) ?>
+                    <?php if (! empty($permission['application_id'])): ?>
+                        <span class="text-gray-500 text-xs">(#<?= (int) $permission['application_id'] ?>)</span>
+                    <?php else: ?>
+                        -
+                    <?php endif; ?>
+                </dd>
+            </div>
+            <div>
+                <dt class="text-gray-500"><?= lang('Iam.field_resource') ?></dt>
+                <dd class="mt-1 text-gray-900"><?= esc((string) ($permission['resource'] ?? '-')) ?></dd>
+            </div>
+            <div>
+                <dt class="text-gray-500"><?= lang('Iam.field_action') ?></dt>
+                <dd class="mt-1 text-gray-900"><?= esc((string) ($permission['action'] ?? '-')) ?></dd>
+            </div>
+            <div class="md:col-span-2">
+                <dt class="text-gray-500"><?= lang('Iam.field_description') ?></dt>
+                <dd class="mt-1 text-gray-900 whitespace-pre-line"><?= esc((string) ($permission['description'] ?? '-')) ?></dd>
             </div>
             <div>
                 <dt class="text-gray-500"><?= lang('TableColumns.created_at') ?></dt>
