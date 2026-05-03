@@ -26,7 +26,6 @@ final class UserCRUDTest extends CIUnitTestCase
                 'first_name' => 'Jane',
                 'last_name' => 'Doe',
                 'email' => 'jane@example.com',
-                'role' => 'admin',
             ])
             ->willReturn([
                 'ok'          => true,
@@ -48,7 +47,6 @@ final class UserCRUDTest extends CIUnitTestCase
             'first_name' => 'Jane',
             'last_name'  => 'Doe',
             'email'      => 'jane@example.com',
-            'role'       => 'admin',
         ]);
 
         $result->assertRedirectTo(site_url('admin/users'));
@@ -80,7 +78,6 @@ final class UserCRUDTest extends CIUnitTestCase
             'first_name' => 'Jane',
             'last_name'  => 'Doe',
             'email'      => 'jane@example.com',
-            'role'       => 'admin',
         ]);
 
         $result->assertRedirect();
@@ -95,7 +92,6 @@ final class UserCRUDTest extends CIUnitTestCase
             ->with('123', [
                 'first_name' => 'Jane',
                 'last_name' => 'Updated',
-                'role' => 'superadmin',
                 'email' => 'jane.updated@example.com',
             ])
             ->willReturn([
@@ -119,7 +115,6 @@ final class UserCRUDTest extends CIUnitTestCase
             'last_name'      => 'Updated',
             'email'          => 'jane.updated@example.com',
             'original_email' => 'jane@example.com',
-            'role'           => 'superadmin',
         ]);
 
         $result->assertRedirectTo(site_url('admin/users/123'));
@@ -137,8 +132,8 @@ final class UserCRUDTest extends CIUnitTestCase
                 'data'        => [],
                 'raw'         => '',
                 'headers'     => [],
-                'messages'    => ['Invalid role'],
-                'fieldErrors' => ['role' => 'Invalid role'],
+                'messages'    => ['Invalid email'],
+                'fieldErrors' => ['email' => 'Invalid email'],
             ]);
 
         Services::injectMock('userApiService', $userService);
@@ -152,7 +147,6 @@ final class UserCRUDTest extends CIUnitTestCase
             'last_name'      => 'Updated',
             'email'          => 'jane.updated@example.com',
             'original_email' => 'jane@example.com',
-            'role'           => 'superadmin',
         ]);
 
         $result->assertRedirect();
@@ -180,7 +174,6 @@ final class UserCRUDTest extends CIUnitTestCase
                         'email'      => 'user@example.com',
                         'first_name' => 'John',
                         'last_name'  => 'Doe',
-                        'role'       => 'user',
                         'status'     => 'approved',
                     ],
                 ],

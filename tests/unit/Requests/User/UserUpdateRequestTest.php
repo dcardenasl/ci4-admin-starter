@@ -19,7 +19,6 @@ final class UserUpdateRequestTest extends CIUnitTestCase
         $request = $this->createPostRequest([
             'first_name'     => 'Jane',
             'last_name'      => 'Doe',
-            'role'          => 'admin',
             'email'         => 'Jane@Example.com',
             'original_email' => 'jane@example.com',
         ]);
@@ -29,7 +28,6 @@ final class UserUpdateRequestTest extends CIUnitTestCase
 
         $this->assertSame('Jane', $payload['first_name']);
         $this->assertSame('Doe', $payload['last_name']);
-        $this->assertSame('admin', $payload['role']);
         $this->assertArrayNotHasKey('email', $payload);
     }
 
@@ -38,7 +36,6 @@ final class UserUpdateRequestTest extends CIUnitTestCase
         $request = $this->createPostRequest([
             'first_name'     => 'Jane',
             'last_name'      => 'Doe',
-            'role'          => 'admin',
             'email'         => 'jane.new@example.com',
             'original_email' => 'jane@example.com',
         ]);

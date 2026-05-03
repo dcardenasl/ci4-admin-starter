@@ -60,7 +60,6 @@ final class UserApiServiceTest extends CIUnitTestCase
                     'email'      => 'user@example.com',
                     'first_name' => 'John',
                     'last_name'  => 'Doe',
-                    'role'       => 'user',
                 ],
             ],
             'raw'         => '',
@@ -94,7 +93,6 @@ final class UserApiServiceTest extends CIUnitTestCase
                 'first_name' => 'Jane',
                 'last_name'  => 'Smith',
                 'email'      => 'jane@example.com',
-                'role'       => 'user',
             ])
             ->willReturn($expected);
 
@@ -103,7 +101,6 @@ final class UserApiServiceTest extends CIUnitTestCase
             'first_name' => 'Jane',
             'last_name'  => 'Smith',
             'email'      => 'jane@example.com',
-            'role'       => 'user',
         ]);
 
         $this->assertTrue($result['ok']);
@@ -116,7 +113,7 @@ final class UserApiServiceTest extends CIUnitTestCase
         $expected = [
             'ok'          => true,
             'status'      => 200,
-            'data'        => ['data' => ['id' => 123, 'role' => 'admin']],
+            'data'        => ['data' => ['id' => 123, 'first_name' => 'Updated']],
             'raw'         => '',
             'messages'    => [],
             'fieldErrors' => [],
@@ -125,15 +122,15 @@ final class UserApiServiceTest extends CIUnitTestCase
         $mock = $this->createMock(ApiClientInterface::class);
         $mock->expects($this->once())
             ->method('put')
-            ->with('/users/123', ['role' => 'admin'])
+            ->with('/users/123', ['first_name' => 'Updated'])
             ->willReturn($expected);
 
         $service = new UserApiService($mock);
-        $result = $service->update('123', ['role' => 'admin']);
+        $result = $service->update('123', ['first_name' => 'Updated']);
 
         $this->assertTrue($result['ok']);
         $this->assertSame(200, $result['status']);
-        $this->assertSame('admin', $result['data']['data']['role']);
+        $this->assertSame('Updated', $result['data']['data']['first_name']);
     }
 
     public function testDeleteUser(): void
