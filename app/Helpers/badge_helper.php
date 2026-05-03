@@ -135,30 +135,6 @@ if (! function_exists('localized_audit_severity')) {
     }
 }
 
-if (! function_exists('role_badge')) {
-    function role_badge(?string $role): string
-    {
-        return in_array(strtolower((string) $role), ['admin', 'superadmin'], true)
-            ? 'bg-brand-100 text-brand-800'
-            : 'bg-gray-100 text-gray-700';
-    }
-}
-
-if (! function_exists('localized_role')) {
-    function localized_role(?string $role): string
-    {
-        $raw = (string) $role;
-        $role = strtolower($raw);
-
-        return match ($role) {
-            'admin' => lang('Users.admin_role'),
-            'superadmin' => lang('Users.super_admin_role'),
-            'user'  => lang('Users.user_role'),
-            default => $raw,
-        };
-    }
-}
-
 if (! function_exists('health_tone_badge')) {
     /**
      * Health status colors and tones for API health indicators.
