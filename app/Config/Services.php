@@ -16,6 +16,8 @@ use App\Modules\Dashboard\Services\HealthApiService;
 use App\Modules\Dashboard\Services\HealthApiServiceInterface;
 use App\Modules\Files\Services\FileApiService;
 use App\Modules\Files\Services\FileApiServiceInterface;
+use App\Modules\Iam\Services\ApplicationApiService;
+use App\Modules\Iam\Services\ApplicationApiServiceInterface;
 use App\Modules\Iam\Services\AppUserMembershipApiService;
 use App\Modules\Iam\Services\AppUserMembershipApiServiceInterface;
 use App\Modules\Iam\Services\PermissionApiService;
@@ -183,5 +185,15 @@ class Services extends BaseService
         }
 
         return new AppUserMembershipApiService(static::apiClient());
+    }
+
+    public static function applicationApiService(bool $getShared = true): ApplicationApiServiceInterface
+    {
+        if ($getShared) {
+            /** @var ApplicationApiService */
+            return static::getSharedInstance('applicationApiService');
+        }
+
+        return new ApplicationApiService(static::apiClient());
     }
 }
