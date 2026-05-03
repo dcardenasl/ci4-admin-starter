@@ -159,12 +159,18 @@ The `app/Libraries/ApiClient.php` class is the heart of all API communication. I
 $session->set('access_token', $data['access_token']);
 $session->set('refresh_token', $data['refresh_token']);
 $session->set('token_expires_at', time() + $data['expires_in']);
-$session->set('user', $data['user']); // {id, email, first_name, last_name, avatar_url, role}
+$session->set('user', $data['user']); // {id, email, first_name, last_name, avatar_url, permissions: string[]}
+```
+
+The `user.permissions` array drives all UI gating — there is no longer a `role` field on the session user (or on the API user record). Use `has_permission(string $code)` from `app/Helpers/auth_helper.php` (loaded globally) to check access in views and controllers. Permission codes use a **dot separator**: `iam.admin-access`, `users.write`, `metrics.read`, etc.
+
+```php
+if (has_permission('iam.admin-access')) { /* show admin nav */ }
 ```
 
 **Filters:**
 - `AuthFilter` (`app/Filters/AuthFilter.php`): Verifies presence of `access_token` in session, redirects to `/login` if missing
-- `AdminFilter` (`app/Filters/AdminFilter.php`): Checks `session('user.role') === 'admin'`, redirects to `/dashboard` with error flash if not admin
+- `AdminFilter` (`app/Filters/AdminFilter.php`): Checks `has_permission('iam.admin-access')`, redirects to `/dashboard` with error flash otherwise (returns JSON 403 for AJAX)
 - `LocaleFilter` (`app/Filters/LocaleFilter.php`): Reads `session('locale')`, validates against supported locales, sets the language for the current request
 
 All filters are registered in `app/Config/Filters.php`. `csrf` and `locale` run globally on every request; `auth` and `admin` are applied per route group.
@@ -304,6 +310,9 @@ All modules are fully implemented:
 | Audit (admin) | `AuditController` | `GET /admin/audit`, `/admin/audit/{id}`, `/admin/audit/entity/{type}/{id}` |
 | API Keys (admin) | `ApiKeyController` | Full CRUD under `/admin/api-keys` |
 | Metrics (admin) | `MetricsController` | `GET /admin/metrics` |
+| IAM — Roles (admin) | `Iam\RoleController` | Full CRUD + `/admin/iam/roles/{id}/permissions/(attach\|{pid}/detach)` |
+| IAM — Permissions (admin) | `Iam\PermissionController` | Full CRUD under `/admin/iam/permissions` |
+| IAM — Memberships (admin) | `Iam\AppUserMembershipController` | Full CRUD + `/admin/iam/memberships/{id}/roles/(attach\|{rid}/detach)` |
 | Language | `LanguageController` | `GET /language/set` |
 
 ## File Locations & Patterns
@@ -328,6 +337,7 @@ The project uses a **modular architecture** where each feature is self-contained
 - `app/Modules/Audit/` — Audit logs (admin-only)
 - `app/Modules/ApiKeys/` — API key management (admin-only)
 - `app/Modules/Metrics/` — Metrics and analytics dashboards (admin-only)
+- `app/Modules/Iam/` — Identity & Access management: Roles, Permissions, Memberships (admin-only). Sidebar section "Identity & Access" surfaces these. Detail pages include M2M attach/detach UI for roles↔permissions and memberships↔roles. The user detail page (`Users` module) lists each user's memberships with a "Manage roles" link to the membership detail.
 - `app/Modules/Language/` — Internationalization (locale switching)
 
 **Scaffolding contract — collision rejection (`bin/make-module.sh` / `bin/remove-module.sh`):**
