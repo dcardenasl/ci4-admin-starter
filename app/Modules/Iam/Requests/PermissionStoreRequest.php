@@ -10,20 +10,28 @@ class PermissionStoreRequest extends BaseFormRequest
 {
     protected function fields(): array
     {
-        return ['name'];
+        return ['application_id', 'code', 'resource', 'action', 'description'];
     }
 
     public function rules(): array
     {
         return [
-            'name' => 'required|min_length[2]|max_length[255]',
+            'application_id' => 'required|is_natural_no_zero',
+            'code'           => 'required|min_length[2]|max_length[100]',
+            'resource'       => 'required|min_length[1]|max_length[50]',
+            'action'         => 'required|min_length[1]|max_length[50]',
+            'description'    => 'permit_empty|max_length[500]',
         ];
     }
 
     public function payload(): array
     {
         return [
-            'name' => $this->postString('name'),
+            'application_id' => $this->postInt('application_id'),
+            'code'           => $this->postString('code'),
+            'resource'       => $this->postString('resource'),
+            'action'         => $this->postString('action'),
+            'description'    => $this->postString('description'),
         ];
     }
 }

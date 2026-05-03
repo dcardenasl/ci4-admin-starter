@@ -85,7 +85,16 @@ return [
     'field_resource'                    => 'Recurso',
     'field_action'                      => 'Acción',
     'field_description'                 => 'Descripción',
+    'field_user'                        => 'Usuario',
     'field_user_id'                     => 'ID de usuario',
+    'field_application'                 => 'Aplicación',
     'field_application_id'              => 'ID de aplicación',
     'field_status'                      => 'Estado',
+
+    // Lookup empty states
+    'no_applications'                   => 'No hay aplicaciones disponibles. Ejecuta el seeder de IAM para crear la aplicación por defecto.',
+    'no_users'                          => 'No hay usuarios disponibles. Crea un usuario primero.',
+    'application_help'                  => 'La aplicación a la que pertenece este recurso.',
+    'role_global_label'                 => 'Global (sin aplicación)',
+    'system_role_notice'                => 'Rol del sistema: las ediciones son limitadas y no se puede eliminar.',
 ];

@@ -8,6 +8,7 @@ use App\Controllers\BaseWebController;
 use App\Modules\Iam\Requests\PermissionStoreRequest;
 use App\Modules\Iam\Requests\PermissionUpdateRequest;
 use App\Modules\Iam\Services\PermissionApiServiceInterface;
+use App\Modules\Iam\Support\IamLookups;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -16,11 +17,13 @@ use Psr\Log\LoggerInterface;
 class PermissionController extends BaseWebController
 {
     protected PermissionApiServiceInterface $permissionService;
+    protected IamLookups $lookups;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger): void
     {
         parent::initController($request, $response, $logger);
         $this->permissionService = service('permissionApiService');
+        $this->lookups           = new IamLookups();
     }
 
     public function index(): string
@@ -33,30 +36,54 @@ class PermissionController extends BaseWebController
 
     public function data(): ResponseInterface
     {
-        return $this->tableDataResponse(
-            [],
-            ['name', 'created_at'],
-            fn (array $params) => $this->permissionService->list($params),
-        );
+        $tableState = $this->resolveTableState([], ['code', 'resource', 'action', 'application_id', 'created_at']);
+        $params     = $this->buildTableApiParams($tableState);
+        $response   = $this->safeApiCall(fn () => $this->permissionService->list($params));
+
+        $appNames = $this->lookups->applicationNames();
+        $body     = is_array($response['data'] ?? null) ? $response['data'] : [];
+        if (isset($body['data']) && is_array($body['data'])) {
+            $body['data'] = array_map(static function (array $row) use ($appNames): array {
+                $appId               = (int) ($row['application_id'] ?? 0);
+                $row['application_name'] = $appNames[$appId] ?? null;
+                return $row;
+            }, $body['data']);
+        }
+
+        $response['data'] = $body;
+        unset($response['raw']);
+
+        return $this->passthroughApiJsonResponse($response);
     }
 
     public function show(string $id): string
     {
         $response = $this->safeApiCall(fn () => $this->permissionService->get($id));
 
-        return $this->renderResourceShow(
-            'iam/permissions/show',
-            lang('Iam.permissions_details'),
-            'permission',
-            $response,
-            lang('Iam.permissions_not_found'),
-        );
+        if (! ($response['ok'] ?? false)) {
+            return $this->render('iam/permissions/show', [
+                'title'      => lang('Iam.permissions_details'),
+                'permission' => [],
+                'error'      => $this->firstMessage($response, lang('Iam.permissions_not_found')),
+            ]);
+        }
+
+        $permission = $this->extractData($response);
+        $appId      = (int) ($permission['application_id'] ?? 0);
+        $appNames   = $this->lookups->applicationNames();
+        $permission['application_name'] = $appNames[$appId] ?? null;
+
+        return $this->render('iam/permissions/show', [
+            'title'      => lang('Iam.permissions_details'),
+            'permission' => $permission,
+        ]);
     }
 
     public function create(): string
     {
         return $this->render('iam/permissions/create', [
-            'title' => lang('Iam.permissions_create'),
+            'title'        => lang('Iam.permissions_create'),
+            'applications' => $this->lookups->applications(),
         ]);
     }
 
@@ -86,8 +113,9 @@ class PermissionController extends BaseWebController
         }
 
         return $this->render('iam/permissions/edit', [
-            'title' => lang('Iam.permissions_edit'),
-            'item'  => $this->extractData($response),
+            'title'        => lang('Iam.permissions_edit'),
+            'item'         => $this->extractData($response),
+            'applications' => $this->lookups->applications(),
         ]);
     }
 

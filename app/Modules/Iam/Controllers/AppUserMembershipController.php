@@ -9,6 +9,7 @@ use App\Modules\Iam\Requests\AppUserMembershipStoreRequest;
 use App\Modules\Iam\Requests\AppUserMembershipUpdateRequest;
 use App\Modules\Iam\Services\AppUserMembershipApiServiceInterface;
 use App\Modules\Iam\Services\RoleApiServiceInterface;
+use App\Modules\Iam\Support\IamLookups;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -18,12 +19,14 @@ class AppUserMembershipController extends BaseWebController
 {
     protected AppUserMembershipApiServiceInterface $appUserMembershipService;
     protected RoleApiServiceInterface $roleService;
+    protected IamLookups $lookups;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger): void
     {
         parent::initController($request, $response, $logger);
         $this->appUserMembershipService = service('appUserMembershipApiService');
-        $this->roleService = service('roleApiService');
+        $this->roleService              = service('roleApiService');
+        $this->lookups                  = new IamLookups();
     }
 
     public function index(): string
@@ -36,11 +39,28 @@ class AppUserMembershipController extends BaseWebController
 
     public function data(): ResponseInterface
     {
-        return $this->tableDataResponse(
-            [],
-            ['name', 'created_at'],
-            fn (array $params) => $this->appUserMembershipService->list($params),
-        );
+        $tableState = $this->resolveTableState([], ['user_id', 'application_id', 'status', 'created_at']);
+        $params     = $this->buildTableApiParams($tableState);
+        $response   = $this->safeApiCall(fn () => $this->appUserMembershipService->list($params));
+
+        $appNames   = $this->lookups->applicationNames();
+        $userLabels = $this->lookups->userLabels();
+        $body       = is_array($response['data'] ?? null) ? $response['data'] : [];
+        if (isset($body['data']) && is_array($body['data'])) {
+            $body['data'] = array_map(static function (array $row) use ($appNames, $userLabels): array {
+                $appId               = (int) ($row['application_id'] ?? 0);
+                $userId              = (int) ($row['user_id'] ?? 0);
+                $row['application_name'] = $appNames[$appId] ?? null;
+                $row['user_label']       = $userLabels[$userId] ?? null;
+
+                return $row;
+            }, $body['data']);
+        }
+
+        $response['data'] = $body;
+        unset($response['raw']);
+
+        return $this->passthroughApiJsonResponse($response);
     }
 
     public function show(string $id): string
@@ -59,12 +79,18 @@ class AppUserMembershipController extends BaseWebController
         $allRolesResponse = $this->safeApiCall(fn () => $this->roleService->list(['limit' => 200]));
 
         $assignedRoles = $this->extractItems($assignedResponse);
-        $allRoles = $this->extractItems($allRolesResponse);
-        $assignedIds = array_map(static fn (array $r): int => (int) ($r['id'] ?? 0), $assignedRoles);
+        $allRoles      = $this->extractItems($allRolesResponse);
+        $assignedIds   = array_map(static fn (array $r): int => (int) ($r['id'] ?? 0), $assignedRoles);
+
+        $membership                     = $this->extractData($response);
+        $appId                          = (int) ($membership['application_id'] ?? 0);
+        $userId                         = (int) ($membership['user_id'] ?? 0);
+        $membership['application_name'] = $this->lookups->applicationNames()[$appId] ?? null;
+        $membership['user_label']       = $this->lookups->userLabels()[$userId] ?? null;
 
         return $this->render('iam/memberships/show', [
             'title'             => lang('Iam.app_user_memberships_details'),
-            'appUserMembership' => $this->extractData($response),
+            'appUserMembership' => $membership,
             'allRoles'          => $allRoles,
             'assignedRoleIds'   => $assignedIds,
         ]);
@@ -73,7 +99,9 @@ class AppUserMembershipController extends BaseWebController
     public function create(): string
     {
         return $this->render('iam/memberships/create', [
-            'title' => lang('Iam.app_user_memberships_create'),
+            'title'        => lang('Iam.app_user_memberships_create'),
+            'applications' => $this->lookups->applications(),
+            'users'        => $this->lookups->users(),
         ]);
     }
 
@@ -103,8 +131,10 @@ class AppUserMembershipController extends BaseWebController
         }
 
         return $this->render('iam/memberships/edit', [
-            'title' => lang('Iam.app_user_memberships_edit'),
-            'item'  => $this->extractData($response),
+            'title'        => lang('Iam.app_user_memberships_edit'),
+            'item'         => $this->extractData($response),
+            'applications' => $this->lookups->applications(),
+            'users'        => $this->lookups->users(),
         ]);
     }
 
@@ -140,7 +170,7 @@ class AppUserMembershipController extends BaseWebController
     public function attachRoles(string $id): RedirectResponse
     {
         $rawIds = $this->request->getPost('role_ids');
-        $ids = is_array($rawIds) ? array_values(array_map('intval', $rawIds)) : [];
+        $ids    = is_array($rawIds) ? array_values(array_map('intval', $rawIds)) : [];
 
         if ($ids === []) {
             return redirect()->to(route_to('admin.iam.memberships.show', $id))

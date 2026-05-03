@@ -10,20 +10,24 @@ class AppUserMembershipStoreRequest extends BaseFormRequest
 {
     protected function fields(): array
     {
-        return ['name'];
+        return ['user_id', 'application_id', 'status'];
     }
 
     public function rules(): array
     {
         return [
-            'name' => 'required|min_length[2]|max_length[255]',
+            'user_id'        => 'required|is_natural_no_zero',
+            'application_id' => 'required|is_natural_no_zero',
+            'status'         => 'permit_empty|max_length[255]',
         ];
     }
 
     public function payload(): array
     {
         return [
-            'name' => $this->postString('name'),
+            'user_id'        => $this->postInt('user_id'),
+            'application_id' => $this->postInt('application_id'),
+            'status'         => $this->postString('status'),
         ];
     }
 }

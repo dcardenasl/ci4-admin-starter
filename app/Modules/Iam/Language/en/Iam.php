@@ -85,7 +85,16 @@ return [
     'field_resource'                    => 'Resource',
     'field_action'                      => 'Action',
     'field_description'                 => 'Description',
+    'field_user'                        => 'User',
     'field_user_id'                     => 'User ID',
+    'field_application'                 => 'Application',
     'field_application_id'              => 'Application ID',
     'field_status'                      => 'Status',
+
+    // Lookup empty states
+    'no_applications'                   => 'No applications available. Run the IAM seeder to create the default application.',
+    'no_users'                          => 'No users available. Create a user first.',
+    'application_help'                  => 'The application this entity belongs to.',
+    'role_global_label'                 => 'Global (no application)',
+    'system_role_notice'                => 'System role: edits are limited and the role cannot be deleted.',
 ];

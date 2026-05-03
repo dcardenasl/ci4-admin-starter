@@ -10,20 +10,28 @@ class RoleStoreRequest extends BaseFormRequest
 {
     protected function fields(): array
     {
-        return ['name'];
+        return ['application_id', 'code', 'name', 'description'];
     }
 
     public function rules(): array
     {
         return [
-            'name' => 'required|min_length[2]|max_length[255]',
+            'application_id' => 'permit_empty|is_natural_no_zero',
+            'code'           => 'required|min_length[2]|max_length[100]',
+            'name'           => 'required|min_length[2]|max_length[100]',
+            'description'    => 'permit_empty|max_length[500]',
         ];
     }
 
     public function payload(): array
     {
+        $appIdRaw = trim((string) $this->request->getPost('application_id'));
+
         return [
-            'name' => $this->postString('name'),
+            'application_id' => $appIdRaw === '' ? null : (int) $appIdRaw,
+            'code'           => $this->postString('code'),
+            'name'           => $this->postString('name'),
+            'description'    => $this->postString('description'),
         ];
     }
 }
