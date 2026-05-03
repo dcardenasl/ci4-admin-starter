@@ -21,22 +21,5 @@
             <?php endforeach; ?>
         </select>
     </div>
-    <div>
-        <label class="<?= esc(filter_label_class()) ?>"><?= lang('Users.role') ?></label>
-        <select name="role" class="<?= esc(filter_input_class()) ?>">
-            <option value=""><?= lang('Users.all_roles') ?></option>
-            <?php $role = (string) request()->getGet('role'); ?>
-            <?php foreach (($roleOptions ?? []) as $option): ?>
-                <?php
-                $value = (string) ($option['value'] ?? '');
-                if ($value === '') {
-                    continue;
-                }
-                $label = (string) ($option['label'] ?? $value);
-                ?>
-                <option value="<?= esc($value) ?>" <?= $role === $value ? 'selected' : '' ?>><?= esc($label) ?></option>
-            <?php endforeach; ?>
-        </select>
-    </div>
     <?= view('layouts/partials/filter_limit', ['limitOptions' => $limitOptions ?? [10, 25, 50, 100]]) ?>
 </div>

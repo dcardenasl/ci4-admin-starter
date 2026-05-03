@@ -10,7 +10,7 @@ class UserStoreRequest extends BaseFormRequest
 {
     protected function fields(): array
     {
-        return ['first_name', 'last_name', 'email', 'role'];
+        return ['first_name', 'last_name', 'email'];
     }
 
     public function rules(): array
@@ -19,7 +19,6 @@ class UserStoreRequest extends BaseFormRequest
             'first_name' => 'required|min_length[2]|max_length[100]',
             'last_name'  => 'required|min_length[2]|max_length[100]',
             'email'     => 'required|valid_email',
-            'role'      => 'required|in_list[user,admin,superadmin]',
         ];
     }
 
@@ -29,7 +28,6 @@ class UserStoreRequest extends BaseFormRequest
             'first_name' => $this->postString('first_name'),
             'last_name'  => $this->postString('last_name'),
             'email'     => $this->postString('email'),
-            'role'      => $this->postString('role'),
         ];
     }
 }

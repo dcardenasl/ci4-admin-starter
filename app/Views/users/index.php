@@ -23,7 +23,6 @@
         'fieldsView' => 'users/partials/filters',
         'fieldsData' => [
             'statusOptions' => $statusOptions ?? [],
-            'roleOptions' => $roleOptions ?? [],
             'limitOptions' => $limitOptions ?? [10, 25, 50, 100],
         ],
         'submitLabel' => lang('App.search'),
@@ -55,12 +54,6 @@
                                 <span aria-hidden="true" x-text="sortIcon('email')"></span>
                             </button>
                         </th>
-                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('role')">
-                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('role')" aria-label="<?= esc(lang('TableA11y.sort_by', [lang('TableColumns.role')])) ?>">
-                                <span><?= lang('TableColumns.role') ?></span>
-                                <span aria-hidden="true" x-text="sortIcon('role')"></span>
-                            </button>
-                        </th>
                         <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('status')">
                             <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('status')" aria-label="<?= esc(lang('TableA11y.sort_by', [lang('TableColumns.status')])) ?>">
                                 <span><?= lang('TableColumns.status') ?></span>
@@ -81,9 +74,6 @@
                         <tr class="<?= esc(table_row_class()) ?>">
                             <td class="<?= esc(table_td_class('primary')) ?>" x-text="fullName(row)"></td>
                             <td class="<?= esc(table_td_class('muted')) ?>" x-text="String(row.email ?? '-')"></td>
-                            <td class="<?= esc(table_td_class()) ?>">
-                                <span class="inline-flex rounded-full px-2 py-1 text-xs" :class="roleBadgeClass(row.role)" x-text="roleLabel(row.role)"></span>
-                            </td>
                             <td class="<?= esc(table_td_class()) ?>">
                                 <span class="inline-flex rounded-full px-2 py-1 text-xs" :class="statusBadgeClass(row.status)" x-text="statusLabel(row.status)"></span>
                             </td>

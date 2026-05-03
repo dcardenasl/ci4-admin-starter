@@ -31,7 +31,6 @@ class UserController extends BaseWebController
     {
         return $this->render('users/index', [
             'title'         => lang('Users.title'),
-            'roleOptions'   => CatalogOptions::options([], 'users.roles', $this->defaultRoleOptions()),
             'statusOptions' => CatalogOptions::options([], 'users.statuses', $this->defaultStatusOptions()),
             'limitOptions'  => CatalogOptions::limitOptions([]),
         ]);
@@ -40,8 +39,8 @@ class UserController extends BaseWebController
     public function data(): ResponseInterface
     {
         return $this->tableDataResponse(
-            ['status', 'role'],
-            ['created_at', 'email', 'role', 'status', 'first_name', 'last_name'],
+            ['status'],
+            ['created_at', 'email', 'status', 'first_name', 'last_name'],
             fn (array $params) => $this->userService->list($params),
         );
     }
@@ -71,8 +70,7 @@ class UserController extends BaseWebController
     public function create(): string
     {
         return $this->render('users/create', [
-            'title'       => lang('Users.create'),
-            'roleOptions' => CatalogOptions::options([], 'users.roles', $this->defaultRoleOptions()),
+            'title' => lang('Users.create'),
         ]);
     }
 
@@ -105,9 +103,8 @@ class UserController extends BaseWebController
         }
 
         return $this->render('users/edit', [
-            'title'       => lang('Users.edit_user'),
-            'editUser'    => $this->extractData($response),
-            'roleOptions' => CatalogOptions::options([], 'users.roles', $this->defaultRoleOptions()),
+            'title'    => lang('Users.edit_user'),
+            'editUser' => $this->extractData($response),
         ]);
     }
 
@@ -151,18 +148,6 @@ class UserController extends BaseWebController
         }
 
         return redirect()->to(route_to('admin.users.show', $id))->with('success', lang('Users.approve_success'));
-    }
-
-    /**
-     * @return array<int, array{value:string,label:string}>
-     */
-    private function defaultRoleOptions(): array
-    {
-        return [
-            ['value' => 'user', 'label' => lang('Users.user_role')],
-            ['value' => 'admin', 'label' => lang('Users.admin_role')],
-            ['value' => 'superadmin', 'label' => lang('Users.super_admin_role')],
-        ];
     }
 
     /**
