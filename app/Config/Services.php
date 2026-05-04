@@ -18,8 +18,6 @@ use App\Modules\Files\Services\FileApiService;
 use App\Modules\Files\Services\FileApiServiceInterface;
 use App\Modules\Iam\Services\ApplicationApiService;
 use App\Modules\Iam\Services\ApplicationApiServiceInterface;
-use App\Modules\Iam\Services\AppUserMembershipApiService;
-use App\Modules\Iam\Services\AppUserMembershipApiServiceInterface;
 use App\Modules\Iam\Services\PermissionApiService;
 use App\Modules\Iam\Services\PermissionApiServiceInterface;
 use App\Modules\Iam\Services\RoleApiService;
@@ -177,16 +175,6 @@ class Services extends BaseService
 
         return new PermissionApiService(static::apiClient());
     }
-    public static function appUserMembershipApiService(bool $getShared = true): AppUserMembershipApiServiceInterface
-    {
-        if ($getShared) {
-            /** @var AppUserMembershipApiService */
-            return static::getSharedInstance('appUserMembershipApiService');
-        }
-
-        return new AppUserMembershipApiService(static::apiClient());
-    }
-
     public static function applicationApiService(bool $getShared = true): ApplicationApiServiceInterface
     {
         if ($getShared) {
