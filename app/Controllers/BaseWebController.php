@@ -37,10 +37,15 @@ abstract class BaseWebController extends BaseController
         $apiConfig = config('ApiClient');
 
         $this->viewData = [
-            'appName'          => $apiConfig->appName,
-            'user'             => $this->session->get(SessionKeys::USER->value),
-            'currentLocale'    => Services::language()->getLocale(),
-            'supportedLocales' => config('App')->supportedLocales,
+            'appName'             => $apiConfig->appName,
+            'user'                => $this->session->get(SessionKeys::USER->value),
+            'currentLocale'       => Services::language()->getLocale(),
+            'supportedLocales'    => config('App')->supportedLocales,
+            // Absolute expiration timestamp (UTC seconds) for the current
+            // access token. The layout publishes it as a <meta> tag so
+            // client-side JS can show a warning before the session lapses,
+            // instead of users getting a confusing 401 mid-action.
+            'sessionExpiresAt'    => $this->session->get(SessionKeys::EXPIRES_AT->value),
         ];
     }
 

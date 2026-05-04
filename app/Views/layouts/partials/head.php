@@ -4,6 +4,9 @@ $appName ??= config('App')->appName;
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><?= esc($title ?? $appName) ?></title>
+<?php if (!empty($sessionExpiresAt ?? null)): ?>
+<meta name="session-expires-at" content="<?= esc((string) (int) $sessionExpiresAt) ?>">
+<?php endif; ?>
 <link rel="stylesheet" href="/assets/css/app.css">
 <?php
 // Alpine and Lucide are vendored locally via `npm run build:vendor` so the
