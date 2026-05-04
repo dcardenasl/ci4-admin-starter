@@ -312,8 +312,9 @@ All modules are fully implemented:
 | Metrics (admin) | `MetricsController` | `GET /admin/metrics` |
 | IAM — Roles (admin) | `Iam\RoleController` | Full CRUD + `/admin/iam/roles/{id}/permissions/(attach\|{pid}/detach)` |
 | IAM — Permissions (admin) | `Iam\PermissionController` | Full CRUD under `/admin/iam/permissions` |
-| IAM — Memberships (admin) | `Iam\AppUserMembershipController` | Full CRUD + `/admin/iam/memberships/{id}/roles/(attach\|{rid}/detach)` |
 | Language | `LanguageController` | `GET /language/set` |
+
+> **Note:** Role assignment to users happens directly in the **Users** module (`UserController` accepts `role_ids[]` in store/update). The earlier separate `AppUserMembershipController` was removed when the API consolidated `app_user_memberships` + `membership_roles` into a single `user_roles` join table (API migrations `2026-05-03-100003` … `100007`).
 
 ## File Locations & Patterns
 
@@ -337,7 +338,7 @@ The project uses a **modular architecture** where each feature is self-contained
 - `app/Modules/Audit/` — Audit logs (admin-only)
 - `app/Modules/ApiKeys/` — API key management (admin-only)
 - `app/Modules/Metrics/` — Metrics and analytics dashboards (admin-only)
-- `app/Modules/Iam/` — Identity & Access management: Roles, Permissions, Memberships (admin-only). Sidebar section "Identity & Access" surfaces these. Detail pages include M2M attach/detach UI for roles↔permissions and memberships↔roles. The user detail page (`Users` module) lists each user's memberships with a "Manage roles" link to the membership detail.
+- `app/Modules/Iam/` — Identity & Access management: Roles, Permissions (admin-only). Sidebar section "Identity & Access" surfaces these. Detail pages include M2M attach/detach UI for roles↔permissions. Role assignment to users lives in the `Users` module — the user edit page surfaces the assignable roles (via the Users API service `assignableRoles()` endpoint) and submits `role_ids[]` directly.
 - `app/Modules/Language/` — Internationalization (locale switching)
 
 **Scaffolding contract — collision rejection (`bin/make-module.sh` / `bin/remove-module.sh`):**
