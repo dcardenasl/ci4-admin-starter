@@ -17,6 +17,7 @@ return [
     'search_placeholder'   => 'Buscar por nombre o prefijo...',
     'active'              => 'Activa',
     'inactive'            => 'Inactiva',
+    'read_only_badge'     => 'Acceso de solo lectura',
     'copy_success'        => 'Clave copiada al portapapeles',
     'create'              => 'Nueva API key',
     'edit'                => 'Editar API key',
