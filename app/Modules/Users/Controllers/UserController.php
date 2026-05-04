@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Modules\Users\Controllers;
 
 use App\Controllers\BaseWebController;
-use App\Modules\Iam\Services\AppUserMembershipApiServiceInterface;
 use App\Modules\Users\Requests\UserStoreRequest;
 use App\Modules\Users\Requests\UserUpdateRequest;
 use App\Modules\Users\Services\UserApiServiceInterface;
@@ -18,13 +17,11 @@ use Psr\Log\LoggerInterface;
 class UserController extends BaseWebController
 {
     protected UserApiServiceInterface $userService;
-    protected AppUserMembershipApiServiceInterface $membershipService;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger): void
     {
         parent::initController($request, $response, $logger);
         $this->userService = service('userApiService');
-        $this->membershipService = service('appUserMembershipApiService');
     }
 
     public function index(): string
@@ -51,26 +48,27 @@ class UserController extends BaseWebController
 
         if (! ($response['ok'] ?? false)) {
             return $this->render('users/show', [
-                'title'       => lang('Users.details'),
-                'user'        => [],
-                'memberships' => [],
-                'error'       => $this->firstMessage($response, lang('Users.not_found')),
+                'title' => lang('Users.details'),
+                'user'  => [],
+                'roles' => [],
+                'error' => $this->firstMessage($response, lang('Users.not_found')),
             ]);
         }
 
-        $membershipsResponse = $this->safeApiCall(fn () => $this->membershipService->listForUser($id));
+        $user = $this->extractData($response);
 
         return $this->render('users/show', [
-            'title'       => lang('Users.details'),
-            'user'        => $this->extractData($response),
-            'memberships' => $this->extractItems($membershipsResponse),
+            'title' => lang('Users.details'),
+            'user'  => $user,
+            'roles' => is_array($user['roles'] ?? null) ? $user['roles'] : [],
         ]);
     }
 
     public function create(): string
     {
         return $this->render('users/create', [
-            'title' => lang('Users.create'),
+            'title'           => lang('Users.create'),
+            'assignableRoles' => $this->fetchAssignableRoles(),
         ]);
     }
 
@@ -102,9 +100,16 @@ class UserController extends BaseWebController
             return redirect()->to(route_to('admin.users'))->with('error', lang('Users.not_found'));
         }
 
+        $user = $this->extractData($response);
+
         return $this->render('users/edit', [
-            'title'    => lang('Users.edit_user'),
-            'editUser' => $this->extractData($response),
+            'title'           => lang('Users.edit_user'),
+            'editUser'        => $user,
+            'currentRoleIds'  => array_map(
+                static fn (array $r) => (int) ($r['id'] ?? 0),
+                is_array($user['roles'] ?? null) ? $user['roles'] : []
+            ),
+            'assignableRoles' => $this->fetchAssignableRoles(),
         ]);
     }
 
@@ -148,6 +153,37 @@ class UserController extends BaseWebController
         }
 
         return redirect()->to(route_to('admin.users.show', $id))->with('success', lang('Users.approve_success'));
+    }
+
+    /**
+     * @return array<int, array{id:int, code:string, name:string}>
+     */
+    private function fetchAssignableRoles(): array
+    {
+        $response = $this->safeApiCall(fn () => $this->userService->assignableRoles());
+        if (! ($response['ok'] ?? false)) {
+            return [];
+        }
+
+        $items = $this->extractItems($response);
+        $items = $items === [] ? $this->extractData($response) : $items;
+        if (! is_array($items)) {
+            return [];
+        }
+
+        $roles = [];
+        foreach ($items as $row) {
+            if (! is_array($row) || ! isset($row['id'])) {
+                continue;
+            }
+            $roles[] = [
+                'id'   => (int) $row['id'],
+                'code' => (string) ($row['code'] ?? ''),
+                'name' => (string) ($row['name'] ?? ''),
+            ];
+        }
+
+        return $roles;
     }
 
     /**

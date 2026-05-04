@@ -30,6 +30,31 @@
             <?= render_field_error('email') ?>
         </div>
 
+        <div>
+            <span class="block text-sm font-medium text-gray-700"><?= lang('Users.roles') ?></span>
+            <p class="text-xs text-gray-500 mt-1"><?= lang('Users.roles_help_create') ?></p>
+            <?php $oldRoleIds = (array) old('role_ids', []); ?>
+            <?php if (! empty($assignableRoles)): ?>
+                <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <?php foreach ($assignableRoles as $role): ?>
+                        <label class="inline-flex items-start gap-2 text-sm rounded-lg border border-gray-200 px-3 py-2 hover:bg-gray-50">
+                            <input type="checkbox" name="role_ids[]" value="<?= (int) $role['id'] ?>"
+                                <?= in_array((string) $role['id'], array_map('strval', $oldRoleIds), true) ? 'checked' : '' ?>
+                                class="mt-1 rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                            <span>
+                                <span class="font-medium text-gray-900"><?= esc($role['name']) ?></span>
+                                <span class="block text-xs text-gray-500"><?= esc($role['code']) ?></span>
+                            </span>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+                <p class="text-xs text-gray-500 mt-2"><?= lang('Users.roles_help_default') ?></p>
+            <?php else: ?>
+                <p class="mt-2 text-sm text-gray-500 italic"><?= lang('Users.roles_none_assignable') ?></p>
+            <?php endif; ?>
+            <?= render_field_error('role_ids') ?>
+        </div>
+
         <div class="flex items-center gap-3 pt-2">
             <button type="submit" class="rounded-lg bg-brand-600 text-white px-4 py-2 text-sm hover:bg-brand-700"><?= lang('Users.create') ?></button>
             <a href="<?= route_to('admin.users') ?>" class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('App.cancel') ?></a>

@@ -44,4 +44,11 @@ return [
     'apps_and_roles'   => 'Apps & Roles',
     'no_memberships'   => 'This user has no application memberships yet.',
     'manage_roles'     => 'Manage roles',
+    'roles'            => 'Roles',
+    'no_roles'         => 'This user has no roles assigned.',
+    'roles_help_create'   => 'Pick one or more roles for this user. If you leave it empty, the default "user" role is assigned.',
+    'roles_help_edit'     => 'Update which roles this user has. Removing all roles re-assigns the default "user" role.',
+    'roles_help_default'  => 'Tip: leave the list empty to fall back to the default "user" role.',
+    'roles_none_assignable' => 'You don\'t have permission to assign any role.',
+    'roles_some_locked'   => 'This user has roles you cannot modify; they will be preserved.',
 ];

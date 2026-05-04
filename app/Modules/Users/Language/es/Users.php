@@ -44,4 +44,11 @@ return [
     'apps_and_roles'   => 'Apps y roles',
     'no_memberships'   => 'Este usuario aún no tiene membresías en ninguna aplicación.',
     'manage_roles'     => 'Administrar roles',
+    'roles'            => 'Roles',
+    'no_roles'         => 'Este usuario no tiene roles asignados.',
+    'roles_help_create'   => 'Selecciona uno o más roles para este usuario. Si lo dejas vacío, se asigna el rol "user" por defecto.',
+    'roles_help_edit'     => 'Actualiza los roles de este usuario. Si quitas todos, se vuelve a asignar el rol "user" por defecto.',
+    'roles_help_default'  => 'Consejo: déjalo vacío para usar el rol "user" por defecto.',
+    'roles_none_assignable' => 'No tienes permiso para asignar ningún rol.',
+    'roles_some_locked'   => 'Este usuario tiene roles que no puedes modificar; se conservarán.',
 ];

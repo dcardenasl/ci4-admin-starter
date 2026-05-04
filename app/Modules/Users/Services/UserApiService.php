@@ -46,6 +46,11 @@ class UserApiService extends ResourceApiService implements UserApiServiceInterfa
         return $response;
     }
 
+    public function assignableRoles(): array
+    {
+        return $this->apiClient->get('/users/assignable-roles');
+    }
+
     /**
      * @param array<string, mixed> $response
      */

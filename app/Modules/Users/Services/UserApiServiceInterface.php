@@ -35,4 +35,7 @@ interface UserApiServiceInterface
 
     /** @return ApiResponse */
     public function approve(int|string $id): array;
+
+    /** @return ApiResponse */
+    public function assignableRoles(): array;
 }

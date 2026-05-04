@@ -10,7 +10,7 @@ class UserUpdateRequest extends BaseFormRequest
 {
     protected function fields(): array
     {
-        return ['first_name', 'last_name', 'email', 'original_email'];
+        return ['first_name', 'last_name', 'email', 'original_email', 'role_ids'];
     }
 
     public function rules(): array
@@ -20,6 +20,7 @@ class UserUpdateRequest extends BaseFormRequest
             'last_name'      => 'required|min_length[2]|max_length[100]',
             'email'          => 'required|valid_email',
             'original_email' => 'required|valid_email',
+            'role_ids'       => 'permit_empty',
         ];
     }
 
@@ -37,6 +38,29 @@ class UserUpdateRequest extends BaseFormRequest
             $payload['email'] = $email;
         }
 
+        if ($this->request->getPost('role_ids') !== null) {
+            $payload['role_ids'] = $this->normalizedRoleIds();
+        }
+
         return $payload;
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function normalizedRoleIds(): array
+    {
+        $raw = $this->request->getPost('role_ids');
+        if (! is_array($raw)) {
+            return [];
+        }
+
+        $clean = [];
+        foreach ($raw as $value) {
+            if (is_numeric($value) && (int) $value > 0) {
+                $clean[] = (int) $value;
+            }
+        }
+        return array_values(array_unique($clean));
     }
 }

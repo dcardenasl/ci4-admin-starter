@@ -1,5 +1,5 @@
 <?php
-$memberships = $memberships ?? [];
+$roles = $roles ?? (is_array($user['roles'] ?? null) ? $user['roles'] : []);
 $user = $user ?? [];
 $canModifyTarget = ! empty($user) ? can_act_on_user($user) : false;
 ?>
@@ -71,28 +71,24 @@ $canModifyTarget = ! empty($user) ? can_act_on_user($user) : false;
             </dl>
 
             <div class="mt-6 border-t border-gray-100 pt-4">
-                <h4 class="text-sm font-semibold text-gray-900"><?= lang('Users.apps_and_roles') ?></h4>
-                <?php if ($memberships === []): ?>
-                    <p class="mt-2 text-sm text-gray-500"><?= lang('Users.no_memberships') ?></p>
+                <div class="flex items-center justify-between">
+                    <h4 class="text-sm font-semibold text-gray-900"><?= lang('Users.roles') ?></h4>
+                    <?php if ($canModifyTarget): ?>
+                        <a href="<?= route_to('admin.users.edit', $uid) ?>" class="text-xs text-brand-600 hover:text-brand-700"><?= lang('Users.manage_roles') ?> &rarr;</a>
+                    <?php endif; ?>
+                </div>
+
+                <?php if ($roles === []): ?>
+                    <p class="mt-2 text-sm text-gray-500"><?= lang('Users.no_roles') ?></p>
                 <?php else: ?>
-                    <ul class="mt-3 divide-y divide-gray-100 border border-gray-100 rounded-lg">
-                        <?php foreach ($memberships as $membership): ?>
-                            <?php $mid = (string) ($membership['id'] ?? ''); ?>
-                            <li class="flex items-center justify-between p-3 text-sm">
-                                <div>
-                                    <span class="text-gray-900 font-medium">App #<?= esc((string) ($membership['application_id'] ?? '-')) ?></span>
-                                    <span class="ml-2 inline-flex rounded-full px-2 py-1 text-xs <?= status_badge((string) ($membership['status'] ?? '')) ?>">
-                                        <?= esc(localized_status((string) ($membership['status'] ?? '-'))) ?>
-                                    </span>
-                                </div>
-                                <?php if ($canModifyTarget): ?>
-                                    <a href="<?= route_to('admin.iam.memberships.show', $mid) ?>" class="text-xs text-brand-600 hover:text-brand-700">
-                                        <?= lang('Users.manage_roles') ?> &rarr;
-                                    </a>
-                                <?php endif; ?>
-                            </li>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        <?php foreach ($roles as $role): ?>
+                            <span class="inline-flex items-center gap-2 rounded-full bg-brand-50 text-brand-700 border border-brand-100 px-3 py-1 text-xs">
+                                <span class="font-medium"><?= esc((string) ($role['name'] ?? '-')) ?></span>
+                                <span class="text-brand-500/80"><?= esc((string) ($role['code'] ?? '')) ?></span>
+                            </span>
                         <?php endforeach; ?>
-                    </ul>
+                    </div>
                 <?php endif; ?>
             </div>
         </section>
