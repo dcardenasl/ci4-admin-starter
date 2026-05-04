@@ -48,7 +48,7 @@ final class ApiKeyFiltersFallbackTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['permissions' => ['iam.admin-access']],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->get('/admin/api-keys/data?is_active=1');
 
         $result->assertStatus(200);
@@ -76,7 +76,7 @@ final class ApiKeyFiltersFallbackTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['permissions' => ['iam.admin-access']],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->get('/admin/api-keys/data?sort=-created_at');
 
         $result->assertStatus(200);
@@ -103,7 +103,7 @@ final class ApiKeyFiltersFallbackTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['permissions' => ['iam.admin-access']],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->get('/admin/api-keys/data?sort=unknown_field');
 
         $result->assertStatus(200);
@@ -140,7 +140,7 @@ final class ApiKeyFiltersFallbackTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['permissions' => ['iam.admin-access']],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->get('/admin/api-keys/data?limit=50&page=3');
 
         $result->assertStatus(200);

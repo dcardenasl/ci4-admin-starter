@@ -43,7 +43,7 @@ final class AuthLogoutFlowTest extends CIUnitTestCase
         $result = $this->withSession([
             'access_token' => 'token',
             'refresh_token' => 'refresh',
-            'user'         => ['id' => 1, 'email' => 'admin@example.com', 'permissions' => ['iam.admin-access']],
+            'user'         => ['id' => 1, 'email' => 'admin@example.com', 'permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->post('/logout', [
             csrf_token() => csrf_hash(),
         ]);
@@ -65,7 +65,7 @@ final class AuthLogoutFlowTest extends CIUnitTestCase
         $result = $this->withSession([
             'access_token' => 'token',
             'refresh_token' => 'refresh',
-            'user'         => ['id' => 1, 'email' => 'admin@example.com', 'permissions' => ['iam.admin-access']],
+            'user'         => ['id' => 1, 'email' => 'admin@example.com', 'permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->post('/logout', [
             csrf_token() => csrf_hash(),
         ]);

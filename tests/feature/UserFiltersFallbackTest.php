@@ -53,7 +53,7 @@ final class UserFiltersFallbackTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['permissions' => ['iam.admin-access']],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->get('/admin/users/data?status=active');
 
         $result->assertStatus(200);
@@ -88,7 +88,7 @@ final class UserFiltersFallbackTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['permissions' => ['iam.admin-access']],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->get('/admin/users/data?sort=-created_at');
 
         $result->assertStatus(200);
@@ -122,7 +122,7 @@ final class UserFiltersFallbackTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['permissions' => ['iam.admin-access']],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->get('/admin/users/data?sort=unknown_field');
 
         $result->assertStatus(200);
@@ -159,7 +159,7 @@ final class UserFiltersFallbackTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['permissions' => ['iam.admin-access']],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->get('/admin/users/data?limit=50&page=3');
 
         $result->assertStatus(200);

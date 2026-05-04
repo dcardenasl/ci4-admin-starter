@@ -53,7 +53,7 @@ final class AuditFiltersFallbackTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['permissions' => ['iam.admin-access']],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->get('/admin/audit/data?action=login');
 
         $result->assertStatus(200);
@@ -88,7 +88,7 @@ final class AuditFiltersFallbackTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['permissions' => ['iam.admin-access']],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->get('/admin/audit/data?sort=action');
 
         $result->assertStatus(200);
@@ -125,7 +125,7 @@ final class AuditFiltersFallbackTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['permissions' => ['iam.admin-access']],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->get('/admin/audit/data?limit=100&page=2');
 
         $result->assertStatus(200);

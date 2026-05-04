@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Modules\Iam\Services\AppUserMembershipApiService;
 use App\Modules\Users\Services\UserApiService;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\FeatureTestTrait;
@@ -26,6 +25,7 @@ final class UserCRUDTest extends CIUnitTestCase
                 'first_name' => 'Jane',
                 'last_name' => 'Doe',
                 'email' => 'jane@example.com',
+                'role_ids' => [],
             ])
             ->willReturn([
                 'ok'          => true,
@@ -41,7 +41,7 @@ final class UserCRUDTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['permissions' => ['iam.admin-access']],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->post('/admin/users', [
             csrf_token() => csrf_hash(),
             'first_name' => 'Jane',
@@ -72,7 +72,7 @@ final class UserCRUDTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['permissions' => ['iam.admin-access']],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->post('/admin/users', [
             csrf_token() => csrf_hash(),
             'first_name' => 'Jane',
@@ -108,7 +108,7 @@ final class UserCRUDTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['permissions' => ['iam.admin-access']],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->post('/admin/users/123', [
             csrf_token()     => csrf_hash(),
             'first_name'     => 'Jane',
@@ -140,7 +140,7 @@ final class UserCRUDTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['permissions' => ['iam.admin-access']],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->post('/admin/users/123', [
             csrf_token()     => csrf_hash(),
             'first_name'     => 'Jane',
@@ -183,26 +183,11 @@ final class UserCRUDTest extends CIUnitTestCase
                 'fieldErrors' => [],
             ]);
 
-        $membershipService = $this->createMock(AppUserMembershipApiService::class);
-        $membershipService->expects($this->once())
-            ->method('listForUser')
-            ->with('123')
-            ->willReturn([
-                'ok'          => true,
-                'status'      => 200,
-                'data'        => ['data' => []],
-                'raw'         => '',
-                'headers'     => [],
-                'messages'    => [],
-                'fieldErrors' => [],
-            ]);
-
         Services::injectMock('userApiService', $userService);
-        Services::injectMock('appUserMembershipApiService', $membershipService);
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['permissions' => ['iam.admin-access']],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->get('/admin/users/123');
 
         $result->assertOK();
@@ -231,7 +216,7 @@ final class UserCRUDTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['permissions' => ['iam.admin-access']],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->get('/admin/users/999');
 
         $result->assertOK();
@@ -258,7 +243,7 @@ final class UserCRUDTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['permissions' => ['iam.admin-access']],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->get('/admin/users/999/edit');
 
         $result->assertRedirect();
@@ -286,7 +271,7 @@ final class UserCRUDTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['permissions' => ['iam.admin-access']],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->post('/admin/users/123/approve', [
             csrf_token() => csrf_hash(),
         ]);
@@ -316,7 +301,7 @@ final class UserCRUDTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['permissions' => ['iam.admin-access']],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->post('/admin/users/123/approve', [
             csrf_token() => csrf_hash(),
         ]);
@@ -346,7 +331,7 @@ final class UserCRUDTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['permissions' => ['iam.admin-access']],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->post('/admin/users/123/delete', [
             csrf_token() => csrf_hash(),
         ]);
@@ -376,7 +361,7 @@ final class UserCRUDTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['permissions' => ['iam.admin-access']],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->post('/admin/users/123/delete', [
             csrf_token() => csrf_hash(),
         ]);

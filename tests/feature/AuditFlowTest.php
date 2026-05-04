@@ -50,7 +50,7 @@ final class AuditFlowTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user' => ['permissions' => ['iam.admin-access']],
+            'user' => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->get('/admin/audit/77');
 
         $result->assertStatus(200);
@@ -62,7 +62,7 @@ final class AuditFlowTest extends CIUnitTestCase
     {
         $result = $this->withSession([
             'access_token' => 'token',
-            'user' => ['permissions' => ['iam.admin-access']],
+            'user' => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->get('/admin/audit/entity/user/15');
 
         $result->assertRedirectTo(site_url('admin/audit?search=user%2015'));

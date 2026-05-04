@@ -46,7 +46,7 @@ final class ProfileFlowTest extends CIUnitTestCase
             ->willReturn([
                 'ok'          => true,
                 'status'      => 200,
-                'data'        => ['data' => ['id' => 15, 'first_name' => 'Admin', 'last_name' => 'Updated', 'email' => 'admin@example.com', 'permissions' => ['iam.admin-access']]],
+                'data'        => ['data' => ['id' => 15, 'first_name' => 'Admin', 'last_name' => 'Updated', 'email' => 'admin@example.com', 'permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']]],
                 'raw'         => '',
                 'headers'     => [],
                 'messages'    => [],
@@ -57,7 +57,7 @@ final class ProfileFlowTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['id' => 15, 'email' => 'admin@example.com', 'permissions' => ['iam.admin-access']],
+            'user'         => ['id' => 15, 'email' => 'admin@example.com', 'permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->post('/profile', [
             csrf_token() => csrf_hash(),
             'first_name'     => 'Admin',

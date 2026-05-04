@@ -54,7 +54,7 @@ final class MetricsFlowTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user' => ['permissions' => ['iam.admin-access']],
+            'user' => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->get('/admin/metrics');
 
         $result->assertStatus(200);
@@ -94,7 +94,7 @@ final class MetricsFlowTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user' => ['permissions' => ['iam.admin-access']],
+            'user' => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->get('/admin/metrics?period=invalid');
 
         $result->assertStatus(200);
