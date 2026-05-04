@@ -5,14 +5,21 @@ declare(strict_types=1);
 namespace App\Modules\Iam\Support;
 
 /**
- * Per-request cache of IAM lookup data (applications + users) used to
- * populate <select> options and to enrich list rows with human names
- * instead of raw foreign-key IDs.
+ * Catalogue cache for IAM `<select>` dropdowns (applications + users).
+ *
+ * Combines a per-request memo with a cross-request shared cache to keep the
+ * admin from paginating the full catalogues on every form render. The cache
+ * is invalidated by callers that mutate users/applications via
+ * {@see invalidateUsers()} / {@see invalidateApplications()}.
  *
  * Kept narrow on purpose: only the fields admin views need to render.
  */
 final class IamLookups
 {
+    private const CACHE_KEY_APPS  = 'iam_lookups_apps_v1';
+    private const CACHE_KEY_USERS = 'iam_lookups_users_v1';
+    private const CACHE_TTL       = 120; // seconds
+
     /** @var list<array{id: int, name: string}>|null */
     private ?array $applications = null;
 
@@ -28,20 +35,41 @@ final class IamLookups
             return $this->applications;
         }
 
-        $items = $this->fetchAllPages(
+        $cache  = service('cache');
+        $cached = $cache->get(self::CACHE_KEY_APPS);
+        if (is_array($cached)) {
+            return $this->applications = self::normalizeApplications($cached);
+        }
+
+        $items              = $this->fetchAllPages(
             static fn (array $params): array => service('applicationApiService')->list($params),
             200
         );
+        $this->applications = self::normalizeApplications($items);
 
-        $this->applications = array_values(array_map(
-            static fn (array $row): array => [
-                'id'   => (int) ($row['id'] ?? 0),
-                'name' => (string) ($row['name'] ?? ''),
-            ],
-            $items
-        ));
+        $cache->save(self::CACHE_KEY_APPS, $this->applications, self::CACHE_TTL);
 
         return $this->applications;
+    }
+
+    /**
+     * @param  array<mixed, mixed>  $rows
+     * @return list<array{id: int, name: string}>
+     */
+    private static function normalizeApplications(array $rows): array
+    {
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            $result[] = [
+                'id'   => (int) ($row['id'] ?? 0),
+                'name' => (string) ($row['name'] ?? ''),
+            ];
+        }
+
+        return $result;
     }
 
     /**
@@ -66,31 +94,68 @@ final class IamLookups
             return $this->users;
         }
 
-        $items = $this->fetchAllPages(
+        $cache  = service('cache');
+        $cached = $cache->get(self::CACHE_KEY_USERS);
+        if (is_array($cached)) {
+            return $this->users = self::normalizeUsers($cached);
+        }
+
+        $items       = $this->fetchAllPages(
             static fn (array $params): array => service('userApiService')->list($params),
             500
         );
+        $this->users = self::normalizeUsers($items);
 
-        $this->users = array_values(array_map(
-            static function (array $row): array {
-                $first = trim((string) ($row['first_name'] ?? ''));
-                $last  = trim((string) ($row['last_name'] ?? ''));
-                $email = (string) ($row['email'] ?? '');
-                $name  = trim($first . ' ' . $last);
-                $label = $name === '' ? $email : sprintf('%s <%s>', $name, $email);
-
-                return [
-                    'id'         => (int) ($row['id'] ?? 0),
-                    'email'      => $email,
-                    'first_name' => $first,
-                    'last_name'  => $last,
-                    'label'      => $label,
-                ];
-            },
-            $items
-        ));
+        $cache->save(self::CACHE_KEY_USERS, $this->users, self::CACHE_TTL);
 
         return $this->users;
+    }
+
+    /**
+     * @param  array<mixed, mixed>  $rows
+     * @return list<array{id: int, email: string, first_name: string, last_name: string, label: string}>
+     */
+    private static function normalizeUsers(array $rows): array
+    {
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            $first = trim((string) ($row['first_name'] ?? ''));
+            $last  = trim((string) ($row['last_name'] ?? ''));
+            $email = (string) ($row['email'] ?? '');
+            $name  = trim($first . ' ' . $last);
+            $label = $name === '' ? $email : sprintf('%s <%s>', $name, $email);
+
+            $result[] = [
+                'id'         => (int) ($row['id'] ?? 0),
+                'email'      => $email,
+                'first_name' => $first,
+                'last_name'  => $last,
+                'label'      => $label,
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * Drop the cached user catalogue. Call after any successful create/update/
+     * delete on a user to keep dropdowns in sync within {@see CACHE_TTL}.
+     */
+    public static function invalidateUsers(): void
+    {
+        service('cache')->delete(self::CACHE_KEY_USERS);
+    }
+
+    /**
+     * Drop the cached application catalogue. Apps rarely change, but call this
+     * if an application is created/renamed.
+     */
+    public static function invalidateApplications(): void
+    {
+        service('cache')->delete(self::CACHE_KEY_APPS);
     }
 
     /**
