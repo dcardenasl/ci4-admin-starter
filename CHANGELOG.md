@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **`AdminFilter`** no longer hardcodes the admin-permission whitelist. The list of permission codes that grant admin entry now lives in `Config\AdminAccess::$permissions` (env-overridable via `ADMIN_PERMISSIONS`), so adding a new admin module no longer requires editing the filter source.
+- **`FileUploadRequest`** performs two-stage MIME validation: (1) the standard CI4 `mime_in[]` rule against the client-reported MIME, then (2) a fileinfo-based real-MIME check via `checkRealMime()` against the per-extension whitelist. A `evil.php` renamed to `evil.jpg` with a forged `Content-Type` is now rejected.
+- **`Config\Security::$regenerate = false`** is preserved (multi-tab admin workflow), but the long comment on the property now documents the trade-off explicitly so a future audit doesn't re-flag it.
+- **`files/partials/list_section.php`** view-mode preference moved from `localStorage` to `sessionStorage` — aligns with the architecture rule of not stashing state outside the server-side session, and avoids cross-user persistence on shared computers.
+- **`composer.json`** requires CodeIgniter `^4.5` (was `^4.4`). The lock file already shipped 4.7.x; this just tightens the floor and unblocks 4.5+ features.
+- **Tailwind, Alpine, and Lucide** are now built or vendored locally (`npm run build:all`). The layout falls back to the pinned jsdelivr CDN URLs only when the vendored copies are missing — keeping a fresh-clone smoke path while removing the runtime CDN dependency from production.
+
+### Added
+- **`Config\AdminAccess`** — central, env-overridable list of permission codes that grant entry to `/admin/*`. Reads `ADMIN_PERMISSIONS` (comma-separated) from `.env`.
+- **`<meta name="session-expires-at">`** emitted by `BaseWebController.viewData` and consumed by `bootSessionExpiryWatcher()` in `app.js`. Logs a console warning + emits a `session:expiring-soon` window event 60s before the JWT expires; downstream UI can hook this to show a banner / save-warning. Avoids the surprise 401 mid-action.
+- **`HEALTHCHECK`** in the Dockerfile — probes the PHP-FPM listener via PHP `fsockopen` (no curl/nc dependency).
+- **`build:vendor` / `build:all`** npm scripts that copy `node_modules/alpinejs/dist/cdn.min.js` and `node_modules/lucide/dist/umd/lucide.min.js` into `public/assets/vendor/`.
+- **5 new MIME-validation tests** in `tests/unit/Modules/Files/Requests/FileUploadRequestTest.php`: real-MIME mismatch detection for renamed `.php`, ZIP disguised as PDF, unknown extensions, and consistent PNG happy-path.
+- **`AdminFilter` config-driven test** — verifies that overriding `Config\AdminAccess::$permissions` actually changes who passes the gate.
+
 ## [1.1.0] — 2026-04-30
 
 ### Added

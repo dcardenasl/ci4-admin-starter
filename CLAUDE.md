@@ -17,9 +17,9 @@ Browser → CI4 Admin Starter (port 8082) → ci4-api-starter API (port 8080)
 
 - **Framework:** CodeIgniter 4 (PHP 8.2+)
 - **Rendering:** Server-side PHP views
-- **Styling:** Tailwind CSS (CDN-based)
-- **Icons:** Lucide Icons (CDN-based)
-- **Interactivity:** Alpine.js (CDN-based)
+- **Styling:** Tailwind CSS — built locally via `npm run build:css` (output: `public/assets/css/app.css`)
+- **Icons:** Lucide Icons — vendored locally to `public/assets/vendor/lucide.min.js` via `npm run build:vendor`
+- **Interactivity:** Alpine.js — vendored locally to `public/assets/vendor/alpine.min.js` via `npm run build:vendor`. The layout transparently falls back to the pinned CDN URLs when a vendored copy is missing (e.g. on a fresh clone before `npm install`).
 - **Authentication:** JWT tokens stored in PHP sessions (server-side only)
 - **HTTP Client:** Custom ApiClient library with automatic token refresh
 - **i18n:** CodeIgniter 4 Language files (`en` / `es`)
@@ -76,7 +76,7 @@ Application will be available at: `http://localhost:8082`
 
 **Notes:**
 - Both terminal sessions should run in parallel during development
-- CSS must be built via npm (Tailwind) — the styles are not included in the CDN version used in production
+- CSS must be built via `npm run build:css` (Tailwind) and vendor JS via `npm run build:vendor` (Alpine + Lucide). Use `npm run build:all` for both. In CI / on first clone, run `npm ci && npm run build:all`.
 - Production builds use `npm run build:css` to generate minified CSS (see DEPLOYMENT.md)
 
 ### Testing
@@ -217,7 +217,7 @@ app/Views/
 │   ├── app.php                    # Authenticated layout (sidebar + navbar)
 │   ├── auth.php                   # Public layout (centered card)
 │   └── partials/
-│       ├── head.php               # Common <head>: Tailwind CDN, Alpine CDN, Lucide CDN, theme config
+│       ├── head.php               # Common <head>: built CSS, vendored Alpine + Lucide (CDN fallback), session-expires-at meta, theme config
 │       ├── sidebar.php            # Collapsible navigation sidebar
 │       ├── navbar.php             # Top bar with user dropdown and language switcher
 │       ├── flash_messages.php     # Toast notifications
@@ -360,13 +360,14 @@ The project uses a **modular architecture** where each feature is self-contained
 
 ## Security Considerations
 
-- JWT tokens MUST ONLY be stored in PHP sessions, never in cookies/localStorage accessible by JavaScript
-- CSRF protection enabled by default in CodeIgniter 4
-- Input validation required on all form submissions
-- Admin routes MUST use both `auth` and `admin` filters
-- File uploads validated by size (max 10 MB) before being passed to API
-- API app key stored only in `.env`; never exposed to client-side code
-- Never commit `.env` files or expose API URLs/secrets in client-side code
+- JWT tokens MUST ONLY be stored in PHP sessions, never in cookies/localStorage accessible by JavaScript. UI-only preferences (e.g. table-vs-grid view) may use `sessionStorage` (per-tab, ephemeral), but never `localStorage` — the audit caught one such regression in 2026-05.
+- CSRF protection enabled by default in CodeIgniter 4. `Config\Security::$regenerate = false` is **intentional** to keep multi-tab forms valid; see the long comment on that property for the trade-off.
+- Input validation required on all form submissions. File uploads cross-check `getMimeType()` (real, via fileinfo) against the per-extension whitelist in `FileUploadRequest::ALLOWED_EXTENSION_MIMES`, not just the client-reported `Content-Type`.
+- Admin routes MUST use both `auth` and `admin` filters. The list of permission codes that grant admin entry lives in `Config\AdminAccess::$permissions` (env-overridable via `ADMIN_PERMISSIONS`); `AdminFilter` reads it dynamically — do NOT hardcode the list back into the filter.
+- `<meta name="session-expires-at">` is emitted by `BaseWebController` so the JS in `bootSessionExpiryWatcher()` can warn the user 60s before the access token expires (event: `session:expiring-soon`). Avoids the "surprise 401 mid-action" UX.
+- File uploads validated by size (max 10 MB) before being passed to API.
+- API app key stored only in `.env`; never exposed to client-side code.
+- Never commit `.env` files or expose API URLs/secrets in client-side code.
 
 ## External API Reference
 
