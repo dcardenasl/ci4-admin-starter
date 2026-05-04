@@ -15,7 +15,7 @@ final class AdminFilterTest extends CIUnitTestCase
 {
     public function testAllowsUserWithIamAdminAccessPermission(): void
     {
-        session()->set('user', ['permissions' => ['iam.admin-access']]);
+        session()->set('user', ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']]);
 
         $filter = new AdminFilter();
         $result = $filter->before(service('request'));

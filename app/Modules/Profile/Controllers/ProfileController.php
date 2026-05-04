@@ -29,7 +29,7 @@ class ProfileController extends BaseWebController
     {
         $this->refreshUserSession();
         $user = session('user') ?? [];
-        $isAdmin = has_permission('iam.admin-access');
+        $isAdmin = has_permission('users.write');
 
         return $this->render('profile/index', [
             'title'   => lang('Profile.title'),
@@ -42,7 +42,7 @@ class ProfileController extends BaseWebController
     {
         $sessionUser = session('user') ?? [];
 
-        if (! has_permission('iam.admin-access')) {
+        if (! has_permission('users.write')) {
             return redirect()->to(route_to('profile'))->with('error', lang('Profile.update_not_allowed'));
         }
 

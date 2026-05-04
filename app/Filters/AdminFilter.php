@@ -11,12 +11,29 @@ use CodeIgniter\HTTP\ResponseInterface;
 
 class AdminFilter implements FilterInterface
 {
+    /**
+     * Web-side admin section gate. Anyone with at least one admin-level
+     * permission passes; finer-grained access (per resource) is enforced
+     * by the per-route `permission:<code>` filter or by the controller.
+     *
+     * Sidebar visibility is gated separately in `partials/sidebar.php`.
+     */
+    private const ADMIN_PERMISSIONS = ['users.read', 'audit.read', 'apikeys.read', 'metrics.read'];
+
     public function before(RequestInterface $request, $arguments = null)
     {
         helper('auth');
 
-        if (! has_permission('iam.admin-access')) {
-            log_message('debug', 'AdminFilter: missing iam.admin-access permission.');
+        $hasAny = false;
+        foreach (self::ADMIN_PERMISSIONS as $code) {
+            if (has_permission($code)) {
+                $hasAny = true;
+                break;
+            }
+        }
+
+        if (! $hasAny) {
+            log_message('debug', 'AdminFilter: actor has no admin-level permission.');
 
             if ($request instanceof IncomingRequest && $request->isAJAX()) {
                 return service('response')
