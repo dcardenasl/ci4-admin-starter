@@ -1,4 +1,8 @@
-<?php $memberships = $memberships ?? []; ?>
+<?php
+$memberships = $memberships ?? [];
+$user = $user ?? [];
+$canModifyTarget = ! empty($user) ? can_act_on_user($user) : false;
+?>
 <div class="mb-4">
     <a href="<?= route_to('admin.users') ?>" class="text-sm text-brand-600 hover:text-brand-700">&larr; <?= lang('Users.back_to_list') ?></a>
 </div>
@@ -15,11 +19,13 @@
             <div class="flex items-center justify-between">
                 <h3 class="text-lg font-semibold text-gray-900"><?= lang('Users.details') ?></h3>
                 <div class="flex items-center gap-2">
-                    <a href="<?= route_to('admin.users.edit', $uid) ?>" class="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('App.edit') ?></a>
-                    <form method="post" action="<?= route_to('admin.users.delete', $uid) ?>" x-data @submit.prevent="$store.confirm.show('<?= esc(lang('Users.confirm_delete'), 'js') ?>', () => $el.submit())">
-                        <?= csrf_field() ?>
-                        <button type="submit" class="rounded-lg bg-red-600 px-3 py-2 text-sm text-white hover:bg-red-700"><?= lang('App.delete') ?></button>
-                    </form>
+                    <?php if ($canModifyTarget): ?>
+                        <a href="<?= route_to('admin.users.edit', $uid) ?>" class="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('App.edit') ?></a>
+                        <form method="post" action="<?= route_to('admin.users.delete', $uid) ?>" x-data @submit.prevent="$store.confirm.show('<?= esc(lang('Users.confirm_delete'), 'js') ?>', () => $el.submit())">
+                            <?= csrf_field() ?>
+                            <button type="submit" class="rounded-lg bg-red-600 px-3 py-2 text-sm text-white hover:bg-red-700"><?= lang('App.delete') ?></button>
+                        </form>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -79,9 +85,11 @@
                                         <?= esc(localized_status((string) ($membership['status'] ?? '-'))) ?>
                                     </span>
                                 </div>
-                                <a href="<?= route_to('admin.iam.memberships.show', $mid) ?>" class="text-xs text-brand-600 hover:text-brand-700">
-                                    <?= lang('Users.manage_roles') ?> &rarr;
-                                </a>
+                                <?php if ($canModifyTarget): ?>
+                                    <a href="<?= route_to('admin.iam.memberships.show', $mid) ?>" class="text-xs text-brand-600 hover:text-brand-700">
+                                        <?= lang('Users.manage_roles') ?> &rarr;
+                                    </a>
+                                <?php endif; ?>
                             </li>
                         <?php endforeach; ?>
                     </ul>
@@ -98,7 +106,9 @@
                         <button type="submit" class="w-full rounded-lg bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700"><?= lang('Users.approve') ?></button>
                     </form>
                 <?php endif; ?>
-                <a href="<?= route_to('admin.users.edit', $uid) ?>" class="block w-full text-center rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('App.edit') ?></a>
+                <?php if ($canModifyTarget): ?>
+                    <a href="<?= route_to('admin.users.edit', $uid) ?>" class="block w-full text-center rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('App.edit') ?></a>
+                <?php endif; ?>
                 <a href="<?= route_to('admin.audit') . '?user_id=' . rawurlencode($uid) ?>" class="block w-full text-center rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('Users.view_audit') ?></a>
             </div>
         </section>
