@@ -23,15 +23,15 @@ $routes->group('admin/iam', ['filter' => ['auth', 'admin']], static function (Ro
     $routes->post('roles/(:segment)/permissions/attach', '\\App\\Modules\\Iam\\Controllers\\RoleController::attachPermissions/$1', ['as' => 'admin.iam.roles.permissions.attach']);
     $routes->post('roles/(:segment)/permissions/(:segment)/detach', '\\App\\Modules\\Iam\\Controllers\\RoleController::detachPermission/$1/$2', ['as' => 'admin.iam.roles.permissions.detach']);
 
-    // Permission
+    // Permission — read-only for admins; mutations require SuperAdmin.
     $routes->get('permissions', '\App\Modules\Iam\Controllers\PermissionController::index', ['as' => 'admin.iam.permissions']);
     $routes->get('permissions/data', '\App\Modules\Iam\Controllers\PermissionController::data', ['as' => 'admin.iam.permissions.data']);
-    $routes->get('permissions/create', '\App\Modules\Iam\Controllers\PermissionController::create', ['as' => 'admin.iam.permissions.create']);
-    $routes->post('permissions', '\App\Modules\Iam\Controllers\PermissionController::store', ['as' => 'admin.iam.permissions.store']);
     $routes->get('permissions/(:segment)', '\App\Modules\Iam\Controllers\PermissionController::show/$1', ['as' => 'admin.iam.permissions.show']);
-    $routes->get('permissions/(:segment)/edit', '\App\Modules\Iam\Controllers\PermissionController::edit/$1', ['as' => 'admin.iam.permissions.edit']);
-    $routes->post('permissions/(:segment)', '\App\Modules\Iam\Controllers\PermissionController::update/$1', ['as' => 'admin.iam.permissions.update']);
-    $routes->post('permissions/(:segment)/delete', '\App\Modules\Iam\Controllers\PermissionController::delete/$1', ['as' => 'admin.iam.permissions.delete']);
+    $routes->get('permissions/create', '\App\Modules\Iam\Controllers\PermissionController::create', ['as' => 'admin.iam.permissions.create', 'filter' => 'superadmin']);
+    $routes->post('permissions', '\App\Modules\Iam\Controllers\PermissionController::store', ['as' => 'admin.iam.permissions.store', 'filter' => 'superadmin']);
+    $routes->get('permissions/(:segment)/edit', '\App\Modules\Iam\Controllers\PermissionController::edit/$1', ['as' => 'admin.iam.permissions.edit', 'filter' => 'superadmin']);
+    $routes->post('permissions/(:segment)', '\App\Modules\Iam\Controllers\PermissionController::update/$1', ['as' => 'admin.iam.permissions.update', 'filter' => 'superadmin']);
+    $routes->post('permissions/(:segment)/delete', '\App\Modules\Iam\Controllers\PermissionController::delete/$1', ['as' => 'admin.iam.permissions.delete', 'filter' => 'superadmin']);
 
     // AppUserMembership
     $routes->get('memberships', '\App\Modules\Iam\Controllers\AppUserMembershipController::index', ['as' => 'admin.iam.memberships']);

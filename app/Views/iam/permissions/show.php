@@ -14,14 +14,16 @@
         <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-gray-900"><?= lang('Iam.permissions_details') ?></h3>
             <div class="flex items-center gap-2">
-                <a href="<?= route_to('admin.iam.permissions.edit', $itemId) ?>" class="<?= esc(action_button_class()) ?>"><?= lang('App.edit') ?></a>
-                <form method="post" action="<?= route_to('admin.iam.permissions.delete', $itemId) ?>" onsubmit="return confirm('<?= esc(lang('App.confirm_delete')) ?>');">
-                    <?= csrf_field() ?>
-                    <button type="submit" class="<?= esc(action_button_class('danger')) ?>">
-                        <?= ui_icon('trash', 'h-3.5 w-3.5') ?>
-                        <?= esc(lang('App.delete')) ?>
-                    </button>
-                </form>
+                <?php if (is_superadmin()): ?>
+                    <a href="<?= route_to('admin.iam.permissions.edit', $itemId) ?>" class="<?= esc(action_button_class()) ?>"><?= lang('App.edit') ?></a>
+                    <form method="post" action="<?= route_to('admin.iam.permissions.delete', $itemId) ?>" onsubmit="return confirm('<?= esc(lang('App.confirm_delete')) ?>');">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="<?= esc(action_button_class('danger')) ?>">
+                            <?= ui_icon('trash', 'h-3.5 w-3.5') ?>
+                            <?= esc(lang('App.delete')) ?>
+                        </button>
+                    </form>
+                <?php endif; ?>
             </div>
         </div>
 
