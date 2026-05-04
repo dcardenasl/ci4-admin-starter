@@ -40,17 +40,6 @@ class PermissionController extends BaseWebController
         $params     = $this->buildTableApiParams($tableState);
         $response   = $this->safeApiCall(fn () => $this->permissionService->list($params));
 
-        $appNames = $this->lookups->applicationNames();
-        $body     = is_array($response['data'] ?? null) ? $response['data'] : [];
-        if (isset($body['data']) && is_array($body['data'])) {
-            $body['data'] = array_map(static function (array $row) use ($appNames): array {
-                $appId               = (int) ($row['application_id'] ?? 0);
-                $row['application_name'] = $appNames[$appId] ?? null;
-                return $row;
-            }, $body['data']);
-        }
-
-        $response['data'] = $body;
         unset($response['raw']);
 
         return $this->passthroughApiJsonResponse($response);
@@ -69,9 +58,6 @@ class PermissionController extends BaseWebController
         }
 
         $permission = $this->extractData($response);
-        $appId      = (int) ($permission['application_id'] ?? 0);
-        $appNames   = $this->lookups->applicationNames();
-        $permission['application_name'] = $appNames[$appId] ?? null;
 
         return $this->render('iam/permissions/show', [
             'title'      => lang('Iam.permissions_details'),

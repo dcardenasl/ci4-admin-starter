@@ -43,18 +43,6 @@ class RoleController extends BaseWebController
         $params     = $this->buildTableApiParams($tableState);
         $response   = $this->safeApiCall(fn () => $this->roleService->list($params));
 
-        $appNames = $this->lookups->applicationNames();
-        $body     = is_array($response['data'] ?? null) ? $response['data'] : [];
-        if (isset($body['data']) && is_array($body['data'])) {
-            $body['data'] = array_map(static function (array $row) use ($appNames): array {
-                $appId               = (int) ($row['application_id'] ?? 0);
-                $row['application_name'] = $appId > 0 ? ($appNames[$appId] ?? null) : null;
-
-                return $row;
-            }, $body['data']);
-        }
-
-        $response['data'] = $body;
         unset($response['raw']);
 
         return $this->passthroughApiJsonResponse($response);
@@ -79,9 +67,7 @@ class RoleController extends BaseWebController
         $allPermissions      = $this->extractItems($allPermissionsResponse);
         $assignedIds         = array_map(static fn (array $p): int => (int) ($p['id'] ?? 0), $assignedPermissions);
 
-        $role                       = $this->extractData($response);
-        $appId                      = (int) ($role['application_id'] ?? 0);
-        $role['application_name']   = $appId > 0 ? ($this->lookups->applicationNames()[$appId] ?? null) : null;
+        $role = $this->extractData($response);
 
         return $this->render('iam/roles/show', [
             'title'                 => lang('Iam.roles_details'),

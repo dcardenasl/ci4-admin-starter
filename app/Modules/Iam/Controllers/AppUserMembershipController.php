@@ -43,21 +43,6 @@ class AppUserMembershipController extends BaseWebController
         $params     = $this->buildTableApiParams($tableState);
         $response   = $this->safeApiCall(fn () => $this->appUserMembershipService->list($params));
 
-        $appNames   = $this->lookups->applicationNames();
-        $userLabels = $this->lookups->userLabels();
-        $body       = is_array($response['data'] ?? null) ? $response['data'] : [];
-        if (isset($body['data']) && is_array($body['data'])) {
-            $body['data'] = array_map(static function (array $row) use ($appNames, $userLabels): array {
-                $appId               = (int) ($row['application_id'] ?? 0);
-                $userId              = (int) ($row['user_id'] ?? 0);
-                $row['application_name'] = $appNames[$appId] ?? null;
-                $row['user_label']       = $userLabels[$userId] ?? null;
-
-                return $row;
-            }, $body['data']);
-        }
-
-        $response['data'] = $body;
         unset($response['raw']);
 
         return $this->passthroughApiJsonResponse($response);
@@ -82,11 +67,7 @@ class AppUserMembershipController extends BaseWebController
         $allRoles      = $this->extractItems($allRolesResponse);
         $assignedIds   = array_map(static fn (array $r): int => (int) ($r['id'] ?? 0), $assignedRoles);
 
-        $membership                     = $this->extractData($response);
-        $appId                          = (int) ($membership['application_id'] ?? 0);
-        $userId                         = (int) ($membership['user_id'] ?? 0);
-        $membership['application_name'] = $this->lookups->applicationNames()[$appId] ?? null;
-        $membership['user_label']       = $this->lookups->userLabels()[$userId] ?? null;
+        $membership = $this->extractData($response);
 
         return $this->render('iam/memberships/show', [
             'title'             => lang('Iam.app_user_memberships_details'),
