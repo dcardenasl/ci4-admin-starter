@@ -38,10 +38,10 @@
             <p class="text-xs text-gray-500 mt-1"><?= lang('Users.roles_help_edit') ?></p>
             <?php
                 $oldRoleIds = (array) old('role_ids', $currentRoleIds ?? []);
-                $oldRoleIdsStr = array_map('strval', $oldRoleIds);
-                $assignableIds = array_map(static fn ($r) => (string) ($r['id'] ?? ''), $assignableRoles ?? []);
-                $hiddenLockedRoleIds = array_diff($oldRoleIdsStr, $assignableIds);
-            ?>
+$oldRoleIdsStr = array_map('strval', $oldRoleIds);
+$assignableIds = array_map(static fn ($r) => (string) ($r['id'] ?? ''), $assignableRoles ?? []);
+$hiddenLockedRoleIds = array_diff($oldRoleIdsStr, $assignableIds);
+?>
             <?php if (! empty($assignableRoles)): ?>
                 <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <?php foreach ($assignableRoles as $role): ?>

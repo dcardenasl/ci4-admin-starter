@@ -167,9 +167,6 @@ class UserController extends BaseWebController
 
         $items = $this->extractItems($response);
         $items = $items === [] ? $this->extractData($response) : $items;
-        if (! is_array($items)) {
-            return [];
-        }
 
         $roles = [];
         foreach ($items as $row) {

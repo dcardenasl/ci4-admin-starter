@@ -10,7 +10,7 @@
     },
     "require": {
         "php": "^8.2",
-        "codeigniter4/framework": "^4.4",
+        "codeigniter4/framework": "^4.5",
         "ext-curl": "*",
         "ext-fileinfo": "*",
         "ext-intl": "*",

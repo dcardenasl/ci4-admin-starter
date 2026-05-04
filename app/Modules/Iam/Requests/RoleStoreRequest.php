@@ -25,7 +25,8 @@ class RoleStoreRequest extends BaseFormRequest
 
     public function payload(): array
     {
-        $appIdRaw = trim((string) $this->request->getPost('application_id'));
+        $rawAppId = $this->request->getPost('application_id');
+        $appIdRaw = is_scalar($rawAppId) ? trim((string) $rawAppId) : '';
 
         return [
             'application_id' => $appIdRaw === '' ? null : (int) $appIdRaw,
