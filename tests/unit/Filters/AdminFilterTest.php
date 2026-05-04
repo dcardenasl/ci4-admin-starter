@@ -56,4 +56,20 @@ final class AdminFilterTest extends CIUnitTestCase
         $this->assertSame(403, $result?->getStatusCode());
         $this->assertStringContainsString('permis', strtolower((string) $result?->getBody()));
     }
+
+    public function testFilterReadsAllowedPermissionsFromConfig(): void
+    {
+        // Override config — the filter must pick up the change without code edits.
+        config('AdminAccess')->permissions = ['custom.module.read'];
+
+        $request = service('request');
+        $request->removeHeader('X-Requested-With'); // ensure non-AJAX path
+
+        session()->set('user', ['permissions' => ['custom.module.read']]);
+        $filter = new AdminFilter();
+        $this->assertNull($filter->before($request));
+
+        session()->set('user', ['permissions' => ['users.read']]); // would have passed before
+        $this->assertInstanceOf(RedirectResponse::class, $filter->before($request));
+    }
 }

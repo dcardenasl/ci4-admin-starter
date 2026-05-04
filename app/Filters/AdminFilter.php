@@ -12,20 +12,21 @@ use CodeIgniter\HTTP\ResponseInterface;
 class AdminFilter implements FilterInterface
 {
     /**
-     * Web-side admin section gate. Anyone with at least one admin-level
-     * permission passes; finer-grained access (per resource) is enforced
-     * by the per-route `permission:<code>` filter or by the controller.
+     * Web-side admin section gate. Anyone with at least one of the permission
+     * codes listed in `Config\AdminAccess::$permissions` passes; finer-grained
+     * access (per resource) is enforced by the per-route `permission:<code>`
+     * filter or by the controller.
      *
      * Sidebar visibility is gated separately in `partials/sidebar.php`.
      */
-    private const ADMIN_PERMISSIONS = ['users.read', 'audit.read', 'apikeys.read', 'metrics.read'];
-
     public function before(RequestInterface $request, $arguments = null)
     {
         helper('auth');
 
+        $allowedPermissions = config('AdminAccess')->permissions;
+
         $hasAny = false;
-        foreach (self::ADMIN_PERMISSIONS as $code) {
+        foreach ($allowedPermissions as $code) {
             if (has_permission($code)) {
                 $hasAny = true;
                 break;
