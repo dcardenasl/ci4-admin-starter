@@ -44,6 +44,7 @@ class Filters extends BaseFilters
         'auth'          => AuthFilter::class,
         'admin'         => AdminFilter::class,
         'superadmin'    => SuperAdminFilter::class,
+        'permission'    => \App\Filters\PermissionFilter::class,
         'locale'        => LocaleFilter::class,
         'ratelimit'     => RateLimitFilter::class,
     ];
