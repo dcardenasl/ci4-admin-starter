@@ -5,6 +5,16 @@ $assignedPermissionIds = $assignedPermissionIds ?? [];
 $assignedSet = array_flip(array_map('intval', $assignedPermissionIds));
 $assignedItems = array_values(array_filter($allPermissions, static fn (array $p): bool => isset($assignedSet[(int) ($p['id'] ?? 0)])));
 $availableItems = array_values(array_filter($allPermissions, static fn (array $p): bool => ! isset($assignedSet[(int) ($p['id'] ?? 0)])));
+
+$canModify = can_modify_role($role);
+if (! is_superadmin()) {
+    // Hide permissions the actor cannot grant from the available selector;
+    // the API enforces the same rule, this is purely UX.
+    $availableItems = array_values(array_filter(
+        $availableItems,
+        static fn (array $p): bool => actor_owns_permission((string) ($p['code'] ?? ''))
+    ));
+}
 ?>
 <div class="mb-4">
     <a href="<?= route_to('admin.iam.roles') ?>" class="text-sm text-brand-600 hover:text-brand-700">&larr; <?= lang('Iam.roles_title') ?></a>
@@ -21,8 +31,10 @@ $availableItems = array_values(array_filter($allPermissions, static fn (array $p
         <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-gray-900"><?= lang('Iam.roles_details') ?></h3>
             <div class="flex items-center gap-2">
-                <a href="<?= route_to('admin.iam.roles.edit', $itemId) ?>" class="<?= esc(action_button_class()) ?>"><?= lang('App.edit') ?></a>
-                <?php if (empty($role['is_system'])): ?>
+                <?php if ($canModify): ?>
+                    <a href="<?= route_to('admin.iam.roles.edit', $itemId) ?>" class="<?= esc(action_button_class()) ?>"><?= lang('App.edit') ?></a>
+                <?php endif; ?>
+                <?php if (empty($role['is_system']) || is_superadmin()): ?>
                     <form method="post" action="<?= route_to('admin.iam.roles.delete', $itemId) ?>" onsubmit="return confirm('<?= esc(lang('App.confirm_delete')) ?>');">
                         <?= csrf_field() ?>
                         <button type="submit" class="<?= esc(action_button_class('danger')) ?>">
@@ -91,16 +103,18 @@ $availableItems = array_values(array_filter($allPermissions, static fn (array $p
                                 <span class="ml-2 text-gray-500"><?= esc((string) $perm['description']) ?></span>
                             <?php endif; ?>
                         </div>
-                        <form method="post" action="<?= route_to('admin.iam.roles.permissions.detach', $itemId, $pid) ?>" onsubmit="return confirm('<?= esc(lang('App.confirm_remove')) ?>');">
-                            <?= csrf_field() ?>
-                            <button type="submit" class="text-xs text-red-600 hover:text-red-700"><?= lang('App.remove') ?></button>
-                        </form>
+                        <?php if ($canModify && actor_owns_permission((string) ($perm['code'] ?? ''))): ?>
+                            <form method="post" action="<?= route_to('admin.iam.roles.permissions.detach', $itemId, $pid) ?>" onsubmit="return confirm('<?= esc(lang('App.confirm_remove')) ?>');">
+                                <?= csrf_field() ?>
+                                <button type="submit" class="text-xs text-red-600 hover:text-red-700"><?= lang('App.remove') ?></button>
+                            </form>
+                        <?php endif; ?>
                     </li>
                 <?php endforeach; ?>
             </ul>
         <?php endif; ?>
 
-        <?php if ($availableItems !== []): ?>
+        <?php if ($availableItems !== [] && $canModify): ?>
             <form method="post" action="<?= route_to('admin.iam.roles.permissions.attach', $itemId) ?>" class="mt-6 border-t border-gray-100 pt-4">
                 <?= csrf_field() ?>
                 <h4 class="text-sm font-medium text-gray-900 mb-2"><?= lang('Iam.permissions_available') ?></h4>

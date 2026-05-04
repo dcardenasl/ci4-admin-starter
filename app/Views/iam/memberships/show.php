@@ -5,6 +5,19 @@ $assignedRoleIds = $assignedRoleIds ?? [];
 $assignedSet = array_flip(array_map('intval', $assignedRoleIds));
 $assignedItems = array_values(array_filter($allRoles, static fn (array $r): bool => isset($assignedSet[(int) ($r['id'] ?? 0)])));
 $availableItems = array_values(array_filter($allRoles, static fn (array $r): bool => ! isset($assignedSet[(int) ($r['id'] ?? 0)])));
+
+$subjectUserId = isset($appUserMembership['user_id']) ? (int) $appUserMembership['user_id'] : null;
+$isSelfMembership = $subjectUserId !== null && is_self($subjectUserId);
+$canModifyMembership = ! $isSelfMembership; // SuperAdmin can edit others, but not self
+if (! is_superadmin()) {
+    // Non-SA cannot grant the `superadmin` role nor any role whose code maps
+    // to a permission they don't own. Easiest UX: hide is_system roles
+    // unless the actor is SA.
+    $availableItems = array_values(array_filter(
+        $availableItems,
+        static fn (array $r): bool => empty($r['is_system']) || ($r['code'] ?? '') === 'user'
+    ));
+}
 ?>
 <div class="mb-4">
     <a href="<?= route_to('admin.iam.memberships') ?>" class="text-sm text-brand-600 hover:text-brand-700">&larr; <?= lang('Iam.app_user_memberships_title') ?></a>
@@ -21,14 +34,16 @@ $availableItems = array_values(array_filter($allRoles, static fn (array $r): boo
         <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-gray-900"><?= lang('Iam.app_user_memberships_details') ?></h3>
             <div class="flex items-center gap-2">
-                <a href="<?= route_to('admin.iam.memberships.edit', $itemId) ?>" class="<?= esc(action_button_class()) ?>"><?= lang('App.edit') ?></a>
-                <form method="post" action="<?= route_to('admin.iam.memberships.delete', $itemId) ?>" onsubmit="return confirm('<?= esc(lang('App.confirm_delete')) ?>');">
-                    <?= csrf_field() ?>
-                    <button type="submit" class="<?= esc(action_button_class('danger')) ?>">
-                        <?= ui_icon('trash', 'h-3.5 w-3.5') ?>
-                        <?= esc(lang('App.delete')) ?>
-                    </button>
-                </form>
+                <?php if ($canModifyMembership): ?>
+                    <a href="<?= route_to('admin.iam.memberships.edit', $itemId) ?>" class="<?= esc(action_button_class()) ?>"><?= lang('App.edit') ?></a>
+                    <form method="post" action="<?= route_to('admin.iam.memberships.delete', $itemId) ?>" onsubmit="return confirm('<?= esc(lang('App.confirm_delete')) ?>');">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="<?= esc(action_button_class('danger')) ?>">
+                            <?= ui_icon('trash', 'h-3.5 w-3.5') ?>
+                            <?= esc(lang('App.delete')) ?>
+                        </button>
+                    </form>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -84,16 +99,24 @@ $availableItems = array_values(array_filter($allRoles, static fn (array $r): boo
                             <span class="text-gray-900 font-medium"><?= esc((string) ($r['name'] ?? $r['code'] ?? '-')) ?></span>
                             <code class="ml-2 text-xs text-gray-500"><?= esc((string) ($r['code'] ?? '')) ?></code>
                         </div>
-                        <form method="post" action="<?= route_to('admin.iam.memberships.roles.detach', $itemId, $rid) ?>" onsubmit="return confirm('<?= esc(lang('App.confirm_remove')) ?>');">
-                            <?= csrf_field() ?>
-                            <button type="submit" class="text-xs text-red-600 hover:text-red-700"><?= lang('App.remove') ?></button>
-                        </form>
+                        <?php
+                            $canDetach = $canModifyMembership;
+                    if (! is_superadmin() && (($r['code'] ?? '') === 'superadmin')) {
+                        $canDetach = false;
+                    }
+                    ?>
+                        <?php if ($canDetach): ?>
+                            <form method="post" action="<?= route_to('admin.iam.memberships.roles.detach', $itemId, $rid) ?>" onsubmit="return confirm('<?= esc(lang('App.confirm_remove')) ?>');">
+                                <?= csrf_field() ?>
+                                <button type="submit" class="text-xs text-red-600 hover:text-red-700"><?= lang('App.remove') ?></button>
+                            </form>
+                        <?php endif; ?>
                     </li>
                 <?php endforeach; ?>
             </ul>
         <?php endif; ?>
 
-        <?php if ($availableItems !== []): ?>
+        <?php if ($availableItems !== [] && $canModifyMembership): ?>
             <form method="post" action="<?= route_to('admin.iam.memberships.roles.attach', $itemId) ?>" class="mt-6 border-t border-gray-100 pt-4">
                 <?= csrf_field() ?>
                 <h4 class="text-sm font-medium text-gray-900 mb-2"><?= lang('Iam.roles_available') ?></h4>
