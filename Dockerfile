@@ -40,4 +40,11 @@ RUN chown -R www-data:www-data writable && chmod -R 775 writable
 
 EXPOSE 9000
 
+# Healthcheck: verify the FPM listener is accepting connections on :9000.
+# We use a PHP one-liner (PHP is guaranteed to be in the image) instead of
+# curl/nc, since this image ships PHP-FPM only — the upstream webserver
+# (nginx/apache) lives in a separate container.
+HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --retries=3 \
+    CMD php -r 'exit(@fsockopen("127.0.0.1", 9000) ? 0 : 1);' || exit 1
+
 CMD ["php-fpm"]
