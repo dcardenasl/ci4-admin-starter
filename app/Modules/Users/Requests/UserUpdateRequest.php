@@ -31,11 +31,16 @@ class UserUpdateRequest extends BaseFormRequest
             'last_name'  => $this->postString('last_name'),
         ];
 
-        $email = trim($this->postString('email'));
-        $original_email = trim($this->postString('original_email'));
+        // Email is only modifiable by a superadmin. The form already renders
+        // a read-only input for everyone else; this is the server-side guard
+        // against tampered payloads (and saves the API a guaranteed 403).
+        if (is_superadmin()) {
+            $email          = trim($this->postString('email'));
+            $original_email = trim($this->postString('original_email'));
 
-        if ($original_email === '' || mb_strtolower($email) !== mb_strtolower($original_email)) {
-            $payload['email'] = $email;
+            if ($original_email === '' || mb_strtolower($email) !== mb_strtolower($original_email)) {
+                $payload['email'] = $email;
+            }
         }
 
         if ($this->request->getPost('role_ids') !== null) {

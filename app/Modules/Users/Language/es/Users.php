@@ -12,6 +12,7 @@ return [
     'last_name'        => 'Apellido',
     'name'             => 'Nombre completo',
     'email'            => 'Email',
+    'email_immutable_help' => 'Solo un superadministrador puede cambiar el correo de una cuenta.',
     'status'           => 'Estado',
     'date'             => 'Fecha',
     'actions'          => 'Acciones',

@@ -12,6 +12,7 @@ return [
     'last_name'        => 'Last name',
     'name'             => 'Full name',
     'email'            => 'Email',
+    'email_immutable_help' => 'Only a super administrator may change a user email.',
     'status'           => 'Status',
     'date'             => 'Date',
     'actions'          => 'Actions',

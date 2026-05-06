@@ -28,9 +28,15 @@
 
         <div>
             <label class="block text-sm font-medium text-gray-700" for="email"><?= lang('Users.email') ?></label>
-            <input id="email" name="email" type="email" value="<?= esc(old('email', $editUser['email'] ?? '')) ?>" required
-                class="mt-1 w-full rounded-lg border px-3 py-2 <?= has_field_error('email') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand-500 focus:ring-brand-500' ?>">
-            <?= render_field_error('email') ?>
+            <?php if (is_superadmin()): ?>
+                <input id="email" name="email" type="email" value="<?= esc(old('email', $editUser['email'] ?? '')) ?>" required
+                    class="mt-1 w-full rounded-lg border px-3 py-2 <?= has_field_error('email') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand-500 focus:ring-brand-500' ?>">
+                <?= render_field_error('email') ?>
+            <?php else: ?>
+                <input id="email" name="email" type="email" value="<?= esc($editUser['email'] ?? '') ?>" readonly aria-readonly="true"
+                    class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-gray-700 cursor-not-allowed">
+                <p class="mt-1 text-xs text-gray-500"><?= lang('Users.email_immutable_help') ?></p>
+            <?php endif; ?>
         </div>
 
         <div>
