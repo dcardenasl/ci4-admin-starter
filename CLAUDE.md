@@ -304,9 +304,9 @@ All modules are fully implemented:
 |--------|-----------|------------|
 | Auth | `AuthController` | `GET/POST /login`, `/register`, `/forgot-password`, `/reset-password`, `GET /verify-email`, `/logout` |
 | Dashboard | `DashboardController` | `GET /dashboard` |
-| Profile | `ProfileController` | `GET/POST /profile`, `POST /profile/change-password`, `POST /profile/resend-verification` |
+| Profile | `ProfileController` | `GET/POST /profile`, `POST /profile/change-password`, `POST /profile/resend-verification`. Open to any authenticated user (no `users.write` gate). `update()` calls the API's `PATCH /auth/me`. Email is shown read-only — there is no editable email input here. |
 | Files | `FileController` | `GET /files`, `/files/data`, `POST /files/upload`, `GET /files/{id}/download`, `POST /files/{id}/delete` |
-| Users (admin) | `UserController` | Full CRUD + approve under `/admin/users` |
+| Users (admin) | `UserController` | Full CRUD + approve under `/admin/users`. The edit form's email input is read-only unless the actor is `is_superadmin()`; `UserUpdateRequest::payload()` strips `email` from the payload for non-superadmins as defense in depth (the API also rejects with 403 `Iam.cannotModifyEmail`). |
 | Audit (admin) | `AuditController` | `GET /admin/audit`, `/admin/audit/{id}`, `/admin/audit/entity/{type}/{id}` |
 | API Keys (admin) | `ApiKeyController` | Full CRUD under `/admin/api-keys` |
 | Metrics (admin) | `MetricsController` | `GET /admin/metrics` |
