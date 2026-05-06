@@ -10,7 +10,7 @@ class RoleStoreRequest extends BaseFormRequest
 {
     protected function fields(): array
     {
-        return ['application_id', 'code', 'name', 'description'];
+        return ['application_id', 'code', 'name', 'description', 'permission_ids'];
     }
 
     public function rules(): array
@@ -20,6 +20,7 @@ class RoleStoreRequest extends BaseFormRequest
             'code'           => 'required|min_length[2]|max_length[100]',
             'name'           => 'required|min_length[2]|max_length[100]',
             'description'    => 'permit_empty|max_length[500]',
+            'permission_ids' => 'permit_empty',
         ];
     }
 
@@ -33,6 +34,26 @@ class RoleStoreRequest extends BaseFormRequest
             'code'           => $this->postString('code'),
             'name'           => $this->postString('name'),
             'description'    => $this->postString('description'),
+            'permission_ids' => $this->normalizedPermissionIds(),
         ];
+    }
+
+    /**
+     * @return list<int>
+     */
+    protected function normalizedPermissionIds(): array
+    {
+        $raw = $this->request->getPost('permission_ids');
+        if (! is_array($raw)) {
+            return [];
+        }
+
+        $clean = [];
+        foreach ($raw as $value) {
+            if (is_numeric($value) && (int) $value > 0) {
+                $clean[] = (int) $value;
+            }
+        }
+        return array_values(array_unique($clean));
     }
 }

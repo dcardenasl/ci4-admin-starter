@@ -1,7 +1,18 @@
 <?php
 /** @var array<int, array{id:int,name:string}> $applications */
-$applications = $applications ?? [];
-$selectedApp  = old('application_id', $applications[0]['id'] ?? '');
+$applications          = $applications ?? [];
+$selectedApp           = old('application_id', $applications[0]['id'] ?? '');
+$allPermissions        = $allPermissions ?? [];
+$assignedPermissionIds = $assignedPermissionIds ?? [];
+$oldPermIds            = (array) old('permission_ids', $assignedPermissionIds);
+$oldPermIdsStr         = array_map('strval', $oldPermIds);
+
+if (! is_superadmin()) {
+    $allPermissions = array_values(array_filter(
+        $allPermissions,
+        static fn (array $p): bool => actor_owns_permission((string) ($p['code'] ?? ''))
+    ));
+}
 ?>
 <div class="mb-4">
     <a href="<?= route_to('admin.iam.roles') ?>" class="text-sm text-brand-600 hover:text-brand-700">&larr; <?= esc(lang('App.back')) ?></a>
@@ -49,6 +60,35 @@ $selectedApp  = old('application_id', $applications[0]['id'] ?? '');
                     class="<?= esc(input_class('description')) ?>"><?= esc(old('description', '')) ?></textarea>
                 <?= render_field_error('description') ?>
             </div>
+        </div>
+
+        <div class="pt-2 border-t border-gray-100">
+            <span class="block text-sm font-medium text-gray-700"><?= esc(lang('Iam.permissions_assigned')) ?></span>
+            <p class="text-xs text-gray-500 mt-1"><?= esc(lang('Iam.permissions_help_create')) ?></p>
+
+            <?php if ($allPermissions === []): ?>
+                <p class="mt-2 text-sm text-gray-500 italic"><?= esc(lang('Iam.permissions_none_grantable')) ?></p>
+            <?php else: ?>
+                <div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1">
+                    <?php foreach ($allPermissions as $perm): ?>
+                        <?php $pid = (string) ($perm['id'] ?? ''); ?>
+                        <label class="inline-flex items-start gap-2 text-sm rounded-lg border border-gray-200 px-3 py-2 hover:bg-gray-50">
+                            <input type="checkbox" name="permission_ids[]" value="<?= esc($pid) ?>"
+                                <?= in_array($pid, $oldPermIdsStr, true) ? 'checked' : '' ?>
+                                class="mt-1 rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                            <span>
+                                <code class="font-medium text-gray-900"><?= esc((string) ($perm['code'] ?? '-')) ?></code>
+                                <?php if (! empty($perm['description'])): ?>
+                                    <span class="block text-xs text-gray-500"><?= esc((string) $perm['description']) ?></span>
+                                <?php endif; ?>
+                            </span>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+            <?php // Sentinel: ensures `permission_ids` is always posted even when no boxes are ticked.?>
+            <input type="hidden" name="permission_ids[]" value="">
+            <?= render_field_error('permission_ids') ?>
         </div>
 
         <div class="flex items-center gap-3 pt-2">

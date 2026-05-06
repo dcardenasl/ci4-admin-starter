@@ -67,6 +67,11 @@ return [
     'permissions_detach_success'            => 'Permiso quitado del rol.',
     'permissions_detach_failed'             => 'No se pudo quitar el permiso del rol.',
     'permissions_none_assigned'             => 'Este rol no tiene permisos asignados.',
+    'permissions_help_create'               => 'Selecciona los permisos que otorgará este rol. Podrás cambiarlos luego.',
+    'permissions_help_edit'                 => 'Marca los permisos que este rol debe otorgar. Al guardar se reemplaza el conjunto completo.',
+    'permissions_none_grantable'            => 'No posees ningún permiso que se pueda otorgar desde aquí.',
+    'permissions_some_locked'               => 'Este rol tiene permisos que no puedes modificar; se conservarán al guardar.',
+    'permissions_edit_link'                 => 'Editar',
 
     // Membership ↔ Role M2M
     'roles_assigned'                  => 'Roles asignados',

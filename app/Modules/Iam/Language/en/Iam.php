@@ -67,6 +67,11 @@ return [
     'permissions_detach_success'            => 'Permission removed from role.',
     'permissions_detach_failed'             => 'Could not remove the permission from the role.',
     'permissions_none_assigned'             => 'No permissions assigned to this role.',
+    'permissions_help_create'               => 'Select the permissions to grant to this role. You can change this later.',
+    'permissions_help_edit'                 => 'Tick the permissions this role should grant. Saving replaces the entire set.',
+    'permissions_none_grantable'            => 'You do not own any permission that can be granted from here.',
+    'permissions_some_locked'               => 'This role has permissions you cannot modify; they will be preserved on save.',
+    'permissions_edit_link'                 => 'Edit',
 
     // Membership ↔ Role M2M
     'roles_assigned'                  => 'Assigned roles',

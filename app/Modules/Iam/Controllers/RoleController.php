@@ -80,8 +80,10 @@ class RoleController extends BaseWebController
     public function create(): string
     {
         return $this->render('iam/roles/create', [
-            'title'        => lang('Iam.roles_create'),
-            'applications' => $this->lookups->applications(),
+            'title'                 => lang('Iam.roles_create'),
+            'applications'          => $this->lookups->applications(),
+            'allPermissions'        => $this->loadAllPermissions(),
+            'assignedPermissionIds' => [],
         ]);
     }
 
@@ -110,11 +112,27 @@ class RoleController extends BaseWebController
             return $this->withError(lang('Iam.roles_not_found'), route_to('admin.iam.roles'));
         }
 
+        $assignedResponse = $this->safeApiCall(fn () => $this->roleService->listPermissions($id));
+        $assignedItems    = $this->extractItems($assignedResponse);
+        $assignedIds      = array_map(static fn (array $p): int => (int) ($p['id'] ?? 0), $assignedItems);
+
         return $this->render('iam/roles/edit', [
-            'title'        => lang('Iam.roles_edit'),
-            'item'         => $this->extractData($response),
-            'applications' => $this->lookups->applications(),
+            'title'                 => lang('Iam.roles_edit'),
+            'item'                  => $this->extractData($response),
+            'applications'          => $this->lookups->applications(),
+            'allPermissions'        => $this->loadAllPermissions(),
+            'assignedPermissionIds' => $assignedIds,
         ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function loadAllPermissions(): array
+    {
+        $response = $this->safeApiCall(fn () => $this->permissionService->list(['limit' => 200]));
+
+        return $this->extractItems($response);
     }
 
     public function update(string $id): RedirectResponse
