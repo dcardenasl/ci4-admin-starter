@@ -23,11 +23,17 @@ class ProfileApiService extends BaseApiService implements ProfileApiServiceInter
     }
 
     /**
-     * Update user profile (name, etc)
+     * Update the authenticated user's own profile.
+     *
+     * Targets the dedicated self-update endpoint `/auth/me` so the API can
+     * enforce the self-only allowlist (first_name, last_name, avatar_url) and
+     * keep the admin endpoint blocked for self-edit. The $userId argument is
+     * accepted for backward compatibility with callers but is intentionally
+     * not used — the API derives the subject from the JWT.
      */
     public function update(string $userId, array $payload): array
     {
-        return $this->apiClient->put('/users/' . $userId, $payload);
+        return $this->apiClient->patch('/auth/me', $payload);
     }
 
     /**

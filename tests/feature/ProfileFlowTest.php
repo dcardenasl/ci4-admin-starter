@@ -22,7 +22,7 @@ final class ProfileFlowTest extends CIUnitTestCase
         parent::tearDown();
     }
 
-    public function testAdminCanUpdateOwnProfileUsingUsersEndpoint(): void
+    public function testAdminCanUpdateOwnProfile(): void
     {
         $profileService = $this->createMock(ProfileApiService::class);
         $profileService->expects($this->once())
@@ -68,8 +68,42 @@ final class ProfileFlowTest extends CIUnitTestCase
         $result->assertSessionHas('success');
     }
 
-    public function testNonAdminCannotUpdateProfile(): void
+    public function testRegularUserCanUpdateOwnProfile(): void
     {
+        // Self-edit is now allowed for any authenticated user — Profile no longer
+        // gates by users.write. The API enforces the field-level allowlist
+        // (first_name, last_name, avatar_url) on PATCH /auth/me.
+        $profileService = $this->createMock(ProfileApiService::class);
+        $profileService->expects($this->once())
+            ->method('update')
+            ->with('22', [
+                'first_name' => 'User',
+                'last_name'  => 'Updated',
+            ])
+            ->willReturn([
+                'ok'          => true,
+                'status'      => 200,
+                'data'        => ['data' => ['id' => 22, 'first_name' => 'User', 'last_name' => 'Updated']],
+                'raw'         => '',
+                'headers'     => [],
+                'messages'    => [],
+                'fieldErrors' => [],
+            ]);
+
+        $profileService->expects($this->once())
+            ->method('me')
+            ->willReturn([
+                'ok'          => true,
+                'status'      => 200,
+                'data'        => ['data' => ['id' => 22, 'first_name' => 'User', 'last_name' => 'Updated', 'email' => 'user@example.com', 'permissions' => []]],
+                'raw'         => '',
+                'headers'     => [],
+                'messages'    => [],
+                'fieldErrors' => [],
+            ]);
+
+        Services::injectMock('profileApiService', $profileService);
+
         $result = $this->withSession([
             'access_token' => 'token',
             'user'         => ['id' => 22, 'email' => 'user@example.com', 'permissions' => []],
@@ -80,10 +114,10 @@ final class ProfileFlowTest extends CIUnitTestCase
         ]);
 
         $result->assertRedirectTo(site_url('profile'));
-        $result->assertSessionHas('error');
+        $result->assertSessionHas('success');
     }
 
-    public function testProfilePageShowsReadonlyHintForNonAdmin(): void
+    public function testProfilePageShowsEditableFormForAnyAuthenticatedUser(): void
     {
         $result = $this->withSession([
             'access_token' => 'token',
@@ -91,8 +125,12 @@ final class ProfileFlowTest extends CIUnitTestCase
         ])->get('/profile');
 
         $result->assertStatus(200);
-        $body = html_entity_decode($result->getBody(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-        $this->assertStringContainsString(lang('Profile.personal_info_readonly'), $body);
+        $body = $result->getBody();
+        // Form is rendered (not a read-only summary), with first_name and last_name inputs editable.
+        $this->assertStringContainsString('name="first_name"', $body);
+        $this->assertStringContainsString('name="last_name"', $body);
+        // Email is shown but immutable — the form does not expose an editable email input.
+        $this->assertStringNotContainsString('name="email"', $body);
     }
 
     public function testRequestPasswordResetUsesForgotPasswordFlow(): void

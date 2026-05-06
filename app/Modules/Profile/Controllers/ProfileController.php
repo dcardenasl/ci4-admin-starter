@@ -29,22 +29,16 @@ class ProfileController extends BaseWebController
     {
         $this->refreshUserSession();
         $user = session('user') ?? [];
-        $isAdmin = has_permission('users.write');
 
         return $this->render('profile/index', [
-            'title'   => lang('Profile.title'),
-            'user'    => $user,
-            'isAdmin' => $isAdmin,
+            'title' => lang('Profile.title'),
+            'user'  => $user,
         ]);
     }
 
     public function update(): RedirectResponse
     {
         $sessionUser = session('user') ?? [];
-
-        if (! has_permission('users.write')) {
-            return redirect()->to(route_to('profile'))->with('error', lang('Profile.update_not_allowed'));
-        }
 
         /** @var ProfileUpdateRequest $request */
         $request = service('formRequest', ProfileUpdateRequest::class, false);
