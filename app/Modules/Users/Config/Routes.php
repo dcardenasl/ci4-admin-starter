@@ -15,10 +15,6 @@ $routes->group('admin', ['filter' => 'auth'], static function (RouteCollection $
     $routes->get('users/data', '\App\Modules\Users\Controllers\UserController::data', [
         'as' => 'admin.users.data', 'filter' => 'permission:users.read',
     ]);
-    $routes->get('users/(:segment)', '\App\Modules\Users\Controllers\UserController::show/$1', [
-        'as' => 'admin.users.show', 'filter' => 'permission:users.read',
-    ]);
-
     $routes->get('users/create', '\App\Modules\Users\Controllers\UserController::create', [
         'as' => 'admin.users.create', 'filter' => 'permission:users.write',
     ]);
@@ -27,6 +23,9 @@ $routes->group('admin', ['filter' => 'auth'], static function (RouteCollection $
     ]);
     $routes->get('users/(:segment)/edit', '\App\Modules\Users\Controllers\UserController::edit/$1', [
         'as' => 'admin.users.edit', 'filter' => 'permission:users.write',
+    ]);
+    $routes->get('users/(:segment)', '\App\Modules\Users\Controllers\UserController::show/$1', [
+        'as' => 'admin.users.show', 'filter' => 'permission:users.read',
     ]);
     $routes->post('users/(:segment)', '\App\Modules\Users\Controllers\UserController::update/$1', [
         'as' => 'admin.users.update', 'filter' => 'permission:users.write',

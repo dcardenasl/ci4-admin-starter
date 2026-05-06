@@ -16,9 +16,6 @@ $routes->group('admin', ['filter' => 'auth'], static function (RouteCollection $
     $routes->get('api-keys/data', '\App\Modules\ApiKeys\Controllers\ApiKeyController::data', [
         'as' => 'admin.api_keys.data', 'filter' => 'permission:apikeys.read',
     ]);
-    $routes->get('api-keys/(:segment)', '\App\Modules\ApiKeys\Controllers\ApiKeyController::show/$1', [
-        'as' => 'admin.api_keys.show', 'filter' => 'permission:apikeys.read',
-    ]);
 
     // Write access — superadmin-only by default (apikeys.write is not granted to admin).
     $routes->get('api-keys/create', '\App\Modules\ApiKeys\Controllers\ApiKeyController::create', [
@@ -35,5 +32,8 @@ $routes->group('admin', ['filter' => 'auth'], static function (RouteCollection $
     ]);
     $routes->post('api-keys/(:segment)/delete', '\App\Modules\ApiKeys\Controllers\ApiKeyController::delete/$1', [
         'as' => 'admin.api_keys.delete', 'filter' => 'permission:apikeys.write',
+    ]);
+    $routes->get('api-keys/(:segment)', '\App\Modules\ApiKeys\Controllers\ApiKeyController::show/$1', [
+        'as' => 'admin.api_keys.show', 'filter' => 'permission:apikeys.read',
     ]);
 });

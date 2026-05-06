@@ -28,10 +28,10 @@ $routes->group('admin/iam', ['filter' => ['auth', 'superadmin']], static functio
     // Permission
     $routes->get('permissions', '\App\Modules\Iam\Controllers\PermissionController::index', ['as' => 'admin.iam.permissions']);
     $routes->get('permissions/data', '\App\Modules\Iam\Controllers\PermissionController::data', ['as' => 'admin.iam.permissions.data']);
-    $routes->get('permissions/(:segment)', '\App\Modules\Iam\Controllers\PermissionController::show/$1', ['as' => 'admin.iam.permissions.show']);
     $routes->get('permissions/create', '\App\Modules\Iam\Controllers\PermissionController::create', ['as' => 'admin.iam.permissions.create']);
     $routes->post('permissions', '\App\Modules\Iam\Controllers\PermissionController::store', ['as' => 'admin.iam.permissions.store']);
     $routes->get('permissions/(:segment)/edit', '\App\Modules\Iam\Controllers\PermissionController::edit/$1', ['as' => 'admin.iam.permissions.edit']);
     $routes->post('permissions/(:segment)', '\App\Modules\Iam\Controllers\PermissionController::update/$1', ['as' => 'admin.iam.permissions.update']);
     $routes->post('permissions/(:segment)/delete', '\App\Modules\Iam\Controllers\PermissionController::delete/$1', ['as' => 'admin.iam.permissions.delete']);
+    $routes->get('permissions/(:segment)', '\App\Modules\Iam\Controllers\PermissionController::show/$1', ['as' => 'admin.iam.permissions.show']);
 });
