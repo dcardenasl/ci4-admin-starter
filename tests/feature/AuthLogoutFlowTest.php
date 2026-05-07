@@ -55,8 +55,11 @@ final class AuthLogoutFlowTest extends CIUnitTestCase
 
     public function testLogoutStillDestroysSessionWhenRevokeFails(): void
     {
+        // Audit B8.5 (2026-05-06): logout now retries the revoke call once
+        // before giving up — covers transient API/network blips. The local
+        // session is destroyed regardless to keep logout snappy.
         $authService = $this->createMock(AuthApiService::class);
-        $authService->expects($this->once())
+        $authService->expects($this->exactly(2))
             ->method('logout')
             ->willThrowException(new \RuntimeException('Network error'));
 
@@ -66,6 +69,44 @@ final class AuthLogoutFlowTest extends CIUnitTestCase
             'access_token' => 'token',
             'refresh_token' => 'refresh',
             'user'         => ['id' => 1, 'email' => 'admin@example.com', 'permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
+        ])->post('/logout', [
+            csrf_token() => csrf_hash(),
+        ]);
+
+        $result->assertRedirectTo(site_url('login'));
+        $result->assertSessionHas('success');
+        $result->assertSessionMissing('access_token');
+    }
+
+    public function testLogoutRetriesOnTransientFailureThenSucceedsOnSecondAttempt(): void
+    {
+        // Audit B8.5 (2026-05-06): the second attempt succeeds → no warning
+        // logged, session destroyed cleanly.
+        $authService = $this->createMock(AuthApiService::class);
+        $matcher = $this->exactly(2);
+        $authService->expects($matcher)
+            ->method('logout')
+            ->willReturnCallback(function () use ($matcher) {
+                if ($matcher->numberOfInvocations() === 1) {
+                    throw new \RuntimeException('Transient blip');
+                }
+                return [
+                    'ok'          => true,
+                    'status'      => 200,
+                    'data'        => [],
+                    'raw'         => '',
+                    'headers'     => [],
+                    'messages'    => [],
+                    'fieldErrors' => [],
+                ];
+            });
+
+        Services::injectMock('authApiService', $authService);
+
+        $result = $this->withSession([
+            'access_token'  => 'token',
+            'refresh_token' => 'refresh',
+            'user'          => ['id' => 1, 'email' => 'admin@example.com', 'permissions' => []],
         ])->post('/logout', [
             csrf_token() => csrf_hash(),
         ]);
