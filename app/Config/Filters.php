@@ -8,6 +8,7 @@ use App\Filters\AdminFilter;
 use App\Filters\AuthFilter;
 use App\Filters\LocaleFilter;
 use App\Filters\RateLimitFilter;
+use App\Filters\SecurityHeadersFilter;
 use App\Filters\SuperAdminFilter;
 use CodeIgniter\Config\Filters as BaseFilters;
 use CodeIgniter\Filters\Cors;
@@ -47,6 +48,7 @@ class Filters extends BaseFilters
         'permission'    => \App\Filters\PermissionFilter::class,
         'locale'        => LocaleFilter::class,
         'ratelimit'     => RateLimitFilter::class,
+        'securityheaders' => SecurityHeadersFilter::class,
     ];
 
     /**
@@ -95,7 +97,8 @@ class Filters extends BaseFilters
         ],
         'after' => [
             // 'honeypot',
-            'secureheaders',
+            'securityheaders', // App-defined: X-Frame-Options, X-CTO, Referrer-Policy, Permissions-Policy, HSTS in prod (audit B5.1).
+            'secureheaders',   // CI4 native: emits headers from Config\Security::$secureHeaders if populated.
         ],
     ];
 
