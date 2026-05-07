@@ -75,6 +75,7 @@
         "format:check": "vendor/bin/php-cs-fixer fix --dry-run --diff",
         "format": "vendor/bin/php-cs-fixer fix",
         "i18n-check": "php scripts/i18n-check.php",
+        "coverage:check": "php scripts/check-coverage.php 70 tests/coverage.xml",
         "quality": [
             "@analyse",
             "@format:check",
