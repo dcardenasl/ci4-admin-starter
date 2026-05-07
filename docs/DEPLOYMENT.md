@@ -23,6 +23,26 @@ Configure these values in your `.env` file for production. **Never commit your `
 ### 📁 Upload Settings
 - `FILE_MAX_SIZE = 10485760`: Maximum file size in bytes (10MB). Ensure this matches or is lower than the backend's limit.
 
+### 🗄️ Session storage for multi-server (audit B10.3)
+
+CI4's default `FileHandler` stores sessions on disk under `writable/session`. That works on a single VM but **breaks under any horizontal scale** — a request that hits a different pod has no access to the file, so users get logged out at random.
+
+For any deployment with more than one app pod, switch to Redis (recommended) or the database session handler:
+
+```dotenv
+# Recommended for multi-server / k8s deployments.
+SESSION_DRIVER=redis
+SESSION_SAVE_PATH='tcp://session-redis.internal:6379'
+
+# Alternative: shared database (simpler infra, slower than Redis).
+# SESSION_DRIVER=database
+# SESSION_SAVE_PATH='ci_sessions'   # table name
+```
+
+`Config\Session` (`app/Config/Session.php`) reads these env vars at construction time and switches the `$driver` accordingly. Unknown values fall back to `FileHandler` with a warning logged — a typo never silently locks everyone out.
+
+> **About the token-refresh race:** when admin gets a 401, `ApiClient` refreshes the access token. `$isRefreshing` is a static flag, which is single-process-safe but multi-process-leaky: two PHP-FPM workers can both refresh the same `refresh_token` simultaneously, and the API will revoke the loser's tokens. Switching to Redis sessions does **not** fix this on its own — the refresh window is small enough that the race rarely fires, but if you see "session expired mid-action" reports under load, the long-term fix is a Redis SETNX lock around the refresh call. Tracked as future work.
+
 ### 📦 Frontend build (audit B11.4)
 
 Three npm scripts cover the asset surface:
