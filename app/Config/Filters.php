@@ -7,6 +7,7 @@ namespace Config;
 use App\Filters\AdminFilter;
 use App\Filters\AuthFilter;
 use App\Filters\LocaleFilter;
+use App\Filters\MaintenanceFilter;
 use App\Filters\RateLimitFilter;
 use App\Filters\SecurityHeadersFilter;
 use App\Filters\SuperAdminFilter;
@@ -49,6 +50,7 @@ class Filters extends BaseFilters
         'locale'        => LocaleFilter::class,
         'ratelimit'     => RateLimitFilter::class,
         'securityheaders' => SecurityHeadersFilter::class,
+        'maintenance'   => MaintenanceFilter::class,
     ];
 
     /**
@@ -87,6 +89,7 @@ class Filters extends BaseFilters
      */
     public array $globals = [
         'before' => [
+            'maintenance', // 503 short-circuit when MAINTENANCE_MODE=true (audit B10.4); /health etc. bypass internally.
             // 'honeypot',
             // Google Identity Services posts the credential directly to this endpoint from
             // Google's origin. CSRF stays enabled everywhere else, and the controller also
