@@ -2,6 +2,18 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⚡ Workflow — read this first
+
+**Before touching any code, read `TASKS.md` in this directory.**
+
+1. Take the first task from `## 🔴 En progreso` (if any) or `## 🟡 Próximo`
+2. If taking from Próximo: move it to `## 🔴 En progreso`
+3. Work exclusively on that task — if anything is unclear, ask before implementing
+4. When done: move it to `## ✅ Completadas` with one line of notes (what you did and why)
+5. Never work on tasks not defined in TASKS.md without explicit confirmation
+
+For cross-repo context (current milestone, blocked tasks), read `../TASKS.md`.
+
 ## Project Overview
 
 **CI4 Admin Starter** is a CodeIgniter 4 web application (server-rendered frontend) designed to consume the external API from [`ci4-api-starter`](https://github.com/dcardenasl/ci4-api-starter). It provides an administrative panel interface for authentication, user management, file management, audit logs, and metrics.
