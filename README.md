@@ -7,9 +7,20 @@ A production-ready **CodeIgniter 4 administrative dashboard template** designed 
 This is a **server-rendered frontend** (SRF) that provides a complete administrative panel. It does NOT implement business logic or direct database access—it's a client application that orchestrates HTTP requests to a backend API and renders server-side views.
 
 **Architectural Design:**
+
+```mermaid
+flowchart LR
+    Browser["Browser"]
+    Admin["CI4 Admin Starter<br/>(this repo) :8082"]
+    Session[("PHP Session<br/>access_token<br/>refresh_token<br/>user.permissions[]")]
+    API["ci4-api-starter<br/>(backend) :8080"]
+
+    Browser -->|"HTML / form POST<br/>CSRF protected"| Admin
+    Admin --- Session
+    Admin -->|"REST + Bearer JWT<br/>auto-refresh on 401"| API
 ```
-Browser → CI4 Admin Starter (this repo) → Backend API (ci4-api-starter)
-```
+
+Tokens live **only** in the server-side PHP session — never in cookies, `localStorage`, or anything reachable from JavaScript. The `ApiClient` library is the single chokepoint for all backend traffic and handles token refresh transparently when the API returns 401.
 
 ## 📋 Key Principles
 
