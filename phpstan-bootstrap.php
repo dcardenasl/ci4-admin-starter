@@ -63,6 +63,13 @@ if (! function_exists('site_url')) {
     }
 }
 
+if (! function_exists('base_url')) {
+    function base_url(string $uri = '', ?string $protocol = null): string
+    {
+        return $uri;
+    }
+}
+
 if (! function_exists('route_to')) {
     function route_to(string $routeName, ...$params): string
     {

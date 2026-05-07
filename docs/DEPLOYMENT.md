@@ -23,6 +23,30 @@ Configure these values in your `.env` file for production. **Never commit your `
 ### 📁 Upload Settings
 - `FILE_MAX_SIZE = 10485760`: Maximum file size in bytes (10MB). Ensure this matches or is lower than the backend's limit.
 
+### 📦 Frontend build (audit B11.4)
+
+Three npm scripts cover the asset surface:
+
+| Script | What it does | When to run |
+|---|---|---|
+| `npm run build:css` | Tailwind compile `src/css/app.css` → `public/assets/css/app.css` (minified). | Every deploy / every CSS source change. |
+| `npm run build:vendor` | Copies `node_modules/alpinejs/dist/cdn.min.js` and `node_modules/lucide/dist/umd/lucide.min.js` to `public/assets/vendor/`. | Once per deploy (after `npm install`); the layout falls back to the pinned jsdelivr CDN if vendored copies are missing. |
+| `npm run build:all` | `build:css` + `build:vendor`. | Recommended single command for CI / Dockerfile. |
+
+The Dockerfile (audit B5.3) bakes `npm run build:all` into the image's `asset-build` stage, so production deployments built from the Dockerfile do not need npm at runtime. For non-Docker deploys (e.g. classic shared hosting), run `npm ci && npm run build:all` once after a fresh checkout, then deploy `public/assets/` alongside `app/`.
+
+### 🔄 Asset cache-busting (audit B8.1)
+
+Static assets (`public/assets/css/app.css`, `public/assets/js/app.js`, vendored Alpine/Lucide) are referenced via the `asset_url()` helper, which appends `?v=<token>` to the URL so browsers and CDN edges invalidate stale copies after a deploy.
+
+- `ASSET_VERSION = <git-short-sha>`: **production-correct.** Set this at deploy time to a value that changes on every release (typically a git short SHA, the build timestamp, or a release tag). Recommended pattern in CI:
+  ```bash
+  echo "ASSET_VERSION=$(git rev-parse --short HEAD)" >> .env
+  ```
+- **Fallback:** when `ASSET_VERSION` is unset, the helper uses each asset's `filemtime()`. Fine in dev (auto-bumps when Tailwind / `npm run build:vendor` rewrites the file) but unreliable behind containerized rsync where mtimes reset on every layer copy. Always set `ASSET_VERSION` in production.
+
+Implementation: `app/Helpers/asset_helper.php` (loaded globally via `Config\Autoload::$helpers`).
+
 ---
 
 ## 🔒 Security Hardening

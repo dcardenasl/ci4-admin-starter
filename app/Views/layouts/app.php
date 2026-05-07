@@ -22,6 +22,6 @@
 
     <?= $this->include('layouts/partials/confirm_modal') ?>
     <?= $this->include('layouts/partials/file_picker_modal') ?>
-    <script <?= csp_script_nonce() ?> src="<?= base_url('assets/js/app.js') ?>"></script>
+    <script <?= csp_script_nonce() ?> src="<?= asset_url('assets/js/app.js') ?>"></script>
 </body>
 </html>
