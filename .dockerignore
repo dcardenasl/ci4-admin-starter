@@ -1,0 +1,84 @@
+# Audit B5.3 (2026-05-06): trim build context for the multi-stage Dockerfile.
+# Anything listed here is excluded from `docker build` context — keeps images
+# small, faster, and free of host-only state (.git, .env, node_modules, etc.)
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation (markdown is for humans, not the runtime)
+*.md
+CLAUDE.md
+TASKS.md
+docs/
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment files (NEVER ship secrets in the image)
+.env
+.env.*
+!.env.docker
+
+# Tests + coverage
+tests/
+phpunit.xml
+phpunit.xml.dist
+.phpunit.result.cache
+build/
+
+# CI/CD config
+.github/
+.gitlab-ci.yml
+
+# Static analysis + style configs (not needed at runtime)
+phpstan.neon
+phpstan.neon.dist
+phpstan-baseline.neon
+phpstan-bootstrap.php
+.php-cs-fixer.dist.php
+.php-cs-fixer.cache
+
+# Dependencies (will be installed inside the image)
+vendor/
+node_modules/
+
+# Cache / runtime state
+writable/cache/*
+writable/logs/*
+writable/session/*
+writable/uploads/*
+writable/debugbar/*
+
+# Build artifacts
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Backups / temp
+*.bak
+*.tmp
+*.temp
+backup/
+temp/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Docker config (not needed inside the image)
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Coverage reports
+tests/coverage/
+tests/coverage.txt
+tests/coverage.xml
