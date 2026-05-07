@@ -61,5 +61,8 @@ jobs:
       - name: Lint JS (all files under public/assets/js, audit B8.2)
         run: npm run lint:all
 
+      - name: Language file parity (EN/ES, audit B8.3)
+        run: composer i18n-check
+
       - name: Run test suite
         run: vendor/bin/phpunit ${{ matrix.php-version == '8.2' && '' || '--no-coverage' }}

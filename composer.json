@@ -74,9 +74,11 @@
         "analyse": "vendor/bin/phpstan analyse",
         "format:check": "vendor/bin/php-cs-fixer fix --dry-run --diff",
         "format": "vendor/bin/php-cs-fixer fix",
+        "i18n-check": "php scripts/i18n-check.php",
         "quality": [
             "@analyse",
-            "@format:check"
+            "@format:check",
+            "@i18n-check"
         ],
         "ci": [
             "@test",
