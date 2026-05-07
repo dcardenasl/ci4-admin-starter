@@ -58,8 +58,8 @@ jobs:
       - name: Security audit
         run: composer audit
 
-      - name: Lint JS
-        run: npm run lint:js
+      - name: Lint JS (all files under public/assets/js, audit B8.2)
+        run: npm run lint:all
 
       - name: Run test suite
         run: vendor/bin/phpunit ${{ matrix.php-version == '8.2' && '' || '--no-coverage' }}
