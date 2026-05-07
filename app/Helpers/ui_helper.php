@@ -270,7 +270,6 @@ if (! function_exists('ui_icon')) {
         ];
 
         if (! isset($icons[$name])) {
-            /** @phpstan-ignore identical.alwaysFalse */
             if (ENVIRONMENT === 'development') {
                 throw new \InvalidArgumentException("ui_icon(): unknown icon '{$name}'. Add it to the map or fix the typo.");
             }

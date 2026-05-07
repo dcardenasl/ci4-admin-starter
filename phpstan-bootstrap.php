@@ -2,9 +2,12 @@
 
 declare(strict_types=1);
 
-if (! defined('ENVIRONMENT')) {
-    define('ENVIRONMENT', 'testing');
-}
+// ENVIRONMENT is intentionally NOT defined here so PHPStan treats it as
+// runtime-unknown — otherwise expressions like `ENVIRONMENT === 'production'`
+// resolve to `'testing' === 'production'` and trigger identical.alwaysFalse
+// on legitimate environment-gated branches (audit B5.1, 2026-05-06).
+// The matching `Constant ENVIRONMENT not found` warning is suppressed in
+// `phpstan.neon`. Mirrors the api-starter convention.
 
 foreach ([
     'APPPATH' => __DIR__ . '/app/',

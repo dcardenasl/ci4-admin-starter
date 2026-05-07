@@ -23,3 +23,8 @@ parameters:
         - app/Config/Services.php
         - app/Config/Mimes.php
     treatPhpDocTypesAsCertain: false
+    ignoreErrors:
+        # CI4 framework runtime constant. Intentionally unresolved at analysis time
+        # so environment-gated branches (e.g. `ENVIRONMENT === 'production'`) are
+        # not flagged as identical.alwaysFalse. See phpstan-bootstrap.php for context.
+        - '#Constant ENVIRONMENT not found#'
