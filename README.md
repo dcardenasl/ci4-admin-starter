@@ -1,6 +1,6 @@
 # CI4 Admin Starter
 
-A production-ready **CodeIgniter 4 administrative dashboard template** designed to consume and interact with the [ci4-api-starter](https://github.com/dcardenasl/ci4-api-starter) backend API.
+An opinionated **CodeIgniter 4 administrative dashboard template** designed to consume and interact with the [ci4-api-starter](https://github.com/dcardenasl/ci4-api-starter) backend API.
 
 ## 🎯 Purpose
 
@@ -324,5 +324,5 @@ Contributions are welcome! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for g
 
 ---
 
-**Last Updated:** 2026-04-16  
-**Status:** Production Ready ✅
+**Last Updated:** 2026-05-07  
+**Status:** Stable — opinionated, personal stack. No support contract.
