@@ -83,7 +83,7 @@ return [
 
     'replace'                  => 'Reemplazar archivo',
     'replace_button'           => 'Subir reemplazo',
-    'replace_help'             => 'Elegí un archivo nuevo. La URL queda igual para no romper referencias existentes.',
+    'replace_help'             => 'Elige un archivo nuevo. La URL queda igual para no romper referencias existentes.',
     'replace_success'          => 'Archivo reemplazado.',
     'replace_failed'           => 'No se pudo reemplazar el archivo.',
     'regenerate'               => 'Regenerar variantes',
@@ -108,7 +108,7 @@ return [
     'bulk_confirm_delete'      => '¿Enviar los archivos seleccionados a la papelera?',
     'bulk_confirm_force'       => '¿Eliminar definitivamente los archivos seleccionados? No se puede deshacer.',
 
-    'gallery_drag_help'        => 'Arrastrá para reordenar. Hacé clic en la X para quitar.',
+    'gallery_drag_help'        => 'Arrastra para reordenar. Haz clic en la X para quitar.',
     'gallery_add'              => 'Agregar imágenes',
     'gallery_save_order'       => 'Guardando orden...',
     'gallery_save_success'     => 'Orden guardado.',
