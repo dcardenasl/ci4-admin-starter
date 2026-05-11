@@ -3,6 +3,21 @@
     "description": "Enterprise-oriented CodeIgniter 4 admin frontend starter that consumes a backend API",
     "license": "MIT",
     "type": "project",
+    "keywords": [
+        "codeigniter4",
+        "codeigniter",
+        "ci4",
+        "admin",
+        "dashboard",
+        "admin-panel",
+        "tailwind",
+        "alpine",
+        "starter-kit",
+        "template",
+        "boilerplate",
+        "server-rendered",
+        "php"
+    ],
     "homepage": "https://github.com/dcardenasl/ci4-admin-starter",
     "support": {
         "source": "https://github.com/dcardenasl/ci4-admin-starter",
