@@ -2,56 +2,102 @@
 
 All notable changes to ci4-admin-starter will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### Added
-- **Operacional / Deploy — Bloque B10** (2026-05-07):
-  - **`RequestIdHolder` + `X-Request-ID` propagation** (audit B10.1) — `app/Libraries/RequestIdHolder.php` is a static registry mirroring api-starter's pattern. `ApiClient::resolveRequestId()` reads the incoming request's `X-Request-ID` header (or generates a UUID v4 fallback) and stamps it on the holder + outgoing API request — so admin and api logs join cleanly in any aggregator.
-  - **`JsonFileHandler`** (audit B10.2) — `app/Libraries/Logging/JsonFileHandler.php`: drop-in CI4 log handler that emits one JSON line per record at `writable/logs/log-json-YYYY-MM-DD.log`. Aggregator-friendly (ELK / Splunk / Loki / Datadog), no Monolog dependency. Self-disables (`handles = []`) when `LOG_FORMAT != json` so the default-text deployment pays nothing. Tags every line with `request_id` from `RequestIdHolder` and a constant `service: "ci4-admin-starter"`. 4 unit tests in `tests/unit/Libraries/Logging/JsonFileHandlerTest.php`.
-  - **`Config\Session` env-driven driver** (audit B10.3) — the `$driver` property now resolves from `SESSION_DRIVER` (`file` / `redis` / `database` / `memcached`) at construction time, with `SESSION_SAVE_PATH` for the connection string. Unknown values fall back to `FileHandler` with a warning. New "Session storage for multi-server" section in `docs/DEPLOYMENT.md` with the Redis recipe and a note on the token-refresh race trade-off.
-  - **`MaintenanceFilter`** (audit B10.4) — alias `maintenance`, wired in `globals.before`. `MAINTENANCE_MODE=true` returns `503 Service Unavailable` with a `Retry-After` header. Bypasses `/health`, `/ping`, `/ready`, `/live` so orchestrators keep probing. Renders JSON for `Accept: application/json` requests and a minimal styled HTML page otherwise. Custom message via `MAINTENANCE_MESSAGE`, retry seconds via `MAINTENANCE_RETRY_AFTER`. 7 unit tests in `tests/unit/Filters/MaintenanceFilterTest.php`.
-  - **`.github/workflows/release.yml`** (audit B10.5) — on `v*.*.*` tag push, extracts the matching `## [VERSION]` section from `CHANGELOG.md` via inline awk and creates a GitHub Release with those notes. Soft-fails when the release already exists (re-tag scenario) by editing instead of failing.
+## [2.0.0] — 2026-05-13
+
+This release realigns the admin to the v2.0 contract of `ci4-api-starter` (permission-based authorization, no `users.role`), drives admin access from config instead of a hardcoded filter list, and hardens the deployment surface: Dockerfile multi-stage build, security headers, public `/health` endpoint, JSON logging with `X-Request-ID` propagation, maintenance-mode short-circuit, asset cache-busting, two-stage MIME validation, and a tag-driven GitHub Release workflow.
+
+### ⚠️ Breaking Changes
+
+- **IAM contract realigned with API v2.0.** The session `user` object now exposes `permissions: string[]` (was `user.role`). The legacy `has_admin_access()` helper has been removed; all UI gating and route filtering routes through `has_permission(string $code)` (from `app/Helpers/auth_helper.php`). Permission codes use the **dot separator** (`iam.admin-access`, `users.write`, `metrics.read`).
+- **`AdminFilter` is driven by `Config\AdminAccess`** (env-overridable via `ADMIN_PERMISSIONS`). The hardcoded admin-permission list has been removed from the filter source. Downstream consumers that customised the filter must port their list to the config class.
+- **Email is immutable for non-superadmin actors.** `UserUpdateRequest::payload()` strips `email` from outbound payloads unless the actor is `is_superadmin()`; the API enforces `403 Iam.cannotModifyEmail` as defence in depth. Self-edit of `email` is never accepted — the profile view renders the field read-only.
+- **Profile self-edit flows through `PATCH /auth/me`.** `ProfileController` no longer calls `PUT /users/{id}` for self-updates. Allowlist: `first_name`, `last_name`, `avatar_url`. Any code that overrode `ProfileController::update()` to send arbitrary fields must rework against the dedicated endpoint.
+- **`AppUserMembershipController` removed.** Role assignment to users now happens through `UserController` (the user create/edit forms accept `role_ids[]`). The standalone "membership" admin UI has been deleted.
+- **`SecurityHeadersFilter` enabled by default in `globals.after`.** Emits `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy` (empty for camera/microphone/geolocation/payment/usb/magnetometer/gyroscope), and `Strict-Transport-Security` in production. Embedded third-party iframes, external script tags, and inline scripts may now be blocked — review custom views for CSP compatibility.
+- **`Config\Session` resolves the driver from `SESSION_DRIVER`** (`file` / `redis` / `database` / `memcached`). The default still falls back to `FileHandler` when unset, but multi-server production deployments must set this explicitly.
+- **`Config\Security::$regenerate` is documented as intentional `false`.** The behaviour did not change, but consumers that audited for "always-on session-id regeneration" should read the explanatory comment on the property before flagging it.
+- **Dockerfile rebuilt as a three-stage build** (`composer-build` → `asset-build` → runtime PHP-FPM Alpine). Production no longer needs `npm install`/`build` at runtime (assets baked in). Runs as `USER www-data` instead of root. Existing `Dockerfile` customisations may need to re-base.
+- **`composer.json` requires CodeIgniter `^4.5`** (was `^4.4`).
+- **Frontend dependencies vendored locally.** Tailwind, Alpine, and Lucide are now built or copied via `npm run build:all` into `public/assets/css/` and `public/assets/vendor/`. The layout falls back to the pinned jsdelivr CDN URLs only when the vendored copies are missing — keeping a fresh-clone smoke path while removing the runtime CDN dependency from production. Deployment pipelines must run `npm ci && npm run build:all` before publishing.
+- **PHP `^8.2`** (locked in at v1.1.0; restated here for downstream that may have skipped 1.1).
 
 ### Added
-- **Test maturity — Bloque B9** (2026-05-07):
-  - **`PermissionFilterTest`** (audit B9.3) — 5 unit tests in `tests/unit/Filters/` pinning the gating contract: allows when permission held, redirects browser requests to `/dashboard`, returns JSON 403 for AJAX, denies fail-closed on empty arguments. Audit was partly outdated — `BadgeHelperTest` and `ApiClientTest` already existed.
-  - **`scripts/check-coverage.php`** (audit B9.4) — clover-XML parser that exits non-zero when line coverage is below the supplied threshold (default 70%). New composer alias `coverage:check`. Wired into `.github/workflows/ci.yml` as a soft-fail step (PHP 8.2 lane only; `continue-on-error: true`) until a confirmed baseline lets us flip it to a hard gate.
-  - **B9.1 closed as audit false-positive:** admin feature tests already mock the API surface via `Services::injectMock` (verified across `ApiKeyFlowTest`, `AuthLogoutFlowTest`, etc.). The audit's "tests llaman al API real" finding was outdated.
 
-### Added
-- **Frontend hardening — Bloque B8** (2026-05-07):
-  - **`asset_url()` / `asset_version()` helper** (audit B8.1) — `app/Helpers/asset_helper.php`, autoloaded via `Config\Autoload::$helpers`. Reads `ASSET_VERSION` env (production-correct, set per-deploy) or falls back to file mtime (dev convenience). Wired into `app.php` / `auth.php` layouts and the vendored Alpine/Lucide tags in `head.php`. 6 unit tests in `tests/unit/Helpers/AssetHelperTest.php`. Documented in `docs/DEPLOYMENT.md` with the recommended `git rev-parse --short HEAD` pattern. PHPStan got a `base_url()` shim in `phpstan-bootstrap.php`.
-  - **i18n parity check** (audit B8.3) — `scripts/i18n-check.php` validates EN/ES file and key parity for both global `app/Language/` and per-module `app/Modules/{Module}/Language/` trees. New `composer i18n-check` script and matching step in `.github/workflows/ci.yml`. Adapted from `ci4-api-starter`'s heavier checker, trimmed to just parity (admin doesn't have the hardcoded-exception scan surface).
-  - **`field_aria_attrs()`, `field_error_id()`, ARIA-aware `render_field_error()`** (audit B8.4) — `app/Helpers/form_helper.php` gains `aria-invalid="true"` + `aria-describedby="field-error-<safe>"` emission when a field has a stored error, and `aria-required="true"` when the caller asserts. The error `<p>` now carries a stable `id` + `role="alert"` so screen readers announce dynamically. Existing rendering output preserved otherwise (back-compat). 7 new unit tests in `FormHelperTest`. Confirm modal already had Escape + tab focus trap (verified during the audit; no change needed).
-  - **`revokeTokenWithRetry()`** (audit B8.5) — `AuthController::logout()` previously called the API logout endpoint exactly once and silently dropped failures, leaving the JWT live on the API. Now retries once with a 250ms backoff (covers transient network blips) and logs a warning to the security audit log when both attempts fail. Local session destruction is unconditional to keep logout snappy. Covered by `AuthLogoutFlowTest` (2 existing tests updated for the retry semantics + 1 new test asserting transient-blip success on second attempt).
+#### Operational / deploy
+- **`RequestIdHolder` + `X-Request-ID` propagation** (`app/Libraries/RequestIdHolder.php`) — mirrors api-starter's pattern. `ApiClient::resolveRequestId()` reads the incoming `X-Request-ID` header (or generates a UUID v4 fallback) and stamps it on the holder plus the outgoing API request, so admin and API logs join cleanly in any aggregator.
+- **`JsonFileHandler`** (`app/Libraries/Logging/JsonFileHandler.php`) — drop-in CI4 log handler emitting one JSON line per record at `writable/logs/log-json-YYYY-MM-DD.log`. Aggregator-friendly (ELK / Splunk / Loki / Datadog), no Monolog dependency. Self-disables (`handles = []`) when `LOG_FORMAT != json` so the default-text deployment pays nothing. Tags every line with `request_id` from `RequestIdHolder` and a constant `service: "ci4-admin-starter"`.
+- **`MaintenanceFilter`** (alias `maintenance`, `globals.before`). `MAINTENANCE_MODE=true` returns `503 Service Unavailable` with `Retry-After`. Bypasses `/health`, `/ping`, `/ready`, `/live`. Renders JSON for `Accept: application/json` requests and a minimal styled HTML page otherwise. Custom message via `MAINTENANCE_MESSAGE`, retry seconds via `MAINTENANCE_RETRY_AFTER`.
+- **`.github/workflows/release.yml`** — on `v*.*.*` tag push, extracts the matching `## [VERSION]` section from `CHANGELOG.md` via inline awk and creates a GitHub Release with those notes. Soft-fails on re-tag.
+- **Public `GET /health` endpoint** (`App\Modules\System`) — lightweight liveness probe returning JSON `{ok, status, service, version, timestamp, checks}` with HTTP 200 healthy / 503 if `WRITEPATH` is not writable. Bypasses auth/admin filters; suitable for k8s probes and load-balancer health checks.
+- **`HEALTHCHECK` in the Dockerfile** — probes the PHP-FPM listener via PHP `fsockopen` (no curl/nc dependency).
 
-### Changed
-- **CI `npm run lint:all`** (audit B8.2) — `.github/workflows/ci.yml` now runs `lint:all` (eslint over `public/assets/js/**/*.js`) instead of `lint:js` (only `app.js`). `lint-staged` widened to the same `public/assets/js/**/*.js` pattern so Husky pre-commit catches issues in any future JS file, not just `app.js`. Audit had a partial false positive (CI did already run `npm run lint:js`); the actual gap was scope.
+#### Security
+- **`SecurityHeadersFilter`** — emits `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `X-XSS-Protection`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`, and `Strict-Transport-Security` in production. Registered as alias `securityheaders` in `Config/Filters.php`, wired into `globals.after` before CI4's native `secureheaders`. Closes parity gap with `ci4-api-starter`.
+- **Two-stage MIME validation in `FileUploadRequest`** — the standard CI4 `mime_in[]` rule against the client-reported MIME, then a fileinfo-based real-MIME check via `checkRealMime()` against the per-extension whitelist (`ALLOWED_EXTENSION_MIMES`). An `evil.php` renamed to `evil.jpg` with a forged `Content-Type` is now rejected.
+- **`revokeTokenWithRetry()` in `AuthController::logout()`** — retries the API logout call once with a 250ms backoff (covers transient network blips) and logs a warning to the security audit log when both attempts fail. Local session destruction stays unconditional to keep logout snappy.
 
-### Added
-- **Hardened multi-stage Dockerfile + `.dockerignore`** (audit B5.3, 2026-05-06) — three-stage build (`composer-build` → `asset-build` → runtime PHP-FPM Alpine). Frontend assets (Tailwind + vendored Alpine/Lucide) are now baked into the image so production no longer needs `npm install`/`build`. Drops to `USER www-data` before `CMD` (was running as root). `--no-dev` for both composer and the dropped phpunit/phpstan/cs-fixer artifacts. Resulting image: **123 MB** (was unmeasured but ballooned by `node_modules` + `.git` + tests + dev-deps). HEALTHCHECK probe (PHP `fsockopen` on :9000) preserved. Removed the broken `docker-php-ext-enable fileinfo` line — fileinfo is statically compiled into PHP 8.2.
-- **`GET /health` endpoint** (audit B5.2, 2026-05-06) — public, lightweight liveness probe in new `App\Modules\System` module. Returns JSON `{ok, status, service, version, timestamp, checks}` with HTTP 200 when healthy or 503 if `WRITEPATH` is not writable. Bypasses auth/admin filters by living outside the `auth`-grouped routes; CSRF doesn't apply to GET. 2 feature tests in `tests/feature/HealthEndpointTest.php`. Suitable for k8s liveness/readiness probes and load-balancer health checks.
-- **`SecurityHeadersFilter`** (audit B5.1, 2026-05-06) — emits `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `X-XSS-Protection`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` (camera/microphone/geolocation/payment/usb/magnetometer/gyroscope all empty), and `Strict-Transport-Security` in production. Registered as alias `securityheaders` in `Config/Filters.php`, wired into `globals.after` before CI4's native `secureheaders`. Closes parity gap with `ci4-api-starter`. 6 unit tests in `tests/unit/Filters/SecurityHeadersFilterTest.php`.
-
-### Changed
-- **`phpstan-bootstrap.php`** no longer pre-defines `ENVIRONMENT='testing'` — leaving it runtime-unknown so legitimate `ENVIRONMENT === 'production'` branches are not flagged as `identical.alwaysFalse`. The matching `Constant ENVIRONMENT not found` warning is suppressed in `phpstan.neon` (mirrors api-starter convention). Removed the now-stale `@phpstan-ignore identical.alwaysFalse` annotation in `app/Helpers/ui_helper.php`.
-- **`AdminFilter`** no longer hardcodes the admin-permission whitelist. The list of permission codes that grant admin entry now lives in `Config\AdminAccess::$permissions` (env-overridable via `ADMIN_PERMISSIONS`), so adding a new admin module no longer requires editing the filter source.
-- **`FileUploadRequest`** performs two-stage MIME validation: (1) the standard CI4 `mime_in[]` rule against the client-reported MIME, then (2) a fileinfo-based real-MIME check via `checkRealMime()` against the per-extension whitelist. A `evil.php` renamed to `evil.jpg` with a forged `Content-Type` is now rejected.
-- **`Config\Security::$regenerate = false`** is preserved (multi-tab admin workflow), but the long comment on the property now documents the trade-off explicitly so a future audit doesn't re-flag it.
-- **`files/partials/list_section.php`** view-mode preference moved from `localStorage` to `sessionStorage` — aligns with the architecture rule of not stashing state outside the server-side session, and avoids cross-user persistence on shared computers.
-- **`composer.json`** requires CodeIgniter `^4.5` (was `^4.4`). The lock file already shipped 4.7.x; this just tightens the floor and unblocks 4.5+ features.
-- **Tailwind, Alpine, and Lucide** are now built or vendored locally (`npm run build:all`). The layout falls back to the pinned jsdelivr CDN URLs only when the vendored copies are missing — keeping a fresh-clone smoke path while removing the runtime CDN dependency from production.
-
-### Added
+#### IAM admin UI
 - **`Config\AdminAccess`** — central, env-overridable list of permission codes that grant entry to `/admin/*`. Reads `ADMIN_PERMISSIONS` (comma-separated) from `.env`.
-- **`<meta name="session-expires-at">`** emitted by `BaseWebController.viewData` and consumed by `bootSessionExpiryWatcher()` in `app.js`. Logs a console warning + emits a `session:expiring-soon` window event 60s before the JWT expires; downstream UI can hook this to show a banner / save-warning. Avoids the surprise 401 mid-action.
-- **`HEALTHCHECK`** in the Dockerfile — probes the PHP-FPM listener via PHP `fsockopen` (no curl/nc dependency).
-- **`build:vendor` / `build:all`** npm scripts that copy `node_modules/alpinejs/dist/cdn.min.js` and `node_modules/lucide/dist/umd/lucide.min.js` into `public/assets/vendor/`.
-- **5 new MIME-validation tests** in `tests/unit/Modules/Files/Requests/FileUploadRequestTest.php`: real-MIME mismatch detection for renamed `.php`, ZIP disguised as PDF, unknown extensions, and consistent PNG happy-path.
+- **`App\Modules\Iam`** — Roles and Permissions admin modules under `/admin/iam/`. Full CRUD plus inline permission-editor on role create/edit. M2M attach/detach for roles↔permissions.
+- **Role assignment surfaced on the Users edit page** via `assignableRoles()` on `UserApiService` — the form submits `role_ids[]` directly, replacing the deleted standalone membership controller.
+- **Inline permission editor** on role create / edit views.
+
+#### Frontend hardening
+- **`asset_url()` / `asset_version()` helper** (`app/Helpers/asset_helper.php`, autoloaded). Reads `ASSET_VERSION` env (production-correct, set per-deploy) or falls back to file mtime (dev convenience). Wired into `app.php` / `auth.php` layouts and the vendored Alpine/Lucide tags in `head.php`.
+- **ARIA-aware form helpers** — `field_aria_attrs()`, `field_error_id()`, and an updated `render_field_error()` emit `aria-invalid="true"` + `aria-describedby="field-error-<safe>"` when a field has a stored error, and `aria-required="true"` when the caller asserts. The error `<p>` carries a stable `id` + `role="alert"` so screen readers announce dynamically.
+- **`<meta name="session-expires-at">`** emitted by `BaseWebController.viewData` and consumed by `bootSessionExpiryWatcher()` in `app.js`. Logs a console warning and emits a `session:expiring-soon` window event 60 s before the JWT expires — downstream UI can hook this to show a banner / save-warning.
+- **`build:vendor` / `build:all` npm scripts** that copy `node_modules/alpinejs/dist/cdn.min.js` and `node_modules/lucide/dist/umd/lucide.min.js` into `public/assets/vendor/`.
+
+#### Quality / CI
+- **`scripts/i18n-check.php`** — validates EN/ES file and key parity for both global `app/Language/` and per-module `app/Modules/{Module}/Language/` trees. Wired in as `composer i18n-check` and a matching CI step.
+- **`scripts/check-coverage.php`** — clover-XML parser that exits non-zero below the supplied threshold (default 70%). Composer alias `coverage:check`. Wired into `ci.yml` as a soft-fail step on the PHP 8.2 lane until a confirmed baseline lets us flip it to a hard gate.
+- **`PermissionFilterTest`** — 5 unit tests pinning the gating contract: allows when permission held, redirects browser requests to `/dashboard`, returns JSON 403 for AJAX, denies fail-closed on empty arguments.
 - **`AdminFilter` config-driven test** — verifies that overriding `Config\AdminAccess::$permissions` actually changes who passes the gate.
+- **MIME-validation tests** — 5 new tests in `tests/unit/Modules/Files/Requests/FileUploadRequestTest.php` covering renamed `.php`, ZIP disguised as PDF, unknown extensions, and the consistent PNG happy-path.
+- **`MaintenanceFilterTest`**, **`SecurityHeadersFilterTest`**, **`JsonFileHandlerTest`** — unit coverage for the new filters and the JSON log handler.
+- **`AuthLogoutFlowTest`** updated for the retry semantics, plus a new test asserting transient-blip success on the second attempt.
+- **CI `npm run lint:all`** — `.github/workflows/ci.yml` now runs `lint:all` (eslint over `public/assets/js/**/*.js`) instead of `lint:js` (only `app.js`). `lint-staged` widened to the same pattern.
+
+### Changed
+
+- **`AdminFilter`** no longer hardcodes the admin-permission whitelist (see Breaking Changes above for the migration path).
+- **`Config\Security::$regenerate = false`** retained intentionally (multi-tab admin workflow); the long comment on the property now documents the trade-off explicitly so a future audit doesn't re-flag it.
+- **`files/partials/list_section.php`** view-mode preference moved from `localStorage` to `sessionStorage` — aligns with the architecture rule of not stashing state outside the server-side session, and avoids cross-user persistence on shared computers.
+- **`composer.json`** requires CodeIgniter `^4.5` (was `^4.4`). The lock file already shipped 4.7.x; this tightens the floor and unblocks 4.5+ features.
+- **`phpstan-bootstrap.php`** no longer pre-defines `ENVIRONMENT='testing'` — leaving it runtime-unknown so legitimate `ENVIRONMENT === 'production'` branches are not flagged as `identical.alwaysFalse`. The matching `Constant ENVIRONMENT not found` warning is suppressed in `phpstan.neon` (mirrors api-starter convention).
+- **Tailwind, Alpine, and Lucide** are now built or vendored locally (`npm run build:all`); the runtime CDN dependency is gone in production.
+
+### Removed
+
+- **`has_admin_access()` helper** — replaced by `has_permission('iam.admin-access')`.
+- **`AppUserMembershipController`** and its routes — role assignment lives in the Users module.
+- **Hardcoded admin-permission list** in `AdminFilter` — moved to `Config\AdminAccess`.
+- **Broken `docker-php-ext-enable fileinfo`** line in the Dockerfile — fileinfo is statically compiled into PHP 8.2.
+- **Catalog reference module** (already gone in 1.1.0; restated here for completeness).
+
+### Migration Guide
+
+Upgrading from `1.1.x` directly to `2.0.0`:
+
+1. **Reinstall dependencies and rebuild assets**: `composer install && npm ci && npm run build:all`. Production deployments must run `npm run build:all` (or `build:css` + `build:vendor`) before publishing — the runtime no longer falls back to CDN in production.
+2. **Re-issue any cached JWT.** The login response shape changed on the API side: `user.role` is gone, `user.permissions[]` is the source of UI gating. Force-logout any active admin session that pre-dates the upgrade.
+3. **Set new environment variables** in production `.env`:
+   - `ADMIN_PERMISSIONS` — comma-separated list of permission codes granting `/admin/*` entry (default: `iam.admin-access`).
+   - `SESSION_DRIVER` — `file` / `redis` / `database` / `memcached`. The default falls back to `FileHandler` when unset, but multi-server deployments must set this explicitly.
+   - `ASSET_VERSION` — cache-busting token (recommended: `git rev-parse --short HEAD` per deploy). Falls back to file mtime in dev.
+   - `LOG_FORMAT=json` to opt into `JsonFileHandler` line-delimited JSON logs. Default text format is preserved when unset.
+   - `MAINTENANCE_MODE=true` (plus optional `MAINTENANCE_MESSAGE` and `MAINTENANCE_RETRY_AFTER`) to opt into the short-circuit during deploys.
+4. **Port any custom `AdminFilter` whitelist** to `app/Config/AdminAccess.php` (or set `ADMIN_PERMISSIONS` in `.env`). The hardcoded list in the filter source has been removed.
+5. **Review custom views** for CSP/Frame-Options/Permissions-Policy compatibility — `SecurityHeadersFilter` is now wired by default. Inline scripts, embedded third-party iframes, and cross-origin script tags may need policy adjustments.
+6. **Rebuild the Docker image** with the new multi-stage `Dockerfile` if you were using the previous one. The base image and runtime user (now `www-data`) changed; custom layers must re-base accordingly.
+7. **Update any code calling `has_admin_access()`** to `has_permission('iam.admin-access')`. UI templates that referenced `$user['role']` must consume `$user['permissions']`.
+8. **Update any extension of `ProfileController::update()`** that sent fields beyond `first_name` / `last_name` / `avatar_url` — those are now silently dropped by the API. Use `PUT /users/{id}` (admin endpoint) if you genuinely need to mutate other fields.
+9. **Remove any references to `AppUserMembershipController`** in custom routes, navigation, or templates. Role assignment is via `UserController` (`role_ids[]` payload).
 
 ## [1.1.0] — 2026-04-30
 
@@ -110,7 +156,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Unit and feature test suite: auth flows, file upload/download/delete, API key CRUD, filter and sort forwarding
   - Docker environment and Makefile for development
 
-[unreleased]: https://github.com/dcardenasl/ci4-admin-starter/compare/v1.1.0...HEAD
+[unreleased]: https://github.com/dcardenasl/ci4-admin-starter/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/dcardenasl/ci4-admin-starter/compare/v1.1.0...v2.0.0
 [1.1.0]: https://github.com/dcardenasl/ci4-admin-starter/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/dcardenasl/ci4-admin-starter/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/dcardenasl/ci4-admin-starter/releases/tag/v1.0.0
