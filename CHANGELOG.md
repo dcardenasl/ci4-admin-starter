@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.0.0] — 2026-05-13
+## [2.0.0] — 2026-05-15
 
 This release realigns the admin to the v2.0 contract of `ci4-api-starter` (permission-based authorization, no `users.role`), drives admin access from config instead of a hardcoded filter list, and hardens the deployment surface: Dockerfile multi-stage build, security headers, public `/health` endpoint, JSON logging with `X-Request-ID` propagation, maintenance-mode short-circuit, asset cache-busting, two-stage MIME validation, and a tag-driven GitHub Release workflow.
 
@@ -35,6 +35,15 @@ This release realigns the admin to the v2.0 contract of `ci4-api-starter` (permi
 - **`.github/workflows/release.yml`** — on `v*.*.*` tag push, extracts the matching `## [VERSION]` section from `CHANGELOG.md` via inline awk and creates a GitHub Release with those notes. Soft-fails on re-tag.
 - **Public `GET /health` endpoint** (`App\Modules\System`) — lightweight liveness probe returning JSON `{ok, status, service, version, timestamp, checks}` with HTTP 200 healthy / 503 if `WRITEPATH` is not writable. Bypasses auth/admin filters; suitable for k8s probes and load-balancer health checks.
 - **`HEALTHCHECK` in the Dockerfile** — probes the PHP-FPM listener via PHP `fsockopen` (no curl/nc dependency).
+- **Shared `ci4-platform` external network** in `docker-compose.yml`. The admin, hub (`ci4-api-starter`), and optionally a domain app (`ci4-domain-starter`) attach to the same bridge network so containers resolve each other by service name (`ci4-api-app`, `ci4-domain-app`) while each stack publishes its own host port. Container names switched to kebab-case (`ci4-admin-app`, `ci4-admin-web`, `ci4-admin-redis`). Setup is a one-time `docker network create ci4-platform` on the host — `docker/README.md` walks through the end-to-end flow plus the optional domain-starter extension.
+
+#### Multi-backend support
+- **`DomainApiClient` — secondary HTTP client targeting a `ci4-domain-starter`** app in parallel to the hub. Lets the admin surface entities owned by a domain backend (subscriptions, projects, campaigns…) alongside entities owned by the hub (users, IAM, files, audit) from the same panel.
+  - **Config (`app/Config/DomainApiClient.php`)** mirrors `Config\ApiClient`, reads `domainApiClient.*` / `DOMAIN_API_*` env vars (default base URL `http://localhost:8090`), and extends `Config\ApiClient` so PHPStan keeps the contract aligned.
+  - **Library (`app/Libraries/DomainApiClient`)** extends `ApiClient` and implements `DomainApiClientInterface` — inherits all refresh/header/upload logic, just bound to the domain config.
+  - **Service factory `Services::domainApiClient()`** registered in `Config\Services` as the DI peer of `Services::apiClient()`.
+  - **Scaffolding switch** — `bin/make-module.sh ... --service=hub|domain` (default `hub`) and the underlying `bin/register-service.php --client=hub|domain` flag propagate the choice into the emitted service factory call (`static::apiClient()` vs `static::domainApiClient()`).
+  - **When to use which:** entities owned by the hub → `apiClient`; entities owned by a domain app → `domainApiClient`. Never mix in the same module. Documented in `CLAUDE.md`.
 
 #### Security
 - **`SecurityHeadersFilter`** — emits `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `X-XSS-Protection`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`, and `Strict-Transport-Security` in production. Registered as alias `securityheaders` in `Config/Filters.php`, wired into `globals.after` before CI4's native `secureheaders`. Closes parity gap with `ci4-api-starter`.
@@ -46,6 +55,7 @@ This release realigns the admin to the v2.0 contract of `ci4-api-starter` (permi
 - **`App\Modules\Iam`** — Roles and Permissions admin modules under `/admin/iam/`. Full CRUD plus inline permission-editor on role create/edit. M2M attach/detach for roles↔permissions.
 - **Role assignment surfaced on the Users edit page** via `assignableRoles()` on `UserApiService` — the form submits `role_ids[]` directly, replacing the deleted standalone membership controller.
 - **Inline permission editor** on role create / edit views.
+- **Applications read-only browser** under `/admin/iam/applications` (gated by `superadmin`). Surfaces every registered application from the hub's `IAM Applications` resource with index (server-driven table) and detail views, reusing the existing `ApplicationApiService`. Read-only by design — applications are registered server-side via `php spark apps:bootstrap` on the hub. Sidebar entry "Applications" sits under the Identity & Access section with the `layers` icon. EN + ES strings complete.
 
 #### Frontend hardening
 - **`asset_url()` / `asset_version()` helper** (`app/Helpers/asset_helper.php`, autoloaded). Reads `ASSET_VERSION` env (production-correct, set per-deploy) or falls back to file mtime (dev convenience). Wired into `app.php` / `auth.php` layouts and the vendored Alpine/Lucide tags in `head.php`.
@@ -62,6 +72,8 @@ This release realigns the admin to the v2.0 contract of `ci4-api-starter` (permi
 - **`MaintenanceFilterTest`**, **`SecurityHeadersFilterTest`**, **`JsonFileHandlerTest`** — unit coverage for the new filters and the JSON log handler.
 - **`AuthLogoutFlowTest`** updated for the retry semantics, plus a new test asserting transient-blip success on the second attempt.
 - **CI `npm run lint:all`** — `.github/workflows/ci.yml` now runs `lint:all` (eslint over `public/assets/js/**/*.js`) instead of `lint:js` (only `app.js`). `lint-staged` widened to the same pattern.
+- **Cross-module route-name collision detection in `bin/make-module.sh`** (exit 6). The scaffolder scans `app/Modules/*/Config/Routes.php` plus `app/Config/Routes.php` before generating and refuses to write when the planned `ROUTE_NAME` is already registered in another module — catching the realistic "two modules emit the same named route" mistake that would otherwise shadow URLs silently. Covered by `testMakeModuleRejectsCrossModuleRouteNameCollision` in `ScaffoldingScriptsTest`.
+- **`DomainApiClientTest`** (10 unit tests) — covers config defaults, env override resolution, header injection, refresh delegation, and the `--client=domain` path through the service factory. Plus 3 new cases in `ScaffoldingScriptsTest` exercising `--service=domain` and `register-service.php --client=domain`.
 
 ### Changed
 
