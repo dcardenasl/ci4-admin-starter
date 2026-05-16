@@ -34,4 +34,9 @@ $routes->group('admin/iam', ['filter' => ['auth', 'superadmin']], static functio
     $routes->post('permissions/(:segment)', '\App\Modules\Iam\Controllers\PermissionController::update/$1', ['as' => 'admin.iam.permissions.update']);
     $routes->post('permissions/(:segment)/delete', '\App\Modules\Iam\Controllers\PermissionController::delete/$1', ['as' => 'admin.iam.permissions.delete']);
     $routes->get('permissions/(:segment)', '\App\Modules\Iam\Controllers\PermissionController::show/$1', ['as' => 'admin.iam.permissions.show']);
+
+    // Application (read-only — managed server-side via `php spark apps:bootstrap`)
+    $routes->get('applications', '\App\Modules\Iam\Controllers\ApplicationController::index', ['as' => 'admin.iam.applications']);
+    $routes->get('applications/data', '\App\Modules\Iam\Controllers\ApplicationController::data', ['as' => 'admin.iam.applications.data']);
+    $routes->get('applications/(:segment)', '\App\Modules\Iam\Controllers\ApplicationController::show/$1', ['as' => 'admin.iam.applications.show']);
 });

@@ -63,6 +63,10 @@
                 <?= ui_icon('lock') ?>
                 <span><?= lang('App.permissions') ?></span>
             </a>
+            <a href="<?= route_to('admin.iam.applications') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/iam/applications*') ?>">
+                <?= ui_icon('layers') ?>
+                <span><?= lang('Iam.applications_title') ?></span>
+            </a>
         <?php endif; ?>
     </nav>
 </aside>

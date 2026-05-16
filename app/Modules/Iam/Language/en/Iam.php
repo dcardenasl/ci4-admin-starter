@@ -21,6 +21,18 @@ return [
     'roles_loading'            => 'Loading roles...',
     'roles_no_results'         => 'No roles found.',
 
+    // Application — read-only browser
+    'applications_title'              => 'Applications',
+    'applications_details'            => 'Application details',
+    'applications_not_found'          => 'Application not found.',
+    'applications_empty'              => 'No applications registered yet.',
+    'applications_search_placeholder' => 'Search by code or name...',
+    'applications_loading'            => 'Loading applications...',
+    'applications_no_results'         => 'No applications found.',
+    'applications_managed_server_side' => 'Applications are registered server-side via `php spark apps:bootstrap` on the hub. This panel is read-only.',
+    'field_code_long'                 => 'Application code',
+    'field_active'                    => 'Active',
+
     // Permission — list & actions
     'permissions_title'              => 'Permissions',
     'permissions_new'                => 'New Permission',

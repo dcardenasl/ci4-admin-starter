@@ -267,6 +267,7 @@ if (! function_exists('ui_icon')) {
             'check'         => 'check',
             'folder-open'   => 'folder-open',
             'image'         => 'image',
+            'layers'        => 'layers',
         ];
 
         if (! isset($icons[$name])) {
