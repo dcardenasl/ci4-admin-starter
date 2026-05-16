@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: ci4_admin_app
+    container_name: ci4-admin-app
     restart: unless-stopped
     volumes:
       - .:/var/www/html
@@ -14,13 +14,13 @@ services:
     environment:
       CI_ENVIRONMENT: development
     networks:
-      - ci4_network
+      - ci4-platform
     depends_on:
       - redis
 
   web:
     image: nginx:1.27-alpine
-    container_name: ci4_admin_web
+    container_name: ci4-admin-web
     restart: unless-stopped
     ports:
       - "8082:80"
@@ -28,18 +28,23 @@ services:
       - .:/var/www/html
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
-      - ci4_network
+      - ci4-platform
     depends_on:
       - app
 
   redis:
     image: redis:7-alpine
-    container_name: ci4_admin_redis
+    container_name: ci4-admin-redis
     restart: unless-stopped
     command: redis-server --save "" --appendonly no
     networks:
-      - ci4_network
+      - ci4-platform
 
+# Shared bridge network across all ci4-platform repos (admin + api + domain).
+# Run once before the first `docker compose up`:
+#     docker network create ci4-platform
+# Marking it `external: true` lets the API container resolve `ci4-admin-app`
+# by service name (and vice versa) when both compose stacks are running.
 networks:
-  ci4_network:
-    driver: bridge
+  ci4-platform:
+    external: true
