@@ -158,6 +158,17 @@ The `app/Libraries/ApiClient.php` class is the heart of all API communication. I
 - **Session-based token storage:** Tokens never exposed to browser
 - **App identification:** Sends `X-App-Key` header on every request when `apiClient.appKey` is configured (raises API rate limit from 60 to 600 req/min)
 
+### DomainApiClient: Secondary client for domain-starter backends
+
+When the admin drives both a hub (`ci4-api-starter`) and a domain app (`ci4-domain-starter`) in parallel — e.g. SubscriptionKit, where hub owns auth/users/IAM and a domain app owns projects/subscribers — wire the domain modules to `App\Libraries\DomainApiClient` instead of `ApiClient`.
+
+- **Config:** `app/Config/DomainApiClient.php` reads `domainApiClient.*` / `DOMAIN_API_*` env vars (default base URL `http://localhost:8090`). Extends `Config\ApiClient`, so the contract and PHPStan types stay aligned.
+- **Library:** `App\Libraries\DomainApiClient extends ApiClient implements DomainApiClientInterface`. Inherits all refresh / header / upload logic from `ApiClient`.
+- **Service factory:** `Services::domainApiClient()` is the parallel of `Services::apiClient()`. Returns `DomainApiClientInterface`.
+- **Scaffolding:** `bash bin/make-module.sh <Resource> <Module> /path --service=domain` generates a module wired to `static::domainApiClient()`. Default remains `--service=hub`.
+- **When to use which:** modules that surface entities **owned by the hub** (Users, Roles, Permissions, Files, Audit, ApiKeys, Metrics, IAM Applications) → `apiClient`. Modules that surface entities **owned by a domain app** (Subscriptions, Projects, Campaigns…) → `domainApiClient`. Never mix in the same module.
+- **Services type-hint stays `ApiClientInterface`:** `BaseApiService` and `ResourceApiService` accept the parent interface. `DomainApiClientInterface` exists only so the factory in `Services.php` can distinguish at the DI layer; PHPStan flags a service that was wired to the wrong factory only via the factory's return type, not the service constructor.
+
 **Auto-refresh flow:**
 1. API request returns 401 (token expired)
 2. ApiClient automatically calls `POST /api/v1/auth/refresh` with refresh_token from session

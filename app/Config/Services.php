@@ -6,6 +6,8 @@ namespace Config;
 
 use App\Libraries\ApiClient;
 use App\Libraries\ApiClientInterface;
+use App\Libraries\DomainApiClient;
+use App\Libraries\DomainApiClientInterface;
 use App\Modules\ApiKeys\Services\ApiKeyApiService;
 use App\Modules\ApiKeys\Services\ApiKeyApiServiceInterface;
 use App\Modules\Audit\Services\AuditApiService;
@@ -75,6 +77,16 @@ class Services extends BaseService
         }
 
         return new ApiClient(config('ApiClient'));
+    }
+
+    public static function domainApiClient(bool $getShared = true): DomainApiClientInterface
+    {
+        if ($getShared) {
+            /** @var DomainApiClientInterface */
+            return static::getSharedInstance('domainApiClient');
+        }
+
+        return new DomainApiClient(config('DomainApiClient'));
     }
 
     public static function authApiService(bool $getShared = true): AuthApiServiceInterface
