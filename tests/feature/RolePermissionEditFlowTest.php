@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Modules\Iam\Services\ApplicationApiService;
 use App\Modules\Iam\Services\PermissionApiService;
 use App\Modules\Iam\Services\RoleApiService;
 use CodeIgniter\Test\CIUnitTestCase;
@@ -32,9 +33,19 @@ final class RolePermissionEditFlowTest extends CIUnitTestCase
         ],
     ];
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // IamLookups::applications() caches the catalogue cross-request, so
+        // clear it to keep tests hermetic (otherwise prior runs/CI cold cache
+        // can change behaviour).
+        service('cache')->delete('iam_lookups_apps_v1');
+    }
+
     protected function tearDown(): void
     {
         Services::reset();
+        service('cache')->delete('iam_lookups_apps_v1');
         parent::tearDown();
     }
 
@@ -150,8 +161,16 @@ final class RolePermissionEditFlowTest extends CIUnitTestCase
             'raw' => '', 'headers' => [], 'messages' => [], 'fieldErrors' => [],
         ]);
 
+        $appMock = $this->createMock(ApplicationApiService::class);
+        $appMock->method('list')->willReturn([
+            'ok' => true, 'status' => 200,
+            'data' => ['data' => [], 'meta' => ['total' => 0, 'per_page' => 100]],
+            'raw' => '', 'headers' => [], 'messages' => [], 'fieldErrors' => [],
+        ]);
+
         Services::injectMock('roleApiService', $roleMock);
         Services::injectMock('permissionApiService', $permMock);
+        Services::injectMock('applicationApiService', $appMock);
 
         $result = $this->withSession(self::ADMIN_SESSION)->get('/admin/iam/roles/uuid-3/edit');
 
