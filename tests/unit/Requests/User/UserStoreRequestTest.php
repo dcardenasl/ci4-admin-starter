@@ -19,14 +19,13 @@ final class UserStoreRequestTest extends CIUnitTestCase
         parent::tearDown();
     }
 
-    public function testValidateFailsWithMissingNamesAndInvalidRole(): void
+    public function testValidateFailsWithMissingNamesAndInvalidEmail(): void
     {
         $request = service('request');
         $request->setGlobal('post', [
             'first_name' => '',
             'last_name' => 'A',
             'email' => 'invalid',
-            'role' => 'owner',
         ]);
 
         $formRequest = new UserStoreRequest($request, service('validation'));
@@ -35,6 +34,5 @@ final class UserStoreRequestTest extends CIUnitTestCase
         $this->assertArrayHasKey('first_name', $formRequest->errors());
         $this->assertArrayHasKey('last_name', $formRequest->errors());
         $this->assertArrayHasKey('email', $formRequest->errors());
-        $this->assertArrayHasKey('role', $formRequest->errors());
     }
 }

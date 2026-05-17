@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Config;
 
+use App\Libraries\Logging\JsonFileHandler;
 use CodeIgniter\Config\BaseConfig;
 use CodeIgniter\Log\Handlers\FileHandler;
 use CodeIgniter\Log\Handlers\HandlerInterface;
@@ -121,6 +122,26 @@ class Logger extends BaseConfig
              * Specify a different destination here, if desired.
              */
             'path' => '',
+        ],
+
+        /*
+         * --------------------------------------------------------------------
+         * JSON File Handler — audit B10.2 (2026-05-07)
+         * --------------------------------------------------------------------
+         * Emits one JSON object per line at `writable/logs/log-json-YYYY-MM-DD.log`.
+         * Aggregator-friendly (ELK / Splunk / Loki / Datadog) and carries the
+         * per-request correlation ID via `RequestIdHolder` so cross-service
+         * joins are trivial.
+         *
+         * Opt-in: set `LOG_FORMAT=json` in `.env`. The handler self-disables
+         * at construction time (`handles = []`) when the env var is absent
+         * or `text`, so this entry costs nothing on a default deployment.
+         */
+        JsonFileHandler::class => [
+            'handles'         => ['critical', 'alert', 'emergency', 'debug', 'error', 'info', 'notice', 'warning'],
+            'fileExtension'   => '',
+            'filePermissions' => 0o644,
+            'path'            => '',
         ],
 
         /*

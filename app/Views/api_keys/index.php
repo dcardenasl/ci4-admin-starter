@@ -80,7 +80,9 @@
                                 <td class="<?= esc(table_td_class()) ?>">
                                     <div class="flex items-center gap-2">
                                         <a :href="apiKeyShowUrl(row.id)" class="<?= esc(action_button_class()) ?>"><?= lang('ApiKeys.view') ?></a>
-                                        <a :href="apiKeyEditUrl(row.id)" class="<?= esc(action_button_class()) ?>"><?= lang('App.edit') ?></a>
+                                        <?php if (has_permission('apikeys.write')): ?>
+                                            <a :href="apiKeyEditUrl(row.id)" class="<?= esc(action_button_class()) ?>"><?= lang('App.edit') ?></a>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                             </tr>

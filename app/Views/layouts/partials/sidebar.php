@@ -21,23 +21,51 @@
             <span><?= lang('App.files') ?></span>
         </a>
 
-        <?php if (has_admin_access((string) (session('user.role') ?? ''))): ?>
+        <?php
+            $hasAdminItem = has_permission('users.read') || has_permission('audit.read') || has_permission('apikeys.read') || has_permission('metrics.read');
+        ?>
+
+        <?php if ($hasAdminItem): ?>
             <div class="pt-3 mt-3 border-t border-gray-800 text-xs uppercase text-gray-500"><?= lang('App.administration') ?></div>
-            <a href="<?= route_to('admin.users') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/users*') ?>">
-                <?= ui_icon('users') ?>
-                <span><?= lang('App.users') ?></span>
+            <?php if (has_permission('users.read')): ?>
+                <a href="<?= route_to('admin.users') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/users*') ?>">
+                    <?= ui_icon('users') ?>
+                    <span><?= lang('App.users') ?></span>
+                </a>
+            <?php endif; ?>
+            <?php if (has_permission('audit.read')): ?>
+                <a href="<?= route_to('admin.audit') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/audit*') ?>">
+                    <?= ui_icon('audit') ?>
+                    <span><?= lang('App.audit') ?></span>
+                </a>
+            <?php endif; ?>
+            <?php if (has_permission('apikeys.read')): ?>
+                <a href="<?= route_to('admin.api_keys') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/api-keys*') ?>">
+                    <?= ui_icon('api_keys') ?>
+                    <span><?= lang('App.api_keys') ?></span>
+                </a>
+            <?php endif; ?>
+            <?php if (has_permission('metrics.read')): ?>
+                <a href="<?= route_to('admin.metrics') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/metrics') ?>">
+                    <?= ui_icon('metrics') ?>
+                    <span><?= lang('App.metrics') ?></span>
+                </a>
+            <?php endif; ?>
+        <?php endif; ?>
+
+        <?php if (has_permission('iam.superadmin-access')): ?>
+            <div class="pt-3 mt-3 border-t border-gray-800 text-xs uppercase text-gray-500"><?= lang('App.identity_access') ?></div>
+            <a href="<?= route_to('admin.iam.roles') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/iam/roles*') ?>">
+                <?= ui_icon('shield') ?>
+                <span><?= lang('App.roles') ?></span>
             </a>
-            <a href="<?= route_to('admin.audit') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/audit*') ?>">
-                <?= ui_icon('audit') ?>
-                <span><?= lang('App.audit') ?></span>
+            <a href="<?= route_to('admin.iam.permissions') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/iam/permissions*') ?>">
+                <?= ui_icon('lock') ?>
+                <span><?= lang('App.permissions') ?></span>
             </a>
-            <a href="<?= route_to('admin.api_keys') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/api-keys*') ?>">
-                <?= ui_icon('api_keys') ?>
-                <span><?= lang('App.api_keys') ?></span>
-            </a>
-            <a href="<?= route_to('admin.metrics') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/metrics') ?>">
-                <?= ui_icon('metrics') ?>
-                <span><?= lang('App.metrics') ?></span>
+            <a href="<?= route_to('admin.iam.applications') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/iam/applications*') ?>">
+                <?= ui_icon('layers') ?>
+                <span><?= lang('Iam.applications_title') ?></span>
             </a>
         <?php endif; ?>
     </nav>

@@ -38,7 +38,7 @@ if (! function_exists('format_date')) {
 }
 
 // Authentication helpers are in app/Helpers/auth_helper.php
-// See: is_email_verified(), has_admin_access()
+// See: is_email_verified(), has_permission()
 
 if (! function_exists('filter_label_class')) {
     function filter_label_class(): string
@@ -237,6 +237,10 @@ if (! function_exists('ui_icon')) {
             'audit'     => 'clipboard-list',
             'api_keys'   => 'key-round',
             'metrics'   => 'bar-chart-3',
+            'shield'    => 'shield',
+            'shield-check' => 'shield-check',
+            'lock'      => 'lock',
+            'user-check' => 'user-check',
             'user'      => 'user',
             'user-round' => 'user-round',
             'activity'  => 'activity',
@@ -263,10 +267,10 @@ if (! function_exists('ui_icon')) {
             'check'         => 'check',
             'folder-open'   => 'folder-open',
             'image'         => 'image',
+            'layers'        => 'layers',
         ];
 
         if (! isset($icons[$name])) {
-            /** @phpstan-ignore identical.alwaysFalse */
             if (ENVIRONMENT === 'development') {
                 throw new \InvalidArgumentException("ui_icon(): unknown icon '{$name}'. Add it to the map or fix the typo.");
             }

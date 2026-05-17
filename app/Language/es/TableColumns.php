@@ -6,7 +6,6 @@ return [
     'id'               => 'ID',
     'name'             => 'Nombre',
     'email'            => 'Email',
-    'role'             => 'Rol',
     'status'           => 'Estado',
     'actions'          => 'Acciones',
     'date'             => 'Fecha',

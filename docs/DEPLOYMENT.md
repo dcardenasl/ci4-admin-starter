@@ -23,6 +23,50 @@ Configure these values in your `.env` file for production. **Never commit your `
 ### 📁 Upload Settings
 - `FILE_MAX_SIZE = 10485760`: Maximum file size in bytes (10MB). Ensure this matches or is lower than the backend's limit.
 
+### 🗄️ Session storage for multi-server (audit B10.3)
+
+CI4's default `FileHandler` stores sessions on disk under `writable/session`. That works on a single VM but **breaks under any horizontal scale** — a request that hits a different pod has no access to the file, so users get logged out at random.
+
+For any deployment with more than one app pod, switch to Redis (recommended) or the database session handler:
+
+```dotenv
+# Recommended for multi-server / k8s deployments.
+SESSION_DRIVER=redis
+SESSION_SAVE_PATH='tcp://session-redis.internal:6379'
+
+# Alternative: shared database (simpler infra, slower than Redis).
+# SESSION_DRIVER=database
+# SESSION_SAVE_PATH='ci_sessions'   # table name
+```
+
+`Config\Session` (`app/Config/Session.php`) reads these env vars at construction time and switches the `$driver` accordingly. Unknown values fall back to `FileHandler` with a warning logged — a typo never silently locks everyone out.
+
+> **About the token-refresh race:** when admin gets a 401, `ApiClient` refreshes the access token. `$isRefreshing` is a static flag, which is single-process-safe but multi-process-leaky: two PHP-FPM workers can both refresh the same `refresh_token` simultaneously, and the API will revoke the loser's tokens. Switching to Redis sessions does **not** fix this on its own — the refresh window is small enough that the race rarely fires, but if you see "session expired mid-action" reports under load, the long-term fix is a Redis SETNX lock around the refresh call. Tracked as future work.
+
+### 📦 Frontend build (audit B11.4)
+
+Three npm scripts cover the asset surface:
+
+| Script | What it does | When to run |
+|---|---|---|
+| `npm run build:css` | Tailwind compile `src/css/app.css` → `public/assets/css/app.css` (minified). | Every deploy / every CSS source change. |
+| `npm run build:vendor` | Copies `node_modules/alpinejs/dist/cdn.min.js` and `node_modules/lucide/dist/umd/lucide.min.js` to `public/assets/vendor/`. | Once per deploy (after `npm install`); the layout falls back to the pinned jsdelivr CDN if vendored copies are missing. |
+| `npm run build:all` | `build:css` + `build:vendor`. | Recommended single command for CI / Dockerfile. |
+
+The Dockerfile (audit B5.3) bakes `npm run build:all` into the image's `asset-build` stage, so production deployments built from the Dockerfile do not need npm at runtime. For non-Docker deploys (e.g. classic shared hosting), run `npm ci && npm run build:all` once after a fresh checkout, then deploy `public/assets/` alongside `app/`.
+
+### 🔄 Asset cache-busting (audit B8.1)
+
+Static assets (`public/assets/css/app.css`, `public/assets/js/app.js`, vendored Alpine/Lucide) are referenced via the `asset_url()` helper, which appends `?v=<token>` to the URL so browsers and CDN edges invalidate stale copies after a deploy.
+
+- `ASSET_VERSION = <git-short-sha>`: **production-correct.** Set this at deploy time to a value that changes on every release (typically a git short SHA, the build timestamp, or a release tag). Recommended pattern in CI:
+  ```bash
+  echo "ASSET_VERSION=$(git rev-parse --short HEAD)" >> .env
+  ```
+- **Fallback:** when `ASSET_VERSION` is unset, the helper uses each asset's `filemtime()`. Fine in dev (auto-bumps when Tailwind / `npm run build:vendor` rewrites the file) but unreliable behind containerized rsync where mtimes reset on every layer copy. Always set `ASSET_VERSION` in production.
+
+Implementation: `app/Helpers/asset_helper.php` (loaded globally via `Config\Autoload::$helpers`).
+
 ---
 
 ## 🔒 Security Hardening

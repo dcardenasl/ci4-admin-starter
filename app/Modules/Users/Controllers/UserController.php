@@ -28,7 +28,6 @@ class UserController extends BaseWebController
     {
         return $this->render('users/index', [
             'title'         => lang('Users.title'),
-            'roleOptions'   => CatalogOptions::options([], 'users.roles', $this->defaultRoleOptions()),
             'statusOptions' => CatalogOptions::options([], 'users.statuses', $this->defaultStatusOptions()),
             'limitOptions'  => CatalogOptions::limitOptions([]),
         ]);
@@ -37,8 +36,8 @@ class UserController extends BaseWebController
     public function data(): ResponseInterface
     {
         return $this->tableDataResponse(
-            ['status', 'role'],
-            ['created_at', 'email', 'role', 'status', 'first_name', 'last_name'],
+            ['status'],
+            ['created_at', 'email', 'status', 'first_name', 'last_name'],
             fn (array $params) => $this->userService->list($params),
         );
     }
@@ -47,14 +46,29 @@ class UserController extends BaseWebController
     {
         $response = $this->safeApiCall(fn () => $this->userService->get($id));
 
-        return $this->renderResourceShow('users/show', lang('Users.details'), 'user', $response, lang('Users.not_found'));
+        if (! ($response['ok'] ?? false)) {
+            return $this->render('users/show', [
+                'title' => lang('Users.details'),
+                'user'  => [],
+                'roles' => [],
+                'error' => $this->firstMessage($response, lang('Users.not_found')),
+            ]);
+        }
+
+        $user = $this->extractData($response);
+
+        return $this->render('users/show', [
+            'title' => lang('Users.details'),
+            'user'  => $user,
+            'roles' => is_array($user['roles'] ?? null) ? $user['roles'] : [],
+        ]);
     }
 
     public function create(): string
     {
         return $this->render('users/create', [
-            'title'       => lang('Users.create'),
-            'roleOptions' => CatalogOptions::options([], 'users.roles', $this->defaultRoleOptions()),
+            'title'           => lang('Users.create'),
+            'assignableRoles' => $this->fetchAssignableRoles(),
         ]);
     }
 
@@ -86,10 +100,16 @@ class UserController extends BaseWebController
             return redirect()->to(route_to('admin.users'))->with('error', lang('Users.not_found'));
         }
 
+        $user = $this->extractData($response);
+
         return $this->render('users/edit', [
-            'title'       => lang('Users.edit_user'),
-            'editUser'    => $this->extractData($response),
-            'roleOptions' => CatalogOptions::options([], 'users.roles', $this->defaultRoleOptions()),
+            'title'           => lang('Users.edit_user'),
+            'editUser'        => $user,
+            'currentRoleIds'  => array_map(
+                static fn (array $r) => (int) ($r['id'] ?? 0),
+                is_array($user['roles'] ?? null) ? $user['roles'] : []
+            ),
+            'assignableRoles' => $this->fetchAssignableRoles(),
         ]);
     }
 
@@ -136,15 +156,31 @@ class UserController extends BaseWebController
     }
 
     /**
-     * @return array<int, array{value:string,label:string}>
+     * @return array<int, array{id:int, code:string, name:string}>
      */
-    private function defaultRoleOptions(): array
+    private function fetchAssignableRoles(): array
     {
-        return [
-            ['value' => 'user', 'label' => lang('Users.user_role')],
-            ['value' => 'admin', 'label' => lang('Users.admin_role')],
-            ['value' => 'superadmin', 'label' => lang('Users.super_admin_role')],
-        ];
+        $response = $this->safeApiCall(fn () => $this->userService->assignableRoles());
+        if (! ($response['ok'] ?? false)) {
+            return [];
+        }
+
+        $items = $this->extractItems($response);
+        $items = $items === [] ? $this->extractData($response) : $items;
+
+        $roles = [];
+        foreach ($items as $row) {
+            if (! is_array($row) || ! isset($row['id'])) {
+                continue;
+            }
+            $roles[] = [
+                'id'   => (int) $row['id'],
+                'code' => (string) ($row['code'] ?? ''),
+                'name' => (string) ($row['name'] ?? ''),
+            ];
+        }
+
+        return $roles;
     }
 
     /**

@@ -7,9 +7,15 @@
     "scripts": {
         "dev:css": "tailwindcss -i ./src/css/app.css -o ./public/assets/css/app.css --watch",
         "build:css": "tailwindcss -i ./src/css/app.css -o ./public/assets/css/app.css --minify",
+        "build:vendor": "mkdir -p public/assets/vendor && cp node_modules/alpinejs/dist/cdn.min.js public/assets/vendor/alpine.min.js && cp node_modules/lucide/dist/umd/lucide.min.js public/assets/vendor/lucide.min.js",
+        "build:all": "npm run build:css && npm run build:vendor",
         "lint:js": "eslint public/assets/js/app.js",
         "lint:all": "eslint 'public/assets/js/**/*.js'",
         "prepare": "husky"
+    },
+    "dependencies": {
+        "alpinejs": "^3.14.9",
+        "lucide": "^0.539.0"
     },
     "devDependencies": {
         "@eslint/js": "^10.0.1",
@@ -19,7 +25,7 @@
         "tailwindcss": "^3.4.19"
     },
     "lint-staged": {
-        "public/assets/js/*.js": [
+        "public/assets/js/**/*.js": [
             "eslint --fix"
         ]
     }

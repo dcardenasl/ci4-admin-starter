@@ -22,21 +22,21 @@ final class UserFiltersFallbackTest extends CIUnitTestCase
         parent::tearDown();
     }
 
-    public function testRoleFilterIsForwardedToApiListQuery(): void
+    public function testStatusFilterIsForwardedToApiListQuery(): void
     {
         $mock = $this->createMock(UserApiService::class);
         $mock->expects($this->once())
             ->method('list')
             ->with($this->callback(static function (array $params): bool {
-                return (($params['filter']['role'] ?? null) === 'user')
-                    && (($params['role'] ?? null) === 'user');
+                return (($params['filter']['status'] ?? null) === 'active')
+                    && (($params['status'] ?? null) === 'active');
             }))
             ->willReturn([
                 'ok'          => true,
                 'status'      => 200,
                 'data'        => [
                     'data'         => [
-                        ['id' => 2, 'first_name' => 'User', 'last_name' => 'One', 'email' => 'user@example.com', 'role' => 'user', 'status' => 'active'],
+                        ['id' => 2, 'first_name' => 'User', 'last_name' => 'One', 'email' => 'user@example.com', 'status' => 'active'],
                     ],
                     'meta' => [
                         'page'     => 1,
@@ -53,8 +53,8 @@ final class UserFiltersFallbackTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
-        ])->get('/admin/users/data?role=user');
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
+        ])->get('/admin/users/data?status=active');
 
         $result->assertStatus(200);
         $this->assertStringContainsString('user@example.com', $result->getBody());
@@ -88,7 +88,7 @@ final class UserFiltersFallbackTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->get('/admin/users/data?sort=-created_at');
 
         $result->assertStatus(200);
@@ -122,7 +122,7 @@ final class UserFiltersFallbackTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->get('/admin/users/data?sort=unknown_field');
 
         $result->assertStatus(200);
@@ -159,7 +159,7 @@ final class UserFiltersFallbackTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->get('/admin/users/data?limit=50&page=3');
 
         $result->assertStatus(200);

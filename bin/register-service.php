@@ -5,20 +5,38 @@
  * Auto-register a module service in app/Config/Services.php.
  *
  * Usage:
- *   php bin/register-service.php <Module> <ServiceClass> <ServiceInterface> <ServiceKey>
+ *   php bin/register-service.php <Module> <ServiceClass> <ServiceInterface> <ServiceKey> [--client=hub|domain]
  *
  * Example:
  *   php bin/register-service.php Catalog ProductApiService ProductApiServiceInterface productApiService
+ *   php bin/register-service.php Subscription ProjectApiService ProjectApiServiceInterface projectApiService --client=domain
  */
 
 declare(strict_types=1);
 
-if ($argc < 5) {
-    echo "Usage: php bin/register-service.php <Module> <ServiceClass> <ServiceInterface> <ServiceKey>\n";
+$client = 'hub';
+$positional = [];
+foreach (array_slice($argv, 1) as $arg) {
+    if (str_starts_with($arg, '--client=')) {
+        $client = substr($arg, strlen('--client='));
+    } else {
+        $positional[] = $arg;
+    }
+}
+
+if (count($positional) < 4) {
+    echo "Usage: php bin/register-service.php <Module> <ServiceClass> <ServiceInterface> <ServiceKey> [--client=hub|domain]\n";
     exit(1);
 }
 
-[, $module, $serviceClass, $serviceInterface, $serviceKey] = $argv;
+if (! in_array($client, ['hub', 'domain'], true)) {
+    fwrite(STDERR, "ERROR: --client must be 'hub' or 'domain', got '{$client}'\n");
+    exit(1);
+}
+
+[$module, $serviceClass, $serviceInterface, $serviceKey] = $positional;
+
+$clientFactory = $client === 'domain' ? 'domainApiClient' : 'apiClient';
 
 $servicesFile = __DIR__ . '/../app/Config/Services.php';
 
@@ -36,12 +54,49 @@ $expectedFqcn = "App\\Modules\\{$module}\\Services\\{$serviceInterface}";
 // modules can map to the same camelCase key (e.g. APIKey/ApiKeys both yield
 // 'apiKeyApiService') and silently mis-wire the new controller to the wrong
 // module's service.
+if (preg_match(
+    '/function\s+' . preg_quote($serviceKey, '/') . '\s*\([^)]*\)\s*:\s*([\\\\A-Za-z0-9_]+)\s*\{[^}]*?return new[^(]+\(static::(apiClient|domainApiClient)\(\)\)/s',
+    $content,
+    $m,
+) === 1) {
+    $existingShortType    = $m[1];
+    $existingClientFactory = $m[2];
+    $existingFqcn         = resolveFqcn($content, $existingShortType);
+
+    if ($existingFqcn === ltrim($expectedFqcn, '\\') && $existingClientFactory === $clientFactory) {
+        echo "SKIP: {$serviceKey} already registered in Services.php\n";
+        exit(0);
+    }
+
+    if ($existingFqcn === ltrim($expectedFqcn, '\\') && $existingClientFactory !== $clientFactory) {
+        fwrite(STDERR, sprintf(
+            "ERROR: factory '%s' is already registered wired to '%s()' but the new registration requested '%s()'.\n"
+            . "Remove the existing factory first (or rerun with the matching --client flag).\n",
+            $serviceKey,
+            $existingClientFactory,
+            $clientFactory,
+        ));
+        exit(5);
+    }
+
+    fwrite(STDERR, sprintf(
+        "ERROR: factory '%s' is already registered for '%s', refusing to overwrite with '%s'.\n"
+        . "Pick a different resource name or remove the conflicting registration first.\n",
+        $serviceKey,
+        $existingFqcn ?? $existingShortType,
+        $expectedFqcn,
+    ));
+    exit(4);
+}
+
+// Fallback shape: factory exists but the body shape was unusual (e.g. extra
+// dependencies). Reuse the FQCN-only check from the original logic.
 if (preg_match('/function\s+' . preg_quote($serviceKey, '/') . '\s*\([^)]*\)\s*:\s*([\\\\A-Za-z0-9_]+)/', $content, $m) === 1) {
     $existingShortType = $m[1];
     $existingFqcn      = resolveFqcn($content, $existingShortType);
 
     if ($existingFqcn === ltrim($expectedFqcn, '\\')) {
-        echo "SKIP: {$serviceKey} already registered in Services.php\n";
+        echo "SKIP: {$serviceKey} already registered in Services.php (custom body)\n";
         exit(0);
     }
 
@@ -127,7 +182,7 @@ $method = <<<PHP
             return static::getSharedInstance('{$serviceKey}');
         }
 
-        return new {$serviceClass}(static::apiClient());
+        return new {$serviceClass}(static::{$clientFactory}());
     }
 PHP;
 

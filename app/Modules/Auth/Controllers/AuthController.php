@@ -214,13 +214,59 @@ class AuthController extends BaseWebController
     public function logout(): RedirectResponse
     {
         if ($this->session->has(SessionKeys::ACCESS_TOKEN->value)) {
-            $this->safeApiCall(fn () => $this->authService->logout());
+            $this->revokeTokenWithRetry();
         }
 
         $this->apiClient->clearSessionAuth();
         $this->session->destroy();
 
         return redirect()->to(site_url('login'))->with('success', lang('Auth.logout_success'));
+    }
+
+    /**
+     * Best-effort token revocation against the API. Audit B8.5 (2026-05-06):
+     * the previous implementation called the logout endpoint exactly once and
+     * silently dropped any failure — leaving the access token live on the API
+     * even after the local session was destroyed. Now we retry once with a
+     * short backoff and surface persistent failures to the audit log.
+     *
+     * Why one retry, not many: we don't want to keep the user staring at a
+     * spinner because the API is having a bad minute. One retry covers the
+     * common case (transient network blip) without compounding latency.
+     * Persistent failures get logged so an operator can intervene; the local
+     * session is destroyed regardless to keep the user-facing logout snappy.
+     */
+    private function revokeTokenWithRetry(): void
+    {
+        $maxAttempts = 2;
+        $backoffMs = 250;
+
+        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+            $response = $this->safeApiCall(fn () => $this->authService->logout());
+
+            if (($response['ok'] ?? false) === true) {
+                return;
+            }
+
+            if ($attempt < $maxAttempts) {
+                usleep($backoffMs * 1000);
+            }
+        }
+
+        // Both attempts failed. Log so the operator can detect a stuck-token
+        // pattern (often a sign of API/network issues). The local session is
+        // destroyed by the caller regardless to keep logout snappy.
+        $userId = $this->session->get(SessionKeys::USER->value);
+        $userIdSnippet = (is_array($userId) && isset($userId['id'])) ? (string) $userId['id'] : 'unknown';
+
+        log_message(
+            'warning',
+            sprintf(
+                'logout: token revocation failed after %d attempts. user_id=%s. local session destroyed regardless.',
+                $maxAttempts,
+                $userIdSnippet
+            )
+        );
     }
 
     /** @param array<string, mixed> $data */

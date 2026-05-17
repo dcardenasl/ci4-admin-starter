@@ -37,9 +37,14 @@ Arguments:
 Flags:
   --dry-run         Print what would be generated without writing any file
   --force           Overwrite existing files (skipped by default)
+  --service=hub|domain
+                    Which backend the new service should target. Default is 'hub'
+                    (apiClient, port 8080). Pass 'domain' to wire the service
+                    against domainApiClient (port 8090 — a ci4-domain-starter app).
   --check-api[=URL] Probe the API endpoint with a 2s HEAD request before scaffolding
                     and warn if it doesn't respond. Default URL is read from
-                    apiClient.baseUrl in .env.
+                    apiClient.baseUrl in .env (or domainApiClient.baseUrl when
+                    --service=domain).
 
 Examples:
   bash bin/make-module.sh Product Catalog /catalog/products
@@ -57,11 +62,13 @@ DRY_RUN=false
 FORCE=false
 CHECK_API_URL=""
 CHECK_API_REQUESTED=false
+SERVICE_TARGET="hub"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --dry-run) DRY_RUN=true; shift ;;
         --force)   FORCE=true;   shift ;;
+        --service=*) SERVICE_TARGET="${1#--service=}"; shift ;;
         --check-api) CHECK_API_REQUESTED=true; shift ;;
         --check-api=*) CHECK_API_REQUESTED=true; CHECK_API_URL="${1#--check-api=}"; shift ;;
         --help|-h) usage; exit 0 ;;
@@ -75,6 +82,19 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 set -- "${POSITIONAL[@]}"
+
+if [[ "$SERVICE_TARGET" != "hub" && "$SERVICE_TARGET" != "domain" ]]; then
+    echo -e "${RED}❌ --service must be 'hub' or 'domain'. Got: '${SERVICE_TARGET}'${NC}"
+    exit 1
+fi
+
+if [[ "$SERVICE_TARGET" == "domain" ]]; then
+    CLIENT_FACTORY="domainApiClient"
+    CLIENT_ENV_KEY="domainApiClient.baseUrl"
+else
+    CLIENT_FACTORY="apiClient"
+    CLIENT_ENV_KEY="apiClient.baseUrl"
+fi
 
 RESOURCE=${1:-}
 MODULE=${2:-}
@@ -111,7 +131,7 @@ cd "$(dirname "$0")/.."
 # ─── Optional API endpoint probe (--check-api) ─────────────────────────────────
 if [[ "$CHECK_API_REQUESTED" == true ]]; then
     if [[ -z "$CHECK_API_URL" && -f .env ]]; then
-        CHECK_API_URL=$(grep -E '^[[:space:]]*apiClient\.baseUrl' .env | head -1 | sed -E "s/.*=\s*['\"]?([^'\"]+)['\"]?.*/\1/" | tr -d ' ')
+        CHECK_API_URL=$(grep -E "^[[:space:]]*${CLIENT_ENV_KEY//./\\.}" .env | head -1 | sed -E "s/.*=\s*['\"]?([^'\"]+)['\"]?.*/\1/" | tr -d ' ')
     fi
     if [[ -z "$CHECK_API_URL" ]]; then
         echo -e "${YELLOW}⚠ --check-api requested but no URL provided and apiClient.baseUrl not found in .env. Skipping.${NC}"
@@ -242,6 +262,38 @@ MODULE_DIR="app/Modules/${MODULE}"
 # Human-readable labels for language stubs
 RESOURCE_LABEL=$(echo "${RESOURCE_SNAKE//_/ }" | awk '{$1=toupper(substr($1,1,1))substr($1,2)}1')
 RESOURCE_LOWER=$(echo "$RESOURCE_LABEL" | tr '[:upper:]' '[:lower:]')
+
+# ─── Cross-module route collision detection ────────────────────────────────────
+# Catches the realistic mistake of two modules registering the same route name
+# (which would produce the same URL via `admin/{module_lower}/{segment}`).
+# A re-scaffold within the same module is allowed (the inner per-file check
+# below treats it as a no-op SKIP). Conflicts in OTHER modules are fatal.
+THIS_MODULE_ROUTES="app/Modules/${MODULE}/Config/Routes.php"
+CONFLICTING_FILES=()
+if compgen -G "app/Modules/*/Config/Routes.php" >/dev/null; then
+    while IFS= read -r -d '' route_file; do
+        if [[ "$route_file" == "$THIS_MODULE_ROUTES" ]]; then
+            continue
+        fi
+        if grep -qF "'${ROUTE_NAME}'" "$route_file" 2>/dev/null \
+            || grep -qF "\"${ROUTE_NAME}\"" "$route_file" 2>/dev/null; then
+            CONFLICTING_FILES+=("$route_file")
+        fi
+    done < <(find app/Modules -type f -name 'Routes.php' -print0 2>/dev/null)
+fi
+if [[ -f app/Config/Routes.php ]] && grep -qF "'${ROUTE_NAME}'" app/Config/Routes.php 2>/dev/null; then
+    CONFLICTING_FILES+=('app/Config/Routes.php')
+fi
+
+if [[ ${#CONFLICTING_FILES[@]} -gt 0 ]]; then
+    echo -e "${RED}❌ Route name '${ROUTE_NAME}' is already registered in another module:${NC}" >&2
+    for f in "${CONFLICTING_FILES[@]}"; do
+        echo -e "${RED}   - ${f}${NC}" >&2
+    done
+    echo -e "${YELLOW}Pick a different resource/module pair, or remove the conflicting module first" >&2
+    echo -e "with: bash bin/remove-module.sh <Resource> <Module>${NC}" >&2
+    exit 6
+fi
 
 echo -e "${BLUE}═══════════════════════════════════════════════════${NC}"
 echo -e "${BLUE}Admin Module Scaffolding — ${RESOURCE} in ${MODULE}${NC}"
@@ -1279,9 +1331,10 @@ echo ""
 echo -e "${YELLOW}Registering service in Services.php...${NC}"
 
 if [[ "$DRY_RUN" == true ]]; then
-    echo -e "  ${YELLOW}[dry-run] Would call: php bin/register-service.php ${MODULE} ${SERVICE_CLASS} ${SERVICE_IFACE} ${SERVICE_NAME}${NC}"
+    echo -e "  ${YELLOW}[dry-run] Would call: php bin/register-service.php ${MODULE} ${SERVICE_CLASS} ${SERVICE_IFACE} ${SERVICE_NAME} --client=${SERVICE_TARGET}${NC}"
+    echo -e "  ${YELLOW}[dry-run] Service factory would emit: return new ${SERVICE_CLASS}(static::${CLIENT_FACTORY}());${NC}"
 else
-    REGISTER_RESULT=$(php bin/register-service.php "$MODULE" "$SERVICE_CLASS" "$SERVICE_IFACE" "$SERVICE_NAME" 2>&1) || REGISTER_EXIT=$?
+    REGISTER_RESULT=$(php bin/register-service.php "$MODULE" "$SERVICE_CLASS" "$SERVICE_IFACE" "$SERVICE_NAME" "--client=${SERVICE_TARGET}" 2>&1) || REGISTER_EXIT=$?
     REGISTER_EXIT=${REGISTER_EXIT:-0}
 
     if [[ $REGISTER_EXIT -eq 0 ]]; then
@@ -1299,7 +1352,7 @@ else
         echo "            /** @var ${SERVICE_CLASS} */"
         echo "            return static::getSharedInstance('${SERVICE_NAME}');"
         echo "        }"
-        echo "        return new ${SERVICE_CLASS}(static::apiClient());"
+        echo "        return new ${SERVICE_CLASS}(static::${CLIENT_FACTORY}());"
         echo "    }"
     fi
 fi

@@ -12,8 +12,12 @@ $currentCategory = (string) request()->getGet('category');
 ?>
 <section class="mt-6 bg-white border border-gray-200 rounded-xl shadow-sm p-5"
     x-data="Object.assign({
-        viewMode: localStorage.getItem('filesViewMode') || 'table',
-        setViewMode(mode) { this.viewMode = mode; localStorage.setItem('filesViewMode', mode); },
+        // viewMode is a UI preference scoped to the current tab; sessionStorage
+        // (not localStorage) keeps it out of cross-user persistence on shared
+        // machines and aligns with the architecture rule of not stashing state
+        // outside the server-side session.
+        viewMode: sessionStorage.getItem('filesViewMode') || 'table',
+        setViewMode(mode) { this.viewMode = mode; sessionStorage.setItem('filesViewMode', mode); },
         selectedIds: [],
         isSelected(id) { return this.selectedIds.includes(String(id)); },
         toggleSelect(id) {

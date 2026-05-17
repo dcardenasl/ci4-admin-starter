@@ -17,6 +17,7 @@ return [
     'search_placeholder'   => 'Search by name or prefix...',
     'active'              => 'Active',
     'inactive'            => 'Inactive',
+    'read_only_badge'     => 'Read-only access',
     'copy_success'        => 'Key copied to clipboard',
     'create'              => 'New API key',
     'edit'                => 'Edit API key',

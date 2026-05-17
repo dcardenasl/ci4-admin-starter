@@ -7,7 +7,10 @@ namespace Config;
 use App\Filters\AdminFilter;
 use App\Filters\AuthFilter;
 use App\Filters\LocaleFilter;
+use App\Filters\MaintenanceFilter;
 use App\Filters\RateLimitFilter;
+use App\Filters\SecurityHeadersFilter;
+use App\Filters\SuperAdminFilter;
 use CodeIgniter\Config\Filters as BaseFilters;
 use CodeIgniter\Filters\Cors;
 use CodeIgniter\Filters\CSRF;
@@ -42,8 +45,12 @@ class Filters extends BaseFilters
         'performance'   => PerformanceMetrics::class,
         'auth'          => AuthFilter::class,
         'admin'         => AdminFilter::class,
+        'superadmin'    => SuperAdminFilter::class,
+        'permission'    => \App\Filters\PermissionFilter::class,
         'locale'        => LocaleFilter::class,
         'ratelimit'     => RateLimitFilter::class,
+        'securityheaders' => SecurityHeadersFilter::class,
+        'maintenance'   => MaintenanceFilter::class,
     ];
 
     /**
@@ -82,6 +89,7 @@ class Filters extends BaseFilters
      */
     public array $globals = [
         'before' => [
+            'maintenance', // 503 short-circuit when MAINTENANCE_MODE=true (audit B10.4); /health etc. bypass internally.
             // 'honeypot',
             // Google Identity Services posts the credential directly to this endpoint from
             // Google's origin. CSRF stays enabled everywhere else, and the controller also
@@ -92,7 +100,8 @@ class Filters extends BaseFilters
         ],
         'after' => [
             // 'honeypot',
-            'secureheaders',
+            'securityheaders', // App-defined: X-Frame-Options, X-CTO, Referrer-Policy, Permissions-Policy, HSTS in prod (audit B5.1).
+            'secureheaders',   // CI4 native: emits headers from Config\Security::$secureHeaders if populated.
         ],
     ];
 

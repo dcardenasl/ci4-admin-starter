@@ -253,53 +253,6 @@ final class BadgeHelperTest extends CIUnitTestCase
         $this->assertSame('unexpected_severity', $result);
     }
 
-    // ─── role_badge() ──────────────────────────────────────────────
-
-    public function testRoleBadgeReturnsBrandForAdmin(): void
-    {
-        $result = role_badge('admin');
-        $this->assertStringContainsString('bg-brand-100', $result);
-    }
-
-    public function testRoleBadgeReturnsBrandForSuperAdmin(): void
-    {
-        $result = role_badge('superadmin');
-        $this->assertStringContainsString('bg-brand-100', $result);
-    }
-
-    public function testRoleBadgeReturnsGrayForUser(): void
-    {
-        $result = role_badge('user');
-        $this->assertStringContainsString('bg-gray-100', $result);
-    }
-
-    public function testRoleBadgeIsCaseInsensitive(): void
-    {
-        $result1 = role_badge('ADMIN');
-        $result2 = role_badge('Admin');
-        $result3 = role_badge('admin');
-
-        $this->assertStringContainsString('bg-brand-100', $result1);
-        $this->assertStringContainsString('bg-brand-100', $result2);
-        $this->assertStringContainsString('bg-brand-100', $result3);
-    }
-
-    // ─── localized_role() ──────────────────────────────────────────
-
-    public function testLocalizedRoleReturnsLocalizedValue(): void
-    {
-        Services::language()->setLocale('en');
-        $result = localized_role('admin');
-        $this->assertIsString($result);
-        $this->assertNotEmpty($result);
-    }
-
-    public function testLocalizedRoleReturnsRawValueForUnknown(): void
-    {
-        $result = localized_role('unknown_role_xyz');
-        $this->assertSame('unknown_role_xyz', $result);
-    }
-
     // ─── health_tone_badge() ───────────────────────────────────────
 
     public function testHealthToneBadgeReturnsGreenForUp(): void

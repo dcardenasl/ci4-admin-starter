@@ -32,7 +32,7 @@ class DashboardController extends BaseWebController
     public function index(): string
     {
         $dateRange = $this->resolveDateRange();
-        $isAdmin = has_admin_access((string) (session('user.role') ?? ''));
+        $isAdmin = has_permission('users.read');
 
         // 1. Resource totals from API contract: /users and /files return meta.total
         $usersResponse = $isAdmin

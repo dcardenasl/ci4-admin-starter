@@ -121,6 +121,84 @@ class ScaffoldingScriptsTest extends CIUnitTestCase
         self::runScript('bin/remove-module.sh Gizmo Tools');
     }
 
+    public function testMakeModuleRejectsCrossModuleRouteNameCollision(): void
+    {
+        // First module: registers route name admin.first.widgets
+        self::runScript('bin/make-module.sh Widget First /first/widgets');
+
+        // Second module tries to register the SAME route name via a different module.
+        // Route name is derived as `admin.{module_lower}.{route_segment_underscore}`,
+        // so to collide we need same module-lower + same route-segment-underscore.
+        // Easiest collision: reuse same module name (`First`) AND same resource.
+        // But that's a same-module re-run, allowed. The cross-module case fires
+        // when a different module yields the same module_lower — e.g. `FIRST` vs
+        // `First` (filesystem differs but `tr [:upper:][:lower:]` normalizes both
+        // to 'first'). We trigger it by adding `app/Modules/First/Config/Routes.php`
+        // ourselves with the route name we'll try to re-add from `FirstAlt`.
+
+        // Pre-seed another module's Routes.php with our future ROUTE_NAME.
+        $alienDir = self::$sandbox . '/app/Modules/AlienModule/Config';
+        @mkdir($alienDir, 0o755, true);
+        file_put_contents(
+            $alienDir . '/Routes.php',
+            "<?php\n\$routes->get('alien', 'X::y', ['as' => 'admin.different.widgets']);\n"
+        );
+
+        // Now scaffolding `Widget` under `Different` produces route name
+        // admin.different.widgets — collides with AlienModule.
+        $cwd = getcwd();
+        chdir(self::$sandbox);
+        exec('bash bin/make-module.sh Widget Different /different/widgets --dry-run 2>&1', $out, $code);
+        chdir((string) $cwd);
+
+        $this->assertSame(6, $code, 'Cross-module route name collision must exit 6');
+        $merged = implode("\n", $out);
+        $this->assertStringContainsString('already registered in another module', $merged);
+        $this->assertStringContainsString('AlienModule', $merged);
+
+        @unlink($alienDir . '/Routes.php');
+        @rmdir($alienDir);
+        @rmdir(dirname($alienDir));
+        self::runScript('bin/remove-module.sh Widget First');
+    }
+
+    public function testMakeModuleWithServiceDomainEmitsDomainApiClientFactory(): void
+    {
+        $output = self::runScript(
+            'bin/make-module.sh Project Subscription /projects --service=domain --dry-run'
+        );
+
+        // Dry-run prints the planned register-service.php invocation and the
+        // factory body it would write. Both must reference domainApiClient.
+        $this->assertStringContainsString('--client=domain', $output);
+        $this->assertStringContainsString('static::domainApiClient()', $output);
+        $this->assertStringNotContainsString('static::apiClient()', $output);
+    }
+
+    public function testMakeModuleDefaultServiceWiresHubApiClient(): void
+    {
+        $output = self::runScript('bin/make-module.sh Catalog Marketplace /catalog --dry-run');
+
+        $this->assertStringContainsString('--client=hub', $output);
+        $this->assertStringContainsString('static::apiClient()', $output);
+        $this->assertStringNotContainsString('static::domainApiClient()', $output);
+    }
+
+    public function testMakeModuleRejectsInvalidServiceFlag(): void
+    {
+        $cwd = getcwd();
+        chdir(self::$sandbox);
+        exec(
+            'bash bin/make-module.sh Foo Bar /foo --service=oops --dry-run 2>&1',
+            $out,
+            $code,
+        );
+        chdir((string) $cwd);
+
+        $this->assertNotSame(0, $code, 'Invalid --service value must cause non-zero exit');
+        $this->assertStringContainsString('--service', implode("\n", $out));
+    }
+
     public function testRemoveModuleStripsResourceWithoutTouchingSiblings(): void
     {
         self::runScript('bin/make-module.sh Alpha Demo /demo/alpha');

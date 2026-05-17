@@ -32,7 +32,7 @@ final class ApiKeyFlowTest extends CIUnitTestCase
     {
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'user'],
+            'user'         => ['permissions' => []],
         ])->get('/admin/api-keys');
 
         $result->assertRedirectTo('/dashboard');
@@ -42,7 +42,7 @@ final class ApiKeyFlowTest extends CIUnitTestCase
     {
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->get('/admin/api-keys');
 
         $result->assertStatus(200);
@@ -74,7 +74,7 @@ final class ApiKeyFlowTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->post('/admin/api-keys', [
             csrf_token() => csrf_hash(),
             'name' => 'Integration Key',
@@ -87,7 +87,7 @@ final class ApiKeyFlowTest extends CIUnitTestCase
     {
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->post('/admin/api-keys', [
             csrf_token() => csrf_hash(),
         ]);
@@ -114,7 +114,7 @@ final class ApiKeyFlowTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->get('/admin/api-keys/404');
 
         $result->assertStatus(200);
@@ -141,7 +141,7 @@ final class ApiKeyFlowTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->post('/admin/api-keys/15', [
             csrf_token() => csrf_hash(),
             'name' => 'Renamed',
@@ -170,7 +170,7 @@ final class ApiKeyFlowTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['users.read', 'users.write', 'audit.read', 'metrics.read', 'apikeys.read', 'apikeys.write', 'iam.superadmin-access']],
         ])->post('/admin/api-keys/15/delete', [
             csrf_token() => csrf_hash(),
         ]);

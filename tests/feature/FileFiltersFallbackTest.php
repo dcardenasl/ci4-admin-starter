@@ -48,7 +48,7 @@ final class FileFiltersFallbackTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'user'],
+            'user'         => ['permissions' => []],
         ])->get('/files/data?search=invoice');
 
         $result->assertStatus(200);
@@ -80,7 +80,7 @@ final class FileFiltersFallbackTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'user'],
+            'user'         => ['permissions' => []],
         ])->get('/files/data?cursor=next-token&page=9');
 
         $result->assertStatus(200);
@@ -114,7 +114,7 @@ final class FileFiltersFallbackTest extends CIUnitTestCase
 
         $result = $this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'user'],
+            'user'         => ['permissions' => []],
         ])->get('/files/data?limit=25&page=4');
 
         $result->assertStatus(200);

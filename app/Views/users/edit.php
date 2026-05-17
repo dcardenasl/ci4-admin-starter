@@ -28,28 +28,51 @@
 
         <div>
             <label class="block text-sm font-medium text-gray-700" for="email"><?= lang('Users.email') ?></label>
-            <input id="email" name="email" type="email" value="<?= esc(old('email', $editUser['email'] ?? '')) ?>" required
-                class="mt-1 w-full rounded-lg border px-3 py-2 <?= has_field_error('email') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand-500 focus:ring-brand-500' ?>">
-            <?= render_field_error('email') ?>
+            <?php if (is_superadmin()): ?>
+                <input id="email" name="email" type="email" value="<?= esc(old('email', $editUser['email'] ?? '')) ?>" required
+                    class="mt-1 w-full rounded-lg border px-3 py-2 <?= has_field_error('email') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand-500 focus:ring-brand-500' ?>">
+                <?= render_field_error('email') ?>
+            <?php else: ?>
+                <input id="email" name="email" type="email" value="<?= esc($editUser['email'] ?? '') ?>" readonly aria-readonly="true"
+                    class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-gray-700 cursor-not-allowed">
+                <p class="mt-1 text-xs text-gray-500"><?= lang('Users.email_immutable_help') ?></p>
+            <?php endif; ?>
         </div>
 
         <div>
-            <label class="block text-sm font-medium text-gray-700" for="role"><?= lang('Users.role') ?></label>
-            <select id="role" name="role" required
-                class="mt-1 w-full rounded-lg border px-3 py-2 <?= has_field_error('role') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand-500 focus:ring-brand-500' ?>">
-                <?php $currentRole = (string) old('role', $editUser['role'] ?? 'user'); ?>
-                <?php foreach (($roleOptions ?? []) as $option): ?>
-                    <?php
-                    $value = (string) ($option['value'] ?? '');
-                    if ($value === '') {
-                        continue;
-                    }
-                    $label = (string) ($option['label'] ?? $value);
-                    ?>
-                    <option value="<?= esc($value) ?>" <?= $currentRole === $value ? 'selected' : '' ?>><?= esc($label) ?></option>
-                <?php endforeach; ?>
-            </select>
-            <?= render_field_error('role') ?>
+            <span class="block text-sm font-medium text-gray-700"><?= lang('Users.roles') ?></span>
+            <p class="text-xs text-gray-500 mt-1"><?= lang('Users.roles_help_edit') ?></p>
+            <?php
+                $oldRoleIds = (array) old('role_ids', $currentRoleIds ?? []);
+$oldRoleIdsStr = array_map('strval', $oldRoleIds);
+$assignableIds = array_map(static fn ($r) => (string) ($r['id'] ?? ''), $assignableRoles ?? []);
+$hiddenLockedRoleIds = array_diff($oldRoleIdsStr, $assignableIds);
+?>
+            <?php if (! empty($assignableRoles)): ?>
+                <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <?php foreach ($assignableRoles as $role): ?>
+                        <label class="inline-flex items-start gap-2 text-sm rounded-lg border border-gray-200 px-3 py-2 hover:bg-gray-50">
+                            <input type="checkbox" name="role_ids[]" value="<?= (int) $role['id'] ?>"
+                                <?= in_array((string) $role['id'], $oldRoleIdsStr, true) ? 'checked' : '' ?>
+                                class="mt-1 rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                            <span>
+                                <span class="font-medium text-gray-900"><?= esc($role['name']) ?></span>
+                                <span class="block text-xs text-gray-500"><?= esc($role['code']) ?></span>
+                            </span>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <p class="mt-2 text-sm text-gray-500 italic"><?= lang('Users.roles_none_assignable') ?></p>
+            <?php endif; ?>
+
+            <?php foreach ($hiddenLockedRoleIds as $lockedId): ?>
+                <input type="hidden" name="role_ids[]" value="<?= (int) $lockedId ?>">
+            <?php endforeach; ?>
+            <?php if ($hiddenLockedRoleIds !== []): ?>
+                <p class="mt-2 text-xs text-amber-700"><?= lang('Users.roles_some_locked') ?></p>
+            <?php endif; ?>
+            <?= render_field_error('role_ids') ?>
         </div>
 
         <div class="flex items-center gap-3 pt-2">

@@ -181,7 +181,7 @@ While the Backend is stateless (JWT), the Admin is **stateful** (PHP Sessions).
 ### Content Security Policy (CSP)
 The project is designed to work with strict CSP headers.
 - **Nonces:** All inline scripts and styles (where used) must include a CSP nonce via `csp_script_nonce()`.
-- **External Resources:** Tailwind and Alpine are loaded via CDN, which must be whitelisted in `Config/ContentSecurityPolicy.php`.
+- **External Resources:** Tailwind, Alpine and Lucide are built/vendored locally (`npm run build:all`) and served from `public/assets/`. The layout transparently falls back to pinned jsdelivr CDN URLs only when a vendored copy is missing (e.g. on a fresh clone before `npm install`). If you re-enable the CDN path in production, whitelist `cdn.jsdelivr.net` in `Config/ContentSecurityPolicy.php`.
 
 ### Data Redaction
 To prevent leaking sensitive information in logs, the `ApiClient` includes a `redactData()` method that automatically masks passwords, Base64 file strings, and large payloads before they reach the `log_message()` system.

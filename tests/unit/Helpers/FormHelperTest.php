@@ -129,7 +129,9 @@ final class FormHelperTest extends CIUnitTestCase
 
         $result = render_field_error('email');
 
-        $this->assertStringContainsString('<p class="mt-1 text-sm text-red-600">', $result);
+        // The output gained `id` + `role` for ARIA (audit B8.4); the styling
+        // class and content remain.
+        $this->assertStringContainsString('class="mt-1 text-sm text-red-600"', $result);
         $this->assertStringContainsString('Email is required', $result);
         $this->assertStringContainsString('</p>', $result);
     }
@@ -175,5 +177,66 @@ final class FormHelperTest extends CIUnitTestCase
         $this->assertSame('Email format is invalid', $email);
         $this->assertSame('Password is too weak', $password);
         $this->assertSame('', $phone);
+    }
+
+    // =====================================================================
+    // ARIA helpers (audit B8.4)
+    // =====================================================================
+
+    public function testFieldErrorIdProducesStableSafeIdentifier(): void
+    {
+        $this->assertSame('field-error-email', field_error_id('email'));
+        $this->assertSame('field-error-user_email', field_error_id('user_email'));
+        // Bracketed array notation should be sanitized to a safe HTML id.
+        $this->assertSame('field-error-roles-0', field_error_id('roles[0]'));
+        $this->assertSame('field-error-meta-key', field_error_id('meta.key'));
+    }
+
+    public function testFieldAriaAttrsEmitsNothingWhenCleanAndNotRequired(): void
+    {
+        session()->set('fieldErrors', []);
+
+        $this->assertSame('', field_aria_attrs('email'));
+    }
+
+    public function testFieldAriaAttrsEmitsRequiredWhenAsserted(): void
+    {
+        session()->set('fieldErrors', []);
+
+        $attrs = field_aria_attrs('email', required: true);
+
+        $this->assertStringContainsString('aria-required="true"', $attrs);
+        $this->assertStringNotContainsString('aria-invalid', $attrs, 'No invalid until there is an error.');
+    }
+
+    public function testFieldAriaAttrsEmitsInvalidAndDescribedByOnError(): void
+    {
+        session()->set('fieldErrors', ['email' => 'Email is required']);
+
+        $attrs = field_aria_attrs('email');
+
+        $this->assertStringContainsString('aria-invalid="true"', $attrs);
+        $this->assertStringContainsString('aria-describedby="field-error-email"', $attrs);
+    }
+
+    public function testRenderFieldErrorEmitsIdAndAlertRole(): void
+    {
+        session()->set('fieldErrors', ['email' => 'Email is required']);
+
+        $html = render_field_error('email');
+
+        $this->assertStringContainsString('id="field-error-email"', $html);
+        $this->assertStringContainsString('role="alert"', $html);
+        $this->assertStringContainsString('Email is required', $html);
+    }
+
+    public function testRenderFieldErrorEscapesMessageContent(): void
+    {
+        session()->set('fieldErrors', ['email' => '<img src=x onerror=alert(1)>']);
+
+        $html = render_field_error('email');
+
+        $this->assertStringNotContainsString('<img', $html);
+        $this->assertStringContainsString('&lt;img', $html);
     }
 }

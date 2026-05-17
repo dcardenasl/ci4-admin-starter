@@ -1,3 +1,8 @@
+<?php
+$roles = $roles ?? (is_array($user['roles'] ?? null) ? $user['roles'] : []);
+$user = $user ?? [];
+$canModifyTarget = ! empty($user) ? can_act_on_user($user) : false;
+?>
 <div class="mb-4">
     <a href="<?= route_to('admin.users') ?>" class="text-sm text-brand-600 hover:text-brand-700">&larr; <?= lang('Users.back_to_list') ?></a>
 </div>
@@ -14,11 +19,13 @@
             <div class="flex items-center justify-between">
                 <h3 class="text-lg font-semibold text-gray-900"><?= lang('Users.details') ?></h3>
                 <div class="flex items-center gap-2">
-                    <a href="<?= route_to('admin.users.edit', $uid) ?>" class="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('App.edit') ?></a>
-                    <form method="post" action="<?= route_to('admin.users.delete', $uid) ?>" x-data @submit.prevent="$store.confirm.show('<?= esc(lang('Users.confirm_delete'), 'js') ?>', () => $el.submit())">
-                        <?= csrf_field() ?>
-                        <button type="submit" class="rounded-lg bg-red-600 px-3 py-2 text-sm text-white hover:bg-red-700"><?= lang('App.delete') ?></button>
-                    </form>
+                    <?php if ($canModifyTarget): ?>
+                        <a href="<?= route_to('admin.users.edit', $uid) ?>" class="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('App.edit') ?></a>
+                        <form method="post" action="<?= route_to('admin.users.delete', $uid) ?>" x-data @submit.prevent="$store.confirm.show('<?= esc(lang('Users.confirm_delete'), 'js') ?>', () => $el.submit())">
+                            <?= csrf_field() ?>
+                            <button type="submit" class="rounded-lg bg-red-600 px-3 py-2 text-sm text-white hover:bg-red-700"><?= lang('App.delete') ?></button>
+                        </form>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -34,14 +41,6 @@
                 <div>
                     <dt class="text-gray-500"><?= lang('Users.email') ?></dt>
                     <dd class="mt-1 text-gray-900"><?= esc((string) ($user['email'] ?? '-')) ?></dd>
-                </div>
-                <div>
-                    <dt class="text-gray-500"><?= lang('Users.role') ?></dt>
-                    <dd class="mt-1">
-                        <span class="inline-flex rounded-full px-2 py-1 text-xs <?= role_badge($user['role'] ?? 'user') ?>">
-                            <?= esc(localized_role((string) ($user['role'] ?? 'user'))) ?>
-                        </span>
-                    </dd>
                 </div>
                 <div>
                     <dt class="text-gray-500"><?= lang('Users.status') ?></dt>
@@ -70,6 +69,28 @@
                     <dd class="mt-1 text-gray-900"><?= esc(format_date($user['updated_at'] ?? null)) ?></dd>
                 </div>
             </dl>
+
+            <div class="mt-6 border-t border-gray-100 pt-4">
+                <div class="flex items-center justify-between">
+                    <h4 class="text-sm font-semibold text-gray-900"><?= lang('Users.roles') ?></h4>
+                    <?php if ($canModifyTarget): ?>
+                        <a href="<?= route_to('admin.users.edit', $uid) ?>" class="text-xs text-brand-600 hover:text-brand-700"><?= lang('Users.manage_roles') ?> &rarr;</a>
+                    <?php endif; ?>
+                </div>
+
+                <?php if ($roles === []): ?>
+                    <p class="mt-2 text-sm text-gray-500"><?= lang('Users.no_roles') ?></p>
+                <?php else: ?>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        <?php foreach ($roles as $role): ?>
+                            <span class="inline-flex items-center gap-2 rounded-full bg-brand-50 text-brand-700 border border-brand-100 px-3 py-1 text-xs">
+                                <span class="font-medium"><?= esc((string) ($role['name'] ?? '-')) ?></span>
+                                <span class="text-brand-500/80"><?= esc((string) ($role['code'] ?? '')) ?></span>
+                            </span>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
         </section>
 
         <section class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
@@ -81,7 +102,9 @@
                         <button type="submit" class="w-full rounded-lg bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700"><?= lang('Users.approve') ?></button>
                     </form>
                 <?php endif; ?>
-                <a href="<?= route_to('admin.users.edit', $uid) ?>" class="block w-full text-center rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('App.edit') ?></a>
+                <?php if ($canModifyTarget): ?>
+                    <a href="<?= route_to('admin.users.edit', $uid) ?>" class="block w-full text-center rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('App.edit') ?></a>
+                <?php endif; ?>
                 <a href="<?= route_to('admin.audit') . '?user_id=' . rawurlencode($uid) ?>" class="block w-full text-center rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('Users.view_audit') ?></a>
             </div>
         </section>

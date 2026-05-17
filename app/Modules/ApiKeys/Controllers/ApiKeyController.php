@@ -24,8 +24,28 @@ class ApiKeyController extends BaseWebController
         $this->apiKeyService = service('apiKeyApiService');
     }
 
-    public function index(): string
+    private function requireRead(): ?RedirectResponse
     {
+        if (! has_permission('apikeys.read')) {
+            return redirect()->to(route_to('dashboard'))->with('error', lang('App.access_denied'));
+        }
+        return null;
+    }
+
+    private function requireWrite(): ?RedirectResponse
+    {
+        if (! has_permission('apikeys.write')) {
+            return redirect()->to(route_to('admin.api_keys'))->with('error', lang('App.access_denied'));
+        }
+        return null;
+    }
+
+    public function index(): string|RedirectResponse
+    {
+        $deny = $this->requireRead();
+        if ($deny !== null) {
+            return $deny;
+        }
         return $this->render('api_keys/index', [
             'title'         => lang('ApiKeys.title'),
             'statusOptions' => CatalogOptions::options([], 'api_keys.statuses', $this->defaultStatusOptions()),
@@ -33,8 +53,12 @@ class ApiKeyController extends BaseWebController
         ]);
     }
 
-    public function data(): ResponseInterface
+    public function data(): ResponseInterface|RedirectResponse
     {
+        $deny = $this->requireRead();
+        if ($deny !== null) {
+            return $deny;
+        }
         return $this->tableDataResponse(
             ['name', 'is_active'],
             ['id', 'name', 'is_active', 'created_at', 'rate_limit_requests', 'rate_limit_window'],
@@ -42,15 +66,23 @@ class ApiKeyController extends BaseWebController
         );
     }
 
-    public function show(string $id): string
+    public function show(string $id): string|RedirectResponse
     {
+        $deny = $this->requireRead();
+        if ($deny !== null) {
+            return $deny;
+        }
         $response = $this->safeApiCall(fn () => $this->apiKeyService->get($id));
 
         return $this->renderResourceShow('api_keys/show', lang('ApiKeys.details'), 'apiKey', $response, lang('ApiKeys.not_found'));
     }
 
-    public function create(): string
+    public function create(): string|RedirectResponse
     {
+        $deny = $this->requireWrite();
+        if ($deny !== null) {
+            return $deny;
+        }
         return $this->render('api_keys/create', [
             'title' => lang('ApiKeys.create'),
         ]);
@@ -58,6 +90,10 @@ class ApiKeyController extends BaseWebController
 
     public function store(): RedirectResponse
     {
+        $deny = $this->requireWrite();
+        if ($deny !== null) {
+            return $deny;
+        }
         /** @var ApiKeyStoreRequest $request */
         $request = service('formRequest', ApiKeyStoreRequest::class, false);
         $invalid = $this->validateRequest($request);
@@ -92,6 +128,10 @@ class ApiKeyController extends BaseWebController
 
     public function edit(string $id): string|\CodeIgniter\HTTP\RedirectResponse
     {
+        $deny = $this->requireWrite();
+        if ($deny !== null) {
+            return $deny;
+        }
         $response = $this->safeApiCall(fn () => $this->apiKeyService->get($id));
 
         if (! $response['ok']) {
@@ -107,6 +147,10 @@ class ApiKeyController extends BaseWebController
 
     public function update(string $id): RedirectResponse
     {
+        $deny = $this->requireWrite();
+        if ($deny !== null) {
+            return $deny;
+        }
         /** @var ApiKeyUpdateRequest $request */
         $request = service('formRequest', ApiKeyUpdateRequest::class, false);
         $invalid = $this->validateRequest($request);
@@ -131,6 +175,10 @@ class ApiKeyController extends BaseWebController
 
     public function delete(string $id): RedirectResponse
     {
+        $deny = $this->requireWrite();
+        if ($deny !== null) {
+            return $deny;
+        }
         $response = $this->safeApiCall(fn () => $this->apiKeyService->delete($id));
 
         if (! $response['ok']) {

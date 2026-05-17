@@ -175,36 +175,6 @@
                                 </div>
                             </section>
                         <?php endif; ?>
-                        
-<?php if (! empty($metrics['users_by_role'])): ?>
-    <section class="mt-6 bg-white border border-gray-200 rounded-xl shadow-sm p-5">
-        <h3 class="text-lg font-semibold text-gray-900"><?= lang('Metrics.users_by_role') ?></h3>
-        <div class="<?= esc(table_wrapper_class()) ?>">
-            <div class="<?= esc(table_scroll_class()) ?>">
-            <table class="<?= esc(table_class()) ?>">
-                <thead class="<?= esc(table_head_class()) ?>">
-                    <tr>
-                        <th class="<?= esc(table_th_class()) ?>"><?= lang('TableColumns.role') ?></th>
-                        <th class="<?= esc(table_th_class()) ?>"><?= lang('TableColumns.count') ?></th>
-                    </tr>
-                </thead>
-                <tbody class="<?= esc(table_body_class()) ?>">
-                    <?php foreach ($metrics['users_by_role'] as $role => $count): ?>
-                        <tr class="<?= esc(table_row_class()) ?>">
-                            <td class="<?= esc(table_td_class()) ?>">
-                                <span class="inline-flex rounded-full px-2 py-1 text-xs <?= role_badge((string) $role) ?>">
-                                    <?= esc((string) $role) ?>
-                                </span>
-                            </td>
-                            <td class="<?= esc(table_td_class('primary')) ?>"><?= esc((string) $count) ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-            </div>
-        </div>
-    </section>
-<?php endif; ?>
 
 <?php if (! empty($metrics['users_by_status'])): ?>
     <section class="mt-6 bg-white border border-gray-200 rounded-xl shadow-sm p-5">

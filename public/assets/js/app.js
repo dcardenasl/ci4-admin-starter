@@ -182,16 +182,6 @@ const statusBadgeClass = (status) => {
 };
 
 /**
- * Returns Tailwind CSS classes for a user role badge.
- *
- * @param {string} role - Role value (e.g. 'admin', 'superadmin', 'user')
- * @returns {string} Tailwind CSS class string
- */
-const roleBadgeClass = (role) => ['admin', 'superadmin'].includes(String(role || '').toLowerCase())
-    ? 'bg-brand-100 text-brand-800'
-    : 'bg-gray-100 text-gray-700';
-
-/**
  * Returns Tailwind CSS classes for an audit action badge.
  *
  * @param {string} action - Audit action value (e.g. 'create', 'update', 'delete', 'login')
@@ -287,19 +277,6 @@ const statusLabels = {
     }
 };
 
-const roleLabels = {
-    es: {
-        admin: 'Administrador',
-        superadmin: 'Superadministrador',
-        user: 'Usuario'
-    },
-    en: {
-        admin: 'Admin',
-        superadmin: 'Superadmin',
-        user: 'User'
-    }
-};
-
 const auditActionLabels = {
     es: {
         create: 'Crear',
@@ -378,24 +355,6 @@ const statusLabel = (status) => {
     const locale = localePrefix();
 
     return statusLabels[locale]?.[key] || value;
-};
-
-/**
- * Returns the localised display label for a user role value.
- *
- * @param {string} role - Role value (e.g. 'admin', 'user')
- * @returns {string} Human-readable label in the current page locale
- */
-const roleLabel = (role) => {
-    const value = String(role || '').trim();
-    if (value === '') {
-        return '-';
-    }
-
-    const key = value.toLowerCase();
-    const locale = localePrefix();
-
-    return roleLabels[locale]?.[key] || value;
 };
 
 /**
@@ -1212,8 +1171,6 @@ document.addEventListener('alpine:init', () => {
 
         statusBadgeClass,
         statusLabel,
-        roleLabel,
-        roleBadgeClass,
         auditActionBadgeClass,
         auditActionLabel,
         auditResultBadgeClass,
@@ -1221,6 +1178,14 @@ document.addEventListener('alpine:init', () => {
         auditSeverityBadgeClass,
         auditSeverityLabel,
         formatDate,
+
+        showUrl(id) {
+            return `${this.routes.showBase}/${encodeURIComponent(String(id ?? ''))}`;
+        },
+
+        editUrl(id) {
+            return `${this.routes.editBase}/${encodeURIComponent(String(id ?? ''))}/edit`;
+        },
 
         userShowUrl(id) {
             return `${this.routes.showBase}/${encodeURIComponent(String(id ?? ''))}`;
@@ -1627,11 +1592,53 @@ document.addEventListener('alpine:init', () => {
 
 document.addEventListener('DOMContentLoaded', () => {
     bootLucideIcons();
+    bootSessionExpiryWatcher();
 });
 
 window.addEventListener('load', () => {
     bootLucideIcons();
 });
+
+/**
+ * Watches the <meta name="session-expires-at"> tag emitted by BaseWebController
+ * and surfaces a console warning + window event when the session is within
+ * 60 seconds of expiry. Listeners can hook the `session:expiring-soon` event
+ * to render a banner / modal; a default no-op is fine.
+ *
+ * Without this, users running an admin tab idle for an hour just hit a
+ * surprise 401 in the middle of an action — the audit's M10.
+ */
+function bootSessionExpiryWatcher() {
+    const meta = document.querySelector('meta[name="session-expires-at"]');
+    if (!(meta instanceof HTMLMetaElement)) {
+        return;
+    }
+    const expiresAt = parseInt(meta.getAttribute('content') || '0', 10);
+    if (!Number.isFinite(expiresAt) || expiresAt <= 0) {
+        return;
+    }
+
+    const WARN_BEFORE_SECONDS = 60;
+    let warned = false;
+
+    const tick = () => {
+        const remaining = expiresAt - Math.floor(Date.now() / 1000);
+        if (!warned && remaining > 0 && remaining <= WARN_BEFORE_SECONDS) {
+            warned = true;
+            console.warn(`[session] Token expires in ~${remaining}s. Save your work.`);
+            window.dispatchEvent(new CustomEvent('session:expiring-soon', {
+                detail: { remainingSeconds: remaining },
+            }));
+        }
+        if (remaining <= 0) {
+            window.dispatchEvent(new CustomEvent('session:expired'));
+            clearInterval(handle);
+        }
+    };
+
+    const handle = setInterval(tick, 5000);
+    tick();
+}
 
 /**
  * Google Identity Services callback.

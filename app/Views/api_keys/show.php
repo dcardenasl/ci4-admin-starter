@@ -18,11 +18,17 @@
             <div class="flex items-center justify-between">
                 <h3 class="text-lg font-semibold text-gray-900"><?= lang('ApiKeys.details') ?></h3>
                 <div class="flex items-center gap-2">
-                    <a href="<?= route_to('admin.api_keys.edit', $id) ?>" class="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('App.edit') ?></a>
-                    <form method="post" action="<?= route_to('admin.api_keys.delete', $id) ?>" x-data @submit.prevent="$store.confirm.show('<?= esc(lang('ApiKeys.confirm_delete'), 'js') ?>', () => $el.submit())">
-                        <?= csrf_field() ?>
-                        <button type="submit" class="rounded-lg bg-red-600 px-3 py-2 text-sm text-white hover:bg-red-700"><?= lang('App.delete') ?></button>
-                    </form>
+                    <?php if (has_permission('apikeys.write')): ?>
+                        <a href="<?= route_to('admin.api_keys.edit', $id) ?>" class="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('App.edit') ?></a>
+                        <form method="post" action="<?= route_to('admin.api_keys.delete', $id) ?>" x-data @submit.prevent="$store.confirm.show('<?= esc(lang('ApiKeys.confirm_delete'), 'js') ?>', () => $el.submit())">
+                            <?= csrf_field() ?>
+                            <button type="submit" class="rounded-lg bg-red-600 px-3 py-2 text-sm text-white hover:bg-red-700"><?= lang('App.delete') ?></button>
+                        </form>
+                    <?php else: ?>
+                        <span class="inline-flex items-center gap-2 rounded-md bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1.5 text-xs">
+                            <?= lang('ApiKeys.read_only_badge') ?>
+                        </span>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -71,13 +77,15 @@
             </dl>
         </section>
 
-        <section class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
-            <h3 class="text-lg font-semibold text-gray-900"><?= lang('ApiKeys.quick_actions') ?></h3>
-            <div class="mt-4 space-y-3">
-                <a href="<?= route_to('admin.api_keys.edit', $id) ?>" class="block w-full text-center rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('App.edit') ?></a>
-                <a href="<?= route_to('admin.api_keys.create') ?>" class="block w-full text-center rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('ApiKeys.create') ?></a>
-            </div>
-        </section>
+        <?php if (has_permission('apikeys.write')): ?>
+            <section class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+                <h3 class="text-lg font-semibold text-gray-900"><?= lang('ApiKeys.quick_actions') ?></h3>
+                <div class="mt-4 space-y-3">
+                    <a href="<?= route_to('admin.api_keys.edit', $id) ?>" class="block w-full text-center rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('App.edit') ?></a>
+                    <a href="<?= route_to('admin.api_keys.create') ?>" class="block w-full text-center rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><?= lang('ApiKeys.create') ?></a>
+                </div>
+            </section>
+        <?php endif; ?>
     </div>
 
     <?php if ($generatedApiKey !== ''): ?>

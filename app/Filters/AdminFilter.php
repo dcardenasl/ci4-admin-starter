@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Filters;
 
-use App\Support\SessionKeys;
 use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\IncomingRequest;
 use CodeIgniter\HTTP\RequestInterface;
@@ -12,23 +11,30 @@ use CodeIgniter\HTTP\ResponseInterface;
 
 class AdminFilter implements FilterInterface
 {
+    /**
+     * Web-side admin section gate. Anyone with at least one of the permission
+     * codes listed in `Config\AdminAccess::$permissions` passes; finer-grained
+     * access (per resource) is enforced by the per-route `permission:<code>`
+     * filter or by the controller.
+     *
+     * Sidebar visibility is gated separately in `partials/sidebar.php`.
+     */
     public function before(RequestInterface $request, $arguments = null)
     {
-        $user = session()->get(SessionKeys::USER->value);
-        $role = null;
+        helper('auth');
 
-        if (is_array($user)) {
-            $role = $user['role'] ?? null;
-        } elseif (is_object($user)) {
-            $role = $user->role ?? null;
+        $allowedPermissions = config('AdminAccess')->permissions;
+
+        $hasAny = false;
+        foreach ($allowedPermissions as $code) {
+            if (has_permission($code)) {
+                $hasAny = true;
+                break;
+            }
         }
 
-        $roleValue = is_scalar($role) ? strtolower((string) $role) : '';
-
-        /** @var \Config\Auth $authConfig */
-        $authConfig = config('Auth');
-        if (! in_array($roleValue, $authConfig->adminRoles, true)) {
-            log_message('debug', 'AdminFilter: insufficient role for admin route.');
+        if (! $hasAny) {
+            log_message('debug', 'AdminFilter: actor has no admin-level permission.');
 
             if ($request instanceof IncomingRequest && $request->isAJAX()) {
                 return service('response')

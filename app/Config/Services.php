@@ -6,6 +6,8 @@ namespace Config;
 
 use App\Libraries\ApiClient;
 use App\Libraries\ApiClientInterface;
+use App\Libraries\DomainApiClient;
+use App\Libraries\DomainApiClientInterface;
 use App\Modules\ApiKeys\Services\ApiKeyApiService;
 use App\Modules\ApiKeys\Services\ApiKeyApiServiceInterface;
 use App\Modules\Audit\Services\AuditApiService;
@@ -16,6 +18,12 @@ use App\Modules\Dashboard\Services\HealthApiService;
 use App\Modules\Dashboard\Services\HealthApiServiceInterface;
 use App\Modules\Files\Services\FileApiService;
 use App\Modules\Files\Services\FileApiServiceInterface;
+use App\Modules\Iam\Services\ApplicationApiService;
+use App\Modules\Iam\Services\ApplicationApiServiceInterface;
+use App\Modules\Iam\Services\PermissionApiService;
+use App\Modules\Iam\Services\PermissionApiServiceInterface;
+use App\Modules\Iam\Services\RoleApiService;
+use App\Modules\Iam\Services\RoleApiServiceInterface;
 use App\Modules\Metrics\Services\MetricsApiService;
 use App\Modules\Metrics\Services\MetricsApiServiceInterface;
 use App\Modules\Profile\Services\ProfileApiService;
@@ -69,6 +77,16 @@ class Services extends BaseService
         }
 
         return new ApiClient(config('ApiClient'));
+    }
+
+    public static function domainApiClient(bool $getShared = true): DomainApiClientInterface
+    {
+        if ($getShared) {
+            /** @var DomainApiClientInterface */
+            return static::getSharedInstance('domainApiClient');
+        }
+
+        return new DomainApiClient(config('DomainApiClient'));
     }
 
     public static function authApiService(bool $getShared = true): AuthApiServiceInterface
@@ -151,4 +169,31 @@ class Services extends BaseService
         return new ProfileApiService(static::apiClient());
     }
 
+    public static function roleApiService(bool $getShared = true): RoleApiServiceInterface
+    {
+        if ($getShared) {
+            /** @var RoleApiService */
+            return static::getSharedInstance('roleApiService');
+        }
+
+        return new RoleApiService(static::apiClient());
+    }
+    public static function permissionApiService(bool $getShared = true): PermissionApiServiceInterface
+    {
+        if ($getShared) {
+            /** @var PermissionApiService */
+            return static::getSharedInstance('permissionApiService');
+        }
+
+        return new PermissionApiService(static::apiClient());
+    }
+    public static function applicationApiService(bool $getShared = true): ApplicationApiServiceInterface
+    {
+        if ($getShared) {
+            /** @var ApplicationApiService */
+            return static::getSharedInstance('applicationApiService');
+        }
+
+        return new ApplicationApiService(static::apiClient());
+    }
 }

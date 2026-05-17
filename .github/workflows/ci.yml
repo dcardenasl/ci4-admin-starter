@@ -58,8 +58,21 @@ jobs:
       - name: Security audit
         run: composer audit
 
-      - name: Lint JS
-        run: npm run lint:js
+      - name: Lint JS (all files under public/assets/js, audit B8.2)
+        run: npm run lint:all
+
+      - name: Language file parity (EN/ES, audit B8.3)
+        run: composer i18n-check
 
       - name: Run test suite
         run: vendor/bin/phpunit ${{ matrix.php-version == '8.2' && '' || '--no-coverage' }}
+
+      # Audit B9.4: enforce a coverage floor on the PHP 8.2 run (where
+      # xdebug is enabled). Soft-fail for now — the threshold (70%) needs
+      # one CI run with the actual measurement to decide whether to keep
+      # it as a hard gate or ratchet down. Flip `continue-on-error` to
+      # `false` once the baseline is confirmed.
+      - name: Coverage gate (>= 70% line coverage)
+        if: matrix.php-version == '8.2'
+        continue-on-error: true
+        run: composer coverage:check

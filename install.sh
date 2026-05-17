@@ -328,13 +328,13 @@ elif ! grep -q "^CI_ENVIRONMENT" .env; then
     ok "Añadido CI_ENVIRONMENT = development al .env"
 fi
 
-# app.baseURL
+# app.baseURL  (escape the dot so we don't also match the alternative `app_baseURL` line)
 APP_BASE_URL_VAL="http://localhost:${ADMIN_PORT}/"
-if grep -q "^# app.baseURL" .env; then
-    sed_inplace ".env" "s|^# app.baseURL = .*|app.baseURL = '${APP_BASE_URL_VAL}'|"
+if grep -q "^# app\.baseURL" .env; then
+    sed_inplace ".env" "s|^# app\.baseURL = .*|app.baseURL = '${APP_BASE_URL_VAL}'|"
     ok "Activado app.baseURL en .env"
-elif grep -q "^app.baseURL" .env; then
-    sed_inplace ".env" "s|^app.baseURL = .*|app.baseURL = '${APP_BASE_URL_VAL}'|"
+elif grep -q "^app\.baseURL" .env; then
+    sed_inplace ".env" "s|^app\.baseURL = .*|app.baseURL = '${APP_BASE_URL_VAL}'|"
     ok "Actualizado app.baseURL en .env"
 else
     echo "app.baseURL = '${APP_BASE_URL_VAL}'" >> .env

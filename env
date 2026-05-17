@@ -80,5 +80,18 @@
 # Optional: Override the webapp base URL (used in email links, password reset redirects)
 # WEBAPP_BASE_URL = 'http://localhost:8082'
 
+#--------------------------------------------------------------------
+# DOMAIN API CLIENT (optional — only when admin talks to a ci4-domain-starter)
+#--------------------------------------------------------------------
+# Configure these to wire a second backend in parallel to the hub. Modules
+# scaffolded with `bash bin/make-module.sh ... --service=domain` will route
+# their HTTP calls here instead of `apiClient.baseUrl`.
+#
+# domainApiClient.baseUrl = 'http://localhost:8090'
+# domainApiClient.apiPrefix = '/api/v1'
+# domainApiClient.appName = 'Domain Client'
+# domainApiClient.logRequests = false
+# domainApiClient.appKey = 'apk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+
 # Maximum file upload size in bytes (applies to frontend validation + server rules)
 # FILE_MAX_SIZE = 10485760

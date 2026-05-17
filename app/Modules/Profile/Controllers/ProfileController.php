@@ -29,23 +29,16 @@ class ProfileController extends BaseWebController
     {
         $this->refreshUserSession();
         $user = session('user') ?? [];
-        $isAdmin = has_admin_access(is_scalar($user['role'] ?? null) ? (string) $user['role'] : null);
 
         return $this->render('profile/index', [
-            'title'   => lang('Profile.title'),
-            'user'    => $user,
-            'isAdmin' => $isAdmin,
+            'title' => lang('Profile.title'),
+            'user'  => $user,
         ]);
     }
 
     public function update(): RedirectResponse
     {
         $sessionUser = session('user') ?? [];
-        $isAdmin = has_admin_access(is_scalar($sessionUser['role'] ?? null) ? (string) $sessionUser['role'] : null);
-
-        if (! $isAdmin) {
-            return redirect()->to(route_to('profile'))->with('error', lang('Profile.update_not_allowed'));
-        }
 
         /** @var ProfileUpdateRequest $request */
         $request = service('formRequest', ProfileUpdateRequest::class, false);

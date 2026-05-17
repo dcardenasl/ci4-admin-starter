@@ -2,6 +2,18 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⚡ Workflow — read this first
+
+**Before touching any code, read `TASKS.md` in this directory.**
+
+1. Take the first task from `## 🔴 En progreso` (if any) or `## 🟡 Próximo`
+2. If taking from Próximo: move it to `## 🔴 En progreso`
+3. Work exclusively on that task — if anything is unclear, ask before implementing
+4. When done: move it to `## ✅ Completadas` with one line of notes (what you did and why)
+5. Never work on tasks not defined in TASKS.md without explicit confirmation
+
+For cross-repo context (current milestone, blocked tasks), read `../TASKS.md`.
+
 ## Project Overview
 
 **CI4 Admin Starter** is a CodeIgniter 4 web application (server-rendered frontend) designed to consume the external API from [`ci4-api-starter`](https://github.com/dcardenasl/ci4-api-starter). It provides an administrative panel interface for authentication, user management, file management, audit logs, and metrics.
@@ -17,9 +29,9 @@ Browser → CI4 Admin Starter (port 8082) → ci4-api-starter API (port 8080)
 
 - **Framework:** CodeIgniter 4 (PHP 8.2+)
 - **Rendering:** Server-side PHP views
-- **Styling:** Tailwind CSS (CDN-based)
-- **Icons:** Lucide Icons (CDN-based)
-- **Interactivity:** Alpine.js (CDN-based)
+- **Styling:** Tailwind CSS — built locally via `npm run build:css` (output: `public/assets/css/app.css`)
+- **Icons:** Lucide Icons — vendored locally to `public/assets/vendor/lucide.min.js` via `npm run build:vendor`
+- **Interactivity:** Alpine.js — vendored locally to `public/assets/vendor/alpine.min.js` via `npm run build:vendor`. The layout transparently falls back to the pinned CDN URLs when a vendored copy is missing (e.g. on a fresh clone before `npm install`).
 - **Authentication:** JWT tokens stored in PHP sessions (server-side only)
 - **HTTP Client:** Custom ApiClient library with automatic token refresh
 - **i18n:** CodeIgniter 4 Language files (`en` / `es`)
@@ -76,7 +88,7 @@ Application will be available at: `http://localhost:8082`
 
 **Notes:**
 - Both terminal sessions should run in parallel during development
-- CSS must be built via npm (Tailwind) — the styles are not included in the CDN version used in production
+- CSS must be built via `npm run build:css` (Tailwind) and vendor JS via `npm run build:vendor` (Alpine + Lucide). Use `npm run build:all` for both. In CI / on first clone, run `npm ci && npm run build:all`.
 - Production builds use `npm run build:css` to generate minified CSS (see DEPLOYMENT.md)
 
 ### Testing
@@ -146,6 +158,17 @@ The `app/Libraries/ApiClient.php` class is the heart of all API communication. I
 - **Session-based token storage:** Tokens never exposed to browser
 - **App identification:** Sends `X-App-Key` header on every request when `apiClient.appKey` is configured (raises API rate limit from 60 to 600 req/min)
 
+### DomainApiClient: Secondary client for domain-starter backends
+
+When the admin drives both a hub (`ci4-api-starter`) and a domain app (`ci4-domain-starter`) in parallel — e.g. SubscriptionKit, where hub owns auth/users/IAM and a domain app owns projects/subscribers — wire the domain modules to `App\Libraries\DomainApiClient` instead of `ApiClient`.
+
+- **Config:** `app/Config/DomainApiClient.php` reads `domainApiClient.*` / `DOMAIN_API_*` env vars (default base URL `http://localhost:8090`). Extends `Config\ApiClient`, so the contract and PHPStan types stay aligned.
+- **Library:** `App\Libraries\DomainApiClient extends ApiClient implements DomainApiClientInterface`. Inherits all refresh / header / upload logic from `ApiClient`.
+- **Service factory:** `Services::domainApiClient()` is the parallel of `Services::apiClient()`. Returns `DomainApiClientInterface`.
+- **Scaffolding:** `bash bin/make-module.sh <Resource> <Module> /path --service=domain` generates a module wired to `static::domainApiClient()`. Default remains `--service=hub`.
+- **When to use which:** modules that surface entities **owned by the hub** (Users, Roles, Permissions, Files, Audit, ApiKeys, Metrics, IAM Applications) → `apiClient`. Modules that surface entities **owned by a domain app** (Subscriptions, Projects, Campaigns…) → `domainApiClient`. Never mix in the same module.
+- **Services type-hint stays `ApiClientInterface`:** `BaseApiService` and `ResourceApiService` accept the parent interface. `DomainApiClientInterface` exists only so the factory in `Services.php` can distinguish at the DI layer; PHPStan flags a service that was wired to the wrong factory only via the factory's return type, not the service constructor.
+
 **Auto-refresh flow:**
 1. API request returns 401 (token expired)
 2. ApiClient automatically calls `POST /api/v1/auth/refresh` with refresh_token from session
@@ -159,12 +182,18 @@ The `app/Libraries/ApiClient.php` class is the heart of all API communication. I
 $session->set('access_token', $data['access_token']);
 $session->set('refresh_token', $data['refresh_token']);
 $session->set('token_expires_at', time() + $data['expires_in']);
-$session->set('user', $data['user']); // {id, email, first_name, last_name, avatar_url, role}
+$session->set('user', $data['user']); // {id, email, first_name, last_name, avatar_url, permissions: string[]}
+```
+
+The `user.permissions` array drives all UI gating — there is no longer a `role` field on the session user (or on the API user record). Use `has_permission(string $code)` from `app/Helpers/auth_helper.php` (loaded globally) to check access in views and controllers. Permission codes use a **dot separator**: `iam.admin-access`, `users.write`, `metrics.read`, etc.
+
+```php
+if (has_permission('iam.admin-access')) { /* show admin nav */ }
 ```
 
 **Filters:**
 - `AuthFilter` (`app/Filters/AuthFilter.php`): Verifies presence of `access_token` in session, redirects to `/login` if missing
-- `AdminFilter` (`app/Filters/AdminFilter.php`): Checks `session('user.role') === 'admin'`, redirects to `/dashboard` with error flash if not admin
+- `AdminFilter` (`app/Filters/AdminFilter.php`): Checks `has_permission('iam.admin-access')`, redirects to `/dashboard` with error flash otherwise (returns JSON 403 for AJAX)
 - `LocaleFilter` (`app/Filters/LocaleFilter.php`): Reads `session('locale')`, validates against supported locales, sets the language for the current request
 
 All filters are registered in `app/Config/Filters.php`. `csrf` and `locale` run globally on every request; `auth` and `admin` are applied per route group.
@@ -211,7 +240,7 @@ app/Views/
 │   ├── app.php                    # Authenticated layout (sidebar + navbar)
 │   ├── auth.php                   # Public layout (centered card)
 │   └── partials/
-│       ├── head.php               # Common <head>: Tailwind CDN, Alpine CDN, Lucide CDN, theme config
+│       ├── head.php               # Common <head>: built CSS, vendored Alpine + Lucide (CDN fallback), session-expires-at meta, theme config
 │       ├── sidebar.php            # Collapsible navigation sidebar
 │       ├── navbar.php             # Top bar with user dropdown and language switcher
 │       ├── flash_messages.php     # Toast notifications
@@ -298,13 +327,17 @@ All modules are fully implemented:
 |--------|-----------|------------|
 | Auth | `AuthController` | `GET/POST /login`, `/register`, `/forgot-password`, `/reset-password`, `GET /verify-email`, `/logout` |
 | Dashboard | `DashboardController` | `GET /dashboard` |
-| Profile | `ProfileController` | `GET/POST /profile`, `POST /profile/change-password`, `POST /profile/resend-verification` |
+| Profile | `ProfileController` | `GET/POST /profile`, `POST /profile/change-password`, `POST /profile/resend-verification`. Open to any authenticated user (no `users.write` gate). `update()` calls the API's `PATCH /auth/me`. Email is shown read-only — there is no editable email input here. |
 | Files | `FileController` | `GET /files`, `/files/data`, `POST /files/upload`, `GET /files/{id}/download`, `POST /files/{id}/delete` |
-| Users (admin) | `UserController` | Full CRUD + approve under `/admin/users` |
+| Users (admin) | `UserController` | Full CRUD + approve under `/admin/users`. The edit form's email input is read-only unless the actor is `is_superadmin()`; `UserUpdateRequest::payload()` strips `email` from the payload for non-superadmins as defense in depth (the API also rejects with 403 `Iam.cannotModifyEmail`). |
 | Audit (admin) | `AuditController` | `GET /admin/audit`, `/admin/audit/{id}`, `/admin/audit/entity/{type}/{id}` |
 | API Keys (admin) | `ApiKeyController` | Full CRUD under `/admin/api-keys` |
 | Metrics (admin) | `MetricsController` | `GET /admin/metrics` |
+| IAM — Roles (admin) | `Iam\RoleController` | Full CRUD + `/admin/iam/roles/{id}/permissions/(attach\|{pid}/detach)` |
+| IAM — Permissions (admin) | `Iam\PermissionController` | Full CRUD under `/admin/iam/permissions` |
 | Language | `LanguageController` | `GET /language/set` |
+
+> **Note:** Role assignment to users happens directly in the **Users** module (`UserController` accepts `role_ids[]` in store/update). The earlier separate `AppUserMembershipController` was removed when the API consolidated `app_user_memberships` + `membership_roles` into a single `user_roles` join table (API migrations `2026-05-03-100003` … `100007`).
 
 ## File Locations & Patterns
 
@@ -328,6 +361,7 @@ The project uses a **modular architecture** where each feature is self-contained
 - `app/Modules/Audit/` — Audit logs (admin-only)
 - `app/Modules/ApiKeys/` — API key management (admin-only)
 - `app/Modules/Metrics/` — Metrics and analytics dashboards (admin-only)
+- `app/Modules/Iam/` — Identity & Access management: Roles, Permissions (admin-only). Sidebar section "Identity & Access" surfaces these. Detail pages include M2M attach/detach UI for roles↔permissions. Role assignment to users lives in the `Users` module — the user edit page surfaces the assignable roles (via the Users API service `assignableRoles()` endpoint) and submits `role_ids[]` directly.
 - `app/Modules/Language/` — Internationalization (locale switching)
 
 **Scaffolding contract — collision rejection (`bin/make-module.sh` / `bin/remove-module.sh`):**
@@ -349,13 +383,14 @@ The project uses a **modular architecture** where each feature is self-contained
 
 ## Security Considerations
 
-- JWT tokens MUST ONLY be stored in PHP sessions, never in cookies/localStorage accessible by JavaScript
-- CSRF protection enabled by default in CodeIgniter 4
-- Input validation required on all form submissions
-- Admin routes MUST use both `auth` and `admin` filters
-- File uploads validated by size (max 10 MB) before being passed to API
-- API app key stored only in `.env`; never exposed to client-side code
-- Never commit `.env` files or expose API URLs/secrets in client-side code
+- JWT tokens MUST ONLY be stored in PHP sessions, never in cookies/localStorage accessible by JavaScript. UI-only preferences (e.g. table-vs-grid view) may use `sessionStorage` (per-tab, ephemeral), but never `localStorage` — the audit caught one such regression in 2026-05.
+- CSRF protection enabled by default in CodeIgniter 4. `Config\Security::$regenerate = false` is **intentional** to keep multi-tab forms valid; see the long comment on that property for the trade-off.
+- Input validation required on all form submissions. File uploads cross-check `getMimeType()` (real, via fileinfo) against the per-extension whitelist in `FileUploadRequest::ALLOWED_EXTENSION_MIMES`, not just the client-reported `Content-Type`.
+- Admin routes MUST use both `auth` and `admin` filters. The list of permission codes that grant admin entry lives in `Config\AdminAccess::$permissions` (env-overridable via `ADMIN_PERMISSIONS`); `AdminFilter` reads it dynamically — do NOT hardcode the list back into the filter.
+- `<meta name="session-expires-at">` is emitted by `BaseWebController` so the JS in `bootSessionExpiryWatcher()` can warn the user 60s before the access token expires (event: `session:expiring-soon`). Avoids the "surprise 401 mid-action" UX.
+- File uploads validated by size (max 10 MB) before being passed to API.
+- API app key stored only in `.env`; never exposed to client-side code.
+- Never commit `.env` files or expose API URLs/secrets in client-side code.
 
 ## External API Reference
 
