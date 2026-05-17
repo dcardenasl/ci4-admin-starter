@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.0.0] — 2026-05-15
+## [2.0.0] — 2026-05-17
 
-This release realigns the admin to the v2.0 contract of `ci4-api-starter` (permission-based authorization, no `users.role`), drives admin access from config instead of a hardcoded filter list, and hardens the deployment surface: Dockerfile multi-stage build, security headers, public `/health` endpoint, JSON logging with `X-Request-ID` propagation, maintenance-mode short-circuit, asset cache-busting, two-stage MIME validation, and a tag-driven GitHub Release workflow.
+This release realigns the admin to the v2.0 contract of `ci4-api-starter` (permission-based authorization, no `users.role`), drives admin access from config instead of a hardcoded filter list, and hardens the deployment surface: Dockerfile multi-stage build, security headers, public `/health` endpoint, JSON logging with `X-Request-ID` propagation, maintenance-mode short-circuit, asset cache-busting, two-stage MIME validation, and a tag-driven GitHub Release workflow. Also migrates the CSS build to Tailwind v4 (CSS-first config), tightens the Node engine floor, and ships the workaround that unblocks the trash UI against `ci4-api-starter@v2.1.0`.
 
 ### ⚠️ Breaking Changes
 
@@ -25,6 +25,9 @@ This release realigns the admin to the v2.0 contract of `ci4-api-starter` (permi
 - **`composer.json` requires CodeIgniter `^4.5`** (was `^4.4`).
 - **Frontend dependencies vendored locally.** Tailwind, Alpine, and Lucide are now built or copied via `npm run build:all` into `public/assets/css/` and `public/assets/vendor/`. The layout falls back to the pinned jsdelivr CDN URLs only when the vendored copies are missing — keeping a fresh-clone smoke path while removing the runtime CDN dependency from production. Deployment pipelines must run `npm ci && npm run build:all` before publishing.
 - **PHP `^8.2`** (locked in at v1.1.0; restated here for downstream that may have skipped 1.1).
+- **`engines.node` floor raised to `^20.19.0 || ^22.13.0 || >=24`** (was `>=20.0.0`). Required by `eslint@10.4.0` and the Tailwind v4 CLI. Bump your CI / dev runtime before installing.
+- **`tailwind.config.js` removed.** Tailwind v4 is CSS-first: the equivalent config now lives in `src/css/app.css` via `@import "tailwindcss"`, an `@theme {}` block (brand color palette + fonts), `@source` directives (`app/Views`, `app/Helpers`, `public/assets/js`), and `@source inline()` declarations replacing the old JS `safelist`. Any downstream that customised `tailwind.config.js` must port their config across — `@config "../tailwind.config.js"` is technically supported by v4 but `safelist` is **not** honored when loaded that way; use `@source inline()` instead. See the Tailwind v4 upgrade guide.
+- **`@tailwindcss/cli` is now a required dev dependency.** In v4 the CLI ships in a separate package; the existing `npm run dev:css` and `build:css` scripts keep working because both packages expose the same `tailwindcss` binary, but `npm ci` needs the new package to be installed.
 
 ### Added
 
@@ -83,6 +86,13 @@ This release realigns the admin to the v2.0 contract of `ci4-api-starter` (permi
 - **`composer.json`** requires CodeIgniter `^4.5` (was `^4.4`). The lock file already shipped 4.7.x; this tightens the floor and unblocks 4.5+ features.
 - **`phpstan-bootstrap.php`** no longer pre-defines `ENVIRONMENT='testing'` — leaving it runtime-unknown so legitimate `ENVIRONMENT === 'production'` branches are not flagged as `identical.alwaysFalse`. The matching `Constant ENVIRONMENT not found` warning is suppressed in `phpstan.neon` (mirrors api-starter convention).
 - **Tailwind, Alpine, and Lucide** are now built or vendored locally (`npm run build:all`); the runtime CDN dependency is gone in production.
+- **CSS build migrated to Tailwind v4** (`tailwindcss@^4.3.0` + `@tailwindcss/cli@^4.3.0`). `src/css/app.css` switches `@tailwind base/components/utilities` → `@import "tailwindcss"`. The `brand-*` palette lives in an `@theme {}` block; the old JS `safelist` (gradient classes, `odd:`/`even:`/`hover:` table variants, `py-3.5`, `text-[11px]`) is now `@source inline(...)` directives. `app/Views/layouts/partials/head.php` switches the runtime `--color-brand-*` CSS vars from RGB triplets (`239 246 255`) to full `rgb()` values so the cascade override works under v4's `color-mix()` opacity model (v3's `<alpha-value>` indirection is gone). Net effect: minified output grows from ~30 KB to ~42 KB (more defaults shipped + `@source inline` additions), build wall-time is sub-100 ms.
+- **`eslint` bumped to `^10.4.0`** (was `^10.2.1`). `@eslint/js` stays on `^10.0.1` (latest of the v10 series). `lint-staged` deferred to `^16.4.0` (the v17 line requires Node `>=22.22.1`; tracked in admin `TASKS.md` as `ADM-DEP-002`).
+- **Admin docs governance** — `docs/INDEX.md` and `docs/es/INDEX.md` now carry an explicit "English is the source of truth, the Spanish translation may lag" banner so contributors don't expect line-for-line parity. The `CLAUDE.md` Files routes table now enumerates the full surface (trash, restore, force, bulk, replace, regenerate, metadata, usages, picker) and flags which routes still wait on API endpoints.
+
+### Fixed
+
+- **`FileApiService::bulk{Delete,Restore,ForceDelete}` stringify the `ids` array** before posting to the API. CI4's global `InvalidChars` filter calls `mb_check_encoding()` recursively over the JSON body and throws `TypeError` on raw integers; serialising as strings dodges the framework bug, and the API DTO casts back to `int` internally. Unblocks the trash UI end-to-end against `ci4-api-starter@v2.1.0`.
 
 ### Removed
 
@@ -91,6 +101,7 @@ This release realigns the admin to the v2.0 contract of `ci4-api-starter` (permi
 - **Hardcoded admin-permission list** in `AdminFilter` — moved to `Config\AdminAccess`.
 - **Broken `docker-php-ext-enable fileinfo`** line in the Dockerfile — fileinfo is statically compiled into PHP 8.2.
 - **Catalog reference module** (already gone in 1.1.0; restated here for completeness).
+- **`tailwind.config.js`** — replaced by CSS-first config in `src/css/app.css` (Tailwind v4).
 
 ### Migration Guide
 
@@ -110,6 +121,13 @@ Upgrading from `1.1.x` directly to `2.0.0`:
 7. **Update any code calling `has_admin_access()`** to `has_permission('iam.admin-access')`. UI templates that referenced `$user['role']` must consume `$user['permissions']`.
 8. **Update any extension of `ProfileController::update()`** that sent fields beyond `first_name` / `last_name` / `avatar_url` — those are now silently dropped by the API. Use `PUT /users/{id}` (admin endpoint) if you genuinely need to mutate other fields.
 9. **Remove any references to `AppUserMembershipController`** in custom routes, navigation, or templates. Role assignment is via `UserController` (`role_ids[]` payload).
+10. **Upgrade Node to `^20.19.0`, `^22.13.0`, or `>=24`** before running `npm ci`. `eslint@10.4.0` and the Tailwind v4 CLI both refuse to install on older Node.
+11. **Port any `tailwind.config.js` customisations** to `src/css/app.css`. The mapping is:
+    - JS `theme.extend.colors` → CSS `@theme { --color-*: ... }`. v4 expects full color values (e.g. `rgb(239 246 255)` or `oklch(...)`), not RGB triplets — the `<alpha-value>` indirection is gone (opacity modifiers like `bg-brand-500/50` now generate `color-mix()` automatically).
+    - JS `theme.extend.fontFamily` → CSS `@theme { --font-sans: ...; --font-mono: ... }`.
+    - JS `safelist` → CSS `@source inline("class-name")`. The `@source inline()` directive supports brace expansion for ranges.
+    - JS `content` paths → CSS `@source "../path"`. v4 auto-detects sources, but explicit `@source` directives are safer for PHP-heavy projects.
+    Run `npm run build:css` to regenerate `public/assets/css/app.css`, then smoke-test a couple of representative views (login, dashboard, a striped table) to confirm visual parity.
 
 ## [1.1.0] — 2026-04-30
 
