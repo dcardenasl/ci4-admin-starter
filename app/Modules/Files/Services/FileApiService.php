@@ -84,16 +84,29 @@ class FileApiService extends ResourceApiService implements FileApiServiceInterfa
 
     public function bulkDelete(array $ids): array
     {
-        return $this->apiClient->post('/files/bulk-delete', ['ids' => array_values($ids)]);
+        return $this->apiClient->post('/files/bulk-delete', ['ids' => $this->stringifyIds($ids)]);
     }
 
     public function bulkRestore(array $ids): array
     {
-        return $this->apiClient->post('/files/bulk-restore', ['ids' => array_values($ids)]);
+        return $this->apiClient->post('/files/bulk-restore', ['ids' => $this->stringifyIds($ids)]);
     }
 
     public function bulkForceDelete(array $ids): array
     {
-        return $this->apiClient->post('/files/bulk-force-delete', ['ids' => array_values($ids)]);
+        return $this->apiClient->post('/files/bulk-force-delete', ['ids' => $this->stringifyIds($ids)]);
+    }
+
+    /**
+     * Serialize ids as strings to dodge CI4's `InvalidChars` global filter,
+     * which throws `TypeError` from `mb_check_encoding()` when it recurses
+     * into a JSON body containing raw integers. The API DTO casts back.
+     *
+     * @param list<int|string> $ids
+     * @return list<string>
+     */
+    private function stringifyIds(array $ids): array
+    {
+        return array_values(array_map(static fn ($id): string => (string) $id, $ids));
     }
 }
