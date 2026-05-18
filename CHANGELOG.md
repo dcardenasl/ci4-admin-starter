@@ -5,15 +5,13 @@ All notable changes to ci4-admin-starter will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.0.0] — 2026-05-17
+
+This release realigns the admin to the v2.0 contract of `ci4-api-starter` (permission-based authorization, no `users.role`), drives admin access from config instead of a hardcoded filter list, and hardens the deployment surface: Dockerfile multi-stage build, security headers, public `/health` endpoint, JSON logging with `X-Request-ID` propagation, maintenance-mode short-circuit, asset cache-busting, two-stage MIME validation, and a tag-driven GitHub Release workflow. Also migrates the CSS build to Tailwind v4 (CSS-first config), tightens the Node engine floor, ships the workaround that unblocks the trash UI against `ci4-api-starter@v2.1.0`, and bumps the `codeigniter4/framework` floor to `^4.7`.
 
 ### Changed
 
 - **`codeigniter4/framework` constraint bumped from `^4.5` to `^4.7`** — locks to the current stable CI4 (v4.7.2). README requirements section corrected from PHP 8.1 → PHP 8.2 (matches `composer.json`) and Node 16+ → Node 20.19+ (matches `package.json` engines).
-
-## [2.0.0] — 2026-05-17
-
-This release realigns the admin to the v2.0 contract of `ci4-api-starter` (permission-based authorization, no `users.role`), drives admin access from config instead of a hardcoded filter list, and hardens the deployment surface: Dockerfile multi-stage build, security headers, public `/health` endpoint, JSON logging with `X-Request-ID` propagation, maintenance-mode short-circuit, asset cache-busting, two-stage MIME validation, and a tag-driven GitHub Release workflow. Also migrates the CSS build to Tailwind v4 (CSS-first config), tightens the Node engine floor, and ships the workaround that unblocks the trash UI against `ci4-api-starter@v2.1.0`.
 
 ### ⚠️ Breaking Changes
 
