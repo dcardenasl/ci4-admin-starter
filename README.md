@@ -112,9 +112,9 @@ See **[Validation Layer Guide](./docs/VALIDATION-LAYER.md)** for detailed patter
 
 ## 🛠️ Requirements
 
-- **PHP** 8.1 or higher
+- **PHP** 8.2 or higher
 - **Composer** 2.x
-- **Node.js** 16+ (for Tailwind CSS builds)
+- **Node.js** 20.19+ (or 22.13+, or 24+) — for Tailwind CSS builds
 - **PHP Extensions:**
   - `intl` (required)
   - `mbstring` (required)
@@ -324,5 +324,5 @@ Contributions are welcome! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for g
 
 ---
 
-**Last Updated:** 2026-05-07  
+**Last Updated:** 2026-05-17  
 **Status:** Stable — opinionated, personal stack. No support contract.
