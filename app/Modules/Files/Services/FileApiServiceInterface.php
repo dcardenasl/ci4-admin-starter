@@ -64,9 +64,6 @@ interface FileApiServiceInterface
     public function usages(int|string $id): array;
 
     /** @return ApiResponse */
-    public function replace(int|string $id, string $filePath, string $filename, ?string $mimeType = null): array;
-
-    /** @return ApiResponse */
     public function regenerateVariants(int|string $id): array;
 
     /**

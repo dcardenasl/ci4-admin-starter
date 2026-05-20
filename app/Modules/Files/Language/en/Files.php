@@ -81,11 +81,6 @@ return [
 
     'file_not_found'           => 'File not found.',
 
-    'replace'                  => 'Replace file',
-    'replace_button'           => 'Upload replacement',
-    'replace_help'             => 'Choose a new file. The URL stays the same so existing references keep working.',
-    'replace_success'          => 'File replaced.',
-    'replace_failed'           => 'Could not replace the file.',
     'regenerate'               => 'Regenerate variants',
     'regenerate_help'          => 'Re-runs image processing and metadata probing for this file.',
     'regenerate_success'       => 'Variants regenerated.',
@@ -114,4 +109,7 @@ return [
     'gallery_save_success'     => 'Order saved.',
     'gallery_save_failed'      => 'Could not save the new order.',
     'gallery_add_success'      => 'Images added.',
+
+    'in_use_warning_title' => 'This file is currently in use. ',
+    'in_use_warning_body'  => 'Referenced by {0} resource(s). Permanent deletion will be blocked until unlinked.',
 ];

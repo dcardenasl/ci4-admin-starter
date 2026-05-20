@@ -23,7 +23,6 @@ $routes->group('', ['filter' => 'auth'], static function (RouteCollection $route
     $routes->post('/files/(:segment)/metadata', '\App\Modules\Files\Controllers\FileController::updateMeta/$1', ['as' => 'files.metadata']);
     $routes->post('/files/(:segment)/restore', '\App\Modules\Files\Controllers\FileController::restore/$1', ['as' => 'files.restore']);
     $routes->post('/files/(:segment)/force', '\App\Modules\Files\Controllers\FileController::forceDelete/$1', ['as' => 'files.force']);
-    $routes->post('/files/(:segment)/replace', '\App\Modules\Files\Controllers\FileController::replace/$1', ['as' => 'files.replace']);
     $routes->post('/files/(:segment)/regenerate', '\App\Modules\Files\Controllers\FileController::regenerate/$1', ['as' => 'files.regenerate']);
     $routes->post('/files/bulk', '\App\Modules\Files\Controllers\FileController::bulk', ['as' => 'files.bulk']);
     $routes->post('/files/(:segment)/delete', '\App\Modules\Files\Controllers\FileController::delete/$1', ['as' => 'files.delete']);

@@ -62,20 +62,6 @@ class FileApiService extends ResourceApiService implements FileApiServiceInterfa
         return $this->apiClient->get('/files/' . $id . '/usages');
     }
 
-    public function replace(int|string $id, string $filePath, string $filename, ?string $mimeType = null): array
-    {
-        if (! is_file($filePath)) {
-            throw new RuntimeException("File does not exist: {$filePath}");
-        }
-
-        return $this->apiClient->upload('/files/' . $id . '/replace', [
-            'file' => [
-                'path'     => $filePath,
-                'filename' => $filename,
-                'mimeType' => $mimeType,
-            ],
-        ]);
-    }
 
     public function regenerateVariants(int|string $id): array
     {

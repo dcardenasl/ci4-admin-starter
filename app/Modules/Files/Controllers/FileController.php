@@ -216,24 +216,6 @@ class FileController extends BaseWebController
         return redirect()->to(route_to('files.trash'))->with('success', lang('Files.force_delete_success'));
     }
 
-    public function replace(string $id): RedirectResponse
-    {
-        $file = $this->request instanceof \CodeIgniter\HTTP\IncomingRequest
-            ? $this->request->getFile('file')
-            : null;
-
-        if ($file === null || ! $file->isValid()) {
-            return redirect()->to(route_to('files.show', $id))->with('error', lang('Files.invalid_file'));
-        }
-
-        $response = $this->safeApiCall(fn () => $this->fileService->replace($id, $file->getTempName(), $file->getName(), $file->getMimeType()));
-        if (! ($response['ok'] ?? false)) {
-            return $this->failApi($response, lang('Files.replace_failed'), route_to('files.show', $id), false);
-        }
-
-        return redirect()->to(route_to('files.show', $id))->with('success', lang('Files.replace_success'));
-    }
-
     public function regenerate(string $id): RedirectResponse
     {
         $response = $this->safeApiCall(fn () => $this->fileService->regenerateVariants($id));
