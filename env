@@ -77,6 +77,12 @@
 # apiClient.appName = 'API Client'
 # apiClient.apiPrefix = '/api/v1'
 # apiClient.logRequests = false
+#
+# API App Key — raises rate limit from 60 req/min (IP-based) to 600 req/min (key-based).
+# Create a key at /admin/api-keys, then set it here.
+# Omit rather than set an invalid value — a wrong key returns 401 on every request.
+# apiClient.appKey = apk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+#
 # Optional: Override the webapp base URL (used in email links, password reset redirects)
 # WEBAPP_BASE_URL = 'http://localhost:8082'
 
