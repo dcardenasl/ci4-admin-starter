@@ -5,7 +5,7 @@ All notable changes to ci4-admin-starter will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0] — 2026-05-17
+## [2.0.0] — 2026-05-19
 
 This release realigns the admin to the v2.0 contract of `ci4-api-starter` (permission-based authorization, no `users.role`), drives admin access from config instead of a hardcoded filter list, and hardens the deployment surface: Dockerfile multi-stage build, security headers, public `/health` endpoint, JSON logging with `X-Request-ID` propagation, maintenance-mode short-circuit, asset cache-busting, two-stage MIME validation, and a tag-driven GitHub Release workflow. Also migrates the CSS build to Tailwind v4 (CSS-first config), tightens the Node engine floor, ships the workaround that unblocks the trash UI against `ci4-api-starter@v2.1.0`, and bumps the `codeigniter4/framework` floor to `^4.7`.
 
@@ -90,11 +90,15 @@ This release realigns the admin to the v2.0 contract of `ci4-api-starter` (permi
 - **Tailwind, Alpine, and Lucide** are now built or vendored locally (`npm run build:all`); the runtime CDN dependency is gone in production.
 - **CSS build migrated to Tailwind v4** (`tailwindcss@^4.3.0` + `@tailwindcss/cli@^4.3.0`). `src/css/app.css` switches `@tailwind base/components/utilities` → `@import "tailwindcss"`. The `brand-*` palette lives in an `@theme {}` block; the old JS `safelist` (gradient classes, `odd:`/`even:`/`hover:` table variants, `py-3.5`, `text-[11px]`) is now `@source inline(...)` directives. `app/Views/layouts/partials/head.php` switches the runtime `--color-brand-*` CSS vars from RGB triplets (`239 246 255`) to full `rgb()` values so the cascade override works under v4's `color-mix()` opacity model (v3's `<alpha-value>` indirection is gone). Net effect: minified output grows from ~30 KB to ~42 KB (more defaults shipped + `@source inline` additions), build wall-time is sub-100 ms.
 - **`eslint` bumped to `^10.4.0`** (was `^10.2.1`). `@eslint/js` stays on `^10.0.1` (latest of the v10 series). `lint-staged` deferred to `^16.4.0` (the v17 line requires Node `>=22.22.1`; tracked in admin `TASKS.md` as `ADM-DEP-002`).
+- **`lucide` bumped to `1.16.0`** (was `0.539.0`). Icon-set compatible update; `npm run build:vendor` regenerates the vendored copy in `public/assets/vendor/`.
+- **`apiClient.appKey` documented in the example env template** — the `env` file now includes the commented-out `apiClient.appKey` key with the same descriptive comment as `CLAUDE.md` and `docs/ARCHITECTURE.md`, so the option is visible on first-clone setup.
+- **Deprecated `POST /files/{id}/replace` endpoint removed from the admin.** The route, controller action, service method, and interface entry have been deleted. The file detail view (`files/show.php`) now shows an inline warning when the file has active usages (resources referencing it), giving context before deletion. Tracked as pending on the API side in the workspace `TASKS.md`.
 - **Admin docs governance** — `docs/INDEX.md` and `docs/es/INDEX.md` now carry an explicit "English is the source of truth, the Spanish translation may lag" banner so contributors don't expect line-for-line parity. The `CLAUDE.md` Files routes table now enumerates the full surface (trash, restore, force, bulk, replace, regenerate, metadata, usages, picker) and flags which routes still wait on API endpoints.
 
 ### Fixed
 
 - **`FileApiService::bulk{Delete,Restore,ForceDelete}` stringify the `ids` array** before posting to the API. CI4's global `InvalidChars` filter calls `mb_check_encoding()` recursively over the JSON body and throws `TypeError` on raw integers; serialising as strings dodges the framework bug, and the API DTO casts back to `int` internally. Unblocks the trash UI end-to-end against `ci4-api-starter@v2.1.0`.
+- **`DashboardController`** caches health-check, metrics-summary, and recent-files API calls in the session (60-second TTL). Eliminates redundant round-trips on repeated dashboard loads and reduces perceived latency.
 
 ### Removed
 
