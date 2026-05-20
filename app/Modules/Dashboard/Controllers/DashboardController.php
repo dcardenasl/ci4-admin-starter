@@ -32,19 +32,51 @@ class DashboardController extends BaseWebController
     public function index(): string
     {
         $dateRange = $this->resolveDateRange();
-        $isAdmin = has_permission('users.read');
+        $isAdmin   = has_permission('users.read');
+        $userId    = (int) ((session('user') ?? [])['id'] ?? 0);
+        $cache     = service('cache');
 
-        // 1. Resource totals from API contract: /users and /files return meta.total
-        $usersResponse = $isAdmin
-            ? $this->safeApiCall(fn () => $this->userService->list(['limit' => 1]))
-            : ['ok' => false, 'data' => []];
+        // Health (30s — real-time status; errors are not cached so the next load retries)
+        $healthResponse = $cache->get('dashboard_health');
+        if (!is_array($healthResponse)) {
+            $healthResponse = $this->safeApiCall(fn () => $this->healthService->check());
+            if ($healthResponse['ok'] ?? false) {
+                $cache->save('dashboard_health', $healthResponse, 30);
+            }
+        }
 
-        $filesResponse = $this->safeApiCall(fn () => $this->fileService->list(['limit' => 5]));
+        // Files: user-scoped (60s — changes on upload/delete, but brief staleness is acceptable)
+        $filesCacheKey = 'dashboard_files_' . $userId;
+        $filesResponse = $cache->get($filesCacheKey);
+        if (!is_array($filesResponse)) {
+            $filesResponse = $this->safeApiCall(fn () => $this->fileService->list(['limit' => 5]));
+            if ($filesResponse['ok'] ?? false) {
+                $cache->save($filesCacheKey, $filesResponse, 60);
+            }
+        }
 
-        // 2. Network metrics from /metrics -> request_stats
-        $metricsResponse = $this->safeApiCall(fn () => $this->metricsService->summary($dateRange));
+        // Metrics: keyed on date range (120s — historical stats, infrequent changes)
+        $metricsCacheKey = 'dashboard_metrics_' . md5(serialize($dateRange));
+        $metricsResponse = $cache->get($metricsCacheKey);
+        if (!is_array($metricsResponse)) {
+            $metricsResponse = $this->safeApiCall(fn () => $this->metricsService->summary($dateRange));
+            if ($metricsResponse['ok'] ?? false) {
+                $cache->save($metricsCacheKey, $metricsResponse, 120);
+            }
+        }
 
-        $healthResponse = $this->safeApiCall(fn () => $this->healthService->check());
+        // Users total: global count (120s — changes infrequently)
+        if ($isAdmin) {
+            $usersResponse = $cache->get('dashboard_users');
+            if (!is_array($usersResponse)) {
+                $usersResponse = $this->safeApiCall(fn () => $this->userService->list(['limit' => 1]));
+                if ($usersResponse['ok'] ?? false) {
+                    $cache->save('dashboard_users', $usersResponse, 120);
+                }
+            }
+        } else {
+            $usersResponse = ['ok' => false, 'data' => []];
+        }
 
         // Data processing
         $metrics = $this->extractData($metricsResponse);
