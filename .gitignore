@@ -19,6 +19,7 @@ $RECYCLE.BIN/
 .env
 .env.*
 !.env.example
+*.key
 .vagrant
 Vagrantfile
 auth.json
