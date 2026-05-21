@@ -38,4 +38,7 @@ return [
     'check_status_critical' => 'Critical',
     'check_status_unhealthy' => 'Unhealthy',
     'check_status_unknown'  => 'Unknown',
+    'service_hub'    => 'Hub API',
+    'service_domain' => 'Domain App',
+    'service_bff'    => 'BFF Gateway',
 ];

@@ -4,6 +4,10 @@ Welcome to the official documentation for **CI4 Admin Starter** — a production
 
 🌐 **Languages:** [English](./INDEX.md) | [Español](./es/INDEX.md)
 
+> **Translation policy.** The English version is the source of truth. The Spanish
+> translation under `docs/es/` is refreshed periodically — it may lag behind English
+> by a sprint or two. When the two disagree, trust English.
+
 ## 🚀 Getting Started
 
 **New to the project?** Start here:

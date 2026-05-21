@@ -1661,6 +1661,8 @@ window.handleGoogleCredentialResponse = (response) => {
         return;
     }
 
+    window.dispatchEvent(new CustomEvent('login:loading', { detail: { flow: 'google' } }));
+
     tokenInput.value = token;
     loginForm.submit();
 };

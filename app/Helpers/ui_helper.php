@@ -265,9 +265,10 @@ if (! function_exists('ui_icon')) {
             'upload-cloud'  => 'upload-cloud',
             'refresh-ccw'   => 'refresh-ccw',
             'check'         => 'check',
-            'folder-open'   => 'folder-open',
-            'image'         => 'image',
-            'layers'        => 'layers',
+            'folder-open'     => 'folder-open',
+            'image'           => 'image',
+            'layers'          => 'layers',
+            'triangle-alert'  => 'triangle-alert',
         ];
 
         if (! isset($icons[$name])) {

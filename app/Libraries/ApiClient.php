@@ -186,6 +186,15 @@ class ApiClient implements ApiClientInterface
             log_message('info', $logMsg);
         }
 
+        if (! is_array($payload)) {
+            log_message('warning', sprintf(
+                'ApiClient: unexpected non-array payload from %s (type=%s, status=%d). Falling back to empty data.',
+                $body !== '' ? substr($body, 0, 120) : '(empty)',
+                gettype($payload),
+                $status
+            ));
+        }
+
         return [
             'ok'          => $status >= 200 && $status < 300,
             'status'      => $status,

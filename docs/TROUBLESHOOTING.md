@@ -164,7 +164,7 @@ sudo apt-get install php-phar
 4. **Tailwind configuration issue:**
    - Check `app/Views/layouts/partials/head.php` exists
    - Verify CSS custom properties are defined
-   - Check `tailwind.config.js` for correct paths
+   - Check `src/css/app.css` `@theme` block and `@source` directives (Tailwind v4 — no more `tailwind.config.js`)
 
 ### "Alpine.js not working" or "No interactivity"
 

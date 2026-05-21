@@ -10,6 +10,8 @@ return [
     'login_title'       => 'Sign in',
     'login_subtitle'    => 'Access the administration panel',
     'login_button'      => 'Sign in',
+    'login_signing_in'        => 'Signing in...',
+    'login_signing_in_google' => 'Signing in with Google...',
     'forgot_password'   => 'Forgot your password?',
     'create_account'    => 'Create an account',
     'or_login_with'      => 'Or sign in with',

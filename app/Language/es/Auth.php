@@ -10,6 +10,8 @@ return [
     'login_title'       => 'Iniciar sesión',
     'login_subtitle'    => 'Accede al panel de administración',
     'login_button'      => 'Ingresar',
+    'login_signing_in'        => 'Ingresando...',
+    'login_signing_in_google' => 'Ingresando con Google...',
     'forgot_password'   => '¿Olvidaste tu contraseña?',
     'create_account'    => 'Crear una cuenta',
     'or_login_with'      => 'O ingresa con',

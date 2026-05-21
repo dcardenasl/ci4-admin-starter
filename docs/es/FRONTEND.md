@@ -33,13 +33,13 @@ Usamos Alpine.js para agregar interactividad sin la sobrecarga de un framework p
 1. **`confirm`:** Usado para mostrar diálogos de confirmación para acciones destructivas.
    ```javascript
    // Ejemplo: Disparar una confirmación desde Alpine
-   $store.confirm.show('¿Estás seguro?', () => {
+   $store.confirm.show(lang('App.are_you_sure'), () => {
        // Realizar acción (p.ej., enviar formulario o fetch)
    });
    ```
 2. **`toast`:** Usado para notificaciones temporales.
    ```javascript
-   $store.toast.push('success', '¡Operación exitosa!');
+   $store.toast.push('success', lang('App.operation_successful'));
    ```
 
 ### Tablas Interactivas (`remoteTable`)
@@ -78,7 +78,7 @@ Simplifica el manejo de errores en formularios:
 
 ## 🎨 Convenciones de Estilos
 
-1. **Colores de Marca:** Usamos una paleta `brand` (definida en `tailwind.config.js`) para acciones primarias.
+1. **Colores de Marca:** Usamos una paleta `brand` (definida en `src/css/app.css` dentro del bloque `@theme`, sobrescribible en runtime desde `app/Views/layouts/partials/head.php`) para acciones primarias.
 2. **Consistencia:** Evita escribir CSS personalizado. El 99% de la UI debe construirse usando utilidades Tailwind o los ayudantes PHP proporcionados.
 3. **Capacidad de Respuesta:** Usa prefijos `md:` y `lg:` para asegurar que el admin sea utilizable en tablets y desktops. La barra lateral se colapsa automáticamente en mobile.
 4. **Accesibilidad:**

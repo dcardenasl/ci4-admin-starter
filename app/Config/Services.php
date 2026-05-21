@@ -6,6 +6,8 @@ namespace Config;
 
 use App\Libraries\ApiClient;
 use App\Libraries\ApiClientInterface;
+use App\Libraries\BffApiClient;
+use App\Libraries\BffApiClientInterface;
 use App\Libraries\DomainApiClient;
 use App\Libraries\DomainApiClientInterface;
 use App\Modules\ApiKeys\Services\ApiKeyApiService;
@@ -89,6 +91,16 @@ class Services extends BaseService
         return new DomainApiClient(config('DomainApiClient'));
     }
 
+    public static function bffApiClient(bool $getShared = true): BffApiClientInterface
+    {
+        if ($getShared) {
+            /** @var BffApiClientInterface */
+            return static::getSharedInstance('bffApiClient');
+        }
+
+        return new BffApiClient(config('BffApiClient'));
+    }
+
     public static function authApiService(bool $getShared = true): AuthApiServiceInterface
     {
         if ($getShared) {
@@ -157,6 +169,26 @@ class Services extends BaseService
         }
 
         return new HealthApiService(static::apiClient(), config('ApiClient')->healthPaths);
+    }
+
+    public static function domainHealthApiService(bool $getShared = true): HealthApiServiceInterface
+    {
+        if ($getShared) {
+            /** @var HealthApiService */
+            return static::getSharedInstance('domainHealthApiService');
+        }
+
+        return new HealthApiService(static::domainApiClient(), config('DomainApiClient')->healthPaths);
+    }
+
+    public static function bffHealthApiService(bool $getShared = true): HealthApiServiceInterface
+    {
+        if ($getShared) {
+            /** @var HealthApiService */
+            return static::getSharedInstance('bffHealthApiService');
+        }
+
+        return new HealthApiService(static::bffApiClient(), config('BffApiClient')->healthPaths);
     }
 
     public static function profileApiService(bool $getShared = true): ProfileApiServiceInterface

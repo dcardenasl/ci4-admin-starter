@@ -34,16 +34,16 @@ $lucideLocal = file_exists(FCPATH . 'assets/vendor/lucide.min.js');
     }
 
     :root {
-        --color-brand-50: 239 246 255;
-        --color-brand-100: 219 234 254;
-        --color-brand-200: 191 219 254;
-        --color-brand-300: 147 197 253;
-        --color-brand-400: 96 165 250;
-        --color-brand-500: 59 130 246;
-        --color-brand-600: 37 99 235;
-        --color-brand-700: 29 78 216;
-        --color-brand-800: 30 64 175;
-        --color-brand-900: 30 58 138;
+        --color-brand-50: rgb(239 246 255);
+        --color-brand-100: rgb(219 234 254);
+        --color-brand-200: rgb(191 219 254);
+        --color-brand-300: rgb(147 197 253);
+        --color-brand-400: rgb(96 165 250);
+        --color-brand-500: rgb(59 130 246);
+        --color-brand-600: rgb(37 99 235);
+        --color-brand-700: rgb(29 78 216);
+        --color-brand-800: rgb(30 64 175);
+        --color-brand-900: rgb(30 58 138);
         --font-sans: "Inter", system-ui, -apple-system, sans-serif;
         --font-mono: "JetBrains Mono", ui-monospace, monospace;
     }

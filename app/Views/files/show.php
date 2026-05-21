@@ -25,6 +25,16 @@ $smUrl    = is_array($variants['sm'] ?? null) ? (string) ($variants['sm']['url']
     </div>
 </div>
 
+<?php if ($usages !== []): ?>
+<div class="mb-4 flex items-start gap-3 rounded-lg border border-yellow-300 bg-yellow-50 p-4 text-sm text-yellow-800" role="alert">
+    <?= ui_icon('triangle-alert', 'mt-0.5 h-4 w-4 shrink-0 text-yellow-600') ?>
+    <div>
+        <strong><?= esc(lang('Files.in_use_warning_title')) ?></strong>
+        <?= esc(lang('Files.in_use_warning_body', [count($usages)])) ?>
+    </div>
+</div>
+<?php endif; ?>
+
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Preview + technical info -->
     <section class="bg-white border border-gray-200 rounded-xl shadow-sm p-5 lg:col-span-1">
@@ -116,18 +126,11 @@ $smUrl    = is_array($variants['sm'] ?? null) ? (string) ($variants['sm']['url']
     <!-- Editorial metadata + Where-used -->
     <div class="lg:col-span-2 space-y-6">
         <section class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
-            <h3 class="text-lg font-semibold text-gray-900"><?= esc(lang('Files.replace')) ?></h3>
-            <p class="text-sm text-gray-500 mt-1"><?= esc(lang('Files.replace_help')) ?></p>
-            <form method="post" action="<?= route_to('files.replace', $id) ?>" enctype="multipart/form-data" class="mt-3 flex flex-col sm:flex-row sm:items-center gap-3">
-                <?= csrf_field() ?>
-                <input type="file" name="file" required class="block text-sm text-gray-700 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-brand-700 hover:file:bg-brand-100">
-                <button type="submit" class="<?= esc(action_button_class('primary')) ?>">
-                    <?= ui_icon('upload', 'h-3.5 w-3.5') ?> <?= esc(lang('Files.replace_button')) ?>
-                </button>
-            </form>
+            <h3 class="text-lg font-semibold text-gray-900"><?= esc(lang('Files.regenerate')) ?></h3>
+            <p class="text-sm text-gray-500 mt-1"><?= esc(lang('Files.regenerate_help')) ?></p>
             <form method="post" action="<?= route_to('files.regenerate', $id) ?>" class="mt-3">
                 <?= csrf_field() ?>
-                <button type="submit" class="<?= esc(action_button_class()) ?>" title="<?= esc(lang('Files.regenerate_help')) ?>">
+                <button type="submit" class="<?= esc(action_button_class()) ?>">
                     <?= ui_icon('refresh-ccw', 'h-3.5 w-3.5') ?> <?= esc(lang('Files.regenerate')) ?>
                 </button>
             </form>

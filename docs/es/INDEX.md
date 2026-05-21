@@ -4,6 +4,11 @@ Bienvenido a la documentación oficial de **CI4 Admin Starter** — una plantill
 
 🌐 **Idiomas:** [English](../INDEX.md) | [Español](./INDEX.md)
 
+> **Nota de sincronización.** La versión en inglés (`docs/`) es la fuente autoritativa.
+> La traducción en español se actualiza periódicamente, no en tiempo real. Si esta
+> versión contradice a la inglesa, asume que la inglesa es la correcta y reporta la
+> discrepancia.
+
 ## 🚀 Comenzar
 
 **¿Nuevo en el proyecto?** Comienza aquí:
