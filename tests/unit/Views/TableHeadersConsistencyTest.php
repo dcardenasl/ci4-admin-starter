@@ -21,7 +21,7 @@ final class TableHeadersConsistencyTest extends CIUnitTestCase
             APPPATH . 'Views/audit/index.php',
             APPPATH . 'Views/api_keys/index.php',
             APPPATH . 'Views/files/partials/list_section.php',
-            APPPATH . 'Views/dashboard/index.php',
+            APPPATH . 'Views/dashboard/partials/widget_recent_files.php',
             APPPATH . 'Views/metrics/index.php',
         ];
     }

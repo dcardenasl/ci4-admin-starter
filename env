@@ -99,5 +99,16 @@
 # domainApiClient.logRequests = false
 # domainApiClient.appKey = 'apk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 
+#--------------------------------------------------------------------
+# BFF API CLIENT (optional — only when a ci4-bff-starter is part of the stack)
+#--------------------------------------------------------------------
+# Leave bffApiClient.baseUrl empty (default) to disable BFF health monitoring.
+# Set it to show a BFF health card on the admin dashboard.
+#
+# bffApiClient.baseUrl = 'http://localhost:8088'
+# bffApiClient.apiPrefix = '/api/v1'
+# bffApiClient.appName = 'BFF Gateway'
+# bffApiClient.logRequests = false
+
 # Maximum file upload size in bytes (applies to frontend validation + server rules)
 # FILE_MAX_SIZE = 10485760
