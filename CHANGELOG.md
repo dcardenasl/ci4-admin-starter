@@ -68,6 +68,16 @@ This release realigns the admin to the v2.0 contract of `ci4-api-starter` (permi
 - **`<meta name="session-expires-at">`** emitted by `BaseWebController.viewData` and consumed by `bootSessionExpiryWatcher()` in `app.js`. Logs a console warning and emits a `session:expiring-soon` window event 60 s before the JWT expires — downstream UI can hook this to show a banner / save-warning.
 - **`build:vendor` / `build:all` npm scripts** that copy `node_modules/alpinejs/dist/cdn.min.js` and `node_modules/lucide/dist/umd/lucide.min.js` into `public/assets/vendor/`.
 
+#### Dashboard
+- **Async widget endpoints** — the dashboard page renders instantly with skeleton placeholders and fetches each panel independently: `GET /dashboard/widgets/stats`, `/dashboard/widgets/health`, `/dashboard/widgets/recent-files`, `/dashboard/widgets/activity`. Eliminates the 2-3 API-call blocking render that caused slow first-paint on cold caches.
+- **Multi-service health panel** — the health widget shows hub, domain app, and BFF gateway as separate cards. Cards are omitted automatically when the respective `baseUrl` is unconfigured (empty string in the config), so a plain hub-only deployment sees only the hub card.
+
+#### BFF integration (optional)
+- **`BffApiClient` / `BffApiClientInterface`** (`app/Libraries/BffApiClient.php`) — thin subclass of `ApiClient` bound to `Config\BffApiClient`. Provides the same token-refresh and header-injection behaviour as the hub client but targeting the BFF gateway.
+- **`Config\BffApiClient`** (`app/Config/BffApiClient.php`) — reads `bffApiClient.*` env vars (default `baseUrl = ''` — disabled). Set `bffApiClient.baseUrl = http://localhost:8088` to enable BFF health monitoring on the dashboard.
+- **`Services::bffApiClient()`** registered in `Config\Services` alongside the existing `apiClient()` and `domainApiClient()` factories.
+- **`Services::domainHealthApiService()`** registered — a second `HealthApiService` instance bound to `domainApiClient()`, consumed by the new health widget to probe the domain app independently of the hub.
+
 #### Quality / CI
 - **`scripts/i18n-check.php`** — validates EN/ES file and key parity for both global `app/Language/` and per-module `app/Modules/{Module}/Language/` trees. Wired in as `composer i18n-check` and a matching CI step.
 - **`scripts/check-coverage.php`** — clover-XML parser that exits non-zero below the supplied threshold (default 70%). Composer alias `coverage:check`. Wired into `ci.yml` as a soft-fail step on the PHP 8.2 lane until a confirmed baseline lets us flip it to a hard gate.
@@ -127,8 +137,9 @@ Upgrading from `1.1.x` directly to `2.0.0`:
 7. **Update any code calling `has_admin_access()`** to `has_permission('iam.admin-access')`. UI templates that referenced `$user['role']` must consume `$user['permissions']`.
 8. **Update any extension of `ProfileController::update()`** that sent fields beyond `first_name` / `last_name` / `avatar_url` — those are now silently dropped by the API. Use `PUT /users/{id}` (admin endpoint) if you genuinely need to mutate other fields.
 9. **Remove any references to `AppUserMembershipController`** in custom routes, navigation, or templates. Role assignment is via `UserController` (`role_ids[]` payload).
-10. **Upgrade Node to `^20.19.0`, `^22.13.0`, or `>=24`** before running `npm ci`. `eslint@10.4.0` and the Tailwind v4 CLI both refuse to install on older Node.
-11. **Port any `tailwind.config.js` customisations** to `src/css/app.css`. The mapping is:
+10. **(Optional) BFF health monitoring** — set `bffApiClient.baseUrl = http://localhost:8088` in `.env` to display a BFF health card on the dashboard. Leave unset (or empty) if no BFF gateway is in the stack — no code changes required.
+11. **Upgrade Node to `^20.19.0`, `^22.13.0`, or `>=24`** before running `npm ci`. `eslint@10.4.0` and the Tailwind v4 CLI both refuse to install on older Node.
+12. **Port any `tailwind.config.js` customisations** to `src/css/app.css`. The mapping is:
     - JS `theme.extend.colors` → CSS `@theme { --color-*: ... }`. v4 expects full color values (e.g. `rgb(239 246 255)` or `oklch(...)`), not RGB triplets — the `<alpha-value>` indirection is gone (opacity modifiers like `bg-brand-500/50` now generate `color-mix()` automatically).
     - JS `theme.extend.fontFamily` → CSS `@theme { --font-sans: ...; --font-mono: ... }`.
     - JS `safelist` → CSS `@source inline("class-name")`. The `@source inline()` directive supports brace expansion for ranges.
