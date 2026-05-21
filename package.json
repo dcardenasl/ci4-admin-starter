@@ -2,7 +2,7 @@
     "name": "ci4-admin-starter",
     "private": true,
     "engines": {
-        "node": "^20.19.0 || ^22.13.0 || >=24"
+        "node": "^22.22.1 || >=24"
     },
     "scripts": {
         "dev:css": "tailwindcss -i ./src/css/app.css -o ./public/assets/css/app.css --watch",
@@ -22,7 +22,7 @@
         "@tailwindcss/cli": "^4.3.0",
         "eslint": "^10.4.0",
         "husky": "^9.1.7",
-        "lint-staged": "^16.4.0",
+        "lint-staged": "^17.0.5",
         "tailwindcss": "^4.3.0"
     },
     "lint-staged": {

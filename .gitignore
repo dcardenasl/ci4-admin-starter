@@ -19,6 +19,9 @@ $RECYCLE.BIN/
 .env
 .env.*
 !.env.example
+*.key
+pnpm-lock.yaml
+pnpm-workspace.yaml
 .vagrant
 Vagrantfile
 auth.json
