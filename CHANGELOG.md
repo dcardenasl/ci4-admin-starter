@@ -27,7 +27,7 @@ This release realigns the admin to the v2.0 contract of `ci4-api-starter` (permi
 - **`composer.json` requires CodeIgniter `^4.5`** (was `^4.4`).
 - **Frontend dependencies vendored locally.** Tailwind, Alpine, and Lucide are now built or copied via `npm run build:all` into `public/assets/css/` and `public/assets/vendor/`. The layout falls back to the pinned jsdelivr CDN URLs only when the vendored copies are missing — keeping a fresh-clone smoke path while removing the runtime CDN dependency from production. Deployment pipelines must run `npm ci && npm run build:all` before publishing.
 - **PHP `^8.2`** (locked in at v1.1.0; restated here for downstream that may have skipped 1.1).
-- **`engines.node` floor raised to `^20.19.0 || ^22.13.0 || >=24`** (was `>=20.0.0`). Required by `eslint@10.4.0` and the Tailwind v4 CLI. Bump your CI / dev runtime before installing.
+- **`engines.node` floor raised to `^22.22.1 || >=24`** (was `>=20.0.0`). Required by `lint-staged@17`. **Node 20 is no longer supported for the build toolchain.** Bump your CI / dev runtime to Node 22.22.x or later before installing.
 - **`tailwind.config.js` removed.** Tailwind v4 is CSS-first: the equivalent config now lives in `src/css/app.css` via `@import "tailwindcss"`, an `@theme {}` block (brand color palette + fonts), `@source` directives (`app/Views`, `app/Helpers`, `public/assets/js`), and `@source inline()` declarations replacing the old JS `safelist`. Any downstream that customised `tailwind.config.js` must port their config across — `@config "../tailwind.config.js"` is technically supported by v4 but `safelist` is **not** honored when loaded that way; use `@source inline()` instead. See the Tailwind v4 upgrade guide.
 - **`@tailwindcss/cli` is now a required dev dependency.** In v4 the CLI ships in a separate package; the existing `npm run dev:css` and `build:css` scripts keep working because both packages expose the same `tailwindcss` binary, but `npm ci` needs the new package to be installed.
 
@@ -79,6 +79,10 @@ This release realigns the admin to the v2.0 contract of `ci4-api-starter` (permi
 - **`Services::domainHealthApiService()`** registered — a second `HealthApiService` instance bound to `domainApiClient()`, consumed by the new health widget to probe the domain app independently of the hub.
 
 #### Quality / CI
+- **`security.yml` GitHub Actions workflow** — weekly security scan (plus push/PR to `main`): `composer audit`, `npm audit --audit-level=high`, hardcoded-secret grep, `.env` presence check, `.gitignore` validation. Matches the workflow present in `ci4-api-starter`, `ci4-domain-starter`, and `ci4-bff-starter`.
+- **CI push trigger scoped to `main` and `dev`** — prevents CI from running on every feature branch push; aligns with the convention in the other platform repos.
+- **`*.key` added to `.gitignore`** — required by the `security.yml` gitignore-validation step.
+- **lint-staged bumped to `^17.0.5`; CI upgraded to Node 22** — lint-staged v17 requires `>=22.22.1`. `engines.node` updated to `^22.22.1 || >=24`; both `ci.yml` and `security.yml` set `node-version: '22'`. Node 20 is no longer supported for the build toolchain.
 - **`scripts/i18n-check.php`** — validates EN/ES file and key parity for both global `app/Language/` and per-module `app/Modules/{Module}/Language/` trees. Wired in as `composer i18n-check` and a matching CI step.
 - **`scripts/check-coverage.php`** — clover-XML parser that exits non-zero below the supplied threshold (default 70%). Composer alias `coverage:check`. Wired into `ci.yml` as a soft-fail step on the PHP 8.2 lane until a confirmed baseline lets us flip it to a hard gate.
 - **`PermissionFilterTest`** — 5 unit tests pinning the gating contract: allows when permission held, redirects browser requests to `/dashboard`, returns JSON 403 for AJAX, denies fail-closed on empty arguments.
@@ -138,7 +142,7 @@ Upgrading from `1.1.x` directly to `2.0.0`:
 8. **Update any extension of `ProfileController::update()`** that sent fields beyond `first_name` / `last_name` / `avatar_url` — those are now silently dropped by the API. Use `PUT /users/{id}` (admin endpoint) if you genuinely need to mutate other fields.
 9. **Remove any references to `AppUserMembershipController`** in custom routes, navigation, or templates. Role assignment is via `UserController` (`role_ids[]` payload).
 10. **(Optional) BFF health monitoring** — set `bffApiClient.baseUrl = http://localhost:8088` in `.env` to display a BFF health card on the dashboard. Leave unset (or empty) if no BFF gateway is in the stack — no code changes required.
-11. **Upgrade Node to `^20.19.0`, `^22.13.0`, or `>=24`** before running `npm ci`. `eslint@10.4.0` and the Tailwind v4 CLI both refuse to install on older Node.
+11. **Upgrade Node to `^22.22.1` or `>=24`** before running `npm ci`. `lint-staged@17` requires Node `>=22.22.1`; Node 20 is no longer supported.
 12. **Port any `tailwind.config.js` customisations** to `src/css/app.css`. The mapping is:
     - JS `theme.extend.colors` → CSS `@theme { --color-*: ... }`. v4 expects full color values (e.g. `rgb(239 246 255)` or `oklch(...)`), not RGB triplets — the `<alpha-value>` indirection is gone (opacity modifiers like `bg-brand-500/50` now generate `color-mix()` automatically).
     - JS `theme.extend.fontFamily` → CSS `@theme { --font-sans: ...; --font-mono: ... }`.
