@@ -5,6 +5,25 @@ All notable changes to ci4-admin-starter will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [2.1.0] — 2026-05-23
+
+### Added
+
+- **Async dashboard widget endpoints** — dashboard page now renders instantly with skeleton placeholders and fetches each widget independently (`GET /dashboard/widgets/stats`, `/widgets/health`, `/widgets/recent-files`, `/widgets/activity`). Eliminates blocking 2-3 API calls on cold render.
+- **Multi-backend health widget** — dashboard health panel now shows hub, domain app, and BFF gateway as separate cards. Cards auto-omit when the respective `baseUrl` is unconfigured (empty string).
+- **BFF gateway health integration** (`BffApiClient`, `Config\BffApiClient`, `Services::bffApiClient()`) — thin HTTP client subclass targeting `ci4-bff-starter`. Optional: set `bffApiClient.baseUrl = http://localhost:8088` to enable BFF health monitoring.
+- **CI security workflow** (`.github/workflows/security.yml`) — automated vulnerability scanning via `composer security` and `npm audit`. Runs on `push` to main/dev branches and on pull requests.
+
+### Changed
+
+- **Dependency stability** — `lint-staged` bumped from v14 to v17; `@tailwindcss/cli` constrained to `^4`. Node.js CI floor raised to `^24.0.0` to match `engines.node` declaration.
+
+### Fixed
+
+- **CI shell injection in release workflow** — fixed variable interpolation in release notes extraction (previously vulnerable to backticks in CHANGELOG content; now properly escaped via env-pass).
+
 ## [2.0.0] — 2026-05-19
 
 This release realigns the admin to the v2.0 contract of `ci4-api-starter` (permission-based authorization, no `users.role`), drives admin access from config instead of a hardcoded filter list, and hardens the deployment surface: Dockerfile multi-stage build, security headers, public `/health` endpoint, JSON logging with `X-Request-ID` propagation, maintenance-mode short-circuit, asset cache-busting, two-stage MIME validation, and a tag-driven GitHub Release workflow. Also migrates the CSS build to Tailwind v4 (CSS-first config), tightens the Node engine floor, ships the workaround that unblocks the trash UI against `ci4-api-starter@v2.1.0`, and bumps the `codeigniter4/framework` floor to `^4.7`.
