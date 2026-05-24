@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.1] — 2026-05-24
+
+### Fixed
+
+- `bin/make-module.sh` now serializes scaffolding steps and aligns generated test stubs to the module's actual service interface, preventing phantom test failures on fresh module generation.
+
 ## [2.1.0] — 2026-05-23
 
 ### Added
