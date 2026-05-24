@@ -289,6 +289,11 @@ apply_subs "app/Config/ApiClient.php" \
     "${P_PHP_BASE_URL}|${R_PHP_BASE_URL}" \
     "${P_PHP_APP_NAME}|${R_PHP_APP_NAME}"
 
+# tests/unit/Libraries/ApiClientTest.php
+apply_subs "tests/unit/Libraries/ApiClientTest.php" \
+    "${P_BASE_URL_OLD}|${R_BASE_URL_NEW}" \
+    "${P_APP_NAME_OLD}|${R_APP_NAME_NEW}"
+
 # app/Views/layouts/partials/head.php
 apply_subs "app/Views/layouts/partials/head.php" \
     "${P_HEAD_APP_NAME}|${R_HEAD_APP_NAME}"

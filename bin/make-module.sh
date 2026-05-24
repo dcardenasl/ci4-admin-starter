@@ -128,6 +128,15 @@ fi
 # Change to project root (ci4-admin-starter/)
 cd "$(dirname "$0")/.."
 
+LOCK_DIR="${TMPDIR:-/tmp}/ci4-admin-make-module.lock"
+if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+    echo -e "${YELLOW}⚠ Another make-module.sh process is running. Waiting for the scaffold lock...${NC}"
+    while ! mkdir "$LOCK_DIR" 2>/dev/null; do
+        sleep 1
+    done
+fi
+trap 'rm -rf "$LOCK_DIR"' EXIT
+
 # ─── Optional API endpoint probe (--check-api) ─────────────────────────────────
 if [[ "$CHECK_API_REQUESTED" == true ]]; then
     if [[ -z "$CHECK_API_URL" && -f .env ]]; then
@@ -1199,7 +1208,7 @@ final class ${RESOURCE}FlowTest extends CIUnitTestCase
     {
         \$result = \$this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'user'],
+            'user'         => ['permissions' => []],
         ])->get('/admin/${MODULE_LOWER}/${ROUTE_SEGMENT}');
 
         \$result->assertRedirectTo(site_url('dashboard'));
@@ -1209,7 +1218,7 @@ final class ${RESOURCE}FlowTest extends CIUnitTestCase
     {
         \$result = \$this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['users.read']],
         ])->get('/admin/${MODULE_LOWER}/${ROUTE_SEGMENT}');
 
         \$result->assertStatus(200);
@@ -1219,7 +1228,7 @@ final class ${RESOURCE}FlowTest extends CIUnitTestCase
     {
         \$result = \$this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['users.read']],
         ])->post('/admin/${MODULE_LOWER}/${ROUTE_SEGMENT}', [
             csrf_token() => csrf_hash(),
         ]);
@@ -1242,7 +1251,7 @@ final class ${RESOURCE}FlowTest extends CIUnitTestCase
 
         \$result = \$this->withSession([
             'access_token' => 'token',
-            'user'         => ['role' => 'admin'],
+            'user'         => ['permissions' => ['users.read']],
         ])->post('/admin/${MODULE_LOWER}/${ROUTE_SEGMENT}/test-uuid/delete', [
             csrf_token() => csrf_hash(),
         ]);
