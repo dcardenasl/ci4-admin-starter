@@ -269,6 +269,21 @@ if (! function_exists('ui_icon')) {
             'image'           => 'image',
             'layers'          => 'layers',
             'triangle-alert'  => 'triangle-alert',
+            'cart'            => 'shopping-cart',
+            'warehouse'       => 'warehouse',
+            'box'             => 'package',
+            'truck'           => 'truck',
+            'wallet'          => 'wallet',
+            'credit-card'     => 'credit-card',
+            'bank'            => 'banknote',
+            'settings'        => 'settings',
+            'mail'            => 'mail',
+            'bell'            => 'bell',
+            'calendar'        => 'calendar',
+            'map-pin'         => 'map-pin',
+            'tag'             => 'tag',
+            'ticket'          => 'ticket',
+            'store'           => 'store',
         ];
 
         if (! isset($icons[$name])) {

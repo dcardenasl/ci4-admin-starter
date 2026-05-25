@@ -199,6 +199,48 @@ class ScaffoldingScriptsTest extends CIUnitTestCase
         $this->assertStringContainsString('--service', implode("\n", $out));
     }
 
+    public function testMakeModuleWithCustomActionsScaffoldsHooksEndToEnd(): void
+    {
+        self::runScript('bin/make-module.sh Release Publishing /publishing/releases --action=approve --action=publish');
+
+        $service = (string) file_get_contents(self::$sandbox . '/app/Modules/Publishing/Services/ReleaseApiService.php');
+        $interface = (string) file_get_contents(self::$sandbox . '/app/Modules/Publishing/Services/ReleaseApiServiceInterface.php');
+        $controller = (string) file_get_contents(self::$sandbox . '/app/Modules/Publishing/Controllers/ReleaseController.php');
+        $routes = (string) file_get_contents(self::$sandbox . '/app/Modules/Publishing/Config/Routes.php');
+        $showView = (string) file_get_contents(self::$sandbox . '/app/Views/publishing/releases/show.php');
+        $langEn = (string) file_get_contents(self::$sandbox . '/app/Modules/Publishing/Language/en/Publishing.php');
+
+        $this->assertStringContainsString('public function approve(int|string $id): array;', $interface);
+        $this->assertStringContainsString('public function publish(int|string $id): array;', $interface);
+        $this->assertStringContainsString("'/approve'", $service);
+        $this->assertStringContainsString("'/publish'", $service);
+        $this->assertStringContainsString('public function approve(string $id): RedirectResponse', $controller);
+        $this->assertStringContainsString('public function publish(string $id): RedirectResponse', $controller);
+        $this->assertStringContainsString("admin.publishing.releases.approve", $routes);
+        $this->assertStringContainsString("admin.publishing.releases.publish", $routes);
+        $this->assertStringContainsString("route_to('admin.publishing.releases.approve'", $showView);
+        $this->assertStringContainsString("route_to('admin.publishing.releases.publish'", $showView);
+        $this->assertStringContainsString("'releases_approve'", $langEn);
+        $this->assertStringContainsString("'releases_publish'", $langEn);
+
+        self::runScript('bin/remove-module.sh Release Publishing');
+    }
+
+    public function testMakeModuleRejectsInvalidCustomActionFlag(): void
+    {
+        $cwd = getcwd();
+        chdir(self::$sandbox);
+        exec(
+            'bash bin/make-module.sh Foo Bar /foo --action=Approve-Now --dry-run 2>&1',
+            $out,
+            $code,
+        );
+        chdir((string) $cwd);
+
+        $this->assertNotSame(0, $code, 'Invalid --action value must cause non-zero exit');
+        $this->assertStringContainsString('--action', implode("\n", $out));
+    }
+
     public function testRemoveModuleStripsResourceWithoutTouchingSiblings(): void
     {
         self::runScript('bin/make-module.sh Alpha Demo /demo/alpha');
