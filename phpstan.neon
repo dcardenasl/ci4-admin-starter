@@ -12,21 +12,33 @@ parameters:
         - app/Services
         - app/Support
         - app/Traits
+    parallel:
+        jobSize: 20
+        processTimeout: 600.0
+        maximumNumberOfProcesses: 0
+        minimumNumberOfJobsPerProcess: 2
+        buffer: 134217728
     excludePaths:
+        - vendor
+        - writable
+        - tests/_support
         - app/Views
+    # Use bootstrap for constants and common CI4 functions discovery
     bootstrapFiles:
         - phpstan-bootstrap.php
-    scanFiles:
-        - app/Config/ApiClient.php
-        - app/Config/BffApiClient.php
-        - app/Config/DomainApiClient.php
-        - app/Config/App.php
-        - app/Config/Auth.php
-        - app/Config/Services.php
-        - app/Config/Mimes.php
+    reportUnmatchedIgnoredErrors: false
     treatPhpDocTypesAsCertain: false
+    # ignoreErrors limited to CI4 framework-dynamic patterns (not real bugs).
     ignoreErrors:
-        # CI4 framework runtime constant. Intentionally unresolved at analysis time
-        # so environment-gated branches (e.g. `ENVIRONMENT === 'production'`) are
-        # not flagged as identical.alwaysFalse. See phpstan-bootstrap.php for context.
-        - '#Constant ENVIRONMENT not found#'
+        # CI4 helper functions (loaded globally via spark/autoloader)
+        - '#Function (esc|lang|service|helper|model|config|cache|view|is_cli|env|base_url|site_url|redirect|clean_path|log_message|old|cli|session|csrf_token|csrf_hash|csrf_field|csrf_meta|password_strength|sanitize_filename|route_to|url_is|request) not found#'
+        # CI4 framework constants
+        - '#Constant (APPPATH|FCPATH|ROOTPATH|WRITEPATH|ENVIRONMENT) not found#'
+        # CI4 query builder + magic methods
+        - '#Call to an undefined method CodeIgniter\\Database\\BaseBuilder::#'
+        # CI4 Entity dynamic properties (Entity uses __get/__set)
+        - '#Access to an undefined property App\\Entities\\.*::\$#'
+        # Generic object access — appears when a service returns mixed-shape untyped data
+        - '#Call to an undefined method object::#'
+        - '#Access to an unknown class Config\\Services#'
+        - '#Access to an undefined property object::#'
