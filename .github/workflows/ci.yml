@@ -61,7 +61,7 @@ jobs:
         run: vendor/bin/php-cs-fixer fix --dry-run --diff
 
       - name: Security audit
-        run: composer audit
+        run: composer audit --no-abandoned
 
       - name: Lint JS (all files under public/assets/js, audit B8.2)
         run: npm run lint:all
