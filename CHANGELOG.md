@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] — 2026-05-27
+
+### Added
+
+- **Expanded icon map** — 15 new semantic aliases in `ui_helper::ui_icon()`: `cart`, `warehouse`, `box`, `truck`, `wallet`, `credit-card`, `bank`, `settings`, `mail`, `bell`, `calendar`, `map-pin`, `tag`, `ticket`, `store`. Useful for e-commerce and logistics domain modules.
+
+### Changed
+
+- **PHPStan configuration modernised** — migrated to CI4-aware extensions (`phpstan-codeigniter`, `phpstan-strict-rules`, `phpstan-deprecation-rules`). PSR-4 class-map now includes `App\` and `Config\` namespaces so PHPStan resolves CI4 config classes without `@extends` casts. PHPStan dependencies updated in `composer.lock`.
+- **`bin/make-module.sh` logging improved** — scaffolding steps print structured progress lines that make the output easier to trace in CI and automated installs.
+- **CodeIgniter 4 updated to v4.7.3** (`composer.lock`).
+
 ## [2.1.1] — 2026-05-24
 
 ### Fixed

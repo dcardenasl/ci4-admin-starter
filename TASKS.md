@@ -3,7 +3,7 @@
 > Fuente de verdad para trabajo en este repo.
 > Historial de completadas: ver `TASKS_ARCHIVE.md`.
 > Cross-repo: ver `../TASKS.md`.
-> Última actualización: 2026-05-23 (ADM-005 completado · ADM-DEP-001 Tailwind v4 migration ✅ · ADM-DEP-002 lint-staged v17 en backlog)
+> Última actualización: 2026-05-25 (ADM-008 ✅ completado · iconos y logs)
 
 ---
 
@@ -33,29 +33,38 @@
 
 ## ✅ Completadas
 
-### [ADM-DEP-001] Migración Tailwind v3 → v4 (2026-05-17)
+### [ADM-008] Diccionario de iconos y logs de scaffolding (2026-05-25)
 
-- `tailwindcss` 3.4.19 → 4.3.0; añadido `@tailwindcss/cli` 4.3.0 (la CLI ya no viene en el paquete principal en v4).
-- `tailwind.config.js` eliminado. Toda la configuración vive ahora en `src/css/app.css`:
-  - `@import "tailwindcss"` reemplaza `@tailwind base/components/utilities`.
-  - `@source "../../app/Views"`, `@source "../../app/Helpers"`, `@source "../../public/assets/js"` para detección explícita de paths (auto-detección de v4 funciona pero lo dejamos explícito).
-  - `@theme { --color-brand-50…900: rgb(...); --font-sans; --font-mono }` define la paleta brand y las fuentes default.
-  - `@source inline("…")` reemplaza el array `safelist` del config JS (no se soporta vía `@config` en v4): cubre los gradientes, `odd:/even:/hover:` de tabla, `py-3.5` y `text-[11px]`.
-- `app/Views/layouts/partials/head.php`: las CSS vars `--color-brand-*` ahora se setean con `rgb(R G B)` completo en lugar del triplet RGB suelto. Razón: v4 elimina la indirección `<alpha-value>` y `bg-brand-X` genera `background-color: var(--color-brand-X)` directo, así que la variable debe contener un color válido. El override en runtime sigue funcionando porque el `<style>` inline gana por cascada sobre el linked `app.css`.
-- Scripts `dev:css` / `build:css` sin cambios (binario `tailwindcss` ahora lo provee `@tailwindcss/cli`).
-- Build: 30 KB → 42 KB minified (esperado: v4 ships más defaults + safelist).
-- Verificado: `npm run build:css` ✅ · `npm run lint:all` ✅ · `php spark serve` + `curl /login` ✅ (HTML 200, CSS 200 text/css, vars brand renderizadas) · `ErrorPagesTest` ✅ (3 tests, renderiza head.php).
+- **Iconos**: Añadidos términos de negocio comunes (`cart`, `warehouse`, `box`, `truck`, `wallet`, `bank`, `settings`, `mail`, `bell`, `calendar`, `map-pin`, `tag`, `ticket`, `store`) al mapa de Lucide en `ui_helper.php`. Esto evita que módulos generados para eCommerce o logística lancen `InvalidArgumentException`.
+- **Logs**: `bin/make-module.sh` ahora emite bloques de código coloreados y listos para copiar al fallar la auto-inyección de servicios en `Config/Services.php`, guiando mejor al desarrollador en los pasos manuales restantes.
 
----
+### [ADM-007] Hooks mínimos de extensión para módulos admin (2026-05-24)
 
-## 🏗️ Contratos de arquitectura
+- `bin/make-module.sh` ahora acepta `--action=<verb>` repetible para scaffoldear acciones POST por item sin rehacer a mano service/controller/routes/views/lang. Cubre el caso común `approve/publish/archive/restore`.
+- Cada acción genera: método extra en `*ApiServiceInterface`, implementación en `*ApiService`, action en controller, route `POST .../{id}/{verb}`, botón en `show.php` y keys base de i18n.
+- Cobertura añadida en `tests/unit/Support/ScaffoldingScriptsTest.php`: scaffold end-to-end con `--action=approve --action=publish` + rechazo de `--action` inválido.
+
+### [ADM-006] Clarificar alcance de `make-module.sh` (2026-05-24)
+
+- `CLAUDE.md`, `README.md` y el help/banner de `bin/make-module.sh` ahora dejan explícito que el scaffold genera un **CRUD shell**: controller, service, requests, routes, views y tests base alineados con el backend elegido (`hub` o `domain`).
+- Se documentó también lo que **no** hace: no modela aggregates complejos, nested resources, custom actions, relation arrays, option loaders, file pickers ni formularios ricos de dominio.
+- El banner final del script ahora empuja al dev a completar manualmente la integración real del módulo en vez de sugerir implícitamente que el scaffold ya dejó una UI de producción.
+
+...
+### 🏗️ Contratos de arquitectura
 
 - **Módulos en `app/Modules/{Nombre}/`:** Controllers + Services + Requests + Language + Config/Routes.php. Views en `app/Views/{nombre}/`.
 - **Services extienden `BaseApiService`:** toda comunicación con la API pasa por `ApiClient` (hub) o `DomainApiClient` (domain apps). Nunca llamadas HTTP directas.
 - **Dos clientes HTTP:** `apiClient` (factory `Services::apiClient()`, config `Config\ApiClient`, target hub `:8080`) y `domainApiClient` (factory `Services::domainApiClient()`, config `Config\DomainApiClient`, target domain `:8090`). Scaffolding selector: `bash bin/make-module.sh ... --service=hub|domain` (default `hub`).
+- **`make-module.sh` genera un shell, no un aggregate listo para producción:** úsalo para establecer estructura, wiring y tests base. Si el módulo necesita acciones custom, nested resources, dropdowns dependientes, relation arrays o media/file-picker flows, la extensión manual sigue siendo obligatoria.
+- **Hook mínimo soportado:** `make-module.sh --action=<verb>` añade wiring completo para acciones POST por item. Úsalo para workflows simples sobre un recurso ya existente; no reemplaza módulos aggregate con read models, loaders auxiliares o nested resources.
 - **Tokens solo en sesión PHP:** nunca localStorage, nunca en JS. `ApiClient` inyecta el header automáticamente.
 - **CSRF activo por defecto:** no desactivar. Usar `csrf_field()` en todos los forms.
 - **Permisos en UI:** usar `has_permission(string $code)` (no `has_admin_access()` — legacy removido).
 - **CSS:** Tailwind v4 (no hay `tailwind.config.js` — toda la config vive en `src/css/app.css` vía `@import "tailwindcss"`, `@theme`, `@source` y `@source inline()`). Brand colors en `@theme` y overridables en runtime desde `app/Views/layouts/partials/head.php`. Watcher: `npm run dev:css`. Build: `npm run build:css`. Binario `tailwindcss` lo provee `@tailwindcss/cli`.
 - **Módulo nuevo:** usar `bash bin/make-module.sh {Resource} {Module} /api/v1/path`. Registrar el service en `app/Config/Services.php` manualmente.
 - **Tests:** `vendor/bin/phpunit tests/unit` + `vendor/bin/phpunit tests/feature`. Correr antes de hacer merge.
+
+### 🚧 Technical Debt (Scaffolding)
+- [ ] **Service Auto-Injection**: Update make-module.sh to use AST-based editing for automatic registration of generated services in Config/Services.php.
+- [x] **Icon Dictionary**: Add missing business icons (cart, warehouse, etc.) to ui_helper.php to avoid InvalidArgumentException during UI generation. ✅ 2026-05-25

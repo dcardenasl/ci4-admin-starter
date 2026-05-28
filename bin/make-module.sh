@@ -6,6 +6,12 @@
 # Usage:
 #   bash bin/make-module.sh <Resource> <Module> <ApiPath> [RouteSegment] [--dry-run] [--force]
 #
+# Scope:
+#   Generates a CRUD shell only: controller, service, requests, routes, views,
+#   language files, test stubs, and optional POST item-actions via --action.
+#   Aggregate-grade UI behavior still requires
+#   manual extension after scaffolding.
+#
 # Examples:
 #   bash bin/make-module.sh Product Catalog /catalog/products
 #   bash bin/make-module.sh SchoolCategory Education /education/school-categories school-categories
@@ -28,6 +34,13 @@ usage() {
 Usage:
   bash bin/make-module.sh <Resource> <Module> <ApiPath> [RouteSegment] [flags]
 
+Scope:
+  Generates a CRUD shell only. You still need manual follow-up for aggregate
+  behavior such as custom actions, nested resources, relation-array forms,
+  option loaders, and media/file-picker flows.
+  The built-in `--action=<verb>` hook covers only common POST item actions
+  such as approve, publish, archive, restore.
+
 Arguments:
   <Resource>      StudlyCase resource name  (e.g. Product, SchoolCategory)
   <Module>        StudlyCase module name    (e.g. Catalog, Education)
@@ -41,6 +54,9 @@ Flags:
                     Which backend the new service should target. Default is 'hub'
                     (apiClient, port 8080). Pass 'domain' to wire the service
                     against domainApiClient (port 8090 — a ci4-domain-starter app).
+  --action=<verb>    Add a custom POST action for a single item. Repeat the flag
+                    for multiple actions (e.g. --action=approve --action=publish).
+                    Verbs must be lower-kebab-case.
   --check-api[=URL] Probe the API endpoint with a 2s HEAD request before scaffolding
                     and warn if it doesn't respond. Default URL is read from
                     apiClient.baseUrl in .env (or domainApiClient.baseUrl when
@@ -52,6 +68,7 @@ Examples:
   bash bin/make-module.sh Product Catalog /catalog/products --dry-run
   bash bin/make-module.sh Product Catalog /catalog/products --check-api
   bash bin/make-module.sh Product Catalog /catalog/products --check-api=http://localhost:8080
+  bash bin/make-module.sh User Identity /users --action=approve --action=archive
 USAGE
 }
 
@@ -63,12 +80,14 @@ FORCE=false
 CHECK_API_URL=""
 CHECK_API_REQUESTED=false
 SERVICE_TARGET="hub"
+CUSTOM_ACTIONS=()
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --dry-run) DRY_RUN=true; shift ;;
         --force)   FORCE=true;   shift ;;
         --service=*) SERVICE_TARGET="${1#--service=}"; shift ;;
+        --action=*) CUSTOM_ACTIONS+=("${1#--action=}"); shift ;;
         --check-api) CHECK_API_REQUESTED=true; shift ;;
         --check-api=*) CHECK_API_REQUESTED=true; CHECK_API_URL="${1#--check-api=}"; shift ;;
         --help|-h) usage; exit 0 ;;
@@ -123,6 +142,21 @@ fi
 if [[ "$API_PATH" != /* ]]; then
     echo -e "${RED}❌ API_PATH must start with '/' (e.g. /catalog/products). Got: '${API_PATH}'${NC}"
     exit 1
+fi
+
+if [[ ${#CUSTOM_ACTIONS[@]} -gt 0 ]]; then
+    for action in "${CUSTOM_ACTIONS[@]}"; do
+        if [[ ! "$action" =~ ^[a-z][a-z0-9-]*$ ]]; then
+            echo -e "${RED}❌ --action values must be lower-kebab-case (e.g. approve, publish, archive-item). Got: '${action}'${NC}"
+            exit 1
+        fi
+    done
+
+    unique_action_count=$(printf '%s\n' "${CUSTOM_ACTIONS[@]}" | sort -u | wc -l | tr -d ' ')
+    if [[ "${#CUSTOM_ACTIONS[@]}" -ne "$unique_action_count" ]]; then
+        echo -e "${RED}❌ Duplicate --action flags detected. Each custom action must be unique.${NC}"
+        exit 1
+    fi
 fi
 
 # Change to project root (ci4-admin-starter/)
@@ -233,6 +267,23 @@ print(v[:1].upper() + v[1:])
 ' "$1"
 }
 
+to_action_method() {
+    python3 -c '
+import sys
+parts = sys.argv[1].split("-")
+first = parts[0]
+rest = "".join(p[:1].upper() + p[1:] for p in parts[1:])
+print(first + rest)
+' "$1"
+}
+
+humanize_kebab() {
+    python3 -c '
+import sys
+print(" ".join(p[:1].upper() + p[1:] for p in sys.argv[1].split("-")))
+' "$1"
+}
+
 # Naive plural: handles -y→-ies, keeps the rest predictable
 pluralize() {
     local w="$1"
@@ -263,6 +314,7 @@ SERVICE_IFACE="${RESOURCE}ApiServiceInterface"                # AudienceApiServi
 CONTROLLER_CLASS="${RESOURCE}Controller"                      # AudienceController
 STORE_REQUEST="${RESOURCE}StoreRequest"                       # AudienceStoreRequest
 UPDATE_REQUEST="${RESOURCE}UpdateRequest"                     # AudienceUpdateRequest
+CONTROLLER_FQCN="\\\\App\\\\Modules\\\\${MODULE}\\\\Controllers\\\\${CONTROLLER_CLASS}"
 ROUTE_NAME="admin.${MODULE_LOWER}.${ROUTE_SEGMENT_UNDERSCORE}"  # admin.shows.audiences
 LANG_PREFIX="${RESOURCE_PLURAL}"                              # school_categories  (used as lang key prefix)
 VIEW_PATH="${MODULE_LOWER}/${ROUTE_SEGMENT_UNDERSCORE}"       # shows/audiences
@@ -271,6 +323,49 @@ MODULE_DIR="app/Modules/${MODULE}"
 # Human-readable labels for language stubs
 RESOURCE_LABEL=$(echo "${RESOURCE_SNAKE//_/ }" | awk '{$1=toupper(substr($1,1,1))substr($1,2)}1')
 RESOURCE_LOWER=$(echo "$RESOURCE_LABEL" | tr '[:upper:]' '[:lower:]')
+
+SERVICE_IFACE_ACTIONS=""
+SERVICE_CLASS_ACTIONS=""
+CONTROLLER_ACTIONS=""
+ROUTE_APPEND_BLOCK=""
+SHOW_ACTION_BUTTONS=""
+LANG_EN_ACTIONS=""
+LANG_ES_ACTIONS=""
+CUSTOM_ACTIONS_SUMMARY=""
+
+for ACTION in "${CUSTOM_ACTIONS[@]}"; do
+    ACTION_METHOD="$(to_action_method "$ACTION")"
+    ACTION_LABEL="$(humanize_kebab "$ACTION")"
+    ACTION_ROUTE_NAME="${ROUTE_NAME}.${ACTION//-/_}"
+    ACTION_PREFIX="${LANG_PREFIX}_${ACTION//-/_}"
+
+    SERVICE_IFACE_ACTIONS+=$'\n\n'"    /** @return ApiResponse */"$'\n'"    public function ${ACTION_METHOD}(int|string \$id): array;"
+
+    SERVICE_CLASS_ACTIONS+=$'\n\n'"    public function ${ACTION_METHOD}(int|string \$id): array"$'\n'"    {"$'\n'"        return \$this->apiClient->post(\$this->resourcePath() . '/' . \$id . '/${ACTION}');"$'\n'"    }"
+
+    CONTROLLER_ACTIONS+=$'\n\n'"    public function ${ACTION_METHOD}(string \$id): RedirectResponse"$'\n'"    {"$'\n'"        \$response = \$this->safeApiCall(fn () => \$this->${RESOURCE_CAMEL}Service->${ACTION_METHOD}(\$id));"$'\n\n'"        if (! \$response['ok']) {"$'\n'"            return \$this->failApi(\$response, lang('${MODULE}.${ACTION_PREFIX}_failed'), route_to('${ROUTE_NAME}.show', \$id), false);"$'\n'"        }"$'\n\n'"        return redirect()->to(route_to('${ROUTE_NAME}.show', \$id))->with('success', lang('${MODULE}.${ACTION_PREFIX}_success'));"$'\n'"    }"
+
+    ROUTE_APPEND_BLOCK+=$'\n'"    \$routes->post('${ROUTE_SEGMENT}/(:segment)/${ACTION}', '${CONTROLLER_FQCN}::${ACTION_METHOD}/\$1', ['as' => '${ACTION_ROUTE_NAME}']);"
+
+    SHOW_ACTION_BUTTONS+=$(cat <<EOF
+
+                <form method="post" action="<?= route_to('${ACTION_ROUTE_NAME}', \$itemId) ?>">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="<?= esc(action_button_class()) ?>">
+                        <?= esc(lang('${MODULE}.${ACTION_PREFIX}')) ?>
+                    </button>
+                </form>
+EOF
+)
+
+    LANG_EN_ACTIONS+=$'\n'"    '${ACTION_PREFIX}'                   => '${ACTION_LABEL} ${RESOURCE_LABEL}',"$'\n'"    '${ACTION_PREFIX}_success'           => '${ACTION_LABEL} completed successfully for ${RESOURCE_LABEL}.',"$'\n'"    '${ACTION_PREFIX}_failed'            => 'Could not run ${ACTION} for the ${RESOURCE_LOWER}.',"
+    LANG_ES_ACTIONS+=$'\n'"    '${ACTION_PREFIX}'                   => '${ACTION_LABEL} ${RESOURCE_LABEL}',"$'\n'"    '${ACTION_PREFIX}_success'           => 'La acción ${ACTION_LABEL} se ejecutó correctamente para el ${RESOURCE_LOWER}.',"$'\n'"    '${ACTION_PREFIX}_failed'            => 'No se pudo ejecutar la acción ${ACTION_LABEL} para el ${RESOURCE_LOWER}.',"
+
+    if [[ -n "$CUSTOM_ACTIONS_SUMMARY" ]]; then
+        CUSTOM_ACTIONS_SUMMARY+=", "
+    fi
+    CUSTOM_ACTIONS_SUMMARY+="${ACTION}"
+done
 
 # ─── Cross-module route collision detection ────────────────────────────────────
 # Catches the realistic mistake of two modules registering the same route name
@@ -321,6 +416,9 @@ printf "  %-18s %s\n" "Route:"        "admin/${MODULE_LOWER}/${ROUTE_SEGMENT}"
 printf "  %-18s %s\n" "Route name:"   "${ROUTE_NAME}"
 printf "  %-18s %s\n" "Service:"      "service('${SERVICE_NAME}')"
 printf "  %-18s %s\n" "Views:"        "app/Views/${VIEW_PATH}/"
+if [[ -n "$CUSTOM_ACTIONS_SUMMARY" ]]; then
+    printf "  %-18s %s\n" "Custom actions:" "${CUSTOM_ACTIONS_SUMMARY}"
+fi
 echo ""
 
 # ─── Helper: cross-platform placeholder substitution ───────────────────────────
@@ -570,6 +668,7 @@ interface ${SERVICE_IFACE}
 
     /** @return ApiResponse */
     public function delete(int|string \$id): array;
+${SERVICE_IFACE_ACTIONS}
 }"
 
 # ── Service ────────────────────────────────────────────────────────────────────
@@ -588,6 +687,7 @@ class ${SERVICE_CLASS} extends ResourceApiService implements ${SERVICE_IFACE}
     {
         return '${API_PATH}';
     }
+${SERVICE_CLASS_ACTIONS}
 }"
 
 # ── StoreRequest ───────────────────────────────────────────────────────────────
@@ -757,6 +857,7 @@ class ${CONTROLLER_CLASS} extends BaseWebController
 
         return redirect()->to(route_to('${ROUTE_NAME}'))->with('success', lang('${MODULE}.${LANG_PREFIX}_delete_success'));
     }
+${CONTROLLER_ACTIONS}
 }"
 
 # ── Routes ─────────────────────────────────────────────────────────────────────
@@ -787,6 +888,7 @@ use CodeIgniter\Router\RouteCollection;
     \$routes->get('${ROUTE_SEGMENT}/(:segment)/edit', '${NS}::edit/\$1', ['as' => '${ROUTE_NAME}.edit']);
     \$routes->post('${ROUTE_SEGMENT}/(:segment)', '${NS}::update/\$1', ['as' => '${ROUTE_NAME}.update']);
     \$routes->post('${ROUTE_SEGMENT}/(:segment)/delete', '${NS}::delete/\$1', ['as' => '${ROUTE_NAME}.delete']);
+${ROUTE_APPEND_BLOCK}
 });" > "$ROUTES_FILE"
         echo -e "  ${GREEN}✓ Created:           ${ROUTES_FILE}${NC}"
     fi
@@ -795,10 +897,10 @@ else
     if [[ "$DRY_RUN" == true ]]; then
         echo -e "  ${YELLOW}[dry-run] Would append route block to: ${ROUTES_FILE}${NC}"
     else
-        if python3 - "$ROUTES_FILE" "$ROUTE_SEGMENT" "$NS" "$ROUTE_NAME" "$RESOURCE" <<'PYEOF'
+        if python3 - "$ROUTES_FILE" "$ROUTE_SEGMENT" "$NS" "$ROUTE_NAME" "$RESOURCE" "$ROUTE_APPEND_BLOCK" <<'PYEOF'
 import sys, re
 
-routes_file, seg, ns, name, resource = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5]
+routes_file, seg, ns, name, resource, extra_routes = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6]
 
 with open(routes_file) as f:
     content = f.read()
@@ -819,6 +921,9 @@ block = (
     f"    $routes->post('{seg}/(:segment)', '{ns}::update/$1', ['as' => '{name}.update']);\n"
     f"    $routes->post('{seg}/(:segment)/delete', '{ns}::delete/$1', ['as' => '{name}.delete']);"
 )
+
+if extra_routes:
+    block += extra_routes
 
 new_content = re.sub(r'(\n\}\);)', '\n' + block + r'\1', content, count=1)
 
@@ -885,6 +990,7 @@ return [
     '${LANG_PREFIX}_search_placeholder' => 'Buscar por nombre...',
     '${LANG_PREFIX}_loading'            => 'Cargando ${RESOURCE_LOWER}s...',
     '${LANG_PREFIX}_no_results'         => 'No se encontraron ${RESOURCE_LOWER}s.',
+${LANG_ES_ACTIONS}
 
     // ${RESOURCE} — form fields (add more as needed)
     'field_name'                        => 'Nombre',
@@ -912,6 +1018,7 @@ return [
     '${LANG_PREFIX}_search_placeholder' => 'Search by name...',
     '${LANG_PREFIX}_loading'            => 'Loading ${RESOURCE_LOWER}s...',
     '${LANG_PREFIX}_no_results'         => 'No ${RESOURCE_LOWER}s found.',
+${LANG_EN_ACTIONS}
 
     // ${RESOURCE} — form fields (add more as needed)
     'field_name'                        => 'Name',
@@ -1040,6 +1147,7 @@ write_heredoc "app/Views/${VIEW_PATH}/show.php" << 'VIEW_EOF_MARKER'
             <h3 class="text-lg font-semibold text-gray-900"><?= lang('VIEW_MODULE.VIEW_LANG_PREFIX_details') ?></h3>
             <div class="flex items-center gap-2">
                 <a href="<?= route_to('VIEW_ROUTE_NAME.edit', $itemId) ?>" class="<?= esc(action_button_class()) ?>"><?= lang('App.edit') ?></a>
+VIEW_SHOW_ACTION_BUTTONS
                 <form method="post" action="<?= route_to('VIEW_ROUTE_NAME.delete', $itemId) ?>" onsubmit="return confirm('<?= esc(lang('App.confirm_delete')) ?>');">
                     <?= csrf_field() ?>
                     <button type="submit" class="<?= esc(action_button_class('danger')) ?>">
@@ -1068,7 +1176,8 @@ substitute_placeholders "app/Views/${VIEW_PATH}/show.php" \
     "VIEW_ROUTE_NAME"      "${ROUTE_NAME}" \
     "VIEW_MODULE"          "${MODULE}" \
     "VIEW_LANG_PREFIX_"    "${LANG_PREFIX}_" \
-    "VIEW_RESOURCE_CAMEL"  "${RESOURCE_CAMEL}"
+    "VIEW_RESOURCE_CAMEL"  "${RESOURCE_CAMEL}" \
+    "VIEW_SHOW_ACTION_BUTTONS" "${SHOW_ACTION_BUTTONS}"
 
 write_heredoc "app/Views/${VIEW_PATH}/create.php" << 'VIEW_EOF_MARKER'
 <div class="mb-4">
@@ -1349,9 +1458,11 @@ else
     if [[ $REGISTER_EXIT -eq 0 ]]; then
         echo -e "${GREEN}✓ ${REGISTER_RESULT}${NC}"
     else
-        echo -e "${YELLOW}⚠ Auto-registration failed (exit ${REGISTER_EXIT}): ${REGISTER_RESULT}${NC}"
+        echo -e "${RED}✗ Auto-registration failed (exit ${REGISTER_EXIT}):${NC}"
+        echo -e "${YELLOW}  ${REGISTER_RESULT}${NC}"
         echo ""
-        echo "  Add manually to app/Config/Services.php:"
+        echo -e "${BLUE}  ACTION REQUIRED — Add this block manually to app/Config/Services.php:${NC}"
+        echo -e "${CYAN}"
         echo "    use App\\Modules\\${MODULE}\\Services\\${SERVICE_CLASS};"
         echo "    use App\\Modules\\${MODULE}\\Services\\${SERVICE_IFACE};"
         echo ""
@@ -1363,6 +1474,7 @@ else
         echo "        }"
         echo "        return new ${SERVICE_CLASS}(static::${CLIENT_FACTORY}());"
         echo "    }"
+        echo -e "${NC}"
     fi
 fi
 
@@ -1497,3 +1609,8 @@ echo "       pkill -f 'spark serve'; php spark serve --port 8082 &"
 echo "  5. Run tests for the new module:"
 echo "       vendor/bin/phpunit tests/unit/Services/${SERVICE_CLASS}Test.php"
 echo "       vendor/bin/phpunit tests/feature/${RESOURCE}FlowTest.php"
+echo ""
+echo "Important:"
+echo "  This scaffold is a CRUD shell, not a finished aggregate UI."
+echo "  If the module needs custom actions, nested resources, option loaders,"
+echo "  relation arrays, or richer domain forms, extend the generated code manually."

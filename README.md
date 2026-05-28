@@ -73,6 +73,26 @@ This template is designed to work seamlessly with [ci4-api-starter](https://gith
 
 See **[API Compatibility Guide](./docs/API-COMPATIBILITY.md)** for the complete contract.
 
+## 🧱 Module Scaffolding Scope
+
+`bash bin/make-module.sh <Resource> <Module> <ApiPath>` is a convenience scaffold for new admin modules. It generates a **CRUD shell** aligned with this starter's conventions:
+
+- base controller, service, form requests, routes, language files, views, and test stubs
+- wiring against `apiClient` by default, or `domainApiClient` with `--service=domain`
+- optional item-level POST actions with repeatable `--action=<verb>` flags for common cases such as `approve`, `publish`, `archive`, `restore`
+- a valid starting structure for flat list/show/create/update/delete flows
+
+It is **not** a complete aggregate UI generator. After scaffolding, expect manual work when the module needs:
+
+- custom actions such as `publish`, `archive`, `approve`
+- nested resources or child collections
+- relation arrays and richer form payloads
+- dependent dropdowns / option loaders
+- hub file picker or media-management flows
+- domain-specific response shaping beyond a flat CRUD table/form
+
+Use the script to remove boilerplate and establish the module shape. Treat the generated code as the first draft, not the finished admin UX.
+
 ## 🏗️ Standard Response Format
 
 The `ApiClient` normalizes all API responses to this structure:
