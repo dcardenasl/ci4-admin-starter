@@ -7,7 +7,7 @@
     "scripts": {
         "dev:css": "tailwindcss -i ./src/css/app.css -o ./public/assets/css/app.css --watch",
         "build:css": "tailwindcss -i ./src/css/app.css -o ./public/assets/css/app.css --minify",
-        "build:vendor": "mkdir -p public/assets/vendor && cp node_modules/alpinejs/dist/cdn.min.js public/assets/vendor/alpine.min.js && cp node_modules/lucide/dist/umd/lucide.min.js public/assets/vendor/lucide.min.js",
+        "build:vendor": "node scripts/build-vendor.js",
         "build:all": "npm run build:css && npm run build:vendor",
         "lint:js": "eslint public/assets/js/app.js",
         "lint:all": "eslint 'public/assets/js/**/*.js'",

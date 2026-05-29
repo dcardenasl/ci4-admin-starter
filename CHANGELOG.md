@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.0] — 2026-05-29
+
+### Added
+
+- **Vendor Management:** Introduced `scripts/build-vendor.js` for improved cross-platform vendor asset management.
+
+### Changed
+
+- **Dependencies:** Updated `package.json` and `package-lock.json` for frontend stability.
+- **Assets:** Rebuilt `public/assets/css/app.css` to align with latest styling requirements.
+
 ## [2.3.0] — 2026-05-28
 
 ### Added
