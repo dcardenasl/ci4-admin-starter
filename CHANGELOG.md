@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] — 2026-05-28
+
+### Added
+
+- **`install.sh` non-interactive mode** — added `--yes` / `-y` flag (and `CI4_CONFIRM=y`) that runs the template configuration with built-in defaults and auto-confirms, so the installer can be driven unattended by orchestrators and CI.
+
+### Changed
+
+- **`bin/register-service.php` rewritten on top of `nikic/php-parser`** — Services.php factory injection now mutates the AST instead of splicing strings/regex, making `use` insertion and factory wiring more robust. Idempotency checks require the `public static function` shape, and all error output goes to STDERR.
+
 ## [2.2.0] — 2026-05-27
 
 ### Added
