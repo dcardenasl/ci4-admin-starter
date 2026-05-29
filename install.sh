@@ -126,6 +126,14 @@ echo ""
 echo "  Presiona Ctrl+C en cualquier momento para cancelar sin cambios."
 echo ""
 
+# Parse arguments
+YES_MODE=false
+for _arg in "$@"; do
+    case "$_arg" in
+        --yes|-y) YES_MODE=true ;;
+    esac
+done
+
 # =============================================================================
 # Prompts interactivos
 # =============================================================================
@@ -133,6 +141,8 @@ section "Configuración"
 
 if [ -n "${CI4_API_NAME:-}" ]; then
   API_NAME="$CI4_API_NAME"
+elif [ "$YES_MODE" = "true" ] || [ "${CI4_CONFIRM:-}" = "y" ]; then
+  API_NAME="my-api"
 else
   read -r -p "$(echo -e "  ${BOLD}Nombre del repo API${RESET} (reemplaza 'ci4-api-starter') [my-api]: ")" INPUT_API_NAME
   API_NAME="${INPUT_API_NAME:-my-api}"
@@ -142,6 +152,8 @@ require_non_empty "$API_NAME" "Nombre del repo API"
 DEFAULT_GITHUB="https://github.com/yourusername/${API_NAME}"
 if [ -n "${CI4_API_GITHUB_URL:-}" ]; then
   API_GITHUB_URL="$CI4_API_GITHUB_URL"
+elif [ "$YES_MODE" = "true" ] || [ "${CI4_CONFIRM:-}" = "y" ]; then
+  API_GITHUB_URL="${DEFAULT_GITHUB}"
 else
   read -r -p "$(echo -e "  ${BOLD}URL GitHub del API${RESET}\n  [${DEFAULT_GITHUB}]: ")" INPUT_API_GITHUB_URL
   API_GITHUB_URL="${INPUT_API_GITHUB_URL:-${DEFAULT_GITHUB}}"
@@ -150,6 +162,8 @@ validate_url "$API_GITHUB_URL" "URL GitHub del API"
 
 if [ -n "${CI4_API_BASE_URL:-}" ]; then
   API_BASE_URL="$CI4_API_BASE_URL"
+elif [ "$YES_MODE" = "true" ] || [ "${CI4_CONFIRM:-}" = "y" ]; then
+  API_BASE_URL="http://localhost:8080"
 else
   read -r -p "$(echo -e "  ${BOLD}URL base del API${RESET} (reemplaza 'http://localhost:8080') [http://localhost:8080]: ")" INPUT_API_BASE_URL
   API_BASE_URL="${INPUT_API_BASE_URL:-http://localhost:8080}"
@@ -158,6 +172,8 @@ validate_url "$API_BASE_URL" "URL base del API"
 
 if [ -n "${CI4_APP_NAME:-}" ]; then
   APP_NAME="$CI4_APP_NAME"
+elif [ "$YES_MODE" = "true" ] || [ "${CI4_CONFIRM:-}" = "y" ]; then
+  APP_NAME="My Admin Panel"
 else
   read -r -p "$(echo -e "  ${BOLD}Nombre del panel admin${RESET} (reemplaza 'API Client') [My Admin Panel]: ")" INPUT_APP_NAME
   APP_NAME="${INPUT_APP_NAME:-My Admin Panel}"
@@ -166,6 +182,8 @@ require_non_empty "$APP_NAME" "Nombre del panel admin"
 
 if [ -n "${CI4_ADMIN_PORT:-}" ]; then
   ADMIN_PORT="$CI4_ADMIN_PORT"
+elif [ "$YES_MODE" = "true" ] || [ "${CI4_CONFIRM:-}" = "y" ]; then
+  ADMIN_PORT="8082"
 else
   read -r -p "$(echo -e "  ${BOLD}Puerto del panel admin${RESET} (reemplaza '8082') [8082]: ")" INPUT_ADMIN_PORT
   ADMIN_PORT="${INPUT_ADMIN_PORT:-8082}"
@@ -175,6 +193,8 @@ validate_port "$ADMIN_PORT"
 echo ""
 if [ -n "${CI4_RUN_COMPOSER:-}" ]; then
   RUN_COMPOSER="$CI4_RUN_COMPOSER"
+elif [ "$YES_MODE" = "true" ] || [ "${CI4_CONFIRM:-}" = "y" ]; then
+  RUN_COMPOSER="Y"
 else
   read -r -p "$(echo -e "  ${BOLD}¿Ejecutar 'composer install' al finalizar?${RESET} [Y/n]: ")" INPUT_COMPOSER
   RUN_COMPOSER="${INPUT_COMPOSER:-Y}"
@@ -182,6 +202,8 @@ fi
 
 if [ -n "${CI4_REMOVE_SELF:-}" ]; then
   REMOVE_SELF="$CI4_REMOVE_SELF"
+elif [ "$YES_MODE" = "true" ] || [ "${CI4_CONFIRM:-}" = "y" ]; then
+  REMOVE_SELF="N"
 else
   read -r -p "$(echo -e "  ${BOLD}¿Eliminar este script al finalizar?${RESET} [y/N]: ")" INPUT_REMOVE_SELF
   REMOVE_SELF="${INPUT_REMOVE_SELF:-N}"
@@ -204,7 +226,12 @@ echo -e "  ${BOLD}composer install:${RESET}  $([ "$_rc_lower" != "n" ] && echo "
 _rs_lower="$(printf '%s' "$REMOVE_SELF" | tr '[:upper:]' '[:lower:]')"
 echo -e "  ${BOLD}Eliminar script:${RESET}   $([ "$_rs_lower" = "y" ] && echo "Sí" || echo "No")"
 echo ""
-read -r -p "$(echo -e "  ${BOLD}¿Continuar? [y/N]:${RESET} ")" CONFIRM
+
+if [ "$YES_MODE" = "true" ] || [ "${CI4_CONFIRM:-}" = "y" ]; then
+  CONFIRM="y"
+else
+  read -r -p "$(echo -e "  ${BOLD}¿Continuar? [y/N]:${RESET} ")" CONFIRM
+fi
 
 _confirm_lower="$(printf '%s' "$CONFIRM" | tr '[:upper:]' '[:lower:]')"
 [ "$_confirm_lower" = "y" ] || { warn "Cancelado. No se realizaron cambios."; exit 0; }
