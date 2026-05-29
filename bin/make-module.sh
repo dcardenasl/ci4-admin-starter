@@ -960,8 +960,78 @@ write_lang() {
     fi
 
     if [[ -f "$lang_file" && "$FORCE" != true ]]; then
-        echo -e "  ${YELLOW}⚠ Skipped (exists):  ${lang_file}${NC}"
-        echo -e "     → Add '${LANG_PREFIX}_*' keys to it manually"
+        # Check if keys are already present in the existing file
+        if grep -q "'${LANG_PREFIX}_title'" "$lang_file" || grep -q "\"${LANG_PREFIX}_title\"" "$lang_file"; then
+            echo -e "  ${YELLOW}⚠ Skipped (exists & keys present):  ${lang_file}${NC}"
+            return
+        fi
+
+        echo -e "  ${BLUE}🗏 Merging new keys into existing language file: ${lang_file}${NC}"
+
+        # Prepare the block of keys to append
+        local new_keys
+        if [[ "$locale" == "es" ]]; then
+            new_keys="
+    // ${RESOURCE} — list & actions
+    '${LANG_PREFIX}_title'              => '${RESOURCE_LABEL}s',
+    '${LANG_PREFIX}_new'                => 'Nuevo ${RESOURCE_LABEL}',
+    '${LANG_PREFIX}_create'             => 'Nuevo ${RESOURCE_LABEL}',
+    '${LANG_PREFIX}_edit'               => 'Editar ${RESOURCE_LABEL}',
+    '${LANG_PREFIX}_details'            => 'Detalle de ${RESOURCE_LABEL}',
+    '${LANG_PREFIX}_not_found'          => '${RESOURCE_LABEL} no encontrado.',
+    '${LANG_PREFIX}_create_success'     => '${RESOURCE_LABEL} creado correctamente.',
+    '${LANG_PREFIX}_create_failed'      => 'No se pudo crear el ${RESOURCE_LOWER}.',
+    '${LANG_PREFIX}_update_success'     => '${RESOURCE_LABEL} actualizado correctamente.',
+    '${LANG_PREFIX}_update_failed'      => 'No se pudo actualizar el ${RESOURCE_LOWER}.',
+    '${LANG_PREFIX}_delete_success'     => '${RESOURCE_LABEL} eliminado correctamente.',
+    '${LANG_PREFIX}_delete_failed'      => 'No se pudo eliminar el ${RESOURCE_LOWER}.',
+    '${LANG_PREFIX}_empty'              => 'Aún no hay ${RESOURCE_LOWER}s registrados.',
+    '${LANG_PREFIX}_search_placeholder' => 'Buscar por nombre...',
+    '${LANG_PREFIX}_loading'            => 'Cargando ${RESOURCE_LOWER}s...',
+    '${LANG_PREFIX}_no_results'         => 'No se encontraron ${RESOURCE_LOWER}s.',
+\${LANG_ES_ACTIONS}"
+        else
+            new_keys="
+    // ${RESOURCE} — list & actions
+    '${LANG_PREFIX}_title'              => '${RESOURCE_LABEL}s',
+    '${LANG_PREFIX}_new'                => 'New ${RESOURCE_LABEL}',
+    '${LANG_PREFIX}_create'             => 'New ${RESOURCE_LABEL}',
+    '${LANG_PREFIX}_edit'               => 'Edit ${RESOURCE_LABEL}',
+    '${LANG_PREFIX}_details'            => '${RESOURCE_LABEL} details',
+    '${LANG_PREFIX}_not_found'          => '${RESOURCE_LABEL} not found.',
+    '${LANG_PREFIX}_create_success'     => '${RESOURCE_LABEL} created successfully.',
+    '${LANG_PREFIX}_create_failed'      => 'Could not create the ${RESOURCE_LOWER}.',
+    '${LANG_PREFIX}_update_success'     => '${RESOURCE_LABEL} updated successfully.',
+    '${LANG_PREFIX}_update_failed'      => 'Could not update the ${RESOURCE_LOWER}.',
+    '${LANG_PREFIX}_delete_success'     => '${RESOURCE_LABEL} deleted successfully.',
+    '${LANG_PREFIX}_delete_failed'      => 'Could not delete the ${RESOURCE_LOWER}.',
+    '${LANG_PREFIX}_empty'              => 'No ${RESOURCE_LOWER}s registered yet.',
+    '${LANG_PREFIX}_search_placeholder' => 'Search by name...',
+    '${LANG_PREFIX}_loading'            => 'Loading ${RESOURCE_LOWER}s...',
+    '${LANG_PREFIX}_no_results'         => 'No ${RESOURCE_LOWER}s found.',
+\${LANG_EN_ACTIONS}"
+        fi
+
+        # Safely inject the new keys before the last closing bracket "];" using PHP
+        php -r '
+            $file = $argv[1];
+            $keys = $argv[2];
+            $content = file_get_contents($file);
+            $pos = strrpos($content, "];");
+            if ($pos !== false) {
+                $patched = substr($content, 0, $pos) . $keys . "\n];\n";
+                if (file_put_contents($file, $patched) !== false) {
+                    exit(0);
+                }
+            }
+            exit(1);
+        ' "$lang_file" "$new_keys"
+
+        if [[ $? -eq 0 ]]; then
+            echo -e "  ${GREEN}✓ Merged keys:       ${lang_file}${NC}"
+        else
+            echo -e "  ${RED}✗ Failed to merge keys into: ${lang_file}${NC}"
+        fi
         return
     fi
 
