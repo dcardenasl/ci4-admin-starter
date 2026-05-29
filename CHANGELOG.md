@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Updated `package-lock.json` with current `@tailwindcss/oxide-wasm32-wasi` nested dependency tree.
+
 ## [2.4.0] — 2026-05-29
 
 ### Added
