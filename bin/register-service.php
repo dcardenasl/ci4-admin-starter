@@ -6,13 +6,19 @@
  *
  * Usage:
  *   php bin/register-service.php <Module> <ServiceClass> <ServiceInterface> <ServiceKey> [--client=hub|domain]
- *
- * Example:
- *   php bin/register-service.php Catalog ProductApiService ProductApiServiceInterface productApiService
- *   php bin/register-service.php Subscription ProjectApiService ProjectApiServiceInterface projectApiService --client=domain
  */
 
 declare(strict_types=1);
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use PhpParser\Error;
+use PhpParser\Node;
+use PhpParser\NodeFinder;
+use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor\CloningVisitor;
+use PhpParser\ParserFactory;
+use PhpParser\PrettyPrinter\Standard;
 
 $client = 'hub';
 $positional = [];
@@ -41,7 +47,7 @@ $clientFactory = $client === 'domain' ? 'domainApiClient' : 'apiClient';
 $servicesFile = __DIR__ . '/../app/Config/Services.php';
 
 if (! file_exists($servicesFile)) {
-    echo "ERROR: Services.php not found at {$servicesFile}\n";
+    fwrite(STDERR, "ERROR: Services.php not found at {$servicesFile}\n");
     exit(2);
 }
 
@@ -50,12 +56,8 @@ $content = file_get_contents($servicesFile);
 $expectedFqcn = "App\\Modules\\{$module}\\Services\\{$serviceInterface}";
 
 // Idempotency: skip only when an existing factory points to the SAME FQCN.
-// Matching purely on factory name is unsafe — two resources from different
-// modules can map to the same camelCase key (e.g. APIKey/ApiKeys both yield
-// 'apiKeyApiService') and silently mis-wire the new controller to the wrong
-// module's service.
 if (preg_match(
-    '/function\s+' . preg_quote($serviceKey, '/') . '\s*\([^)]*\)\s*:\s*([\\\\A-Za-z0-9_]+)\s*\{[^}]*?return new[^(]+\(static::(apiClient|domainApiClient)\(\)\)/s',
+    '/public\s+static\s+function\s+' . preg_quote($serviceKey, '/') . '\s*\([^)]*\)\s*:\s*([\\\\A-Za-z0-9_]+)\s*\{[^}]*?return new[^(]+\(static::(apiClient|domainApiClient)\(\)\)/s',
     $content,
     $m,
 ) === 1) {
@@ -89,9 +91,7 @@ if (preg_match(
     exit(4);
 }
 
-// Fallback shape: factory exists but the body shape was unusual (e.g. extra
-// dependencies). Reuse the FQCN-only check from the original logic.
-if (preg_match('/function\s+' . preg_quote($serviceKey, '/') . '\s*\([^)]*\)\s*:\s*([\\\\A-Za-z0-9_]+)/', $content, $m) === 1) {
+if (preg_match('/public\s+static\s+function\s+' . preg_quote($serviceKey, '/') . '\s*\([^)]*\)\s*:\s*([\\\\A-Za-z0-9_]+)/', $content, $m) === 1) {
     $existingShortType = $m[1];
     $existingFqcn      = resolveFqcn($content, $existingShortType);
 
@@ -144,37 +144,92 @@ function resolveFqcn(string $content, string $shortType): ?string
     return null;
 }
 
-// ─── 1. Inject use statements ────────────────────────────────────────────────
-//
-// Strategy: locate the last `use ` line and splice the two new ones immediately
-// after it. This preserves blank-line separators between namespace groups, the
-// existing ordering, and any inline comments — non-destructive by design.
+// ─── AST Mutation using nikic/php-parser ─────────────────────────────────────
 
-$useClass = "use App\\Modules\\{$module}\\Services\\{$serviceClass};";
-$useIface = "use App\\Modules\\{$module}\\Services\\{$serviceInterface};";
+$parser = (new ParserFactory())->createForHostVersion();
 
-if (! str_contains($content, $useClass)) {
-    $lines        = explode("\n", $content);
-    $lastUseIndex = null;
-
-    foreach ($lines as $i => $line) {
-        if (str_starts_with(trim($line), 'use ')) {
-            $lastUseIndex = $i;
-        }
-    }
-
-    if ($lastUseIndex !== null) {
-        array_splice($lines, $lastUseIndex + 1, 0, [$useClass, $useIface]);
-        $content = implode("\n", $lines);
-    }
-    // If no use lines were found at all, the method injection below still runs
-    // and the developer sees the manual instructions in make-module.sh's summary.
+try {
+    $origStmts = $parser->parse($content);
+    $origTokens = $parser->getTokens();
+} catch (Error $e) {
+    fwrite(STDERR, "ERROR: Failed to parse Services.php: {$e->getMessage()}\n");
+    exit(3);
 }
 
-// ─── 2. Inject the service method before the closing } ───────────────────────
+if ($origStmts === null) {
+    fwrite(STDERR, "ERROR: Services.php was parsed as empty\n");
+    exit(3);
+}
 
-$method = <<<PHP
+$traverser = new NodeTraverser(new CloningVisitor());
+$newStmts = $traverser->traverse($origStmts);
 
+$finder = new NodeFinder();
+
+// Find the Namespace node
+$ns = $finder->findFirstInstanceOf($newStmts, Node\Stmt\Namespace_::class);
+if ($ns === null) {
+    fwrite(STDERR, "ERROR: Could not locate Namespace in Services.php\n");
+    exit(3);
+}
+
+// Find the Class Services node
+$class = $finder->findFirstInstanceOf($ns->stmts, Node\Stmt\Class_::class);
+if ($class === null || $class->name?->name !== 'Services') {
+    fwrite(STDERR, "ERROR: Could not locate 'class Services' in Services.php\n");
+    exit(3);
+}
+
+// 1. Inject use statements if not already present
+$useClassFqcn = "App\\Modules\\{$module}\\Services\\{$serviceClass}";
+$useIfaceFqcn = "App\\Modules\\{$module}\\Services\\{$serviceInterface}";
+
+$hasUseClass = false;
+$hasUseIface = false;
+
+$lastUseIndex = -1;
+foreach ($ns->stmts as $i => $stmt) {
+    if ($stmt instanceof Node\Stmt\Use_) {
+        $lastUseIndex = $i;
+        foreach ($stmt->uses as $use) {
+            if ($use->name->toString() === $useClassFqcn) {
+                $hasUseClass = true;
+            }
+            if ($use->name->toString() === $useIfaceFqcn) {
+                $hasUseIface = true;
+            }
+        }
+    }
+}
+
+$newUses = [];
+if (!$hasUseClass) {
+    $newUses[] = new Node\Stmt\Use_([new Node\Stmt\UseUse(new Node\Name($useClassFqcn))]);
+}
+if (!$hasUseIface) {
+    $newUses[] = new Node\Stmt\Use_([new Node\Stmt\UseUse(new Node\Name($useIfaceFqcn))]);
+}
+
+if (count($newUses) > 0) {
+    if ($lastUseIndex >= 0) {
+        array_splice($ns->stmts, $lastUseIndex + 1, 0, $newUses);
+    } else {
+        // Prepend before the class statement
+        $classPos = 0;
+        foreach ($ns->stmts as $i => $stmt) {
+            if ($stmt instanceof Node\Stmt\Class_) {
+                $classPos = $i;
+                break;
+            }
+        }
+        array_splice($ns->stmts, $classPos, 0, $newUses);
+    }
+}
+
+// 2. Inject class method
+$methodCode = <<<PHP
+<?php
+class __Tmp {
     public static function {$serviceKey}(bool \$getShared = true): {$serviceInterface}
     {
         if (\$getShared) {
@@ -184,16 +239,28 @@ $method = <<<PHP
 
         return new {$serviceClass}(static::{$clientFactory}());
     }
+}
 PHP;
 
-// Find the last closing brace of the class
-$lastBrace = strrpos($content, "\n}");
-if ($lastBrace === false) {
-    echo "ERROR: Could not locate closing brace of Services class\n";
+try {
+    $tmpStmts = $parser->parse($methodCode);
+    $tmpClass = $finder->findFirstInstanceOf($tmpStmts, Node\Stmt\Class_::class);
+    $methodNode = $finder->findFirstInstanceOf($tmpClass->stmts, Node\Stmt\ClassMethod::class);
+
+    if ($methodNode === null) {
+        fwrite(STDERR, "ERROR: Could not construct class method AST node\n");
+        exit(3);
+    }
+
+    $class->stmts[] = $methodNode;
+} catch (\Throwable $t) {
+    fwrite(STDERR, "ERROR: Failed to construct AST nodes: {$t->getMessage()}\n");
     exit(3);
 }
 
-$content = substr($content, 0, $lastBrace) . $method . "\n}" . substr($content, $lastBrace + 2);
+// Print and write back
+$printer = new Standard();
+$editedContent = $printer->printFormatPreserving($newStmts, $origStmts, $origTokens);
 
-file_put_contents($servicesFile, $content);
-echo "OK: {$serviceKey} registered in Services.php\n";
+file_put_contents($servicesFile, $editedContent);
+echo "OK: {$serviceKey} registered in Services.php via AST\n";
