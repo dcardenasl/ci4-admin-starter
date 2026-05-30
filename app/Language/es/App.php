@@ -92,4 +92,5 @@ return [
     'select_option'   => 'Seleccionar opción...',
     'back_to_dashboard' => 'Volver al Escritorio',
     'components_title'  => 'Librería de Componentes',
+    'visible_help'      => 'Visible dentro de los motores de búsqueda de la plataforma.',
 ];
