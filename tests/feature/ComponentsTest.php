@@ -95,6 +95,23 @@ final class ComponentsTest extends CIUnitTestCase
         $this->assertStringContainsString('Active State', $html);
     }
 
+    public function testBooleanComponentRendersToggleState(): void
+    {
+        $html = view('components/form/boolean', [
+            'name' => 'is_visible',
+            'label' => 'App.is_visible',
+            'value' => true,
+            'help' => 'App.visible_help',
+        ], ['saveData' => false]);
+
+        $this->assertStringContainsString('type="checkbox"', $html);
+        $this->assertStringContainsString('name="is_visible"', $html);
+        $this->assertStringContainsString('value="1"', $html);
+        $this->assertStringContainsString('checked', $html);
+        $this->assertStringContainsString('type="hidden"', $html);
+        $this->assertStringContainsString(lang('App.visible_help'), $html);
+    }
+
 
     public function testTagsComponentInjectsJsonValue(): void
     {
@@ -129,5 +146,14 @@ final class ComponentsTest extends CIUnitTestCase
         // number_cell
         $html = view('components/table/number_cell', ['value' => 199.99, 'type' => 'currency', 'currency' => 'USD', 'locale' => 'en'], ['saveData' => false]);
         $this->assertStringContainsString('$199.99', $html);
+    }
+
+    public function testHeadPartialUsesTranslatedPageTitle(): void
+    {
+        $html = view('layouts/partials/head', [
+            'title' => lang('App.components_title'),
+        ], ['saveData' => false]);
+
+        $this->assertStringContainsString('<title>' . lang('App.components_title') . '</title>', $html);
     }
 }
