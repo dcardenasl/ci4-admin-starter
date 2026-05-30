@@ -226,6 +226,53 @@ class ScaffoldingScriptsTest extends CIUnitTestCase
         self::runScript('bin/remove-module.sh Release Publishing');
     }
 
+    public function testRegisterSidebarIsIdempotentAndUsesModuleFallbackLabels(): void
+    {
+        $sidebarFile = self::$sandbox . '/app/Views/layouts/partials/sidebar.php';
+        $sidebarBackup = self::$sandbox . '/app/Views/layouts/partials/sidebar.php.bak';
+        $templateFile = self::$sandbox . '/template.json';
+        $moduleDir = self::$sandbox . '/app/Modules/Catalog';
+
+        @copy($sidebarFile, $sidebarBackup);
+        @mkdir($moduleDir . '/Language/en', 0o755, true);
+        @mkdir($moduleDir . '/Language/es', 0o755, true);
+
+        file_put_contents(
+            $moduleDir . '/Language/en/Catalog.php',
+            "<?php\n\ndeclare(strict_types=1);\n\nreturn [\n    'title' => 'Catalog',\n];\n"
+        );
+        file_put_contents(
+            $moduleDir . '/Language/es/Catalog.php',
+            "<?php\n\ndeclare(strict_types=1);\n\nreturn [\n    'title' => 'Catalogo',\n];\n"
+        );
+        $workspaceRoot = dirname(self::$repoRoot);
+        file_put_contents($templateFile, (string) file_get_contents($workspaceRoot . '/templates/ci4-catalog/ci4-catalog-domain/template.json'));
+
+        try {
+            self::runScript('bin/register-sidebar.sh template.json');
+            $afterFirst = (string) file_get_contents($sidebarFile);
+
+            self::runScript('bin/register-sidebar.sh template.json');
+            $afterSecond = (string) file_get_contents($sidebarFile);
+
+            $this->assertSame($afterFirst, $afterSecond, 'Sidebar registration must be idempotent');
+            $this->assertSame(1, substr_count($afterSecond, '<!-- START Catalog -->'));
+            $this->assertSame(1, substr_count($afterSecond, '<!-- END Catalog -->'));
+
+            $langEn = (string) file_get_contents($moduleDir . '/Language/en/Catalog.php');
+            $langEs = (string) file_get_contents($moduleDir . '/Language/es/Catalog.php');
+
+            $this->assertStringContainsString("'sidebar_label' => 'Catalog'", $langEn);
+            $this->assertStringContainsString("'sidebar_label' => 'Catalog'", $langEs);
+            $this->assertStringNotContainsString('CI4 Catalog', $langEs);
+        } finally {
+            @copy($sidebarBackup, $sidebarFile);
+            @unlink($sidebarBackup);
+            self::rrmdir($moduleDir);
+            @unlink($templateFile);
+        }
+    }
+
     public function testMakeModuleRejectsInvalidCustomActionFlag(): void
     {
         $cwd = getcwd();
