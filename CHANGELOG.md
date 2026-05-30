@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.7.0] — 2026-05-30
+
+### Added
+
+- **Universal CRUD module** (`app/Modules/Universal/`) — metadata-driven zero-code admin for any resource. `UniversalController` reads `template.json` files from `templates/*/` at runtime and drives index, create/store, edit/update, and delete actions through `DomainApiClientInterface`. Routes registered under `admin/universal/(:segment)` behind the `auth` filter.
+
 ## [2.6.0] — 2026-05-29
 
 ### Added
