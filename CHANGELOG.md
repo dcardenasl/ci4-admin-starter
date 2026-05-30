@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.0] — 2026-05-29
+
+### Added
+
+- **`make-module.sh`** — automatic translation merging: if the scaffolded module ships translation strings, the script now merges them into the existing locale files rather than overwriting them.
+
 ## [2.5.0] — 2026-05-29
 
 ### Changed
