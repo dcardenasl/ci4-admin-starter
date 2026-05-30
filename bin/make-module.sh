@@ -4,16 +4,18 @@
 # Creates a new resource within an admin module and registers PSR-4 autoloading.
 #
 # Usage:
-#   bash bin/make-module.sh <Resource> <Module> <ApiPath> [RouteSegment] [--dry-run] [--force]
+#   bash bin/make-module.sh <Resource> <Module> <ApiPath> [RouteSegment] [Fields] [--dry-run] [--force]
 #
 # Scope:
 #   Generates a CRUD shell only: controller, service, requests, routes, views,
 #   language files, test stubs, and optional POST item-actions via --action.
-#   Aggregate-grade UI behavior still requires
-#   manual extension after scaffolding.
+#   When [Fields] is provided, views use typed components (form/text, form/select,
+#   form/boolean…) and the index table has one column per field.
+#   Aggregate-grade UI behavior still requires manual extension after scaffolding.
 #
 # Examples:
 #   bash bin/make-module.sh Product Catalog /catalog/products
+#   bash bin/make-module.sh Product Catalog /catalog/products 'name:string:required,price:decimal:required,active:boolean'
 #   bash bin/make-module.sh SchoolCategory Education /education/school-categories school-categories
 #   bash bin/make-module.sh Order Orders /orders
 #   bash bin/make-module.sh Product Catalog /catalog/products --dry-run
@@ -46,6 +48,14 @@ Arguments:
   <Module>        StudlyCase module name    (e.g. Catalog, Education)
   <ApiPath>       API path for the resource (e.g. /catalog/products)
   [RouteSegment]  URL segment override      (default: resource_plural with dashes)
+  [Fields]        Comma-separated field definitions: name:type[:required][:<extra>]
+                  Types: string, text, longtext, int, bigint, decimal, float,
+                         boolean, date, datetime, enum, relation, file, image
+                  Extra for enum:    pipe-separated options  (e.g. status:enum:active|inactive)
+                  Extra for relation: variable name for options array (e.g. category_id:relation:categories)
+                  If arg 4 contains ':', it is treated as Fields (RouteSegment is skipped).
+                  If arg 4 has no ':', it is RouteSegment and arg 5 is Fields.
+                  When omitted, a single 'name:string:required' field is generated.
 
 Flags:
   --dry-run         Print what would be generated without writing any file
@@ -64,7 +74,11 @@ Flags:
 
 Examples:
   bash bin/make-module.sh Product Catalog /catalog/products
+  bash bin/make-module.sh Product Catalog /catalog/products 'name:string:required,price:decimal:required,active:boolean'
+  bash bin/make-module.sh Product Catalog /catalog/products 'name:string:required,status:enum:draft|published|archived'
+  bash bin/make-module.sh Product Catalog /catalog/products 'name:string:required,category_id:relation:required:categories'
   bash bin/make-module.sh SchoolCategory Education /education/school-categories school-categories
+  bash bin/make-module.sh SchoolCategory Education /education/school-categories school-categories 'name:string:required,active:boolean'
   bash bin/make-module.sh Product Catalog /catalog/products --dry-run
   bash bin/make-module.sh Product Catalog /catalog/products --check-api
   bash bin/make-module.sh Product Catalog /catalog/products --check-api=http://localhost:8080
