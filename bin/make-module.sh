@@ -118,7 +118,18 @@ fi
 RESOURCE=${1:-}
 MODULE=${2:-}
 API_PATH=${3:-}
-ROUTE_SEGMENT=${4:-}
+ROUTE_SEGMENT_ARG=${4:-}
+ROUTE_SEGMENT=""
+FIELDS=""
+
+if [[ -n "$ROUTE_SEGMENT_ARG" ]]; then
+    if [[ "$ROUTE_SEGMENT_ARG" == *":"* ]]; then
+        FIELDS="$ROUTE_SEGMENT_ARG"
+    else
+        ROUTE_SEGMENT="$ROUTE_SEGMENT_ARG"
+        FIELDS=${5:-}
+    fi
+fi
 
 if [[ -z "$RESOURCE" || -z "$MODULE" || -z "$API_PATH" ]]; then
     echo -e "${RED}❌ Missing arguments${NC}"
@@ -366,6 +377,326 @@ EOF
     fi
     CUSTOM_ACTIONS_SUMMARY+="${ACTION}"
 done
+
+# ─── Dynamic Field Generator ──────────────────────────────────────────────────
+GENERATED_SNIPPETS=$(python3 - "$FIELDS" "$MODULE" "$LANG_PREFIX" "$RESOURCE_CAMEL" "$RESOURCE" <<'PYEOF'
+import sys
+import json
+
+fields_str = sys.argv[1]
+module = sys.argv[2]
+lang_prefix = sys.argv[3]
+resource_camel = sys.argv[4]
+resource = sys.argv[5]
+
+# Parse fields
+fields = []
+if fields_str:
+    for item in fields_str.split(','):
+        if not item.strip():
+            continue
+        parts = item.split(':')
+        name = parts[0]
+        field_type = parts[1] if len(parts) > 1 else 'string'
+        required = False
+        enum_options = []
+        relation_table = ""
+        
+        for part in parts[2:]:
+            if part == 'required':
+                required = True
+            elif field_type == 'enum':
+                enum_options = part.split('|')
+            elif field_type == 'relation':
+                relation_table = part
+                
+        fields.append({
+            'name': name,
+            'type': field_type,
+            'required': required,
+            'enum_options': enum_options,
+            'relation_table': relation_table
+        })
+else:
+    fields = [{
+        'name': 'name',
+        'type': 'string',
+        'required': True,
+        'enum_options': [],
+        'relation_table': ''
+    }]
+
+req_fields = []
+req_rules = []
+req_payload = []
+index_headers = []
+index_rows = []
+create_fields = []
+edit_fields = []
+show_rows = []
+lang_en = []
+lang_es = []
+
+for f in fields:
+    name = f['name']
+    ftype = f['type']
+    req = f['required']
+    enum_opts = f['enum_options']
+    rel_table = f['relation_table']
+    
+    req_fields.append("'{}'".format(name))
+    
+    rule = ""
+    if ftype == 'string':
+        rule = 'required|min_length[2]|max_length[255]' if req else 'permit_empty|string|max_length[255]'
+    elif ftype in ['text', 'longtext']:
+        rule = 'required|string' if req else 'permit_empty|string'
+    elif ftype in ['int', 'bigint']:
+        rule = 'required|integer' if req else 'permit_empty|integer'
+    elif ftype in ['decimal', 'float']:
+        rule = 'required|decimal' if req else 'permit_empty|decimal'
+    elif ftype == 'boolean':
+        rule = 'permit_empty'
+    elif ftype in ['date', 'datetime']:
+        rule = 'required|valid_date' if req else 'permit_empty|valid_date'
+    elif ftype == 'enum':
+        in_list = ",".join(enum_opts)
+        rule = 'required|in_list[{}]'.format(in_list) if req else 'permit_empty|in_list[{}]'.format(in_list)
+    elif ftype == 'relation':
+        rule = 'required' if req else 'permit_empty'
+    else:
+        rule = 'permit_empty'
+    req_rules.append("            '{}' => '{}',".format(name, rule))
+    
+    if ftype == 'boolean':
+        payload_line = "            '{}' => $this->postBool('{}'),".format(name, name)
+    elif ftype in ['int', 'bigint', 'relation']:
+        payload_line = "            '{}' => $this->postInt('{}'),".format(name, name)
+    elif ftype in ['decimal', 'float']:
+        payload_line = "            '{}' => (float) $this->postString('{}'),".format(name, name)
+    else:
+        payload_line = "            '{}' => $this->postString('{}'),".format(name, name)
+    req_payload.append(payload_line)
+    
+    h_label = name.replace('_id', '').replace('_', ' ').title()
+    lang_en.append("    'field_{}' => '{}',".format(name, h_label))
+    lang_es.append("    'field_{}' => '{}',".format(name, h_label))
+    
+    header = """                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('{name}')">
+                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('{name}')" aria-label="<?= esc(lang('TableA11y.sort_by', [lang('{module}.field_{name}')])) ?>">
+                                <span><?= lang('{module}.field_{name}') ?></span>
+                                <span aria-hidden="true" x-text="sortIcon('{name}')"></span>
+                            </button>
+                        </th>"""
+    header = header.replace('{name}', name).replace('{module}', module)
+    index_headers.append(header)
+    
+    if ftype == 'boolean':
+        row_td = """                            <td class="<?= esc(table_td_class()) ?>">
+                                <span class="inline-flex items-center">
+                                    <template x-if="row.{name}">
+                                        <svg class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </template>
+                                    <template x-if="!row.{name}">
+                                        <svg class="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </template>
+                                </span>
+                            </td>"""
+    elif ftype in ['date', 'datetime']:
+        row_td = """                            <td class="<?= esc(table_td_class('muted')) ?>" x-text="formatDate(row.{name})"></td>"""
+    elif ftype == 'image':
+        row_td = """                            <td class="<?= esc(table_td_class()) ?>">
+                                <template x-if="row.{name}">
+                                    <img class="h-10 w-10 rounded-full object-cover" :src="row.{name}" alt="">
+                                </template>
+                                <template x-if="!row.{name}">
+                                    <span class="text-gray-400">—</span>
+                                </template>
+                            </td>"""
+    elif ftype == 'enum':
+        row_td = """                            <td class="<?= esc(table_td_class()) ?>">
+                                <span class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10" x-text="String(row.{name} ?? '-')"></span>
+                            </td>"""
+    else:
+        td_class = 'primary' if name == 'name' else 'muted'
+        row_td = """                            <td class="<?= esc(table_td_class('{td_class}')) ?>" x-text="String(row.{name} ?? '-')"></td>""".replace('{td_class}', td_class)
+    
+    row_td = row_td.replace('{name}', name)
+    index_rows.append(row_td)
+
+    req_php = 'true' if req else 'false'
+    if ftype == 'string':
+        comp = """        <?= view('components/form/text', [
+            'name' => '{name}',
+            'label' => '{module}.field_{name}',
+            'required' => {req_php},
+            'value' => $item['{name}'] ?? '',
+            'errors' => $errors ?? []
+        ]) ?>"""
+    elif ftype in ['text', 'longtext']:
+        comp = """        <?= view('components/form/textarea', [
+            'name' => '{name}',
+            'label' => '{module}.field_{name}',
+            'required' => {req_php},
+            'value' => $item['{name}'] ?? '',
+            'errors' => $errors ?? []
+        ]) ?>"""
+    elif ftype in ['int', 'bigint']:
+        comp = """        <?= view('components/form/number', [
+            'name' => '{name}',
+            'label' => '{module}.field_{name}',
+            'required' => {req_php},
+            'value' => $item['{name}'] ?? '',
+            'errors' => $errors ?? []
+        ]) ?>"""
+    elif ftype in ['decimal', 'float']:
+        comp = """        <?= view('components/form/decimal', [
+            'name' => '{name}',
+            'label' => '{module}.field_{name}',
+            'required' => {req_php},
+            'value' => $item['{name}'] ?? '',
+            'errors' => $errors ?? []
+        ]) ?>"""
+    elif ftype == 'boolean':
+        comp = """        <?= view('components/form/boolean', [
+            'name' => '{name}',
+            'label' => '{module}.field_{name}',
+            'value' => $item['{name}'] ?? false,
+            'errors' => $errors ?? []
+        ]) ?>"""
+    elif ftype == 'date':
+        comp = """        <?= view('components/form/date', [
+            'name' => '{name}',
+            'label' => '{module}.field_{name}',
+            'required' => {req_php},
+            'value' => $item['{name}'] ?? '',
+            'errors' => $errors ?? []
+        ]) ?>"""
+    elif ftype == 'datetime':
+        comp = """        <?= view('components/form/datetime', [
+            'name' => '{name}',
+            'label' => '{module}.field_{name}',
+            'required' => {req_php},
+            'value' => $item['{name}'] ?? '',
+            'errors' => $errors ?? []
+        ]) ?>"""
+    elif ftype == 'enum':
+        opts_php = ",\n".join([f"                '{o}' => '{o.title()}'" for o in enum_opts])
+        comp = """        <?= view('components/form/select', [
+            'name' => '{name}',
+            'label' => '{module}.field_{name}',
+            'required' => {req_php},
+            'options' => [
+{opts_php}
+            ],
+            'value' => $item['{name}'] ?? '',
+            'errors' => $errors ?? []
+        ]) ?>""".replace('{opts_php}', opts_php)
+    elif ftype == 'relation':
+        comp = """        <?= view('components/form/relation', [
+            'name' => '{name}',
+            'label' => '{module}.field_{name}',
+            'required' => {req_php},
+            'options' => ${rel_table} ?? [],
+            'value' => $item['{name}'] ?? '',
+            'errors' => $errors ?? []
+        ]) ?>""".replace('{rel_table}', rel_table)
+    elif ftype == 'file':
+        comp = """        <?= view('components/form/file', [
+            'name' => '{name}',
+            'label' => '{module}.field_{name}',
+            'value' => $item['{name}'] ?? '',
+            'errors' => $errors ?? []
+        ]) ?>"""
+    elif ftype == 'image':
+        comp = """        <?= view('components/form/image', [
+            'name' => '{name}',
+            'label' => '{module}.field_{name}',
+            'value' => $item['{name}'] ?? '',
+            'errors' => $errors ?? []
+        ]) ?>"""
+    else:
+        comp = """        <?= view('components/form/text', [
+            'name' => '{name}',
+            'label' => '{module}.field_{name}',
+            'required' => {req_php},
+            'value' => $item['{name}'] ?? '',
+            'errors' => $errors ?? []
+        ]) ?>"""
+        
+    comp = comp.replace('{name}', name).replace('{module}', module).replace('{req_php}', req_php)
+    create_fields.append(comp)
+    edit_fields.append(comp)
+    
+    if ftype == 'boolean':
+        val_expr = "view('components/table/boolean_cell', ['value' => ${RESOURCE_CAMEL}['{name}'] ?? false])".replace('{RESOURCE_CAMEL}', resource_camel).replace('{name}', name)
+        show_row = """            <?= view('components/display/field_row', [
+                'label' => '{module}.field_{name}',
+                'value' => {val_expr},
+                'isHtml' => true
+            ]) ?>"""
+    elif ftype == 'image':
+        val_expr = "! empty(${RESOURCE_CAMEL}['{name}']) ? '<img class=\"h-20 w-20 object-cover rounded-lg\" src=\"' . esc(${RESOURCE_CAMEL}['{name}']) . '\" alt=\"\">' : '—'".replace('{RESOURCE_CAMEL}', resource_camel).replace('{name}', name)
+        show_row = """            <?= view('components/display/field_row', [
+                'label' => '{module}.field_{name}',
+                'value' => {val_expr},
+                'isHtml' => true
+            ]) ?>"""
+    elif ftype == 'enum':
+        val_expr = "! empty(${RESOURCE_CAMEL}['{name}']) ? '<span class=\"inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10\">' . esc(${RESOURCE_CAMEL}['{name}']) . '</span>' : '—'".replace('{RESOURCE_CAMEL}', resource_camel).replace('{name}', name)
+        show_row = """            <?= view('components/display/field_row', [
+                'label' => '{module}.field_{name}',
+                'value' => {val_expr},
+                'isHtml' => true
+            ]) ?>"""
+    else:
+        val_expr = "${RESOURCE_CAMEL}['{name}'] ?? '—'".replace('{RESOURCE_CAMEL}', resource_camel).replace('{name}', name)
+        show_row = """            <?= view('components/display/field_row', [
+                'label' => '{module}.field_{name}',
+                'value' => {val_expr}
+            ]) ?>"""
+            
+    show_row = show_row.replace('{module}', module).replace('{name}', name).replace('{val_expr}', val_expr)
+    show_rows.append(show_row)
+
+output = {
+    'req_fields': ", ".join(req_fields),
+    'req_rules': "\n".join(req_rules),
+    'req_payload': "\n".join(req_payload),
+    'index_headers': "\n".join(index_headers),
+    'index_rows': "\n".join(index_rows),
+    'create_fields': "\n\n".join(create_fields),
+    'edit_fields': "\n\n".join(edit_fields),
+    'show_rows': "\n".join(show_rows),
+    'lang_en': "\n".join(lang_en),
+    'lang_es': "\n".join(lang_es)
+}
+print(json.dumps(output))
+PYEOF
+)
+
+extract_snippet() {
+    local key="$1"
+    echo "$GENERATED_SNIPPETS" | php -r '
+        $json = json_decode(file_get_contents("php://stdin"), true);
+        echo $json[$argv[1]] ?? "";
+    ' -- "$key"
+}
+
+REQ_FIELDS=$(extract_snippet 'req_fields')
+REQ_RULES=$(extract_snippet 'req_rules')
+REQ_PAYLOAD=$(extract_snippet 'req_payload')
+VIEW_INDEX_HEADERS=$(extract_snippet 'index_headers')
+VIEW_INDEX_ROWS=$(extract_snippet 'index_rows')
+VIEW_CREATE_FIELDS=$(extract_snippet 'create_fields')
+VIEW_EDIT_FIELDS=$(extract_snippet 'edit_fields')
+VIEW_SHOW_ROWS=$(extract_snippet 'show_rows')
+LANG_EN_FIELDS=$(extract_snippet 'lang_en')
+LANG_ES_FIELDS=$(extract_snippet 'lang_es')
 
 # ─── Cross-module route collision detection ────────────────────────────────────
 # Catches the realistic mistake of two modules registering the same route name
@@ -704,20 +1035,20 @@ class ${STORE_REQUEST} extends BaseFormRequest
 {
     protected function fields(): array
     {
-        return ['name'];
+        return [${REQ_FIELDS}];
     }
 
     public function rules(): array
     {
         return [
-            'name' => 'required|min_length[2]|max_length[255]',
+${REQ_RULES}
         ];
     }
 
     public function payload(): array
     {
         return [
-            'name' => \$this->postString('name'),
+${REQ_PAYLOAD}
         ];
     }
 }"
@@ -1063,7 +1394,7 @@ return [
 ${LANG_ES_ACTIONS}
 
     // ${RESOURCE} — form fields (add more as needed)
-    'field_name'                        => 'Nombre',
+${LANG_ES_FIELDS}
 ];"
     else
         content="<?php
@@ -1091,7 +1422,7 @@ return [
 ${LANG_EN_ACTIONS}
 
     // ${RESOURCE} — form fields (add more as needed)
-    'field_name'                        => 'Name',
+${LANG_EN_FIELDS}
 ];"
     fi
 
@@ -1155,12 +1486,7 @@ write_heredoc "app/Views/${VIEW_PATH}/index.php" << 'VIEW_EOF_MARKER'
             <table class="<?= esc(table_class()) ?>">
                 <thead class="<?= esc(table_head_class()) ?>">
                     <tr>
-                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('name')">
-                            <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('name')" aria-label="<?= esc(lang('TableA11y.sort_by', [lang('VIEW_MODULE.field_name')])) ?>">
-                                <span><?= lang('VIEW_MODULE.field_name') ?></span>
-                                <span aria-hidden="true" x-text="sortIcon('name')"></span>
-                            </button>
-                        </th>
+VIEW_INDEX_HEADERS
                         <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('created_at')">
                             <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('created_at')" aria-label="<?= esc(lang('TableA11y.sort_by', [lang('TableColumns.created_at')])) ?>">
                                 <span><?= lang('TableColumns.created_at') ?></span>
@@ -1173,7 +1499,7 @@ write_heredoc "app/Views/${VIEW_PATH}/index.php" << 'VIEW_EOF_MARKER'
                 <tbody class="<?= esc(table_body_class()) ?>">
                     <template x-for="row in rows" :key="String(row.id ?? Math.random())">
                         <tr class="<?= esc(table_row_class()) ?>">
-                            <td class="<?= esc(table_td_class('primary')) ?>" x-text="String(row.name ?? '-')"></td>
+VIEW_INDEX_ROWS
                             <td class="<?= esc(table_td_class('muted')) ?>" x-text="formatDate(row.created_at)"></td>
                             <td class="<?= esc(table_td_class()) ?>">
                                 <div class="flex items-center gap-2">
@@ -1197,7 +1523,9 @@ substitute_placeholders "app/Views/${VIEW_PATH}/index.php" \
     "VIEW_ROUTE_NAME"    "${ROUTE_NAME}" \
     "VIEW_MODULE"        "${MODULE}" \
     "VIEW_LANG_PREFIX_"  "${LANG_PREFIX}_" \
-    "VIEW_VIEW_PATH"     "${VIEW_PATH}"
+    "VIEW_VIEW_PATH"     "${VIEW_PATH}" \
+    "VIEW_INDEX_HEADERS" "${VIEW_INDEX_HEADERS}" \
+    "VIEW_INDEX_ROWS"    "${VIEW_INDEX_ROWS}"
 
 write_heredoc "app/Views/${VIEW_PATH}/show.php" << 'VIEW_EOF_MARKER'
 <?php $VIEW_RESOURCE_CAMEL = $VIEW_RESOURCE_CAMEL ?? []; ?>
@@ -1229,10 +1557,7 @@ VIEW_SHOW_ACTION_BUTTONS
         </div>
 
         <dl class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm">
-            <div>
-                <dt class="text-gray-500"><?= lang('VIEW_MODULE.field_name') ?></dt>
-                <dd class="mt-1 text-gray-900"><?= esc((string) ($VIEW_RESOURCE_CAMEL['name'] ?? '-')) ?></dd>
-            </div>
+VIEW_SHOW_ROWS
             <div>
                 <dt class="text-gray-500"><?= lang('TableColumns.created_at') ?></dt>
                 <dd class="mt-1 text-gray-900"><?= esc((string) ($VIEW_RESOURCE_CAMEL['created_at'] ?? '-')) ?></dd>
@@ -1247,7 +1572,8 @@ substitute_placeholders "app/Views/${VIEW_PATH}/show.php" \
     "VIEW_MODULE"          "${MODULE}" \
     "VIEW_LANG_PREFIX_"    "${LANG_PREFIX}_" \
     "VIEW_RESOURCE_CAMEL"  "${RESOURCE_CAMEL}" \
-    "VIEW_SHOW_ACTION_BUTTONS" "${SHOW_ACTION_BUTTONS}"
+    "VIEW_SHOW_ACTION_BUTTONS" "${SHOW_ACTION_BUTTONS}" \
+    "VIEW_SHOW_ROWS"       "${VIEW_SHOW_ROWS}"
 
 write_heredoc "app/Views/${VIEW_PATH}/create.php" << 'VIEW_EOF_MARKER'
 <div class="mb-4">
@@ -1260,12 +1586,7 @@ write_heredoc "app/Views/${VIEW_PATH}/create.php" << 'VIEW_EOF_MARKER'
     <form method="post" action="<?= route_to('VIEW_ROUTE_NAME.store') ?>" class="mt-4 space-y-4">
         <?= csrf_field() ?>
 
-        <div>
-            <label class="block text-sm font-medium text-gray-700" for="name"><?= esc(lang('VIEW_MODULE.field_name')) ?> <span class="text-red-500">*</span></label>
-            <input id="name" name="name" type="text" required maxlength="255" value="<?= esc(old('name', '')) ?>"
-                class="<?= esc(input_class('name')) ?>">
-            <?= render_field_error('name') ?>
-        </div>
+VIEW_CREATE_FIELDS
 
         <div class="flex items-center gap-3 pt-2">
             <button type="submit" class="<?= esc(action_button_class('primary')) ?>"><?= esc(lang('App.create')) ?></button>
@@ -1278,7 +1599,8 @@ VIEW_EOF_MARKER
 substitute_placeholders "app/Views/${VIEW_PATH}/create.php" \
     "VIEW_ROUTE_NAME"    "${ROUTE_NAME}" \
     "VIEW_MODULE"        "${MODULE}" \
-    "VIEW_LANG_PREFIX_"  "${LANG_PREFIX}_"
+    "VIEW_LANG_PREFIX_"  "${LANG_PREFIX}_" \
+    "VIEW_CREATE_FIELDS" "${VIEW_CREATE_FIELDS}"
 
 write_heredoc "app/Views/${VIEW_PATH}/edit.php" << 'VIEW_EOF_MARKER'
 <?php $item = $item ?? []; ?>
@@ -1299,13 +1621,7 @@ write_heredoc "app/Views/${VIEW_PATH}/edit.php" << 'VIEW_EOF_MARKER'
     <form method="post" action="<?= route_to('VIEW_ROUTE_NAME.update', (string) ($item['id'] ?? '')) ?>" class="mt-4 space-y-4">
         <?= csrf_field() ?>
 
-        <div>
-            <label class="block text-sm font-medium text-gray-700" for="name"><?= esc(lang('VIEW_MODULE.field_name')) ?> <span class="text-red-500">*</span></label>
-            <input id="name" name="name" type="text" required maxlength="255"
-                value="<?= esc(old('name', (string) ($item['name'] ?? ''))) ?>"
-                class="<?= esc(input_class('name')) ?>">
-            <?= render_field_error('name') ?>
-        </div>
+VIEW_EDIT_FIELDS
 
         <div class="flex items-center gap-3 pt-2">
             <button type="submit" class="<?= esc(action_button_class('primary')) ?>"><?= esc(lang('App.update')) ?></button>
@@ -1318,7 +1634,8 @@ VIEW_EOF_MARKER
 substitute_placeholders "app/Views/${VIEW_PATH}/edit.php" \
     "VIEW_ROUTE_NAME"    "${ROUTE_NAME}" \
     "VIEW_MODULE"        "${MODULE}" \
-    "VIEW_LANG_PREFIX_"  "${LANG_PREFIX}_"
+    "VIEW_LANG_PREFIX_"  "${LANG_PREFIX}_" \
+    "VIEW_EDIT_FIELDS"   "${VIEW_EDIT_FIELDS}"
 
 write_heredoc "app/Views/${VIEW_PATH}/partials/filters.php" << 'VIEW_EOF_MARKER'
 <?php /** @var array $limitOptions */ ?>
