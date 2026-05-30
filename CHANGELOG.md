@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Component Library System** — comprehensive reusable component architecture for rapid admin UI development.
+  - **System module** (`app/Modules/System/`) with `ComponentDemoController` to showcase all components in development environment.
+  - **Form components** (16 types): `text`, `textarea`, `number`, `decimal`, `date`, `datetime`, `boolean`, `select`, `radio`, `file`, `image`, `tags`, `slug`, `metadata`, `relation`, `media_gallery` — standardized field contracts with validation feedback, help text, and accessibility.
+  - **Table components** (9 types): cell renderers (`text`, `badge`, `boolean`, `date`, `image`, `number`), and utilities (`toolbar`, `filter_panel`, `pagination`) for consistent data presentation and filtering.
+  - **Display components**: `field_row` for show views, `empty_state` for no-results UI, `confirm_modal` for confirmation dialogs, `reorder` for drag-and-drop list management.
+  - **Alpine.js enhancements**: `adminMetadataField` component for interactive JSON key-value editing with duplicate detection and import/export; `normalizePickerFile()` utility for file object consistency.
+- **i18n expansion** — new language keys for component labels, form fields, and help text (English and Spanish).
+- **Component testing** — feature tests for showcase route access and component rendering in development/production environments.
+- **Component documentation** (`app/Views/components/README.md`) — complete guide to component contracts, usage patterns, and integration with scaffolding system.
+
 ## [2.7.0] — 2026-05-30
 
 ### Added
