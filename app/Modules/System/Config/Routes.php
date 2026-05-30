@@ -12,3 +12,12 @@ use CodeIgniter\Router\RouteCollection;
 // balancer probes (HTTP 200 if healthy, 503 if degraded). The CSRF global
 // filter only enforces on state-changing verbs, so a GET passes through.
 $routes->get('/health', '\App\Modules\System\Controllers\HealthController::index', ['as' => 'system.health']);
+
+// Development component showcase
+$routes->group('admin', ['filter' => 'auth'], static function (RouteCollection $routes): void {
+    if (ENVIRONMENT === 'development') {
+        $routes->get('system/components', '\App\Modules\System\Controllers\ComponentDemoController::index', [
+            'as' => 'admin.system.components',
+        ]);
+    }
+});
