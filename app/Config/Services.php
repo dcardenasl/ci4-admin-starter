@@ -227,5 +227,4 @@ class Services extends BaseService
         }
 
         return new ApplicationApiService(static::apiClient());
-    }
-}
+    }}
