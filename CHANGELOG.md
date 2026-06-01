@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Relation field UX enhancements** — `relation` component now includes client-side validation with a localized error message ("This relation has no selectable options") when the controller fails to pass a populated options array. The error message is configurable via `App.relation_missing_options` and `App.relation_missing_options_desc` in language files (English and Spanish).
+- **`make-module.sh` test coverage** — expanded `ScaffoldingScriptsTest.php` with 304+ lines of test cases for field parser behavior, module routing, service registration, and fixture loading. New feature tests in `ComponentsTest.php` validate component rendering and relation field error states in development/production environments.
 - **Reorder field support in `make-module.sh`** — the scaffolding engine now detects `order` or `sort_order` integer fields and automatically excludes them from create/edit forms, scaffolds a dedicated reorder view with drag-and-drop UI, and wires controller actions (`reorder()`, `saveOrder()`).
 - **i18n parameters for boolean component** — `boolean` component now accepts optional `on_label` and `off_label` parameters for localized true/false display text (e.g. `'App.yes'`, `'App.no'`), replacing hardcoded English "Enabled" / "Disabled" labels.
 
