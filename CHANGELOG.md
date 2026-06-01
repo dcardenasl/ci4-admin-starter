@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.8.0] — 2026-05-31
+
 ### Added
 
 - **Component Library System** — comprehensive reusable component architecture for rapid admin UI development.
@@ -18,6 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **i18n expansion** — new language keys for component labels, form fields, and help text (English and Spanish).
 - **Component testing** — feature tests for showcase route access and component rendering in development/production environments.
 - **Component documentation** (`app/Views/components/README.md`) — complete guide to component contracts, usage patterns, and integration with scaffolding system.
+- **`make-module.sh` dynamic field parser** — the generator now accepts a `[Fields]` argument with a field-type specification string, scaffolding typed form fields and table columns directly from the command line.
+
+### Fixed
+
+- **Admin module sidebar registration** — `make-module.sh` now generates an idempotent sidebar entry, preventing duplicate navigation items when re-running the generator on an existing module.
 
 ## [2.7.0] — 2026-05-30
 
