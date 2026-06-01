@@ -341,6 +341,8 @@ STORE_REQUEST="${RESOURCE}StoreRequest"                       # AudienceStoreReq
 UPDATE_REQUEST="${RESOURCE}UpdateRequest"                     # AudienceUpdateRequest
 CONTROLLER_FQCN="\\\\App\\\\Modules\\\\${MODULE}\\\\Controllers\\\\${CONTROLLER_CLASS}"
 ROUTE_NAME="admin.${MODULE_LOWER}.${ROUTE_SEGMENT_UNDERSCORE}"  # admin.shows.audiences
+REORDER_ROUTE_NAME="${ROUTE_NAME}.reorder"
+SAVE_ORDER_ROUTE_NAME="${ROUTE_NAME}.save_order"
 LANG_PREFIX="${RESOURCE_PLURAL}"                              # school_categories  (used as lang key prefix)
 VIEW_PATH="${MODULE_LOWER}/${ROUTE_SEGMENT_UNDERSCORE}"       # shows/audiences
 MODULE_DIR="app/Modules/${MODULE}"
@@ -402,6 +404,7 @@ module = sys.argv[2]
 lang_prefix = sys.argv[3]
 resource_camel = sys.argv[4]
 resource = sys.argv[5]
+ORDER_FIELD_NAMES = {'order', 'sort_order'}
 
 # Parse fields
 fields = []
@@ -450,6 +453,8 @@ edit_fields = []
 show_rows = []
 lang_en = []
 lang_es = []
+reorder_field = ''
+reorder_display_key = ''
 
 for f in fields:
     name = f['name']
@@ -457,6 +462,12 @@ for f in fields:
     req = f['required']
     enum_opts = f['enum_options']
     rel_table = f['relation_table']
+    is_order_field = name in ORDER_FIELD_NAMES and ftype in ['int', 'bigint']
+
+    if not is_order_field and not reorder_display_key:
+        reorder_display_key = name
+    if is_order_field and not reorder_field:
+        reorder_field = name
     
     req_fields.append("'{}'".format(name))
     
@@ -466,7 +477,7 @@ for f in fields:
     elif ftype in ['text', 'longtext']:
         rule = 'required|string' if req else 'permit_empty|string'
     elif ftype in ['int', 'bigint']:
-        rule = 'required|integer' if req else 'permit_empty|integer'
+        rule = 'permit_empty|integer' if is_order_field else ('required|integer' if req else 'permit_empty|integer')
     elif ftype in ['decimal', 'float']:
         rule = 'required|decimal' if req else 'permit_empty|decimal'
     elif ftype == 'boolean':
@@ -484,6 +495,8 @@ for f in fields:
     
     if ftype == 'boolean':
         payload_line = "            '{}' => $this->postBool('{}'),".format(name, name)
+    elif is_order_field:
+        payload_line = "            '{}' => $this->postInt('{}', 0),".format(name, name)
     elif ftype in ['int', 'bigint', 'relation']:
         payload_line = "            '{}' => $this->postInt('{}'),".format(name, name)
     elif ftype in ['decimal', 'float']:
@@ -503,7 +516,8 @@ for f in fields:
                             </button>
                         </th>"""
     header = header.replace('{name}', name).replace('{module}', module)
-    index_headers.append(header)
+    if not is_order_field:
+        index_headers.append(header)
     
     if ftype == 'boolean':
         row_td = """                            <td class="<?= esc(table_td_class()) ?>">
@@ -540,7 +554,8 @@ for f in fields:
         row_td = """                            <td class="<?= esc(table_td_class('{td_class}')) ?>" x-text="String(row.{name} ?? '-')"></td>""".replace('{td_class}', td_class)
     
     row_td = row_td.replace('{name}', name)
-    index_rows.append(row_td)
+    if not is_order_field:
+        index_rows.append(row_td)
 
     req_php = 'true' if req else 'false'
     if ftype == 'string':
@@ -580,6 +595,8 @@ for f in fields:
             'name' => '{name}',
             'label' => '{module}.field_{name}',
             'value' => $item['{name}'] ?? false,
+            'on_label' => 'App.yes',
+            'off_label' => 'App.no',
             'errors' => $errors ?? []
         ]) ?>"""
     elif ftype == 'date':
@@ -643,8 +660,9 @@ for f in fields:
         ]) ?>"""
         
     comp = comp.replace('{name}', name).replace('{module}', module).replace('{req_php}', req_php)
-    create_fields.append(comp)
-    edit_fields.append(comp)
+    if not is_order_field:
+        create_fields.append(comp)
+        edit_fields.append(comp)
     
     if ftype == 'boolean':
         val_expr = "view('components/table/boolean_cell', ['value' => ${RESOURCE_CAMEL}['{name}'] ?? false])".replace('{RESOURCE_CAMEL}', resource_camel).replace('{name}', name)
@@ -675,7 +693,8 @@ for f in fields:
             ]) ?>"""
             
     show_row = show_row.replace('{module}', module).replace('{name}', name).replace('{val_expr}', val_expr)
-    show_rows.append(show_row)
+    if not is_order_field:
+        show_rows.append(show_row)
 
 output = {
     'req_fields': ", ".join(req_fields),
@@ -687,7 +706,9 @@ output = {
     'edit_fields': "\n\n".join(edit_fields),
     'show_rows': "\n".join(show_rows),
     'lang_en': "\n".join(lang_en),
-    'lang_es': "\n".join(lang_es)
+    'lang_es': "\n".join(lang_es),
+    'reorder_field': reorder_field,
+    'reorder_display_key': reorder_display_key
 }
 print(json.dumps(output))
 PYEOF
@@ -711,6 +732,48 @@ VIEW_EDIT_FIELDS=$(extract_snippet 'edit_fields')
 VIEW_SHOW_ROWS=$(extract_snippet 'show_rows')
 LANG_EN_FIELDS=$(extract_snippet 'lang_en')
 LANG_ES_FIELDS=$(extract_snippet 'lang_es')
+REORDER_FIELD=$(extract_snippet 'reorder_field')
+REORDER_DISPLAY_KEY=$(extract_snippet 'reorder_display_key')
+HAS_REORDER=false
+if [[ -n "$REORDER_FIELD" ]]; then
+    HAS_REORDER=true
+fi
+
+REORDER_ROUTE_BLOCK=""
+REORDER_CONTROLLER_ACTIONS=""
+REORDER_SHOW_BUTTON=""
+REORDER_VIEW_BLOCK=""
+REORDER_ROUTE_APPEND=""
+TOOLBAR_REORDER_BUTTON=""
+REORDER_UPDATE_PAYLOAD=""
+if [[ "$HAS_REORDER" == true ]]; then
+    REORDER_ROUTE_BLOCK=$'\n'"    \$routes->get('${ROUTE_SEGMENT}/reorder', '${CONTROLLER_FQCN}::reorder', ['as' => '${REORDER_ROUTE_NAME}', 'filter' => 'permission:${MODULE_LOWER}.write']);"$'\n'"    \$routes->post('${ROUTE_SEGMENT}/reorder', '${CONTROLLER_FQCN}::saveOrder', ['as' => '${SAVE_ORDER_ROUTE_NAME}', 'filter' => 'permission:${MODULE_LOWER}.write']);"
+
+    REORDER_CONTROLLER_ACTIONS=$'\n\n'"    public function reorder(): string|RedirectResponse"$'\n'"    {"$'\n'"        \$deny = \$this->requireWrite();"$'\n'"        if (\$deny !== null) {"$'\n'"            return \$deny;"$'\n'"        }"$'\n\n'"        \$response = \$this->safeApiCall(fn () => \$this->${RESOURCE_CAMEL}Service->list(['limit' => 250, 'sort' => '${REORDER_FIELD}']));"$'\n'"        \$items = \$this->extractItems(\$response);"$'\n\n'"        return \$this->render('${VIEW_PATH}/reorder', ["$'\n'"            'title' => lang('${MODULE}.${LANG_PREFIX}_title') . ' - ' . lang('${MODULE}.field_${REORDER_FIELD}'),"$'\n'"            'items' => \$items,"$'\n'"        ]);"$'\n'"    }"$'\n\n'"    public function saveOrder(): ResponseInterface"$'\n'"    {"$'\n'"        \$deny = \$this->requireWrite();"$'\n'"        if (\$deny !== null) {"$'\n'"            return \$this->response->setJSON(["$'\n'"                'ok' => false,"$'\n'"                'message' => lang('App.access_denied'),"$'\n'"            ])->setStatusCode(403);"$'\n'"        }"$'\n\n'"        \$request = \$this->request;"$'\n'"        if (! \$request instanceof \\CodeIgniter\\HTTP\\IncomingRequest) {"$'\n'"            return \$this->response->setJSON(["$'\n'"                'ok' => false,"$'\n'"                'message' => 'Invalid request type',"$'\n'"            ])->setStatusCode(400);"$'\n'"        }"$'\n\n'"        \$json = \$request->getJSON(true);"$'\n'"        \$jsonArray = is_array(\$json) ? \$json : [];"$'\n'"        \$items = \$jsonArray['items'] ?? [];"$'\n\n'"        if (! is_array(\$items)) {"$'\n'"            return \$this->response->setJSON(["$'\n'"                'ok' => false,"$'\n'"                'message' => 'Invalid payload structure',"$'\n'"            ])->setStatusCode(400);"$'\n'"        }"$'\n\n'"        foreach (\$items as \$item) {"$'\n'"            \$id = (string) (\$item['id'] ?? '');"$'\n'"            \$value = isset(\$item['sort_order']) ? (int) \$item['sort_order'] : 0;"$'\n\n'"            if (\$id !== '') {"$'\n'"                \$this->${RESOURCE_CAMEL}Service->update(\$id, ['${REORDER_FIELD}' => \$value]);"$'\n'"            }"$'\n'"        }"$'\n\n'"        return \$this->response->setJSON(["$'\n'"            'ok' => true,"$'\n'"            'message' => lang('Files.gallery_save_success') ?? 'Order saved.',"$'\n'"        ]);"$'\n'"    }"
+
+    REORDER_SHOW_BUTTON=$'\n'"                <a href=\"<?= route_to('${REORDER_ROUTE_NAME}') ?>\" class=\"<?= esc(action_button_class('neutral')) ?>\">"$'\n'"                    <?= ui_icon('layers', 'h-3.5 w-3.5') ?>"$'\n'"                    <?= esc(lang('${MODULE}.field_${REORDER_FIELD}') ?? lang('App.reorder')) ?>"$'\n'"                </a>"
+    TOOLBAR_REORDER_BUTTON=$(cat <<EOF
+    <a href="<?= route_to('${REORDER_ROUTE_NAME}') ?>" class="<?= esc(action_button_class('neutral')) ?>">
+        <?= ui_icon('layers', 'h-3.5 w-3.5') ?>
+        <?= esc(lang('App.reorder')) ?>
+    </a>
+EOF
+)
+    REORDER_UPDATE_PAYLOAD=$(cat <<EOF
+    public function payload(): array
+    {
+        \$payload = parent::payload();
+        unset(\$payload['${REORDER_FIELD}']);
+
+        return \$payload;
+    }
+EOF
+)
+fi
+
+if [[ -n "$REORDER_SHOW_BUTTON" ]]; then
+    SHOW_ACTION_BUTTONS+="$REORDER_SHOW_BUTTON"
+fi
 
 # ─── Cross-module route collision detection ────────────────────────────────────
 # Catches the realistic mistake of two modules registering the same route name
@@ -858,6 +921,9 @@ PLANNED_FILES=(
     "tests/feature/${RESOURCE}FlowTest.php"
     "tests/unit/Services/${SERVICE_CLASS}Test.php"
 )
+if [[ "$HAS_REORDER" == true ]]; then
+    PLANNED_FILES+=("app/Views/${VIEW_PATH}/reorder.php")
+fi
 
 COLLISION_REPORT=$(python3 - "${PLANNED_FILES[@]}" <<'PYEOF'
 import os, sys
@@ -1077,6 +1143,7 @@ namespace App\\Modules\\${MODULE}\\Requests;
 
 class ${UPDATE_REQUEST} extends ${STORE_REQUEST}
 {
+${REORDER_UPDATE_PAYLOAD}
 }"
 
 # ── Controller ─────────────────────────────────────────────────────────────────
@@ -1202,6 +1269,7 @@ class ${CONTROLLER_CLASS} extends BaseWebController
 
         return redirect()->to(route_to('${ROUTE_NAME}'))->with('success', lang('${MODULE}.${LANG_PREFIX}_delete_success'));
     }
+${REORDER_CONTROLLER_ACTIONS}
 ${CONTROLLER_ACTIONS}
 }"
 
@@ -1233,6 +1301,7 @@ use CodeIgniter\Router\RouteCollection;
     \$routes->get('${ROUTE_SEGMENT}/(:segment)/edit', '${NS}::edit/\$1', ['as' => '${ROUTE_NAME}.edit']);
     \$routes->post('${ROUTE_SEGMENT}/(:segment)', '${NS}::update/\$1', ['as' => '${ROUTE_NAME}.update']);
     \$routes->post('${ROUTE_SEGMENT}/(:segment)/delete', '${NS}::delete/\$1', ['as' => '${ROUTE_NAME}.delete']);
+${REORDER_ROUTE_BLOCK}
 ${ROUTE_APPEND_BLOCK}
 });" > "$ROUTES_FILE"
         echo -e "  ${GREEN}✓ Created:           ${ROUTES_FILE}${NC}"
@@ -1242,10 +1311,10 @@ else
     if [[ "$DRY_RUN" == true ]]; then
         echo -e "  ${YELLOW}[dry-run] Would append route block to: ${ROUTES_FILE}${NC}"
     else
-        if python3 - "$ROUTES_FILE" "$ROUTE_SEGMENT" "$NS" "$ROUTE_NAME" "$RESOURCE" "$ROUTE_APPEND_BLOCK" <<'PYEOF'
+        if python3 - "$ROUTES_FILE" "$ROUTE_SEGMENT" "$NS" "$ROUTE_NAME" "$RESOURCE" "$ROUTE_APPEND_BLOCK" "$REORDER_ROUTE_BLOCK" <<'PYEOF'
 import sys, re
 
-routes_file, seg, ns, name, resource, extra_routes = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6]
+routes_file, seg, ns, name, resource, extra_routes, reorder_routes = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7]
 
 with open(routes_file) as f:
     content = f.read()
@@ -1269,6 +1338,9 @@ block = (
 
 if extra_routes:
     block += extra_routes
+
+if reorder_routes:
+    block += reorder_routes
 
 new_content = re.sub(r'(\n\}\);)', '\n' + block + r'\1', content, count=1)
 
@@ -1492,7 +1564,12 @@ write_heredoc "app/Views/${VIEW_PATH}/index.php" << 'VIEW_EOF_MARKER'
     <div class="mt-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700" x-show="error" x-text="errorMessage"></div>
 
     <template x-if="!loading && !error && rows.length === 0">
-        <p class="mt-6 text-sm text-gray-500"><?= lang('VIEW_MODULE.VIEW_LANG_PREFIX_no_results') ?></p>
+        <?= view('components/display/empty_state', [
+            'title' => 'App.no_results',
+            'description' => 'App.no_results_desc',
+            'actionUrl' => route_to('VIEW_ROUTE_NAME.create'),
+            'actionLabel' => 'App.create',
+        ]) ?>
     </template>
     <template x-if="!loading && !error && rows.length > 0">
         <div class="<?= esc(table_wrapper_class()) ?>">
@@ -1651,6 +1728,26 @@ substitute_placeholders "app/Views/${VIEW_PATH}/edit.php" \
     "VIEW_LANG_PREFIX_"  "${LANG_PREFIX}_" \
     "VIEW_EDIT_FIELDS"   "${VIEW_EDIT_FIELDS}"
 
+if [[ "$HAS_REORDER" == true ]]; then
+    write_heredoc "app/Views/${VIEW_PATH}/reorder.php" << 'VIEW_EOF_MARKER'
+<div class="mb-4">
+    <a href="<?= route_to('VIEW_ROUTE_NAME') ?>" class="text-sm text-brand-600 hover:text-brand-700">&larr; <?= esc(lang('App.back')) ?></a>
+</div>
+
+<?= view('components/display/reorder', [
+    'items' => $items ?? [],
+    'saveUrl' => route_to('VIEW_ROUTE_NAME.save_order'),
+    'displayKey' => 'VIEW_REORDER_DISPLAY_KEY',
+    'backUrl' => route_to('VIEW_ROUTE_NAME'),
+    'title' => $title ?? lang('App.reorder'),
+]) ?>
+VIEW_EOF_MARKER
+
+    substitute_placeholders "app/Views/${VIEW_PATH}/reorder.php" \
+        "VIEW_ROUTE_NAME"          "${ROUTE_NAME}" \
+        "VIEW_REORDER_DISPLAY_KEY" "${REORDER_DISPLAY_KEY}"
+fi
+
 write_heredoc "app/Views/${VIEW_PATH}/partials/filters.php" << 'VIEW_EOF_MARKER'
 <?php /** @var array $limitOptions */ ?>
 
@@ -1670,6 +1767,7 @@ substitute_placeholders "app/Views/${VIEW_PATH}/partials/filters.php" \
     "VIEW_LANG_PREFIX_"  "${LANG_PREFIX}_"
 
 write_heredoc "app/Views/${VIEW_PATH}/partials/toolbar_actions.php" << 'VIEW_EOF_MARKER'
+VIEW_TOOLBAR_REORDER_BUTTON
 <a href="<?= route_to('VIEW_ROUTE_NAME.create') ?>" class="<?= esc(action_button_class('primary')) ?>">
     <?= ui_icon('plus', 'h-3.5 w-3.5') ?>
     <?= lang('VIEW_MODULE.VIEW_LANG_PREFIX_new') ?>
@@ -1679,7 +1777,8 @@ VIEW_EOF_MARKER
 substitute_placeholders "app/Views/${VIEW_PATH}/partials/toolbar_actions.php" \
     "VIEW_ROUTE_NAME"    "${ROUTE_NAME}" \
     "VIEW_MODULE"        "${MODULE}" \
-    "VIEW_LANG_PREFIX_"  "${LANG_PREFIX}_"
+    "VIEW_LANG_PREFIX_"  "${LANG_PREFIX}_" \
+    "VIEW_TOOLBAR_REORDER_BUTTON" "${TOOLBAR_REORDER_BUTTON}"
 
 # ── Test stubs ─────────────────────────────────────────────────────────────────
 
@@ -1901,6 +2000,9 @@ if [[ "$DRY_RUN" != true ]]; then
         do
             [[ -f "$f" ]] && GENERATED_PHP_FILES+=("$f")
         done
+        if [[ "$HAS_REORDER" == true ]]; then
+            [[ -f "app/Views/${VIEW_PATH}/reorder.php" ]] && GENERATED_PHP_FILES+=("app/Views/${VIEW_PATH}/reorder.php")
+        fi
 
         if [[ ${#GENERATED_PHP_FILES[@]} -gt 0 ]]; then
             if vendor/bin/php-cs-fixer fix "${GENERATED_PHP_FILES[@]}" --quiet >/dev/null 2>&1; then
@@ -1937,6 +2039,9 @@ if [[ "$DRY_RUN" != true ]]; then
         "tests/feature/${RESOURCE}FlowTest.php"
         "tests/unit/Services/${SERVICE_CLASS}Test.php"
     )
+    if [[ "$HAS_REORDER" == true ]]; then
+        EXPECTED_FILES+=("app/Views/${VIEW_PATH}/reorder.php")
+    fi
 
     for f in "${EXPECTED_FILES[@]}"; do
         if [[ ! -f "$f" ]]; then

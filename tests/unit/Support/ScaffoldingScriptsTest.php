@@ -226,6 +226,32 @@ class ScaffoldingScriptsTest extends CIUnitTestCase
         self::runScript('bin/remove-module.sh Release Publishing');
     }
 
+    public function testMakeModuleWithOrderFieldScaffoldsReorderAndEmptyState(): void
+    {
+        self::runScript('bin/make-module.sh Article Editorial /editorial/articles "title:string:required,is_active:boolean,sort_order:int:required"');
+
+        $index = (string) file_get_contents(self::$sandbox . '/app/Views/editorial/articles/index.php');
+        $create = (string) file_get_contents(self::$sandbox . '/app/Views/editorial/articles/create.php');
+        $edit = (string) file_get_contents(self::$sandbox . '/app/Views/editorial/articles/edit.php');
+        $toolbar = (string) file_get_contents(self::$sandbox . '/app/Views/editorial/articles/partials/toolbar_actions.php');
+        $reorder = (string) file_get_contents(self::$sandbox . '/app/Views/editorial/articles/reorder.php');
+        $controller = (string) file_get_contents(self::$sandbox . '/app/Modules/Editorial/Controllers/ArticleController.php');
+        $routes = (string) file_get_contents(self::$sandbox . '/app/Modules/Editorial/Config/Routes.php');
+
+        $this->assertStringContainsString("components/display/empty_state", $index);
+        $this->assertStringNotContainsString('sort_order', $create);
+        $this->assertStringNotContainsString('sort_order', $edit);
+        $this->assertStringContainsString("route_to('admin.editorial.articles.reorder')", $toolbar);
+        $this->assertStringContainsString("components/display/reorder", $reorder);
+        $this->assertStringContainsString("public function reorder(): string|RedirectResponse", $controller);
+        $this->assertStringContainsString("public function saveOrder(): ResponseInterface", $controller);
+        $this->assertStringContainsString("['sort_order' => \$value]", $controller);
+        $this->assertStringContainsString("admin.editorial.articles.reorder", $routes);
+        $this->assertStringContainsString("admin.editorial.articles.save_order", $routes);
+
+        self::runScript('bin/remove-module.sh Article Editorial');
+    }
+
     public function testRegisterSidebarIsIdempotentAndUsesModuleFallbackLabels(): void
     {
         $sidebarFile = self::$sandbox . '/app/Views/layouts/partials/sidebar.php';

@@ -5,6 +5,8 @@
  * @var mixed|null $value
  * @var bool|null $required
  * @var string|null $help
+ * @var string|null $on_label
+ * @var string|null $off_label
  */
 
 declare(strict_types=1);
@@ -14,6 +16,8 @@ helper('form');
 $required = $required ?? false;
 $value = old($name, $value ?? false);
 $help = $help ?? '';
+$on_label = $on_label ?? 'App.yes';
+$off_label = $off_label ?? 'App.no';
 $checked = filter_var($value, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE);
 
 if ($checked === null) {
@@ -45,7 +49,7 @@ if ($checked === null) {
             <span class="inline-block h-5 w-5 translate-x-0.5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5"></span>
         </span>
         <span class="text-sm font-medium text-gray-700">
-            <?= esc($checked ? 'Enabled' : 'Disabled') ?>
+            <?= esc($checked ? (string) lang($on_label) : (string) lang($off_label)) ?>
         </span>
     </label>
 

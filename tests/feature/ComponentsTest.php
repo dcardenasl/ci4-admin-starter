@@ -102,6 +102,8 @@ final class ComponentsTest extends CIUnitTestCase
             'label' => 'App.is_visible',
             'value' => true,
             'help' => 'App.visible_help',
+            'on_label' => 'App.yes',
+            'off_label' => 'App.no',
         ], ['saveData' => false]);
 
         $this->assertStringContainsString('type="checkbox"', $html);
@@ -110,6 +112,34 @@ final class ComponentsTest extends CIUnitTestCase
         $this->assertStringContainsString('checked', $html);
         $this->assertStringContainsString('type="hidden"', $html);
         $this->assertStringContainsString(lang('App.visible_help'), $html);
+        $this->assertStringContainsString(lang('App.yes'), $html);
+        $this->assertStringNotContainsString('Enabled', $html);
+    }
+
+    public function testDisplayComponentsCompile(): void
+    {
+        $empty = view('components/display/empty_state', [
+            'title' => 'App.no_results',
+            'description' => 'App.no_results_desc',
+            'actionUrl' => '/dummy/create',
+            'actionLabel' => 'App.create',
+        ], ['saveData' => false]);
+
+        $reorder = view('components/display/reorder', [
+            'items' => [
+                ['id' => 1, 'name' => 'Alpha'],
+                ['id' => 2, 'name' => 'Beta'],
+            ],
+            'saveUrl' => '/dummy/reorder',
+            'displayKey' => 'name',
+            'backUrl' => '/dummy',
+        ], ['saveData' => false]);
+
+        $this->assertStringContainsString(lang('App.no_results'), $empty);
+        $this->assertStringContainsString(lang('App.create'), $empty);
+        $this->assertStringContainsString('Alpha', $reorder);
+        $this->assertStringContainsString('Beta', $reorder);
+        $this->assertStringContainsString('saveOrder', $reorder);
     }
 
 

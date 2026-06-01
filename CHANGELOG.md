@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Reorder field support in `make-module.sh`** — the scaffolding engine now detects `order` or `sort_order` integer fields and automatically excludes them from create/edit forms, scaffolds a dedicated reorder view with drag-and-drop UI, and wires controller actions (`reorder()`, `saveOrder()`).
+- **i18n parameters for boolean component** — `boolean` component now accepts optional `on_label` and `off_label` parameters for localized true/false display text (e.g. `'App.yes'`, `'App.no'`), replacing hardcoded English "Enabled" / "Disabled" labels.
+
 ## [2.8.0] — 2026-05-31
 
 ### Added
