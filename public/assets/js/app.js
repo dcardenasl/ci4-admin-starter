@@ -1575,23 +1575,357 @@ document.addEventListener('alpine:init', () => {
                 },
             });
         },
+    }));
 
-        clearFile() {
-            this.fileId = '';
-            this.fileInfo = {
-                original_name: '',
-                mime_type: '',
-                category: '',
-                is_image: false,
-                url: '',
-                human_size: '',
-            };
+     
+    Alpine.data('adminMetadataField', (config = {}) => ({
+        rows: Array.isArray(config.rows) && config.rows.length > 0
+            ? config.rows
+            : [{ key: '', value: '' }],
+        json: '{}',
+        duplicates: [],
+
+        init() {
+            this.sync();
+        },
+
+        addRow() {
+            this.rows.push({ key: '', value: '' });
+            this.sync();
+        },
+
+        removeRow(index) {
+            this.rows.splice(index, 1);
+            if (this.rows.length === 0) {
+                this.addRow();
+                return;
+            }
+            this.sync();
+        },
+
+         
+         
+        importJson() {
+            // eslint-disable-next-line no-undef
+            const raw = prompt('Paste JSON object here:');
+            if (!raw) return;
+
+            try {
+                const parsed = JSON.parse(raw);
+                if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+                    // eslint-disable-next-line no-undef
+                    alert('Invalid JSON: Must be an object.');
+                    return;
+                }
+
+                const newRows = Object.entries(parsed).map(([key, value]) => ({
+                    key,
+                    value: typeof value === 'object' ? JSON.stringify(value) : String(value)
+                }));
+
+                if (newRows.length > 0) {
+                    this.rows = newRows;
+                    this.sync();
+                }
+            } catch (e) {
+                // eslint-disable-next-line no-undef
+                alert('Invalid JSON syntax: ' + e.message);
+            }
+        },
+
+        sync() {
+            const metadata = {};
+            const keys = [];
+            this.duplicates = [];
+
+            this.rows.forEach((row, index) => {
+                const key = String(row.key || '').trim();
+                if (key === '') return;
+
+                if (keys.includes(key)) {
+                    this.duplicates.push(index);
+                }
+                keys.push(key);
+
+                let val = String(row.value || '').trim();
+                if (val === 'true') val = true;
+                else if (val === 'false') val = false;
+                else if (val === 'null') val = null;
+                else if (!isNaN(val) && val !== '') val = Number(val);
+
+                metadata[key] = val;
+            });
+
+            this.json = JSON.stringify(metadata, null, 2);
         },
     }));
+
+    const normalizePickerFile = (file) => {
+        if (!file) return {};
+        return {
+            id: file.id ?? '',
+            original_name: file.original_name ?? file.name ?? '',
+            mime_type: file.mime_type ?? '',
+            category: file.category ?? '',
+            is_image: file.is_image ?? (file.category === 'image'),
+            url: file.url ?? '',
+            human_size: file.human_size ?? '',
+            variants: file.variants ?? {}
+        };
+    };
+
+    Alpine.data('adminMediaGallery', (config = {}) => ({
+        rows: Array.isArray(config.rows) ? config.rows : [],
+
+        init() {
+            if (this.rows.length === 0) {
+                this.addRow('cover');
+            }
+
+            this.rows.forEach((row) => {
+                if (!isObject(row.file)) {
+                    row.file = {};
+                }
+                if (row.hub_file_id) {
+                    this.loadFileInfo(row);
+                }
+            });
+        },
+
+        addRow(type = 'gallery') {
+            this.rows.push({
+                type,
+                hub_file_id: '',
+                external_url: '',
+                alt_text: '',
+                caption: '',
+                sort_order: this.rows.length,
+                is_active: true,
+                file: {},
+            });
+        },
+
+        removeRow(index) {
+            this.rows.splice(index, 1);
+        },
+
+        chooseFile(row) {
+            Alpine.store('filePicker').show({
+                filterType: 'image',
+                accept: 'image/*',
+                multi: false,
+                onSelect: (file) => {
+                    const selected = normalizePickerFile(file);
+                    row.hub_file_id = String(selected.id ?? '');
+                    row.external_url = '';
+                    row.file = {
+                        original_name: String(selected.original_name || ''),
+                        mime_type: String(selected.mime_type || ''),
+                        category: String(selected.category || ''),
+                        is_image: Boolean(selected.is_image),
+                        url: String(selected.url || ''),
+                        human_size: String(selected.human_size || ''),
+                        variants: selected.variants || {},
+                    };
+                },
+            });
+        },
+
+        clearFile(row) {
+            row.hub_file_id = '';
+            row.file = {};
+        },
+
+        fileName(row) {
+            return String(row.file?.original_name || (row.hub_file_id ? `#${row.hub_file_id}` : ''));
+        },
+
+        async loadFileInfo(row) {
+            const panel = document.getElementById('file-picker-panel');
+            const baseUrl = panel?.dataset?.dataUrl
+                ? String(panel.dataset.dataUrl).replace('/picker-data', '')
+                : '/files';
+
+            try {
+                const resp = await fetch(`${baseUrl}/${encodeURIComponent(String(row.hub_file_id))}/picker-info`, {
+                    credentials: 'include',
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+                if (!resp.ok) {
+                    throw new Error(`HTTP ${resp.status}`);
+                }
+
+                const payload = await resp.json();
+                if (payload?.ok && isObject(payload?.data)) {
+                    const d = normalizePickerFile(payload.data);
+                    row.file = {
+                        original_name: String(d.original_name || ''),
+                        mime_type: String(d.mime_type || ''),
+                        category: String(d.category || ''),
+                        is_image: Boolean(d.is_image),
+                        url: String(d.url || ''),
+                        human_size: String(d.human_size || ''),
+                        variants: d.variants || {},
+                    };
+                }
+            } catch (err) {
+                devError('[adminMediaGallery] loadFileInfo error:', err);
+            }
+        },
+    }));
+
+    // Backward compatibility mappings for historic templates
+    Alpine.data('catalogMetadataField', (config = {}) => Alpine.data('adminMetadataField')(config));
+    Alpine.data('catalogItemMedia', (config = {}) => Alpine.data('adminMediaGallery')(config));
 });
+
+const slugify = (value) => String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .replace(/-{2,}/g, '-')
+    .slice(0, 255);
+
+const bootSlugFields = () => {
+    document.querySelectorAll('input[data-slug-source]').forEach((slugInput) => {
+        if (!(slugInput instanceof HTMLInputElement)) {
+            return;
+        }
+
+        const sourceSelector = slugInput.dataset.slugSource || '';
+        const sourceInput = sourceSelector === '' ? null : document.querySelector(sourceSelector);
+        const regenerateButton = slugInput
+            .closest('[data-slug-field]')
+            ?.querySelector('[data-slug-regenerate]');
+        const checkUrl = slugInput.dataset.slugCheckUrl || '';
+        const currentId = slugInput.dataset.slugCurrentId || '';
+        const statusIcons = slugInput
+            .closest('[data-slug-field]')
+            ?.querySelectorAll('[data-slug-status]') || [];
+
+        if (!(sourceInput instanceof HTMLInputElement)) {
+            return;
+        }
+
+        let manual = slugInput.value.trim() !== '' && slugInput.value.trim() !== slugify(sourceInput.value);
+        let availabilityTimer = 0;
+        let availabilityRequest = null;
+
+        const showStatus = (status) => {
+            statusIcons.forEach((icon) => {
+                if (!(icon instanceof HTMLElement)) {
+                    return;
+                }
+
+                const active = icon.dataset.slugStatus === status;
+                icon.classList.toggle('hidden', !active);
+                icon.classList.toggle('flex', active);
+            });
+        };
+
+        const checkAvailability = () => {
+            window.clearTimeout(availabilityTimer);
+
+            if (availabilityRequest !== null) {
+                availabilityRequest.abort();
+                availabilityRequest = null;
+            }
+
+            const slug = slugInput.value.trim();
+            if (checkUrl === '' || slug.length < 2 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+                showStatus('');
+                slugInput.setCustomValidity('');
+                return;
+            }
+
+            availabilityTimer = window.setTimeout(() => {
+                const url = new URL(checkUrl, window.location.origin);
+                url.searchParams.set('slug', slug);
+                if (currentId !== '') {
+                    url.searchParams.set('current_id', currentId);
+                }
+
+                // eslint-disable-next-line no-undef
+                const controller = new AbortController();
+                availabilityRequest = controller;
+                showStatus('checking');
+
+                fetch(url, {
+                    headers: { Accept: 'application/json' },
+                    credentials: 'same-origin',
+                    signal: controller.signal
+                })
+                    .then((response) => response.ok ? response.json() : Promise.reject(new Error(String(response.status))))
+                    .then((payload) => {
+                        const available = payload && payload.available === true;
+                        showStatus(available ? 'available' : 'unavailable');
+
+                        if (available) {
+                            slugInput.setCustomValidity('');
+                            return;
+                        }
+
+                        const unavailableIcon = Array.from(statusIcons).find((icon) => (
+                            icon instanceof HTMLElement && icon.dataset.slugStatus === 'unavailable'
+                        ));
+                        slugInput.setCustomValidity(unavailableIcon instanceof HTMLElement ? unavailableIcon.title : 'Slug unavailable');
+                    })
+                    .catch((error) => {
+                        if (error && error.name === 'AbortError') {
+                            return;
+                        }
+
+                        showStatus('');
+                        slugInput.setCustomValidity('');
+                        devError('Slug availability check failed', error);
+                    })
+                    .finally(() => {
+                        if (availabilityRequest === controller) {
+                            availabilityRequest = null;
+                        }
+                    });
+            }, 350);
+        };
+
+        const syncFromSource = () => {
+            if (manual) {
+                return;
+            }
+
+            slugInput.value = slugify(sourceInput.value);
+            checkAvailability();
+        };
+
+        sourceInput.addEventListener('input', syncFromSource);
+        slugInput.addEventListener('input', () => {
+            const normalized = slugify(slugInput.value);
+            manual = normalized !== '' && normalized !== slugify(sourceInput.value);
+            slugInput.value = normalized;
+            checkAvailability();
+        });
+
+        // eslint-disable-next-line no-undef
+        if (regenerateButton instanceof HTMLButtonElement) {
+            regenerateButton.addEventListener('click', () => {
+                manual = false;
+                syncFromSource();
+                slugInput.focus();
+            });
+        }
+
+        syncFromSource();
+        checkAvailability();
+    });
+};
 
 document.addEventListener('DOMContentLoaded', () => {
     bootLucideIcons();
+    bootSlugFields();
     bootSessionExpiryWatcher();
 });
 

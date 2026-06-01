@@ -226,6 +226,52 @@ class ScaffoldingScriptsTest extends CIUnitTestCase
         self::runScript('bin/remove-module.sh Release Publishing');
     }
 
+    public function testRegisterSidebarIsIdempotentAndUsesModuleFallbackLabels(): void
+    {
+        $sidebarFile = self::$sandbox . '/app/Views/layouts/partials/sidebar.php';
+        $sidebarBackup = self::$sandbox . '/app/Views/layouts/partials/sidebar.php.bak';
+        $templateFile = self::$sandbox . '/template.json';
+        $moduleDir = self::$sandbox . '/app/Modules/Faq';
+
+        @copy($sidebarFile, $sidebarBackup);
+        @mkdir($moduleDir . '/Language/en', 0o755, true);
+        @mkdir($moduleDir . '/Language/es', 0o755, true);
+
+        file_put_contents(
+            $moduleDir . '/Language/en/Faq.php',
+            "<?php\n\ndeclare(strict_types=1);\n\nreturn [\n    'title' => 'Faq',\n];\n"
+        );
+        file_put_contents(
+            $moduleDir . '/Language/es/Faq.php',
+            "<?php\n\ndeclare(strict_types=1);\n\nreturn [\n    'title' => 'Faq',\n];\n"
+        );
+        file_put_contents($templateFile, (string) file_get_contents(self::$repoRoot . '/tests/fixtures/faq-domain-template.json'));
+
+        try {
+            self::runScript('bin/register-sidebar.sh template.json');
+            $afterFirst = (string) file_get_contents($sidebarFile);
+
+            self::runScript('bin/register-sidebar.sh template.json');
+            $afterSecond = (string) file_get_contents($sidebarFile);
+
+            $this->assertSame($afterFirst, $afterSecond, 'Sidebar registration must be idempotent');
+            $this->assertSame(1, substr_count($afterSecond, '<!-- START Faq -->'));
+            $this->assertSame(1, substr_count($afterSecond, '<!-- END Faq -->'));
+
+            $langEn = (string) file_get_contents($moduleDir . '/Language/en/Faq.php');
+            $langEs = (string) file_get_contents($moduleDir . '/Language/es/Faq.php');
+
+            $this->assertStringContainsString("'sidebar_label' => 'Faq'", $langEn);
+            $this->assertStringContainsString("'sidebar_label' => 'Faq'", $langEs);
+            $this->assertStringNotContainsString('CI4 FAQ', $langEs);
+        } finally {
+            @copy($sidebarBackup, $sidebarFile);
+            @unlink($sidebarBackup);
+            self::rrmdir($moduleDir);
+            @unlink($templateFile);
+        }
+    }
+
     public function testMakeModuleRejectsInvalidCustomActionFlag(): void
     {
         $cwd = getcwd();

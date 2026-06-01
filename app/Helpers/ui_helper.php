@@ -287,11 +287,9 @@ if (! function_exists('ui_icon')) {
         ];
 
         if (! isset($icons[$name])) {
-            if (ENVIRONMENT === 'development') {
-                throw new \InvalidArgumentException("ui_icon(): unknown icon '{$name}'. Add it to the map or fix the typo.");
-            }
-
-            $icon = $icons['search'];
+            log_message('warning', "ui_icon(): unknown icon '{$name}'. Add it to the icon map in ui_helper.php.");
+            // Pass the name as-is; Lucide silently ignores unrecognised icon IDs.
+            $icon = $name;
         } else {
             $icon = $icons[$name];
         }

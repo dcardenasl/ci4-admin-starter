@@ -61,10 +61,11 @@ class UniversalController extends BaseWebController
             $selectFields[] = 'id';
         }
 
+        $apiPath = $entity['api_path'] ?? '/' . $resource;
         return $this->tableDataResponse(
             [],
             $selectFields,
-            fn (array $params) => $this->domainClient->get('/' . $resource, $params),
+            fn (array $params) => $this->domainClient->get($apiPath, $params),
         );
     }
 
@@ -105,7 +106,8 @@ class UniversalController extends BaseWebController
             }
         }
 
-        $response = $this->safeApiCall(fn () => $this->domainClient->post('/' . $resource, $payload));
+        $apiPath = $schemaInfo['entity']['api_path'] ?? '/' . $resource;
+        $response = $this->safeApiCall(fn () => $this->domainClient->post($apiPath, $payload));
 
         if (!$response['ok']) {
             return $this->failApi($response, 'Create operation failed.');
@@ -121,7 +123,8 @@ class UniversalController extends BaseWebController
             return redirect()->to('/admin/dashboard')->with('error', 'Resource definition not found.');
         }
 
-        $response = $this->safeApiCall(fn () => $this->domainClient->get('/' . $resource . '/' . $id));
+        $apiPath = $schemaInfo['entity']['api_path'] ?? '/' . $resource;
+        $response = $this->safeApiCall(fn () => $this->domainClient->get($apiPath . '/' . $id));
         if (!$response['ok']) {
             return redirect()->to(route_to('admin.universal.index', $resource))->with('error', 'Record not found.');
         }
@@ -156,7 +159,8 @@ class UniversalController extends BaseWebController
             }
         }
 
-        $response = $this->safeApiCall(fn () => $this->domainClient->put('/' . $resource . '/' . $id, $payload));
+        $apiPath = $schemaInfo['entity']['api_path'] ?? '/' . $resource;
+        $response = $this->safeApiCall(fn () => $this->domainClient->put($apiPath . '/' . $id, $payload));
 
         if (!$response['ok']) {
             return $this->failApi($response, 'Update operation failed.');
@@ -167,7 +171,13 @@ class UniversalController extends BaseWebController
 
     public function delete(string $resource, string $id): RedirectResponse
     {
-        $response = $this->safeApiCall(fn () => $this->domainClient->delete('/' . $resource . '/' . $id));
+        $schemaInfo = $this->getEntitySchema($resource);
+        if ($schemaInfo === null) {
+            return redirect()->back()->with('error', 'Resource definition not found.');
+        }
+
+        $apiPath = $schemaInfo['entity']['api_path'] ?? '/' . $resource;
+        $response = $this->safeApiCall(fn () => $this->domainClient->delete($apiPath . '/' . $id));
 
         if (!$response['ok']) {
             return $this->failApi($response, 'Delete operation failed.', route_to('admin.universal.index', $resource), false);
@@ -183,7 +193,8 @@ class UniversalController extends BaseWebController
      */
     private function getEntitySchema(string $resource): ?array
     {
-        $templateFiles = glob('/Users/davidcardenas/Developer/PHP/ci4-platform/templates/*/template.json');
+        $basePath = env('templates.basePath', ROOTPATH . '../templates');
+        $templateFiles = glob(rtrim($basePath, '/') . '/*/template.json');
         if (! is_array($templateFiles)) {
             return null;
         }
@@ -201,6 +212,17 @@ class UniversalController extends BaseWebController
 
             $entities = $json['entities'] ?? [];
             foreach ($entities as $entity) {
+                // Check explicit resource field first (most reliable)
+                $explicitResource = $entity['resource'] ?? null;
+                if ($explicitResource !== null && strtolower($explicitResource) === strtolower($resource)) {
+                    return [
+                        'template' => $json,
+                        'entity' => $entity,
+                        'resource_path' => '/' . strtolower($resource)
+                    ];
+                }
+
+                // Fall back to name-based heuristics for backward compatibility
                 $name = $entity['name'] ?? '';
                 // Pluralize snake-cased entity name to map typical resource paths
                 $snakePlural = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $name)) . 's';

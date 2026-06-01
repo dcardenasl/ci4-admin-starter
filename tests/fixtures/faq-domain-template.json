@@ -1,0 +1,93 @@
+{
+  "name": "CI4 FAQ",
+  "slug": "ci4-faq",
+  "repo": "dcardenasl/ci4-faq-domain",
+  "type": "platform-template",
+  "version": "1.0.0",
+  "description": "Full-stack FAQ template for ci4-platform with hub, admin, and domain repos.",
+  "components": [
+    {
+      "role": "hub",
+      "path": "ci4-faq-hub",
+      "repo_name": "ci4-faq-hub"
+    },
+    {
+      "role": "domain",
+      "path": "ci4-faq-domain",
+      "repo_name": "ci4-faq-domain"
+    }
+  ],
+  "defaults": {
+    "ports": {
+      "hub": 8080,
+      "admin": 8082,
+      "domain": 8090
+    },
+    "databases": {
+      "hub": "ci4_faq_hub",
+      "hub_test": "ci4_faq_hub_test",
+      "domain": "ci4_faq_domain",
+      "domain_test": "ci4_faq_domain_test"
+    },
+    "domain_app_code": "ci4-faq-domain"
+  },
+  "entities": [
+    {
+      "name": "FaqCategory",
+      "resource": "faq-categories",
+      "api_path": "/support/faq-categories",
+      "title": "FAQ Categories",
+      "fields": [
+        { "name": "name", "type": "string", "title": "Name", "required": true },
+        { "name": "slug", "type": "string", "title": "Slug", "required": true },
+        { "name": "is_active", "type": "boolean", "title": "Active", "default": true }
+      ]
+    },
+    {
+      "name": "Faq",
+      "resource": "faqs",
+      "api_path": "/support/faqs",
+      "title": "FAQs",
+      "fields": [
+        { "name": "question", "type": "string", "title": "Question", "required": true },
+        { "name": "answer", "type": "text", "title": "Answer", "required": true },
+        { "name": "category_id", "type": "integer", "title": "Category ID", "required": true },
+        { "name": "is_published", "type": "boolean", "title": "Published", "default": false },
+        { "name": "sort_order", "type": "integer", "title": "Sort Order", "required": true }
+      ]
+    }
+  ],
+  "permissions": [
+    { "code": "faq.read",          "roles": ["user", "admin", "superadmin"] },
+    { "code": "faq.write",         "roles": ["admin", "superadmin"] },
+    { "code": "faq.delete",        "roles": ["superadmin"] },
+    { "code": "faqCategory.read",  "roles": ["user", "admin", "superadmin"] },
+    { "code": "faqCategory.write", "roles": ["admin", "superadmin"] },
+    { "code": "faqCategory.delete","roles": ["superadmin"] }
+  ],
+  "admin_modules": [
+    {
+      "resource": "FaqCategory",
+      "module": "Faq",
+      "api_path": "/support/faq-categories",
+      "service": "domain",
+      "fields": "name:string:required,slug:string:required,is_active:boolean"
+    },
+    {
+      "resource": "Faq",
+      "module": "Faq",
+      "api_path": "/support/faqs",
+      "service": "domain",
+      "fields": "question:string:required,answer:text:required,category_id:relation:required:faqCategories,is_published:boolean,sort_order:int:required"
+    }
+  ],
+  "admin_sidebar": [
+    {
+      "module": "Faq",
+      "label": "Faq.sidebar_label",
+      "icon": "help-circle",
+      "permission": "faq.read",
+      "items": ["FaqCategory", "Faq"]
+    }
+  ]
+}

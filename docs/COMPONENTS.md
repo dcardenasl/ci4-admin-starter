@@ -1,10 +1,68 @@
 # UI Component Library
 
-This document describes the reusable UI components available in the CI4 Admin Starter template. All components are built with Tailwind CSS utility classes and Alpine.js for interactivity.
+This document describes the reusable view components available in the CI4 Admin Starter template. Components provide a consistent, standardized approach to building admin forms, tables, and display layouts with Tailwind CSS and Alpine.js.
 
-> **Tip:** Global CSS component classes (`.btn-primary`, `.form-input`, etc.) are defined in `app/Views/layouts/partials/head.php`.
+> **Quick start:** See `app/Views/components/README.md` for detailed component contracts and usage examples.
 
 ---
+
+## Component Organization
+
+All reusable components are organized into three categories:
+
+### 1. Form Components (`app/Views/components/form/`)
+
+Standardized input fields with built-in validation feedback, help text, and accessibility features. Consumed by module scaffolding and manually integrated into create/edit forms.
+
+**Types:**
+- Basic inputs: `text`, `textarea`, `number`, `decimal`
+- Temporal: `date`, `datetime`
+- Selection: `select`, `radio`, `boolean`, `relation`
+- Files: `file`, `image`, `media_gallery`
+- Advanced: `tags`, `slug`, `metadata`
+
+**Contract:**
+All form components accept:
+- `$name` (string, required) — HTML field name
+- `$label` (string, required) — language key (e.g., `'Catalog.title'`)
+- `$value` (mixed, optional) — current value, merged with `old($name, $value)`
+- `$required` (bool, optional) — show asterisk and HTML `required` attribute
+- `$errors` (array, optional) — validation errors from session
+- `$help` (string, optional) — help text below the field
+- Type-specific: `$min`, `$max`, `$step`, `$rows`, `$options`, `$async`, `$api_endpoint`, etc.
+
+### 2. Table Components (`app/Views/components/table/`)
+
+Cell renderers and list utilities for consistent table presentation, filtering, sorting, and pagination.
+
+**Cell types:**
+- `text_cell` — plain text, truncated
+- `badge_cell` — colored status badge with dynamic styling
+- `boolean_cell` — checkmark or cross
+- `date_cell` — uniform date formatting
+- `image_cell` — thumbnail with fixed 1:1 aspect ratio
+- `number_cell` — right-aligned numeric display
+
+**Utilities:**
+- `toolbar` — filter toggles and action buttons
+- `filter_panel` — collapsible filter controls
+- `pagination` — page navigation with summary
+
+### 3. Display Components (`app/Views/components/display/`)
+
+Reusable display patterns for show views, empty states, modals, and interactions.
+
+**Types:**
+- `field_row` — key/value display for detail views
+- `empty_state` — elegant empty-table indicator
+- `confirm_modal` — global confirmation dialog
+- `reorder` — drag-and-drop list manager with async persistence
+
+---
+
+## Legacy Component Classes
+
+> **Note:** These Tailwind utility classes predate the component library. They remain for backward compatibility but should not be used in new code. Use the component system instead.
 
 ## Buttons
 
