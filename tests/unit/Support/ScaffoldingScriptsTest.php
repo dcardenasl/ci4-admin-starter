@@ -88,15 +88,57 @@ class ScaffoldingScriptsTest extends CIUnitTestCase
         $autoloadBefore = (string) file_get_contents(self::$sandbox . '/app/Config/Autoload.php');
         $servicesBefore = (string) file_get_contents(self::$sandbox . '/app/Config/Services.php');
 
+        $normalizedBefore = str_replace('\\\\', '\\', $autoloadBefore);
+        $this->assertStringContainsString("'App\\Modules\\Catalog'", $normalizedBefore);
+        $this->assertSame(1, substr_count($normalizedBefore, "'App\\Modules\\Catalog'"));
+
         self::runScript('bin/make-module.sh Widget Catalog /catalog/widgets');
         $autoloadAfter = (string) file_get_contents(self::$sandbox . '/app/Config/Autoload.php');
         $servicesAfter = (string) file_get_contents(self::$sandbox . '/app/Config/Services.php');
 
+        $normalizedAfter = str_replace('\\\\', '\\', $autoloadAfter);
+        $this->assertStringContainsString("'App\\Modules\\Catalog'", $normalizedAfter);
+        $this->assertSame(1, substr_count($normalizedAfter, "'App\\Modules\\Catalog'"));
         $this->assertSame($autoloadBefore, $autoloadAfter, 'Idempotent re-run modified Autoload.php');
         $this->assertSame($servicesBefore, $servicesAfter, 'Idempotent re-run modified Services.php');
 
         // Cleanup sandbox state for downstream tests.
         self::runScript('bin/remove-module.sh Widget Catalog');
+    }
+
+    public function testMakeModuleRegistersNewPsr4NamespaceAutomatically(): void
+    {
+        self::runScript('bin/make-module.sh Gizmo Tools /tools/gizmos');
+
+        $autoload = (string) file_get_contents(self::$sandbox . '/app/Config/Autoload.php');
+
+        $normalized = str_replace('\\\\', '\\', $autoload);
+        $this->assertStringContainsString("'App\\Modules\\Tools'", $normalized);
+        $this->assertSame(1, substr_count($normalized, "'App\\Modules\\Tools'"));
+
+        self::runScript('bin/remove-module.sh Gizmo Tools');
+    }
+
+    public function testMakeModuleRegistersSidebarEntriesFromTemplateJson(): void
+    {
+        $templateFile = self::$sandbox . '/template.json';
+        file_put_contents($templateFile, (string) file_get_contents(self::$repoRoot . '/tests/fixtures/faq-domain-template.json'));
+
+        self::runScript('bin/make-module.sh Faq Faq /faq/faqs', [
+            'CI4_TEMPLATE_JSON' => 'template.json',
+        ]);
+
+        $sidebar = (string) file_get_contents(self::$sandbox . '/app/Views/layouts/partials/sidebar.php');
+        $this->assertStringContainsString('<!-- START Faq -->', $sidebar);
+        $this->assertStringContainsString('<!-- [DYNAMIC_MODULES_ANCHOR] -->', $sidebar);
+        $this->assertStringContainsString("route_to('admin.faq.faq_categories')", $sidebar);
+        $this->assertStringContainsString("route_to('admin.faq.faqs')", $sidebar);
+
+        $langEn = (string) file_get_contents(self::$sandbox . '/app/Modules/Faq/Language/en/Faq.php');
+        $this->assertStringContainsString("'sidebar_label' => 'Faq'", $langEn);
+
+        self::runScript('bin/remove-module.sh Faq Faq');
+        @unlink($templateFile);
     }
 
     public function testGeneratedViewsContainNoVerbatimPlaceholders(): void
@@ -306,6 +348,12 @@ class ScaffoldingScriptsTest extends CIUnitTestCase
                                 'type' => 'datetime',
                                 'label' => 'Publish At',
                             ],
+                            [
+                                'name' => 'is_published',
+                                'type' => 'boolean',
+                                'label' => 'Published',
+                                'help' => 'Whether the guide is visible to readers.',
+                            ],
                         ],
                     ],
                 ],
@@ -313,7 +361,7 @@ class ScaffoldingScriptsTest extends CIUnitTestCase
         );
 
         self::runScript(
-            'bin/make-module.sh Guide Metadata /metadata/guides "title:string:required,summary:text,published_at:datetime"',
+            'bin/make-module.sh Guide Metadata /metadata/guides "title:string:required,summary:text,published_at:datetime,is_published:boolean"',
             ['CI4_TEMPLATE_JSON' => 'template-metadata.json']
         );
 
@@ -329,6 +377,8 @@ class ScaffoldingScriptsTest extends CIUnitTestCase
         $this->assertStringContainsString("'help' => 'Metadata.field_summary_help'", $create);
         $this->assertStringContainsString("'placeholder' => 'Metadata.field_published_at_placeholder'", $create);
         $this->assertStringContainsString("'help' => 'Metadata.field_published_at_help'", $create);
+        $this->assertStringContainsString("'on_label' => 'Metadata.field_is_published_on'", $create);
+        $this->assertStringContainsString("'off_label' => 'Metadata.field_is_published_off'", $create);
 
         $this->assertStringContainsString("'field_title' => 'Headline'", $langEn);
         $this->assertStringContainsString("'field_title_placeholder' => 'Enter headline'", $langEn);
@@ -337,6 +387,9 @@ class ScaffoldingScriptsTest extends CIUnitTestCase
         $this->assertStringContainsString("'field_summary_help' => 'Short summary for cards.'", $langEn);
         $this->assertStringContainsString("'field_published_at_placeholder' => 'Select Publish At'", $langEn);
         $this->assertStringContainsString("'field_published_at_help' => 'Select Publish At.'", $langEn);
+        $this->assertStringContainsString("'field_is_published' => 'Published'", $langEn);
+        $this->assertStringContainsString("'field_is_published_on' => 'Published'", $langEn);
+        $this->assertStringContainsString("'field_is_published_off' => 'Unpublished'", $langEn);
 
         $this->assertStringContainsString("'field_title' => 'Titular'", $langEs);
         $this->assertStringContainsString("'field_title_placeholder' => 'Ingresa titular'", $langEs);
@@ -345,6 +398,9 @@ class ScaffoldingScriptsTest extends CIUnitTestCase
         $this->assertStringContainsString("'field_summary_help' => 'Short summary for cards.'", $langEs);
         $this->assertStringContainsString("'field_published_at_placeholder' => 'Select Publish At'", $langEs);
         $this->assertStringContainsString("'field_published_at_help' => 'Select Publish At.'", $langEs);
+        $this->assertStringContainsString("'field_is_published' => 'Published'", $langEs);
+        $this->assertStringContainsString("'field_is_published_on' => 'Publicado'", $langEs);
+        $this->assertStringContainsString("'field_is_published_off' => 'No publicado'", $langEs);
 
         $this->assertStringContainsString("'field_title' => 'Gros titre'", $langFr);
         $this->assertStringContainsString("'field_title_placeholder' => 'Enter headline'", $langFr);
@@ -353,6 +409,8 @@ class ScaffoldingScriptsTest extends CIUnitTestCase
         $this->assertStringContainsString("'field_summary_help' => 'Short summary for cards.'", $langFr);
         $this->assertStringContainsString("'field_published_at_placeholder' => 'Select Publish At'", $langFr);
         $this->assertStringContainsString("'field_published_at_help' => 'Select Publish At.'", $langFr);
+        $this->assertStringContainsString("'field_is_published_on' => 'Published'", $langFr);
+        $this->assertStringContainsString("'field_is_published_off' => 'Unpublished'", $langFr);
 
         self::runScript('bin/remove-module.sh Guide Metadata');
         @unlink($templateFile);

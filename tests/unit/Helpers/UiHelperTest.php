@@ -64,4 +64,12 @@ final class UiHelperTest extends CIUnitTestCase
         $this->assertTrue(has_active_filters(['status' => 'inactive'], $defaults));
         $this->assertTrue(has_active_filters(['status' => ''], $defaults));
     }
+
+    public function testUiIconSupportsHelpCircleAlias(): void
+    {
+        $svg = ui_icon('help-circle');
+
+        $this->assertStringContainsString('data-lucide="circle-help"', $svg);
+        $this->assertStringContainsString('aria-hidden="true"', $svg);
+    }
 }
