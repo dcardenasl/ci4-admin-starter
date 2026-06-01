@@ -231,22 +231,21 @@ class ScaffoldingScriptsTest extends CIUnitTestCase
         $sidebarFile = self::$sandbox . '/app/Views/layouts/partials/sidebar.php';
         $sidebarBackup = self::$sandbox . '/app/Views/layouts/partials/sidebar.php.bak';
         $templateFile = self::$sandbox . '/template.json';
-        $moduleDir = self::$sandbox . '/app/Modules/Catalog';
+        $moduleDir = self::$sandbox . '/app/Modules/Faq';
 
         @copy($sidebarFile, $sidebarBackup);
         @mkdir($moduleDir . '/Language/en', 0o755, true);
         @mkdir($moduleDir . '/Language/es', 0o755, true);
 
         file_put_contents(
-            $moduleDir . '/Language/en/Catalog.php',
-            "<?php\n\ndeclare(strict_types=1);\n\nreturn [\n    'title' => 'Catalog',\n];\n"
+            $moduleDir . '/Language/en/Faq.php',
+            "<?php\n\ndeclare(strict_types=1);\n\nreturn [\n    'title' => 'Faq',\n];\n"
         );
         file_put_contents(
-            $moduleDir . '/Language/es/Catalog.php',
-            "<?php\n\ndeclare(strict_types=1);\n\nreturn [\n    'title' => 'Catalogo',\n];\n"
+            $moduleDir . '/Language/es/Faq.php',
+            "<?php\n\ndeclare(strict_types=1);\n\nreturn [\n    'title' => 'Faq',\n];\n"
         );
-        $workspaceRoot = dirname(self::$repoRoot);
-        file_put_contents($templateFile, (string) file_get_contents($workspaceRoot . '/templates/ci4-catalog/ci4-catalog-domain/template.json'));
+        file_put_contents($templateFile, (string) file_get_contents(self::$repoRoot . '/tests/fixtures/faq-domain-template.json'));
 
         try {
             self::runScript('bin/register-sidebar.sh template.json');
@@ -256,15 +255,15 @@ class ScaffoldingScriptsTest extends CIUnitTestCase
             $afterSecond = (string) file_get_contents($sidebarFile);
 
             $this->assertSame($afterFirst, $afterSecond, 'Sidebar registration must be idempotent');
-            $this->assertSame(1, substr_count($afterSecond, '<!-- START Catalog -->'));
-            $this->assertSame(1, substr_count($afterSecond, '<!-- END Catalog -->'));
+            $this->assertSame(1, substr_count($afterSecond, '<!-- START Faq -->'));
+            $this->assertSame(1, substr_count($afterSecond, '<!-- END Faq -->'));
 
-            $langEn = (string) file_get_contents($moduleDir . '/Language/en/Catalog.php');
-            $langEs = (string) file_get_contents($moduleDir . '/Language/es/Catalog.php');
+            $langEn = (string) file_get_contents($moduleDir . '/Language/en/Faq.php');
+            $langEs = (string) file_get_contents($moduleDir . '/Language/es/Faq.php');
 
-            $this->assertStringContainsString("'sidebar_label' => 'Catalog'", $langEn);
-            $this->assertStringContainsString("'sidebar_label' => 'Catalog'", $langEs);
-            $this->assertStringNotContainsString('CI4 Catalog', $langEs);
+            $this->assertStringContainsString("'sidebar_label' => 'Faq'", $langEn);
+            $this->assertStringContainsString("'sidebar_label' => 'Faq'", $langEs);
+            $this->assertStringNotContainsString('CI4 FAQ', $langEs);
         } finally {
             @copy($sidebarBackup, $sidebarFile);
             @unlink($sidebarBackup);
