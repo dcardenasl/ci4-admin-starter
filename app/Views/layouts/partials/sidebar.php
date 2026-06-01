@@ -68,7 +68,7 @@
                 <span><?= lang('Iam.applications_title') ?></span>
             </a>
         <?php endif; ?>
-        <!-- [SCAFFOLD_MODULES_ANCHOR] -->
+        <!-- [DYNAMIC_MODULES_ANCHOR] -->
     </nav>
 </aside>
 

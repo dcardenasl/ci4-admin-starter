@@ -20,6 +20,7 @@ $help = $help ?? '';
 $async = $async ?? false;
 $options = $options ?? [];
 $api_endpoint = $api_endpoint ?? '';
+$hasOptions = is_array($options) && $options !== [];
 ?>
 <?php if ($async): ?>
 <div x-data="{
@@ -140,23 +141,34 @@ $api_endpoint = $api_endpoint ?? '';
             <span class="text-red-500" aria-hidden="true">*</span>
         <?php endif; ?>
     </label>
-    <select 
-        id="<?= esc($name, 'attr') ?>" 
-        name="<?= esc($name, 'attr') ?>" 
-        class="<?= input_class($name) ?>"
-        <?= $required ? 'required' : '' ?>
-        <?= field_aria_attrs($name, $required) ?>
-    >
-        <option value=""><?= esc($placeholder ?: lang('App.select_option')) ?></option>
-        <?php foreach ($options as $val => $lbl): ?>
-            <option value="<?= esc($val, 'attr') ?>" <?= (string) $val === (string) $value ? 'selected' : '' ?>>
-                <?= esc($lbl) ?>
-            </option>
-        <?php endforeach; ?>
-    </select>
-    <?php if ($help): ?>
-        <p class="mt-1 text-xs text-gray-500"><?= lang($help) ?></p>
+    <?php if (! $hasOptions): ?>
+        <div class="mt-1 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900" role="alert">
+            <p class="font-medium"><?= esc(lang('App.relation_missing_options')) ?></p>
+            <p class="mt-1 text-xs text-amber-800"><?= esc(lang('App.relation_missing_options_desc')) ?></p>
+        </div>
+        <?php if ($help): ?>
+            <p class="mt-1 text-xs text-gray-500"><?= lang($help) ?></p>
+        <?php endif; ?>
+        <?= render_field_error($name) ?>
+    <?php else: ?>
+        <select 
+            id="<?= esc($name, 'attr') ?>" 
+            name="<?= esc($name, 'attr') ?>" 
+            class="<?= input_class($name) ?>"
+            <?= $required ? 'required' : '' ?>
+            <?= field_aria_attrs($name, $required) ?>
+        >
+            <option value=""><?= esc($placeholder ?: lang('App.select_option')) ?></option>
+            <?php foreach ($options as $val => $lbl): ?>
+                <option value="<?= esc($val, 'attr') ?>" <?= (string) $val === (string) $value ? 'selected' : '' ?>>
+                    <?= esc($lbl) ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+        <?php if ($help): ?>
+            <p class="mt-1 text-xs text-gray-500"><?= lang($help) ?></p>
+        <?php endif; ?>
+        <?= render_field_error($name) ?>
     <?php endif; ?>
-    <?= render_field_error($name) ?>
 </div>
 <?php endif; ?>

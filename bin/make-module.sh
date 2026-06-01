@@ -341,6 +341,8 @@ STORE_REQUEST="${RESOURCE}StoreRequest"                       # AudienceStoreReq
 UPDATE_REQUEST="${RESOURCE}UpdateRequest"                     # AudienceUpdateRequest
 CONTROLLER_FQCN="\\\\App\\\\Modules\\\\${MODULE}\\\\Controllers\\\\${CONTROLLER_CLASS}"
 ROUTE_NAME="admin.${MODULE_LOWER}.${ROUTE_SEGMENT_UNDERSCORE}"  # admin.shows.audiences
+REORDER_ROUTE_NAME="${ROUTE_NAME}.reorder"
+SAVE_ORDER_ROUTE_NAME="${ROUTE_NAME}.save_order"
 LANG_PREFIX="${RESOURCE_PLURAL}"                              # school_categories  (used as lang key prefix)
 VIEW_PATH="${MODULE_LOWER}/${ROUTE_SEGMENT_UNDERSCORE}"       # shows/audiences
 MODULE_DIR="app/Modules/${MODULE}"
@@ -393,15 +395,121 @@ EOF
 done
 
 # ─── Dynamic Field Generator ──────────────────────────────────────────────────
-GENERATED_SNIPPETS=$(python3 - "$FIELDS" "$MODULE" "$LANG_PREFIX" "$RESOURCE_CAMEL" "$RESOURCE" <<'PYEOF'
+GENERATED_SNIPPETS=$(python3 - "$FIELDS" "$MODULE" "$LANG_PREFIX" "$RESOURCE_CAMEL" "$RESOURCE" "${CI4_TEMPLATE_JSON:-}" <<'PYEOF'
+import os
 import sys
 import json
+import re
 
 fields_str = sys.argv[1]
 module = sys.argv[2]
 lang_prefix = sys.argv[3]
 resource_camel = sys.argv[4]
 resource = sys.argv[5]
+template_json_path = sys.argv[6] if len(sys.argv) > 6 else ""
+ORDER_FIELD_NAMES = {'order', 'sort_order'}
+
+
+def php_escape(value: str) -> str:
+    return value.replace("\\", "\\\\").replace("'", "\\'").replace("\n", "\\n")
+
+
+def humanize_field_name(field_name: str) -> str:
+    cleaned = field_name.replace('_id', '').replace('_', ' ').strip()
+    if not cleaned:
+        cleaned = field_name.replace('_', ' ')
+    return " ".join(part[:1].upper() + part[1:] for part in cleaned.split())
+
+
+def default_placeholder(field_type: str, label: str, locale: str) -> str:
+    if field_type in ['string', 'text', 'longtext', 'int', 'bigint', 'decimal', 'float']:
+        return ('Ingresa ' if locale == 'es' else 'Enter ') + label
+    if field_type in ['enum', 'relation', 'date', 'datetime']:
+        return ('Selecciona ' if locale == 'es' else 'Select ') + label
+    if field_type in ['file', 'image']:
+        return ('Elige ' if locale == 'es' else 'Choose ') + label
+    return ''
+
+
+def default_help(field_type: str, label: str, locale: str) -> str:
+    if field_type in ['string', 'text', 'longtext']:
+        return ('Ingresa ' if locale == 'es' else 'Enter ') + label + '.'
+    if field_type in ['int', 'bigint', 'decimal', 'float']:
+        return ('Ingresa ' if locale == 'es' else 'Enter ') + label + '.'
+    if field_type in ['enum', 'relation']:
+        return ('Selecciona ' if locale == 'es' else 'Select ') + label + '.'
+    if field_type in ['date', 'datetime']:
+        return ('Selecciona ' if locale == 'es' else 'Select ') + label + '.'
+    if field_type in ['file', 'image']:
+        return ('Elige ' if locale == 'es' else 'Choose ') + label + '.'
+    if field_type == 'boolean':
+        return ('Activa o desactiva ' if locale == 'es' else 'Toggle ') + label + '.'
+    return ''
+
+
+def default_boolean_state(field_name: str, label: str, locale: str, is_on: bool) -> str:
+    seed = f"{field_name} {label}".lower()
+    if 'active' in seed:
+        if locale == 'es':
+            return 'Activo' if is_on else 'Inactivo'
+        return 'Active' if is_on else 'Inactive'
+    if 'publish' in seed:
+        if locale == 'es':
+            return 'Publicado' if is_on else 'No publicado'
+        return 'Published' if is_on else 'Unpublished'
+    if 'visible' in seed:
+        return 'Visible' if is_on else ('Oculto' if locale == 'es' else 'Hidden')
+    if 'enable' in seed:
+        if locale == 'es':
+            return 'Habilitado' if is_on else 'Deshabilitado'
+        return 'Enabled' if is_on else 'Disabled'
+    if locale == 'es':
+        return 'Sí' if is_on else 'No'
+    return 'Yes' if is_on else 'No'
+
+
+def load_template_fields(path: str, resource_name: str):
+    if not path or not os.path.isfile(path):
+        return {}
+    try:
+        with open(path, encoding='utf-8') as fh:
+            data = json.load(fh)
+    except Exception:
+        return {}
+    for entity in data.get('entities', []):
+        if not isinstance(entity, dict):
+            continue
+        if entity.get('name') != resource_name:
+            continue
+        fields_meta = {}
+        for field in entity.get('fields', []):
+            if isinstance(field, dict) and field.get('name'):
+                fields_meta[str(field['name'])] = field
+        return fields_meta
+    return {}
+
+
+template_fields = load_template_fields(template_json_path, resource)
+
+def is_locale_key(locale: object) -> bool:
+    return isinstance(locale, str) and re.match(r'^[a-z]{2}(?:-[a-zA-Z0-9]+)*$', locale) is not None
+
+template_locales = {'en', 'es'}
+if isinstance(template_fields, dict):
+    for meta in template_fields.values():
+        if not isinstance(meta, dict):
+            continue
+        i18n = meta.get('i18n')
+        if not isinstance(i18n, dict):
+            continue
+        for locale in i18n.keys():
+            if is_locale_key(locale):
+                template_locales.add(str(locale))
+
+locales = ['en', 'es'] + sorted(
+    [locale for locale in template_locales if locale not in {'en', 'es'}]
+)
+lang_fields = {locale: [] for locale in locales}
 
 # Parse fields
 fields = []
@@ -448,8 +556,8 @@ index_rows = []
 create_fields = []
 edit_fields = []
 show_rows = []
-lang_en = []
-lang_es = []
+reorder_field = ''
+reorder_display_key = ''
 
 for f in fields:
     name = f['name']
@@ -457,6 +565,19 @@ for f in fields:
     req = f['required']
     enum_opts = f['enum_options']
     rel_table = f['relation_table']
+    is_order_field = name in ORDER_FIELD_NAMES and ftype in ['int', 'bigint']
+    meta = template_fields.get(name, {}) if isinstance(template_fields, dict) else {}
+    if not isinstance(meta, dict):
+        meta = {}
+    i18n = meta.get('i18n') if isinstance(meta.get('i18n'), dict) else {}
+    base_label = str(meta.get('label') or humanize_field_name(name))
+    base_placeholder = str(meta.get('placeholder') or default_placeholder(ftype, base_label, 'en'))
+    base_help = str(meta.get('help') or default_help(ftype, base_label, 'en'))
+
+    if not is_order_field and not reorder_display_key:
+        reorder_display_key = name
+    if is_order_field and not reorder_field:
+        reorder_field = name
     
     req_fields.append("'{}'".format(name))
     
@@ -466,7 +587,7 @@ for f in fields:
     elif ftype in ['text', 'longtext']:
         rule = 'required|string' if req else 'permit_empty|string'
     elif ftype in ['int', 'bigint']:
-        rule = 'required|integer' if req else 'permit_empty|integer'
+        rule = 'permit_empty|integer' if is_order_field else ('required|integer' if req else 'permit_empty|integer')
     elif ftype in ['decimal', 'float']:
         rule = 'required|decimal' if req else 'permit_empty|decimal'
     elif ftype == 'boolean':
@@ -484,6 +605,8 @@ for f in fields:
     
     if ftype == 'boolean':
         payload_line = "            '{}' => $this->postBool('{}'),".format(name, name)
+    elif is_order_field:
+        payload_line = "            '{}' => $this->postInt('{}', 0),".format(name, name)
     elif ftype in ['int', 'bigint', 'relation']:
         payload_line = "            '{}' => $this->postInt('{}'),".format(name, name)
     elif ftype in ['decimal', 'float']:
@@ -492,9 +615,23 @@ for f in fields:
         payload_line = "            '{}' => $this->postString('{}'),".format(name, name)
     req_payload.append(payload_line)
     
-    h_label = name.replace('_id', '').replace('_', ' ').title()
-    lang_en.append("    'field_{}' => '{}',".format(name, h_label))
-    lang_es.append("    'field_{}' => '{}',".format(name, h_label))
+    for locale in locales:
+        locale_meta = i18n.get(locale, {}) if isinstance(i18n, dict) else {}
+        if not isinstance(locale_meta, dict):
+            locale_meta = {}
+
+        label = str(locale_meta.get('label') or base_label)
+        placeholder = str(locale_meta.get('placeholder') or base_placeholder or default_placeholder(ftype, label, locale))
+        help_text = str(locale_meta.get('help') or base_help or default_help(ftype, label, locale))
+
+        lang_fields[locale].append("    'field_{}' => '{}',".format(name, php_escape(label)))
+        if placeholder:
+            lang_fields[locale].append("    'field_{}_placeholder' => '{}',".format(name, php_escape(placeholder)))
+        if help_text:
+            lang_fields[locale].append("    'field_{}_help' => '{}',".format(name, php_escape(help_text)))
+        if ftype == 'boolean':
+            lang_fields[locale].append("    'field_{}_on' => '{}',".format(name, php_escape(default_boolean_state(name, label, locale, True))))
+            lang_fields[locale].append("    'field_{}_off' => '{}',".format(name, php_escape(default_boolean_state(name, label, locale, False))))
     
     header = """                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('{name}')">
                             <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('{name}')" aria-label="<?= esc(lang('TableA11y.sort_by', [lang('{module}.field_{name}')])) ?>">
@@ -503,7 +640,8 @@ for f in fields:
                             </button>
                         </th>"""
     header = header.replace('{name}', name).replace('{module}', module)
-    index_headers.append(header)
+    if not is_order_field:
+        index_headers.append(header)
     
     if ftype == 'boolean':
         row_td = """                            <td class="<?= esc(table_td_class()) ?>">
@@ -540,7 +678,8 @@ for f in fields:
         row_td = """                            <td class="<?= esc(table_td_class('{td_class}')) ?>" x-text="String(row.{name} ?? '-')"></td>""".replace('{td_class}', td_class)
     
     row_td = row_td.replace('{name}', name)
-    index_rows.append(row_td)
+    if not is_order_field:
+        index_rows.append(row_td)
 
     req_php = 'true' if req else 'false'
     if ftype == 'string':
@@ -549,6 +688,8 @@ for f in fields:
             'label' => '{module}.field_{name}',
             'required' => {req_php},
             'value' => $item['{name}'] ?? '',
+            'placeholder' => '{module}.field_{name}_placeholder',
+            'help' => '{module}.field_{name}_help',
             'errors' => $errors ?? []
         ]) ?>"""
     elif ftype in ['text', 'longtext']:
@@ -557,6 +698,8 @@ for f in fields:
             'label' => '{module}.field_{name}',
             'required' => {req_php},
             'value' => $item['{name}'] ?? '',
+            'placeholder' => '{module}.field_{name}_placeholder',
+            'help' => '{module}.field_{name}_help',
             'errors' => $errors ?? []
         ]) ?>"""
     elif ftype in ['int', 'bigint']:
@@ -565,6 +708,8 @@ for f in fields:
             'label' => '{module}.field_{name}',
             'required' => {req_php},
             'value' => $item['{name}'] ?? '',
+            'placeholder' => '{module}.field_{name}_placeholder',
+            'help' => '{module}.field_{name}_help',
             'errors' => $errors ?? []
         ]) ?>"""
     elif ftype in ['decimal', 'float']:
@@ -573,6 +718,8 @@ for f in fields:
             'label' => '{module}.field_{name}',
             'required' => {req_php},
             'value' => $item['{name}'] ?? '',
+            'placeholder' => '{module}.field_{name}_placeholder',
+            'help' => '{module}.field_{name}_help',
             'errors' => $errors ?? []
         ]) ?>"""
     elif ftype == 'boolean':
@@ -580,6 +727,9 @@ for f in fields:
             'name' => '{name}',
             'label' => '{module}.field_{name}',
             'value' => $item['{name}'] ?? false,
+            'on_label' => '{module}.field_{name}_on',
+            'off_label' => '{module}.field_{name}_off',
+            'help' => '{module}.field_{name}_help',
             'errors' => $errors ?? []
         ]) ?>"""
     elif ftype == 'date':
@@ -588,6 +738,8 @@ for f in fields:
             'label' => '{module}.field_{name}',
             'required' => {req_php},
             'value' => $item['{name}'] ?? '',
+            'placeholder' => '{module}.field_{name}_placeholder',
+            'help' => '{module}.field_{name}_help',
             'errors' => $errors ?? []
         ]) ?>"""
     elif ftype == 'datetime':
@@ -596,6 +748,8 @@ for f in fields:
             'label' => '{module}.field_{name}',
             'required' => {req_php},
             'value' => $item['{name}'] ?? '',
+            'placeholder' => '{module}.field_{name}_placeholder',
+            'help' => '{module}.field_{name}_help',
             'errors' => $errors ?? []
         ]) ?>"""
     elif ftype == 'enum':
@@ -604,6 +758,8 @@ for f in fields:
             'name' => '{name}',
             'label' => '{module}.field_{name}',
             'required' => {req_php},
+            'placeholder' => '{module}.field_{name}_placeholder',
+            'help' => '{module}.field_{name}_help',
             'options' => [
 {opts_php}
             ],
@@ -616,6 +772,8 @@ for f in fields:
             'label' => '{module}.field_{name}',
             'required' => {req_php},
             'options' => ${rel_table} ?? [],
+            'placeholder' => '{module}.field_{name}_placeholder',
+            'help' => '{module}.field_{name}_help',
             'value' => $item['{name}'] ?? '',
             'errors' => $errors ?? []
         ]) ?>""".replace('{rel_table}', rel_table)
@@ -624,6 +782,7 @@ for f in fields:
             'name' => '{name}',
             'label' => '{module}.field_{name}',
             'value' => $item['{name}'] ?? '',
+            'help' => '{module}.field_{name}_help',
             'errors' => $errors ?? []
         ]) ?>"""
     elif ftype == 'image':
@@ -631,6 +790,7 @@ for f in fields:
             'name' => '{name}',
             'label' => '{module}.field_{name}',
             'value' => $item['{name}'] ?? '',
+            'help' => '{module}.field_{name}_help',
             'errors' => $errors ?? []
         ]) ?>"""
     else:
@@ -639,12 +799,15 @@ for f in fields:
             'label' => '{module}.field_{name}',
             'required' => {req_php},
             'value' => $item['{name}'] ?? '',
+            'placeholder' => '{module}.field_{name}_placeholder',
+            'help' => '{module}.field_{name}_help',
             'errors' => $errors ?? []
         ]) ?>"""
         
     comp = comp.replace('{name}', name).replace('{module}', module).replace('{req_php}', req_php)
-    create_fields.append(comp)
-    edit_fields.append(comp)
+    if not is_order_field:
+        create_fields.append(comp)
+        edit_fields.append(comp)
     
     if ftype == 'boolean':
         val_expr = "view('components/table/boolean_cell', ['value' => ${RESOURCE_CAMEL}['{name}'] ?? false])".replace('{RESOURCE_CAMEL}', resource_camel).replace('{name}', name)
@@ -675,7 +838,8 @@ for f in fields:
             ]) ?>"""
             
     show_row = show_row.replace('{module}', module).replace('{name}', name).replace('{val_expr}', val_expr)
-    show_rows.append(show_row)
+    if not is_order_field:
+        show_rows.append(show_row)
 
 output = {
     'req_fields': ", ".join(req_fields),
@@ -686,8 +850,10 @@ output = {
     'create_fields': "\n\n".join(create_fields),
     'edit_fields': "\n\n".join(edit_fields),
     'show_rows': "\n".join(show_rows),
-    'lang_en': "\n".join(lang_en),
-    'lang_es': "\n".join(lang_es)
+    'lang_fields': {locale: "\n".join(lines) for locale, lines in lang_fields.items()},
+    'lang_locales': locales,
+    'reorder_field': reorder_field,
+    'reorder_display_key': reorder_display_key
 }
 print(json.dumps(output))
 PYEOF
@@ -701,6 +867,14 @@ extract_snippet() {
     ' -- "$key"
 }
 
+extract_json_snippet() {
+    local key="$1"
+    echo "$GENERATED_SNIPPETS" | php -r '
+        $json = json_decode(file_get_contents("php://stdin"), true);
+        echo json_encode($json[$argv[1]] ?? null, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    ' -- "$key"
+}
+
 REQ_FIELDS=$(extract_snippet 'req_fields')
 REQ_RULES=$(extract_snippet 'req_rules')
 REQ_PAYLOAD=$(extract_snippet 'req_payload')
@@ -709,8 +883,56 @@ VIEW_INDEX_ROWS=$(extract_snippet 'index_rows')
 VIEW_CREATE_FIELDS=$(extract_snippet 'create_fields')
 VIEW_EDIT_FIELDS=$(extract_snippet 'edit_fields')
 VIEW_SHOW_ROWS=$(extract_snippet 'show_rows')
-LANG_EN_FIELDS=$(extract_snippet 'lang_en')
-LANG_ES_FIELDS=$(extract_snippet 'lang_es')
+LANG_LOCALES_JSON=$(extract_json_snippet 'lang_locales')
+LANG_FIELDS_JSON=$(extract_json_snippet 'lang_fields')
+REORDER_FIELD=$(extract_snippet 'reorder_field')
+REORDER_DISPLAY_KEY=$(extract_snippet 'reorder_display_key')
+HAS_REORDER=false
+if [[ -n "$REORDER_FIELD" ]]; then
+    HAS_REORDER=true
+fi
+
+LANG_LOCALE_LIST=()
+while IFS= read -r locale; do
+    [[ -n "$locale" ]] || continue
+    LANG_LOCALE_LIST+=("$locale")
+done < <(printf '%s' "$LANG_LOCALES_JSON" | jq -r '.[]')
+
+REORDER_ROUTE_BLOCK=""
+REORDER_CONTROLLER_ACTIONS=""
+REORDER_SHOW_BUTTON=""
+REORDER_VIEW_BLOCK=""
+REORDER_ROUTE_APPEND=""
+TOOLBAR_REORDER_BUTTON=""
+REORDER_UPDATE_PAYLOAD=""
+if [[ "$HAS_REORDER" == true ]]; then
+    REORDER_ROUTE_BLOCK=$'\n'"    \$routes->get('${ROUTE_SEGMENT}/reorder', '${CONTROLLER_FQCN}::reorder', ['as' => '${REORDER_ROUTE_NAME}', 'filter' => 'permission:${MODULE_LOWER}.write']);"$'\n'"    \$routes->post('${ROUTE_SEGMENT}/reorder', '${CONTROLLER_FQCN}::saveOrder', ['as' => '${SAVE_ORDER_ROUTE_NAME}', 'filter' => 'permission:${MODULE_LOWER}.write']);"
+
+    REORDER_CONTROLLER_ACTIONS=$'\n\n'"    public function reorder(): string|RedirectResponse"$'\n'"    {"$'\n'"        \$deny = \$this->requireWrite();"$'\n'"        if (\$deny !== null) {"$'\n'"            return \$deny;"$'\n'"        }"$'\n\n'"        \$response = \$this->safeApiCall(fn () => \$this->${RESOURCE_CAMEL}Service->list(['limit' => 250, 'sort' => '${REORDER_FIELD}']));"$'\n'"        \$items = \$this->extractItems(\$response);"$'\n\n'"        return \$this->render('${VIEW_PATH}/reorder', ["$'\n'"            'title' => lang('${MODULE}.${LANG_PREFIX}_title') . ' - ' . lang('${MODULE}.field_${REORDER_FIELD}'),"$'\n'"            'items' => \$items,"$'\n'"        ]);"$'\n'"    }"$'\n\n'"    public function saveOrder(): ResponseInterface"$'\n'"    {"$'\n'"        \$deny = \$this->requireWrite();"$'\n'"        if (\$deny !== null) {"$'\n'"            return \$this->response->setJSON(["$'\n'"                'ok' => false,"$'\n'"                'message' => lang('App.access_denied'),"$'\n'"            ])->setStatusCode(403);"$'\n'"        }"$'\n\n'"        \$request = \$this->request;"$'\n'"        if (! \$request instanceof \\CodeIgniter\\HTTP\\IncomingRequest) {"$'\n'"            return \$this->response->setJSON(["$'\n'"                'ok' => false,"$'\n'"                'message' => 'Invalid request type',"$'\n'"            ])->setStatusCode(400);"$'\n'"        }"$'\n\n'"        \$json = \$request->getJSON(true);"$'\n'"        \$jsonArray = is_array(\$json) ? \$json : [];"$'\n'"        \$items = \$jsonArray['items'] ?? [];"$'\n\n'"        if (! is_array(\$items)) {"$'\n'"            return \$this->response->setJSON(["$'\n'"                'ok' => false,"$'\n'"                'message' => 'Invalid payload structure',"$'\n'"            ])->setStatusCode(400);"$'\n'"        }"$'\n\n'"        foreach (\$items as \$item) {"$'\n'"            \$id = (string) (\$item['id'] ?? '');"$'\n'"            \$value = isset(\$item['sort_order']) ? (int) \$item['sort_order'] : 0;"$'\n\n'"            if (\$id !== '') {"$'\n'"                \$this->${RESOURCE_CAMEL}Service->update(\$id, ['${REORDER_FIELD}' => \$value]);"$'\n'"            }"$'\n'"        }"$'\n\n'"        return \$this->response->setJSON(["$'\n'"            'ok' => true,"$'\n'"            'message' => lang('Files.gallery_save_success') ?? 'Order saved.',"$'\n'"        ]);"$'\n'"    }"
+
+    REORDER_SHOW_BUTTON=$'\n'"                <a href=\"<?= route_to('${REORDER_ROUTE_NAME}') ?>\" class=\"<?= esc(action_button_class('neutral')) ?>\">"$'\n'"                    <?= ui_icon('layers', 'h-3.5 w-3.5') ?>"$'\n'"                    <?= esc(lang('${MODULE}.field_${REORDER_FIELD}') ?? lang('App.reorder')) ?>"$'\n'"                </a>"
+    TOOLBAR_REORDER_BUTTON=$(cat <<EOF
+    <a href="<?= route_to('${REORDER_ROUTE_NAME}') ?>" class="<?= esc(action_button_class('neutral')) ?>">
+        <?= ui_icon('layers', 'h-3.5 w-3.5') ?>
+        <?= esc(lang('App.reorder')) ?>
+    </a>
+EOF
+)
+    REORDER_UPDATE_PAYLOAD=$(cat <<EOF
+    public function payload(): array
+    {
+        \$payload = parent::payload();
+        unset(\$payload['${REORDER_FIELD}']);
+
+        return \$payload;
+    }
+EOF
+)
+fi
+
+if [[ -n "$REORDER_SHOW_BUTTON" ]]; then
+    SHOW_ACTION_BUTTONS+="$REORDER_SHOW_BUTTON"
+fi
 
 # ─── Cross-module route collision detection ────────────────────────────────────
 # Catches the realistic mistake of two modules registering the same route name
@@ -847,8 +1069,6 @@ PLANNED_FILES=(
     "${MODULE_DIR}/Requests/${UPDATE_REQUEST}.php"
     "${MODULE_DIR}/Controllers/${CONTROLLER_CLASS}.php"
     "${MODULE_DIR}/Config/Routes.php"
-    "${MODULE_DIR}/Language/en/${MODULE}.php"
-    "${MODULE_DIR}/Language/es/${MODULE}.php"
     "app/Views/${VIEW_PATH}/index.php"
     "app/Views/${VIEW_PATH}/show.php"
     "app/Views/${VIEW_PATH}/create.php"
@@ -858,6 +1078,12 @@ PLANNED_FILES=(
     "tests/feature/${RESOURCE}FlowTest.php"
     "tests/unit/Services/${SERVICE_CLASS}Test.php"
 )
+if [[ "$HAS_REORDER" == true ]]; then
+    PLANNED_FILES+=("app/Views/${VIEW_PATH}/reorder.php")
+fi
+for locale in "${LANG_LOCALE_LIST[@]}"; do
+    PLANNED_FILES+=("${MODULE_DIR}/Language/${locale}/${MODULE}.php")
+done
 
 COLLISION_REPORT=$(python3 - "${PLANNED_FILES[@]}" <<'PYEOF'
 import os, sys
@@ -922,26 +1148,40 @@ else
         echo -e "${YELLOW}Registering PSR-4 namespace for new module ${MODULE}...${NC}"
 
         if python3 - "$AUTOLOAD_FILE" "$MODULE" <<'PYEOF'
-import sys, re
+import sys
 
 autoload_file = sys.argv[1]
 module = sys.argv[2]
 
-with open(autoload_file) as f:
-    content = f.read()
+with open(autoload_file, encoding='utf-8') as f:
+    lines = f.readlines()
 
-new_entry = f"        'App\\\\Modules\\\\{module}'  => APPPATH . 'Modules/{module}',"
+entry = f"        'App\\Modules\\{module}'  => APPPATH . 'Modules/{module}',\n"
+psr4_open = False
+insert_at = None
 
-# Insert immediately before the line that closes the $psr4 array.
-# That line is "    ];" and is followed by a blank line + "    /**" (Class Map comment).
-pattern = r'(    \];\n\n    /\*\*\n     \* -{10,}\n     \* Class Map)'
-new_content = re.sub(pattern, new_entry + '\n' + r'\1', content, count=1)
+for index, line in enumerate(lines):
+    if "public $psr4 = [" in line:
+        psr4_open = True
+        continue
 
-if new_content == content:
+    if not psr4_open:
+        continue
+
+    if line.strip() == '];':
+        insert_at = index
+        break
+
+if insert_at is None:
     sys.exit(1)
 
-with open(autoload_file, 'w') as f:
-    f.write(new_content)
+if any(entry.strip() == line.strip() for line in lines):
+    sys.exit(0)
+
+lines.insert(insert_at, entry)
+
+with open(autoload_file, 'w', encoding='utf-8') as f:
+    f.writelines(lines)
 PYEOF
         then
             echo -e "${GREEN}✓ UPDATED: app/Config/Autoload.php (PSR-4 entry for ${MODULE})${NC}"
@@ -952,6 +1192,33 @@ PYEOF
         fi
     fi
 fi
+
+# ─── Sidebar registration ──────────────────────────────────────────────────────
+
+register_sidebar_from_template() {
+    local template_json="${CI4_TEMPLATE_JSON:-}"
+
+    if [[ -z "$template_json" || ! -f "$template_json" ]]; then
+        return 0
+    fi
+
+    if [[ "$DRY_RUN" == true ]]; then
+        echo -e "  ${YELLOW}[dry-run] Would register sidebar entries from $(basename "$template_json")${NC}"
+        return 0
+    fi
+
+    if [[ ! -x "bin/register-sidebar.sh" ]]; then
+        echo -e "${YELLOW}⚠ Sidebar registrar not found — add sidebar entries manually if the template defines admin_sidebar.${NC}"
+        return 0
+    fi
+
+    echo -e "${YELLOW}Registering sidebar entries from $(basename "$template_json")...${NC}"
+    if bash bin/register-sidebar.sh "$template_json"; then
+        echo -e "${GREEN}✓ UPDATED: app/Views/layouts/partials/sidebar.php (sidebar entries from $(basename "$template_json"))${NC}"
+    else
+        echo -e "${YELLOW}⚠ Sidebar auto-registration failed. Add sidebar entries manually if the template defines admin_sidebar.${NC}"
+    fi
+}
 
 # ─── Directory structure ───────────────────────────────────────────────────────
 
@@ -964,11 +1231,12 @@ else
     mkdir -p "${MODULE_DIR}/Services"
     mkdir -p "${MODULE_DIR}/Requests"
     mkdir -p "${MODULE_DIR}/Config"
-    mkdir -p "${MODULE_DIR}/Language/en"
-    mkdir -p "${MODULE_DIR}/Language/es"
     mkdir -p "app/Views/${VIEW_PATH}/partials"
     mkdir -p "tests/feature"
     mkdir -p "tests/unit/Services"
+    for locale in "${LANG_LOCALE_LIST[@]}"; do
+        mkdir -p "${MODULE_DIR}/Language/${locale}"
+    done
     echo -e "${GREEN}✓ Done${NC}"
 fi
 
@@ -1077,6 +1345,7 @@ namespace App\\Modules\\${MODULE}\\Requests;
 
 class ${UPDATE_REQUEST} extends ${STORE_REQUEST}
 {
+${REORDER_UPDATE_PAYLOAD}
 }"
 
 # ── Controller ─────────────────────────────────────────────────────────────────
@@ -1202,6 +1471,7 @@ class ${CONTROLLER_CLASS} extends BaseWebController
 
         return redirect()->to(route_to('${ROUTE_NAME}'))->with('success', lang('${MODULE}.${LANG_PREFIX}_delete_success'));
     }
+${REORDER_CONTROLLER_ACTIONS}
 ${CONTROLLER_ACTIONS}
 }"
 
@@ -1233,6 +1503,7 @@ use CodeIgniter\Router\RouteCollection;
     \$routes->get('${ROUTE_SEGMENT}/(:segment)/edit', '${NS}::edit/\$1', ['as' => '${ROUTE_NAME}.edit']);
     \$routes->post('${ROUTE_SEGMENT}/(:segment)', '${NS}::update/\$1', ['as' => '${ROUTE_NAME}.update']);
     \$routes->post('${ROUTE_SEGMENT}/(:segment)/delete', '${NS}::delete/\$1', ['as' => '${ROUTE_NAME}.delete']);
+${REORDER_ROUTE_BLOCK}
 ${ROUTE_APPEND_BLOCK}
 });" > "$ROUTES_FILE"
         echo -e "  ${GREEN}✓ Created:           ${ROUTES_FILE}${NC}"
@@ -1242,10 +1513,10 @@ else
     if [[ "$DRY_RUN" == true ]]; then
         echo -e "  ${YELLOW}[dry-run] Would append route block to: ${ROUTES_FILE}${NC}"
     else
-        if python3 - "$ROUTES_FILE" "$ROUTE_SEGMENT" "$NS" "$ROUTE_NAME" "$RESOURCE" "$ROUTE_APPEND_BLOCK" <<'PYEOF'
+        if python3 - "$ROUTES_FILE" "$ROUTE_SEGMENT" "$NS" "$ROUTE_NAME" "$RESOURCE" "$ROUTE_APPEND_BLOCK" "$REORDER_ROUTE_BLOCK" <<'PYEOF'
 import sys, re
 
-routes_file, seg, ns, name, resource, extra_routes = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6]
+routes_file, seg, ns, name, resource, extra_routes, reorder_routes = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7]
 
 with open(routes_file) as f:
     content = f.read()
@@ -1270,6 +1541,9 @@ block = (
 if extra_routes:
     block += extra_routes
 
+if reorder_routes:
+    block += reorder_routes
+
 new_content = re.sub(r'(\n\}\);)', '\n' + block + r'\1', content, count=1)
 
 with open(routes_file, 'w') as f:
@@ -1290,10 +1564,19 @@ fi
 
 # ── Language stubs ─────────────────────────────────────────────────────────────
 
-# Skip if exists semantics for language files (matches write_file behavior)
 write_lang() {
     local lang_file="$1"
     local locale="${2:-en}"
+    local field_lines
+    field_lines=$(printf '%s' "$LANG_FIELDS_JSON" | jq -r --arg locale "$locale" '.[$locale] // ""')
+
+    local actions_block="$LANG_EN_ACTIONS"
+    local todo_comment=""
+    local existed_before=false
+    if [[ "$locale" == "es" ]]; then
+        actions_block="$LANG_ES_ACTIONS"
+        todo_comment="// TODO: Revisa todas las traducciones (singular/plural y género gramatical pueden variar)."
+    fi
 
     if [[ "$DRY_RUN" == true ]]; then
         if [[ -f "$lang_file" ]]; then
@@ -1310,74 +1593,9 @@ write_lang() {
             echo -e "  ${YELLOW}⚠ Skipped (exists & keys present):  ${lang_file}${NC}"
             return
         fi
-
-        echo -e "  ${BLUE}🗏 Merging new keys into existing language file: ${lang_file}${NC}"
-
-        # Prepare the block of keys to append
-        local new_keys
-        if [[ "$locale" == "es" ]]; then
-            new_keys="
-    // ${RESOURCE} — list & actions
-    '${LANG_PREFIX}_title'              => '${RESOURCE_LABEL}s',
-    '${LANG_PREFIX}_new'                => 'Nuevo ${RESOURCE_LABEL}',
-    '${LANG_PREFIX}_create'             => 'Nuevo ${RESOURCE_LABEL}',
-    '${LANG_PREFIX}_edit'               => 'Editar ${RESOURCE_LABEL}',
-    '${LANG_PREFIX}_details'            => 'Detalle de ${RESOURCE_LABEL}',
-    '${LANG_PREFIX}_not_found'          => '${RESOURCE_LABEL} no encontrado.',
-    '${LANG_PREFIX}_create_success'     => '${RESOURCE_LABEL} creado correctamente.',
-    '${LANG_PREFIX}_create_failed'      => 'No se pudo crear el ${RESOURCE_LOWER}.',
-    '${LANG_PREFIX}_update_success'     => '${RESOURCE_LABEL} actualizado correctamente.',
-    '${LANG_PREFIX}_update_failed'      => 'No se pudo actualizar el ${RESOURCE_LOWER}.',
-    '${LANG_PREFIX}_delete_success'     => '${RESOURCE_LABEL} eliminado correctamente.',
-    '${LANG_PREFIX}_delete_failed'      => 'No se pudo eliminar el ${RESOURCE_LOWER}.',
-    '${LANG_PREFIX}_empty'              => 'Aún no hay ${RESOURCE_LOWER}s registrados.',
-    '${LANG_PREFIX}_search_placeholder' => 'Buscar por nombre...',
-    '${LANG_PREFIX}_loading'            => 'Cargando ${RESOURCE_LOWER}s...',
-    '${LANG_PREFIX}_no_results'         => 'No se encontraron ${RESOURCE_LOWER}s.',
-\${LANG_ES_ACTIONS}"
-        else
-            new_keys="
-    // ${RESOURCE} — list & actions
-    '${LANG_PREFIX}_title'              => '${RESOURCE_LABEL}s',
-    '${LANG_PREFIX}_new'                => 'New ${RESOURCE_LABEL}',
-    '${LANG_PREFIX}_create'             => 'New ${RESOURCE_LABEL}',
-    '${LANG_PREFIX}_edit'               => 'Edit ${RESOURCE_LABEL}',
-    '${LANG_PREFIX}_details'            => '${RESOURCE_LABEL} details',
-    '${LANG_PREFIX}_not_found'          => '${RESOURCE_LABEL} not found.',
-    '${LANG_PREFIX}_create_success'     => '${RESOURCE_LABEL} created successfully.',
-    '${LANG_PREFIX}_create_failed'      => 'Could not create the ${RESOURCE_LOWER}.',
-    '${LANG_PREFIX}_update_success'     => '${RESOURCE_LABEL} updated successfully.',
-    '${LANG_PREFIX}_update_failed'      => 'Could not update the ${RESOURCE_LOWER}.',
-    '${LANG_PREFIX}_delete_success'     => '${RESOURCE_LABEL} deleted successfully.',
-    '${LANG_PREFIX}_delete_failed'      => 'Could not delete the ${RESOURCE_LOWER}.',
-    '${LANG_PREFIX}_empty'              => 'No ${RESOURCE_LOWER}s registered yet.',
-    '${LANG_PREFIX}_search_placeholder' => 'Search by name...',
-    '${LANG_PREFIX}_loading'            => 'Loading ${RESOURCE_LOWER}s...',
-    '${LANG_PREFIX}_no_results'         => 'No ${RESOURCE_LOWER}s found.',
-\${LANG_EN_ACTIONS}"
-        fi
-
-        # Safely inject the new keys before the last closing bracket "];" using PHP
-        php -r '
-            $file = $argv[1];
-            $keys = $argv[2];
-            $content = file_get_contents($file);
-            $pos = strrpos($content, "];");
-            if ($pos !== false) {
-                $patched = substr($content, 0, $pos) . $keys . "\n];\n";
-                if (file_put_contents($file, $patched) !== false) {
-                    exit(0);
-                }
-            }
-            exit(1);
-        ' "$lang_file" "$new_keys"
-
-        if [[ $? -eq 0 ]]; then
-            echo -e "  ${GREEN}✓ Merged keys:       ${lang_file}${NC}"
-        else
-            echo -e "  ${RED}✗ Failed to merge keys into: ${lang_file}${NC}"
-        fi
-        return
+    fi
+    if [[ -f "$lang_file" ]]; then
+        existed_before=true
     fi
 
     local content
@@ -1386,7 +1604,7 @@ write_lang() {
 
 declare(strict_types=1);
 
-// TODO: Revisa todas las traducciones (singular/plural y género gramatical pueden variar).
+${todo_comment}
 return [
     // ${RESOURCE} — list & actions
     '${LANG_PREFIX}_title'              => '${RESOURCE_LABEL}s',
@@ -1405,10 +1623,10 @@ return [
     '${LANG_PREFIX}_search_placeholder' => 'Buscar por nombre...',
     '${LANG_PREFIX}_loading'            => 'Cargando ${RESOURCE_LOWER}s...',
     '${LANG_PREFIX}_no_results'         => 'No se encontraron ${RESOURCE_LOWER}s.',
-${LANG_ES_ACTIONS}
+${actions_block}
 
     // ${RESOURCE} — form fields (add more as needed)
-${LANG_ES_FIELDS}
+${field_lines}
 ];"
     else
         content="<?php
@@ -1433,24 +1651,26 @@ return [
     '${LANG_PREFIX}_search_placeholder' => 'Search by name...',
     '${LANG_PREFIX}_loading'            => 'Loading ${RESOURCE_LOWER}s...',
     '${LANG_PREFIX}_no_results'         => 'No ${RESOURCE_LOWER}s found.',
-${LANG_EN_ACTIONS}
+${actions_block}
 
     // ${RESOURCE} — form fields (add more as needed)
-${LANG_EN_FIELDS}
+${field_lines}
 ];"
     fi
 
-    if [[ -f "$lang_file" && "$FORCE" == true ]]; then
-        printf '%s\n' "$content" > "$lang_file"
+    mkdir -p "$(dirname "$lang_file")"
+    printf '%s\n' "$content" > "$lang_file"
+    if [[ "$existed_before" == true && "$FORCE" == true ]]; then
         echo -e "  ${GREEN}✓ Overwritten:       ${lang_file}${NC}"
     else
-        printf '%s\n' "$content" > "$lang_file"
         echo -e "  ${GREEN}✓ Created:           ${lang_file}${NC}"
     fi
 }
 
-write_lang "${MODULE_DIR}/Language/en/${MODULE}.php" "en"
-write_lang "${MODULE_DIR}/Language/es/${MODULE}.php" "es"
+while IFS= read -r locale; do
+    [[ -n "$locale" ]] || continue
+    write_lang "${MODULE_DIR}/Language/${locale}/${MODULE}.php" "$locale"
+done < <(printf '%s' "$LANG_LOCALES_JSON" | jq -r '.[]')
 
 # ── View stubs ─────────────────────────────────────────────────────────────────
 
@@ -1492,7 +1712,12 @@ write_heredoc "app/Views/${VIEW_PATH}/index.php" << 'VIEW_EOF_MARKER'
     <div class="mt-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700" x-show="error" x-text="errorMessage"></div>
 
     <template x-if="!loading && !error && rows.length === 0">
-        <p class="mt-6 text-sm text-gray-500"><?= lang('VIEW_MODULE.VIEW_LANG_PREFIX_no_results') ?></p>
+        <?= view('components/display/empty_state', [
+            'title' => 'App.no_results',
+            'description' => 'App.no_results_desc',
+            'actionUrl' => route_to('VIEW_ROUTE_NAME.create'),
+            'actionLabel' => 'App.create',
+        ]) ?>
     </template>
     <template x-if="!loading && !error && rows.length > 0">
         <div class="<?= esc(table_wrapper_class()) ?>">
@@ -1651,6 +1876,26 @@ substitute_placeholders "app/Views/${VIEW_PATH}/edit.php" \
     "VIEW_LANG_PREFIX_"  "${LANG_PREFIX}_" \
     "VIEW_EDIT_FIELDS"   "${VIEW_EDIT_FIELDS}"
 
+if [[ "$HAS_REORDER" == true ]]; then
+    write_heredoc "app/Views/${VIEW_PATH}/reorder.php" << 'VIEW_EOF_MARKER'
+<div class="mb-4">
+    <a href="<?= route_to('VIEW_ROUTE_NAME') ?>" class="text-sm text-brand-600 hover:text-brand-700">&larr; <?= esc(lang('App.back')) ?></a>
+</div>
+
+<?= view('components/display/reorder', [
+    'items' => $items ?? [],
+    'saveUrl' => route_to('VIEW_ROUTE_NAME.save_order'),
+    'displayKey' => 'VIEW_REORDER_DISPLAY_KEY',
+    'backUrl' => route_to('VIEW_ROUTE_NAME'),
+    'title' => $title ?? lang('App.reorder'),
+]) ?>
+VIEW_EOF_MARKER
+
+    substitute_placeholders "app/Views/${VIEW_PATH}/reorder.php" \
+        "VIEW_ROUTE_NAME"          "${ROUTE_NAME}" \
+        "VIEW_REORDER_DISPLAY_KEY" "${REORDER_DISPLAY_KEY}"
+fi
+
 write_heredoc "app/Views/${VIEW_PATH}/partials/filters.php" << 'VIEW_EOF_MARKER'
 <?php /** @var array $limitOptions */ ?>
 
@@ -1670,6 +1915,7 @@ substitute_placeholders "app/Views/${VIEW_PATH}/partials/filters.php" \
     "VIEW_LANG_PREFIX_"  "${LANG_PREFIX}_"
 
 write_heredoc "app/Views/${VIEW_PATH}/partials/toolbar_actions.php" << 'VIEW_EOF_MARKER'
+VIEW_TOOLBAR_REORDER_BUTTON
 <a href="<?= route_to('VIEW_ROUTE_NAME.create') ?>" class="<?= esc(action_button_class('primary')) ?>">
     <?= ui_icon('plus', 'h-3.5 w-3.5') ?>
     <?= lang('VIEW_MODULE.VIEW_LANG_PREFIX_new') ?>
@@ -1679,7 +1925,8 @@ VIEW_EOF_MARKER
 substitute_placeholders "app/Views/${VIEW_PATH}/partials/toolbar_actions.php" \
     "VIEW_ROUTE_NAME"    "${ROUTE_NAME}" \
     "VIEW_MODULE"        "${MODULE}" \
-    "VIEW_LANG_PREFIX_"  "${LANG_PREFIX}_"
+    "VIEW_LANG_PREFIX_"  "${LANG_PREFIX}_" \
+    "VIEW_TOOLBAR_REORDER_BUTTON" "${TOOLBAR_REORDER_BUTTON}"
 
 # ── Test stubs ─────────────────────────────────────────────────────────────────
 
@@ -1894,13 +2141,18 @@ if [[ "$DRY_RUN" != true ]]; then
             "${MODULE_DIR}/Requests/${UPDATE_REQUEST}.php" \
             "${MODULE_DIR}/Controllers/${CONTROLLER_CLASS}.php" \
             "${MODULE_DIR}/Config/Routes.php" \
-            "${MODULE_DIR}/Language/en/${MODULE}.php" \
-            "${MODULE_DIR}/Language/es/${MODULE}.php" \
             "tests/feature/${RESOURCE}FlowTest.php" \
             "tests/unit/Services/${SERVICE_CLASS}Test.php"
         do
             [[ -f "$f" ]] && GENERATED_PHP_FILES+=("$f")
         done
+        for locale in "${LANG_LOCALE_LIST[@]}"; do
+            lang_file="${MODULE_DIR}/Language/${locale}/${MODULE}.php"
+            [[ -f "$lang_file" ]] && GENERATED_PHP_FILES+=("$lang_file")
+        done
+        if [[ "$HAS_REORDER" == true ]]; then
+            [[ -f "app/Views/${VIEW_PATH}/reorder.php" ]] && GENERATED_PHP_FILES+=("app/Views/${VIEW_PATH}/reorder.php")
+        fi
 
         if [[ ${#GENERATED_PHP_FILES[@]} -gt 0 ]]; then
             if vendor/bin/php-cs-fixer fix "${GENERATED_PHP_FILES[@]}" --quiet >/dev/null 2>&1; then
@@ -1926,8 +2178,6 @@ if [[ "$DRY_RUN" != true ]]; then
         "${MODULE_DIR}/Requests/${UPDATE_REQUEST}.php"
         "${MODULE_DIR}/Controllers/${CONTROLLER_CLASS}.php"
         "${MODULE_DIR}/Config/Routes.php"
-        "${MODULE_DIR}/Language/en/${MODULE}.php"
-        "${MODULE_DIR}/Language/es/${MODULE}.php"
         "app/Views/${VIEW_PATH}/index.php"
         "app/Views/${VIEW_PATH}/show.php"
         "app/Views/${VIEW_PATH}/create.php"
@@ -1937,6 +2187,12 @@ if [[ "$DRY_RUN" != true ]]; then
         "tests/feature/${RESOURCE}FlowTest.php"
         "tests/unit/Services/${SERVICE_CLASS}Test.php"
     )
+    for locale in "${LANG_LOCALE_LIST[@]}"; do
+        EXPECTED_FILES+=("${MODULE_DIR}/Language/${locale}/${MODULE}.php")
+    done
+    if [[ "$HAS_REORDER" == true ]]; then
+        EXPECTED_FILES+=("app/Views/${VIEW_PATH}/reorder.php")
+    fi
 
     for f in "${EXPECTED_FILES[@]}"; do
         if [[ ! -f "$f" ]]; then
@@ -1981,6 +2237,8 @@ if [[ "$DRY_RUN" != true ]]; then
     fi
 fi
 
+register_sidebar_from_template
+
 # ─── Summary ───────────────────────────────────────────────────────────────────
 
 echo ""
@@ -1994,7 +2252,8 @@ echo -e "${BLUE}═════════════════════�
 echo ""
 echo "Next steps:"
 if [[ "$IS_NEW_MODULE" == true ]]; then
-echo "  1. Add sidebar entry:  app/Views/layouts/partials/sidebar.php"
+echo "  1. Sidebar entry is auto-registered when CI4_TEMPLATE_JSON defines admin_sidebar."
+echo "     If no template contract is available, add it manually in app/Views/layouts/partials/sidebar.php"
 fi
 echo "  2. Customize form fields in:"
 echo "       ${MODULE_DIR}/Requests/${STORE_REQUEST}.php  (validation rules)"
@@ -2003,8 +2262,9 @@ echo "       app/Views/${VIEW_PATH}/show.php              (add <dt>/<dd> rows fo
 echo "       app/Views/${VIEW_PATH}/partials/filters.php  (add filter selects if needed)"
 echo "       app/Views/${VIEW_PATH}/index.php             (add table columns for new fields)"
 echo "  3. Add language keys for new fields in:"
-echo "       ${MODULE_DIR}/Language/en/${MODULE}.php"
-echo "       ${MODULE_DIR}/Language/es/${MODULE}.php  (review TODO header)"
+for locale in "${LANG_LOCALE_LIST[@]}"; do
+    echo "       ${MODULE_DIR}/Language/${locale}/${MODULE}.php"
+done
 echo "  4. Restart the dev server (routes are not hot-reloaded):"
 echo "       pkill -f 'spark serve'; php spark serve --port 8082 &"
 echo "  5. Run tests for the new module:"

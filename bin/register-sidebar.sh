@@ -120,8 +120,8 @@ for group in data['admin_sidebar']:
         sidebar_content = sidebar_content[:block_match.start()] + html_block + sidebar_content[block_match.end():]
         print(f"Updated sidebar menu group for {module}")
     else:
-        # Insert before anchor comment, keeping the anchor line aligned.
-        anchor_pattern = r"(?m)^([ \t]*)<!-- \[SCAFFOLD_MODULES_ANCHOR\] -->[ \t]*\n?"
+        # Insert before the dynamic anchor comment, keeping the anchor line aligned.
+        anchor_pattern = r"(?m)^([ \t]*)<!-- \[(?:DYNAMIC_MODULES_ANCHOR|SCAFFOLD_MODULES_ANCHOR)\] -->[ \t]*\n?"
         anchor_match = re.search(anchor_pattern, sidebar_content)
         if anchor_match:
             indent = anchor_match.group(1)
@@ -129,11 +129,11 @@ for group in data['admin_sidebar']:
                 line.replace("        ", indent, 1) if line.startswith("        ") else line
                 for line in block_lines
             ) + "\n"
-            anchor_line = f"{indent}<!-- [SCAFFOLD_MODULES_ANCHOR] -->\n"
+            anchor_line = f"{indent}<!-- [DYNAMIC_MODULES_ANCHOR] -->\n"
             sidebar_content = sidebar_content[:anchor_match.start()] + html_block + anchor_line + sidebar_content[anchor_match.end():]
             print(f"Injected sidebar menu group for {module}")
         else:
-            print("Error: Could not find <!-- [SCAFFOLD_MODULES_ANCHOR] --> in sidebar.php")
+            print("Error: Could not find <!-- [DYNAMIC_MODULES_ANCHOR] --> in sidebar.php")
             sys.exit(1)
             
     # 3. Append sidebar_label to Language files if missing

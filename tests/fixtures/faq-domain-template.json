@@ -38,9 +38,9 @@
       "api_path": "/support/faq-categories",
       "title": "FAQ Categories",
       "fields": [
-        { "name": "name", "type": "string", "title": "Name", "required": true },
-        { "name": "slug", "type": "string", "title": "Slug", "required": true },
-        { "name": "is_active", "type": "boolean", "title": "Active", "default": true }
+        { "name": "name", "type": "string", "label": "Name", "required": true },
+        { "name": "slug", "type": "string", "label": "Slug", "required": true },
+        { "name": "is_active", "type": "boolean", "label": "Active", "default": true }
       ]
     },
     {
@@ -49,11 +49,11 @@
       "api_path": "/support/faqs",
       "title": "FAQs",
       "fields": [
-        { "name": "question", "type": "string", "title": "Question", "required": true },
-        { "name": "answer", "type": "text", "title": "Answer", "required": true },
-        { "name": "category_id", "type": "integer", "title": "Category ID", "required": true },
-        { "name": "is_published", "type": "boolean", "title": "Published", "default": false },
-        { "name": "sort_order", "type": "integer", "title": "Sort Order", "required": true }
+        { "name": "question", "type": "string", "label": "Question", "required": true },
+        { "name": "answer", "type": "text", "label": "Answer", "required": true },
+        { "name": "category_id", "type": "integer", "label": "Category ID", "required": true },
+        { "name": "is_published", "type": "boolean", "label": "Published", "default": false },
+        { "name": "sort_order", "type": "integer", "label": "Sort Order", "required": true }
       ]
     }
   ],
