@@ -395,16 +395,100 @@ EOF
 done
 
 # ─── Dynamic Field Generator ──────────────────────────────────────────────────
-GENERATED_SNIPPETS=$(python3 - "$FIELDS" "$MODULE" "$LANG_PREFIX" "$RESOURCE_CAMEL" "$RESOURCE" <<'PYEOF'
+GENERATED_SNIPPETS=$(python3 - "$FIELDS" "$MODULE" "$LANG_PREFIX" "$RESOURCE_CAMEL" "$RESOURCE" "${CI4_TEMPLATE_JSON:-}" <<'PYEOF'
+import os
 import sys
 import json
+import re
 
 fields_str = sys.argv[1]
 module = sys.argv[2]
 lang_prefix = sys.argv[3]
 resource_camel = sys.argv[4]
 resource = sys.argv[5]
+template_json_path = sys.argv[6] if len(sys.argv) > 6 else ""
 ORDER_FIELD_NAMES = {'order', 'sort_order'}
+
+
+def php_escape(value: str) -> str:
+    return value.replace("\\", "\\\\").replace("'", "\\'").replace("\n", "\\n")
+
+
+def humanize_field_name(field_name: str) -> str:
+    cleaned = field_name.replace('_id', '').replace('_', ' ').strip()
+    if not cleaned:
+        cleaned = field_name.replace('_', ' ')
+    return " ".join(part[:1].upper() + part[1:] for part in cleaned.split())
+
+
+def default_placeholder(field_type: str, label: str, locale: str) -> str:
+    if field_type in ['string', 'text', 'longtext', 'int', 'bigint', 'decimal', 'float']:
+        return ('Ingresa ' if locale == 'es' else 'Enter ') + label
+    if field_type in ['enum', 'relation', 'date', 'datetime']:
+        return ('Selecciona ' if locale == 'es' else 'Select ') + label
+    if field_type in ['file', 'image']:
+        return ('Elige ' if locale == 'es' else 'Choose ') + label
+    return ''
+
+
+def default_help(field_type: str, label: str, locale: str) -> str:
+    if field_type in ['string', 'text', 'longtext']:
+        return ('Ingresa ' if locale == 'es' else 'Enter ') + label + '.'
+    if field_type in ['int', 'bigint', 'decimal', 'float']:
+        return ('Ingresa ' if locale == 'es' else 'Enter ') + label + '.'
+    if field_type in ['enum', 'relation']:
+        return ('Selecciona ' if locale == 'es' else 'Select ') + label + '.'
+    if field_type in ['date', 'datetime']:
+        return ('Selecciona ' if locale == 'es' else 'Select ') + label + '.'
+    if field_type in ['file', 'image']:
+        return ('Elige ' if locale == 'es' else 'Choose ') + label + '.'
+    if field_type == 'boolean':
+        return ('Activa o desactiva ' if locale == 'es' else 'Toggle ') + label + '.'
+    return ''
+
+
+def load_template_fields(path: str, resource_name: str):
+    if not path or not os.path.isfile(path):
+        return {}
+    try:
+        with open(path, encoding='utf-8') as fh:
+            data = json.load(fh)
+    except Exception:
+        return {}
+    for entity in data.get('entities', []):
+        if not isinstance(entity, dict):
+            continue
+        if entity.get('name') != resource_name:
+            continue
+        fields_meta = {}
+        for field in entity.get('fields', []):
+            if isinstance(field, dict) and field.get('name'):
+                fields_meta[str(field['name'])] = field
+        return fields_meta
+    return {}
+
+
+template_fields = load_template_fields(template_json_path, resource)
+
+def is_locale_key(locale: object) -> bool:
+    return isinstance(locale, str) and re.match(r'^[a-z]{2}(?:-[a-zA-Z0-9]+)*$', locale) is not None
+
+template_locales = {'en', 'es'}
+if isinstance(template_fields, dict):
+    for meta in template_fields.values():
+        if not isinstance(meta, dict):
+            continue
+        i18n = meta.get('i18n')
+        if not isinstance(i18n, dict):
+            continue
+        for locale in i18n.keys():
+            if is_locale_key(locale):
+                template_locales.add(str(locale))
+
+locales = ['en', 'es'] + sorted(
+    [locale for locale in template_locales if locale not in {'en', 'es'}]
+)
+lang_fields = {locale: [] for locale in locales}
 
 # Parse fields
 fields = []
@@ -451,8 +535,6 @@ index_rows = []
 create_fields = []
 edit_fields = []
 show_rows = []
-lang_en = []
-lang_es = []
 reorder_field = ''
 reorder_display_key = ''
 
@@ -463,6 +545,13 @@ for f in fields:
     enum_opts = f['enum_options']
     rel_table = f['relation_table']
     is_order_field = name in ORDER_FIELD_NAMES and ftype in ['int', 'bigint']
+    meta = template_fields.get(name, {}) if isinstance(template_fields, dict) else {}
+    if not isinstance(meta, dict):
+        meta = {}
+    i18n = meta.get('i18n') if isinstance(meta.get('i18n'), dict) else {}
+    base_label = str(meta.get('label') or humanize_field_name(name))
+    base_placeholder = str(meta.get('placeholder') or default_placeholder(ftype, base_label, 'en'))
+    base_help = str(meta.get('help') or default_help(ftype, base_label, 'en'))
 
     if not is_order_field and not reorder_display_key:
         reorder_display_key = name
@@ -505,9 +594,20 @@ for f in fields:
         payload_line = "            '{}' => $this->postString('{}'),".format(name, name)
     req_payload.append(payload_line)
     
-    h_label = name.replace('_id', '').replace('_', ' ').title()
-    lang_en.append("    'field_{}' => '{}',".format(name, h_label))
-    lang_es.append("    'field_{}' => '{}',".format(name, h_label))
+    for locale in locales:
+        locale_meta = i18n.get(locale, {}) if isinstance(i18n, dict) else {}
+        if not isinstance(locale_meta, dict):
+            locale_meta = {}
+
+        label = str(locale_meta.get('label') or base_label)
+        placeholder = str(locale_meta.get('placeholder') or base_placeholder or default_placeholder(ftype, label, locale))
+        help_text = str(locale_meta.get('help') or base_help or default_help(ftype, label, locale))
+
+        lang_fields[locale].append("    'field_{}' => '{}',".format(name, php_escape(label)))
+        if placeholder:
+            lang_fields[locale].append("    'field_{}_placeholder' => '{}',".format(name, php_escape(placeholder)))
+        if help_text:
+            lang_fields[locale].append("    'field_{}_help' => '{}',".format(name, php_escape(help_text)))
     
     header = """                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('{name}')">
                             <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('{name}')" aria-label="<?= esc(lang('TableA11y.sort_by', [lang('{module}.field_{name}')])) ?>">
@@ -564,6 +664,8 @@ for f in fields:
             'label' => '{module}.field_{name}',
             'required' => {req_php},
             'value' => $item['{name}'] ?? '',
+            'placeholder' => '{module}.field_{name}_placeholder',
+            'help' => '{module}.field_{name}_help',
             'errors' => $errors ?? []
         ]) ?>"""
     elif ftype in ['text', 'longtext']:
@@ -572,6 +674,8 @@ for f in fields:
             'label' => '{module}.field_{name}',
             'required' => {req_php},
             'value' => $item['{name}'] ?? '',
+            'placeholder' => '{module}.field_{name}_placeholder',
+            'help' => '{module}.field_{name}_help',
             'errors' => $errors ?? []
         ]) ?>"""
     elif ftype in ['int', 'bigint']:
@@ -580,6 +684,8 @@ for f in fields:
             'label' => '{module}.field_{name}',
             'required' => {req_php},
             'value' => $item['{name}'] ?? '',
+            'placeholder' => '{module}.field_{name}_placeholder',
+            'help' => '{module}.field_{name}_help',
             'errors' => $errors ?? []
         ]) ?>"""
     elif ftype in ['decimal', 'float']:
@@ -588,6 +694,8 @@ for f in fields:
             'label' => '{module}.field_{name}',
             'required' => {req_php},
             'value' => $item['{name}'] ?? '',
+            'placeholder' => '{module}.field_{name}_placeholder',
+            'help' => '{module}.field_{name}_help',
             'errors' => $errors ?? []
         ]) ?>"""
     elif ftype == 'boolean':
@@ -597,6 +705,7 @@ for f in fields:
             'value' => $item['{name}'] ?? false,
             'on_label' => 'App.yes',
             'off_label' => 'App.no',
+            'help' => '{module}.field_{name}_help',
             'errors' => $errors ?? []
         ]) ?>"""
     elif ftype == 'date':
@@ -605,6 +714,8 @@ for f in fields:
             'label' => '{module}.field_{name}',
             'required' => {req_php},
             'value' => $item['{name}'] ?? '',
+            'placeholder' => '{module}.field_{name}_placeholder',
+            'help' => '{module}.field_{name}_help',
             'errors' => $errors ?? []
         ]) ?>"""
     elif ftype == 'datetime':
@@ -613,6 +724,8 @@ for f in fields:
             'label' => '{module}.field_{name}',
             'required' => {req_php},
             'value' => $item['{name}'] ?? '',
+            'placeholder' => '{module}.field_{name}_placeholder',
+            'help' => '{module}.field_{name}_help',
             'errors' => $errors ?? []
         ]) ?>"""
     elif ftype == 'enum':
@@ -621,6 +734,8 @@ for f in fields:
             'name' => '{name}',
             'label' => '{module}.field_{name}',
             'required' => {req_php},
+            'placeholder' => '{module}.field_{name}_placeholder',
+            'help' => '{module}.field_{name}_help',
             'options' => [
 {opts_php}
             ],
@@ -633,6 +748,8 @@ for f in fields:
             'label' => '{module}.field_{name}',
             'required' => {req_php},
             'options' => ${rel_table} ?? [],
+            'placeholder' => '{module}.field_{name}_placeholder',
+            'help' => '{module}.field_{name}_help',
             'value' => $item['{name}'] ?? '',
             'errors' => $errors ?? []
         ]) ?>""".replace('{rel_table}', rel_table)
@@ -641,6 +758,7 @@ for f in fields:
             'name' => '{name}',
             'label' => '{module}.field_{name}',
             'value' => $item['{name}'] ?? '',
+            'help' => '{module}.field_{name}_help',
             'errors' => $errors ?? []
         ]) ?>"""
     elif ftype == 'image':
@@ -648,6 +766,7 @@ for f in fields:
             'name' => '{name}',
             'label' => '{module}.field_{name}',
             'value' => $item['{name}'] ?? '',
+            'help' => '{module}.field_{name}_help',
             'errors' => $errors ?? []
         ]) ?>"""
     else:
@@ -656,6 +775,8 @@ for f in fields:
             'label' => '{module}.field_{name}',
             'required' => {req_php},
             'value' => $item['{name}'] ?? '',
+            'placeholder' => '{module}.field_{name}_placeholder',
+            'help' => '{module}.field_{name}_help',
             'errors' => $errors ?? []
         ]) ?>"""
         
@@ -705,8 +826,8 @@ output = {
     'create_fields': "\n\n".join(create_fields),
     'edit_fields': "\n\n".join(edit_fields),
     'show_rows': "\n".join(show_rows),
-    'lang_en': "\n".join(lang_en),
-    'lang_es': "\n".join(lang_es),
+    'lang_fields': {locale: "\n".join(lines) for locale, lines in lang_fields.items()},
+    'lang_locales': locales,
     'reorder_field': reorder_field,
     'reorder_display_key': reorder_display_key
 }
@@ -722,6 +843,14 @@ extract_snippet() {
     ' -- "$key"
 }
 
+extract_json_snippet() {
+    local key="$1"
+    echo "$GENERATED_SNIPPETS" | php -r '
+        $json = json_decode(file_get_contents("php://stdin"), true);
+        echo json_encode($json[$argv[1]] ?? null, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    ' -- "$key"
+}
+
 REQ_FIELDS=$(extract_snippet 'req_fields')
 REQ_RULES=$(extract_snippet 'req_rules')
 REQ_PAYLOAD=$(extract_snippet 'req_payload')
@@ -730,14 +859,20 @@ VIEW_INDEX_ROWS=$(extract_snippet 'index_rows')
 VIEW_CREATE_FIELDS=$(extract_snippet 'create_fields')
 VIEW_EDIT_FIELDS=$(extract_snippet 'edit_fields')
 VIEW_SHOW_ROWS=$(extract_snippet 'show_rows')
-LANG_EN_FIELDS=$(extract_snippet 'lang_en')
-LANG_ES_FIELDS=$(extract_snippet 'lang_es')
+LANG_LOCALES_JSON=$(extract_json_snippet 'lang_locales')
+LANG_FIELDS_JSON=$(extract_json_snippet 'lang_fields')
 REORDER_FIELD=$(extract_snippet 'reorder_field')
 REORDER_DISPLAY_KEY=$(extract_snippet 'reorder_display_key')
 HAS_REORDER=false
 if [[ -n "$REORDER_FIELD" ]]; then
     HAS_REORDER=true
 fi
+
+LANG_LOCALE_LIST=()
+while IFS= read -r locale; do
+    [[ -n "$locale" ]] || continue
+    LANG_LOCALE_LIST+=("$locale")
+done < <(printf '%s' "$LANG_LOCALES_JSON" | jq -r '.[]')
 
 REORDER_ROUTE_BLOCK=""
 REORDER_CONTROLLER_ACTIONS=""
@@ -910,8 +1045,6 @@ PLANNED_FILES=(
     "${MODULE_DIR}/Requests/${UPDATE_REQUEST}.php"
     "${MODULE_DIR}/Controllers/${CONTROLLER_CLASS}.php"
     "${MODULE_DIR}/Config/Routes.php"
-    "${MODULE_DIR}/Language/en/${MODULE}.php"
-    "${MODULE_DIR}/Language/es/${MODULE}.php"
     "app/Views/${VIEW_PATH}/index.php"
     "app/Views/${VIEW_PATH}/show.php"
     "app/Views/${VIEW_PATH}/create.php"
@@ -924,6 +1057,9 @@ PLANNED_FILES=(
 if [[ "$HAS_REORDER" == true ]]; then
     PLANNED_FILES+=("app/Views/${VIEW_PATH}/reorder.php")
 fi
+for locale in "${LANG_LOCALE_LIST[@]}"; do
+    PLANNED_FILES+=("${MODULE_DIR}/Language/${locale}/${MODULE}.php")
+done
 
 COLLISION_REPORT=$(python3 - "${PLANNED_FILES[@]}" <<'PYEOF'
 import os, sys
@@ -1030,11 +1166,12 @@ else
     mkdir -p "${MODULE_DIR}/Services"
     mkdir -p "${MODULE_DIR}/Requests"
     mkdir -p "${MODULE_DIR}/Config"
-    mkdir -p "${MODULE_DIR}/Language/en"
-    mkdir -p "${MODULE_DIR}/Language/es"
     mkdir -p "app/Views/${VIEW_PATH}/partials"
     mkdir -p "tests/feature"
     mkdir -p "tests/unit/Services"
+    for locale in "${LANG_LOCALE_LIST[@]}"; do
+        mkdir -p "${MODULE_DIR}/Language/${locale}"
+    done
     echo -e "${GREEN}✓ Done${NC}"
 fi
 
@@ -1362,10 +1499,19 @@ fi
 
 # ── Language stubs ─────────────────────────────────────────────────────────────
 
-# Skip if exists semantics for language files (matches write_file behavior)
 write_lang() {
     local lang_file="$1"
     local locale="${2:-en}"
+    local field_lines
+    field_lines=$(printf '%s' "$LANG_FIELDS_JSON" | jq -r --arg locale "$locale" '.[$locale] // ""')
+
+    local actions_block="$LANG_EN_ACTIONS"
+    local todo_comment=""
+    local existed_before=false
+    if [[ "$locale" == "es" ]]; then
+        actions_block="$LANG_ES_ACTIONS"
+        todo_comment="// TODO: Revisa todas las traducciones (singular/plural y género gramatical pueden variar)."
+    fi
 
     if [[ "$DRY_RUN" == true ]]; then
         if [[ -f "$lang_file" ]]; then
@@ -1382,74 +1528,9 @@ write_lang() {
             echo -e "  ${YELLOW}⚠ Skipped (exists & keys present):  ${lang_file}${NC}"
             return
         fi
-
-        echo -e "  ${BLUE}🗏 Merging new keys into existing language file: ${lang_file}${NC}"
-
-        # Prepare the block of keys to append
-        local new_keys
-        if [[ "$locale" == "es" ]]; then
-            new_keys="
-    // ${RESOURCE} — list & actions
-    '${LANG_PREFIX}_title'              => '${RESOURCE_LABEL}s',
-    '${LANG_PREFIX}_new'                => 'Nuevo ${RESOURCE_LABEL}',
-    '${LANG_PREFIX}_create'             => 'Nuevo ${RESOURCE_LABEL}',
-    '${LANG_PREFIX}_edit'               => 'Editar ${RESOURCE_LABEL}',
-    '${LANG_PREFIX}_details'            => 'Detalle de ${RESOURCE_LABEL}',
-    '${LANG_PREFIX}_not_found'          => '${RESOURCE_LABEL} no encontrado.',
-    '${LANG_PREFIX}_create_success'     => '${RESOURCE_LABEL} creado correctamente.',
-    '${LANG_PREFIX}_create_failed'      => 'No se pudo crear el ${RESOURCE_LOWER}.',
-    '${LANG_PREFIX}_update_success'     => '${RESOURCE_LABEL} actualizado correctamente.',
-    '${LANG_PREFIX}_update_failed'      => 'No se pudo actualizar el ${RESOURCE_LOWER}.',
-    '${LANG_PREFIX}_delete_success'     => '${RESOURCE_LABEL} eliminado correctamente.',
-    '${LANG_PREFIX}_delete_failed'      => 'No se pudo eliminar el ${RESOURCE_LOWER}.',
-    '${LANG_PREFIX}_empty'              => 'Aún no hay ${RESOURCE_LOWER}s registrados.',
-    '${LANG_PREFIX}_search_placeholder' => 'Buscar por nombre...',
-    '${LANG_PREFIX}_loading'            => 'Cargando ${RESOURCE_LOWER}s...',
-    '${LANG_PREFIX}_no_results'         => 'No se encontraron ${RESOURCE_LOWER}s.',
-\${LANG_ES_ACTIONS}"
-        else
-            new_keys="
-    // ${RESOURCE} — list & actions
-    '${LANG_PREFIX}_title'              => '${RESOURCE_LABEL}s',
-    '${LANG_PREFIX}_new'                => 'New ${RESOURCE_LABEL}',
-    '${LANG_PREFIX}_create'             => 'New ${RESOURCE_LABEL}',
-    '${LANG_PREFIX}_edit'               => 'Edit ${RESOURCE_LABEL}',
-    '${LANG_PREFIX}_details'            => '${RESOURCE_LABEL} details',
-    '${LANG_PREFIX}_not_found'          => '${RESOURCE_LABEL} not found.',
-    '${LANG_PREFIX}_create_success'     => '${RESOURCE_LABEL} created successfully.',
-    '${LANG_PREFIX}_create_failed'      => 'Could not create the ${RESOURCE_LOWER}.',
-    '${LANG_PREFIX}_update_success'     => '${RESOURCE_LABEL} updated successfully.',
-    '${LANG_PREFIX}_update_failed'      => 'Could not update the ${RESOURCE_LOWER}.',
-    '${LANG_PREFIX}_delete_success'     => '${RESOURCE_LABEL} deleted successfully.',
-    '${LANG_PREFIX}_delete_failed'      => 'Could not delete the ${RESOURCE_LOWER}.',
-    '${LANG_PREFIX}_empty'              => 'No ${RESOURCE_LOWER}s registered yet.',
-    '${LANG_PREFIX}_search_placeholder' => 'Search by name...',
-    '${LANG_PREFIX}_loading'            => 'Loading ${RESOURCE_LOWER}s...',
-    '${LANG_PREFIX}_no_results'         => 'No ${RESOURCE_LOWER}s found.',
-\${LANG_EN_ACTIONS}"
-        fi
-
-        # Safely inject the new keys before the last closing bracket "];" using PHP
-        php -r '
-            $file = $argv[1];
-            $keys = $argv[2];
-            $content = file_get_contents($file);
-            $pos = strrpos($content, "];");
-            if ($pos !== false) {
-                $patched = substr($content, 0, $pos) . $keys . "\n];\n";
-                if (file_put_contents($file, $patched) !== false) {
-                    exit(0);
-                }
-            }
-            exit(1);
-        ' "$lang_file" "$new_keys"
-
-        if [[ $? -eq 0 ]]; then
-            echo -e "  ${GREEN}✓ Merged keys:       ${lang_file}${NC}"
-        else
-            echo -e "  ${RED}✗ Failed to merge keys into: ${lang_file}${NC}"
-        fi
-        return
+    fi
+    if [[ -f "$lang_file" ]]; then
+        existed_before=true
     fi
 
     local content
@@ -1458,7 +1539,7 @@ write_lang() {
 
 declare(strict_types=1);
 
-// TODO: Revisa todas las traducciones (singular/plural y género gramatical pueden variar).
+${todo_comment}
 return [
     // ${RESOURCE} — list & actions
     '${LANG_PREFIX}_title'              => '${RESOURCE_LABEL}s',
@@ -1477,10 +1558,10 @@ return [
     '${LANG_PREFIX}_search_placeholder' => 'Buscar por nombre...',
     '${LANG_PREFIX}_loading'            => 'Cargando ${RESOURCE_LOWER}s...',
     '${LANG_PREFIX}_no_results'         => 'No se encontraron ${RESOURCE_LOWER}s.',
-${LANG_ES_ACTIONS}
+${actions_block}
 
     // ${RESOURCE} — form fields (add more as needed)
-${LANG_ES_FIELDS}
+${field_lines}
 ];"
     else
         content="<?php
@@ -1505,24 +1586,26 @@ return [
     '${LANG_PREFIX}_search_placeholder' => 'Search by name...',
     '${LANG_PREFIX}_loading'            => 'Loading ${RESOURCE_LOWER}s...',
     '${LANG_PREFIX}_no_results'         => 'No ${RESOURCE_LOWER}s found.',
-${LANG_EN_ACTIONS}
+${actions_block}
 
     // ${RESOURCE} — form fields (add more as needed)
-${LANG_EN_FIELDS}
+${field_lines}
 ];"
     fi
 
-    if [[ -f "$lang_file" && "$FORCE" == true ]]; then
-        printf '%s\n' "$content" > "$lang_file"
+    mkdir -p "$(dirname "$lang_file")"
+    printf '%s\n' "$content" > "$lang_file"
+    if [[ "$existed_before" == true && "$FORCE" == true ]]; then
         echo -e "  ${GREEN}✓ Overwritten:       ${lang_file}${NC}"
     else
-        printf '%s\n' "$content" > "$lang_file"
         echo -e "  ${GREEN}✓ Created:           ${lang_file}${NC}"
     fi
 }
 
-write_lang "${MODULE_DIR}/Language/en/${MODULE}.php" "en"
-write_lang "${MODULE_DIR}/Language/es/${MODULE}.php" "es"
+while IFS= read -r locale; do
+    [[ -n "$locale" ]] || continue
+    write_lang "${MODULE_DIR}/Language/${locale}/${MODULE}.php" "$locale"
+done < <(printf '%s' "$LANG_LOCALES_JSON" | jq -r '.[]')
 
 # ── View stubs ─────────────────────────────────────────────────────────────────
 
@@ -1993,12 +2076,14 @@ if [[ "$DRY_RUN" != true ]]; then
             "${MODULE_DIR}/Requests/${UPDATE_REQUEST}.php" \
             "${MODULE_DIR}/Controllers/${CONTROLLER_CLASS}.php" \
             "${MODULE_DIR}/Config/Routes.php" \
-            "${MODULE_DIR}/Language/en/${MODULE}.php" \
-            "${MODULE_DIR}/Language/es/${MODULE}.php" \
             "tests/feature/${RESOURCE}FlowTest.php" \
             "tests/unit/Services/${SERVICE_CLASS}Test.php"
         do
             [[ -f "$f" ]] && GENERATED_PHP_FILES+=("$f")
+        done
+        for locale in "${LANG_LOCALE_LIST[@]}"; do
+            lang_file="${MODULE_DIR}/Language/${locale}/${MODULE}.php"
+            [[ -f "$lang_file" ]] && GENERATED_PHP_FILES+=("$lang_file")
         done
         if [[ "$HAS_REORDER" == true ]]; then
             [[ -f "app/Views/${VIEW_PATH}/reorder.php" ]] && GENERATED_PHP_FILES+=("app/Views/${VIEW_PATH}/reorder.php")
@@ -2028,8 +2113,6 @@ if [[ "$DRY_RUN" != true ]]; then
         "${MODULE_DIR}/Requests/${UPDATE_REQUEST}.php"
         "${MODULE_DIR}/Controllers/${CONTROLLER_CLASS}.php"
         "${MODULE_DIR}/Config/Routes.php"
-        "${MODULE_DIR}/Language/en/${MODULE}.php"
-        "${MODULE_DIR}/Language/es/${MODULE}.php"
         "app/Views/${VIEW_PATH}/index.php"
         "app/Views/${VIEW_PATH}/show.php"
         "app/Views/${VIEW_PATH}/create.php"
@@ -2039,6 +2122,9 @@ if [[ "$DRY_RUN" != true ]]; then
         "tests/feature/${RESOURCE}FlowTest.php"
         "tests/unit/Services/${SERVICE_CLASS}Test.php"
     )
+    for locale in "${LANG_LOCALE_LIST[@]}"; do
+        EXPECTED_FILES+=("${MODULE_DIR}/Language/${locale}/${MODULE}.php")
+    done
     if [[ "$HAS_REORDER" == true ]]; then
         EXPECTED_FILES+=("app/Views/${VIEW_PATH}/reorder.php")
     fi
@@ -2108,8 +2194,9 @@ echo "       app/Views/${VIEW_PATH}/show.php              (add <dt>/<dd> rows fo
 echo "       app/Views/${VIEW_PATH}/partials/filters.php  (add filter selects if needed)"
 echo "       app/Views/${VIEW_PATH}/index.php             (add table columns for new fields)"
 echo "  3. Add language keys for new fields in:"
-echo "       ${MODULE_DIR}/Language/en/${MODULE}.php"
-echo "       ${MODULE_DIR}/Language/es/${MODULE}.php  (review TODO header)"
+for locale in "${LANG_LOCALE_LIST[@]}"; do
+    echo "       ${MODULE_DIR}/Language/${locale}/${MODULE}.php"
+done
 echo "  4. Restart the dev server (routes are not hot-reloaded):"
 echo "       pkill -f 'spark serve'; php spark serve --port 8082 &"
 echo "  5. Run tests for the new module:"

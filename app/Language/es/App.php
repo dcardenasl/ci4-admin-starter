@@ -48,6 +48,8 @@ return [
     'info'            => 'Información',
     'no_results'      => 'No se encontraron resultados.',
     'no_results_desc' => 'No hay registros activos disponibles en esta tabla.',
+    'relation_missing_options' => 'Esta relación no tiene opciones seleccionables.',
+    'relation_missing_options_desc' => 'El controller debe pasar un arreglo de opciones con datos antes de usar este campo.',
     'connection_error' => 'Error de conexión con el servidor.',
     'unknown_error'    => 'Ha ocurrido un error inesperado.',
     'session_expired'  => 'Tu sesión ha expirado. Por favor ingresa de nuevo.',

@@ -48,6 +48,8 @@ return [
     'info'            => 'Info',
     'no_results'      => 'No results found.',
     'no_results_desc' => 'There are no active records available in this table.',
+    'relation_missing_options' => 'This relation has no selectable options.',
+    'relation_missing_options_desc' => 'The controller must pass a populated options array before this field can be used.',
     'connection_error' => 'Server connection error.',
     'unknown_error'    => 'An unexpected error occurred.',
     'session_expired'  => 'Your session has expired. Please log in again.',

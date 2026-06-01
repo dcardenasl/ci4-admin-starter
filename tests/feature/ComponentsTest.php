@@ -95,6 +95,22 @@ final class ComponentsTest extends CIUnitTestCase
         $this->assertStringContainsString('Active State', $html);
     }
 
+    public function testRelationComponentWarnsWhenOptionsAreMissing(): void
+    {
+        $html = view('components/form/relation', [
+            'name' => 'category_id',
+            'label' => 'App.category',
+            'required' => true,
+            'options' => [],
+            'help' => 'App.visible_help',
+        ], ['saveData' => false]);
+
+        $this->assertStringContainsString(lang('App.relation_missing_options'), $html);
+        $this->assertStringContainsString(lang('App.relation_missing_options_desc'), $html);
+        $this->assertStringNotContainsString('<select', $html);
+        $this->assertStringContainsString(lang('App.visible_help'), $html);
+    }
+
     public function testBooleanComponentRendersToggleState(): void
     {
         $html = view('components/form/boolean', [

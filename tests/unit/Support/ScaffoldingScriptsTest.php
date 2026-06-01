@@ -252,6 +252,302 @@ class ScaffoldingScriptsTest extends CIUnitTestCase
         self::runScript('bin/remove-module.sh Article Editorial');
     }
 
+    public function testMakeModuleRelationFieldUsesRelationComponentContract(): void
+    {
+        self::runScript('bin/make-module.sh Article Catalog /catalog/articles "name:string:required,category_id:relation:required:categories"');
+
+        $create = (string) file_get_contents(self::$sandbox . '/app/Views/catalog/articles/create.php');
+        $edit = (string) file_get_contents(self::$sandbox . '/app/Views/catalog/articles/edit.php');
+
+        $this->assertStringContainsString("components/form/relation", $create);
+        $this->assertStringContainsString("'options' => \$categories ?? []", $create);
+        $this->assertStringContainsString("components/form/relation", $edit);
+        $this->assertStringContainsString("'options' => \$categories ?? []", $edit);
+
+        self::runScript('bin/remove-module.sh Article Catalog');
+    }
+
+    public function testMakeModuleDerivesFieldMetadataFromTemplateJson(): void
+    {
+        $templateFile = self::$sandbox . '/template-metadata.json';
+        file_put_contents(
+            $templateFile,
+            json_encode([
+                'entities' => [
+                    [
+                        'name' => 'Guide',
+                        'fields' => [
+                            [
+                                'name' => 'title',
+                                'type' => 'string',
+                                'label' => 'Headline',
+                                'placeholder' => 'Enter headline',
+                                'help' => 'Primary headline shown in listings.',
+                                'i18n' => [
+                                    'es' => [
+                                        'label' => 'Titular',
+                                        'placeholder' => 'Ingresa titular',
+                                        'help' => 'Titular principal mostrado en listados.',
+                                    ],
+                                    'fr' => [
+                                        'label' => 'Gros titre',
+                                        'help' => 'Titre principal affiché dans les listes.',
+                                    ],
+                                ],
+                            ],
+                            [
+                                'name' => 'summary',
+                                'type' => 'text',
+                                'label' => 'Summary',
+                                'help' => 'Short summary for cards.',
+                            ],
+                            [
+                                'name' => 'published_at',
+                                'type' => 'datetime',
+                                'label' => 'Publish At',
+                            ],
+                        ],
+                    ],
+                ],
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+        );
+
+        self::runScript(
+            'bin/make-module.sh Guide Metadata /metadata/guides "title:string:required,summary:text,published_at:datetime"',
+            ['CI4_TEMPLATE_JSON' => 'template-metadata.json']
+        );
+
+        $create = (string) file_get_contents(self::$sandbox . '/app/Views/metadata/guides/create.php');
+        $langEn = (string) file_get_contents(self::$sandbox . '/app/Modules/Metadata/Language/en/Metadata.php');
+        $langEs = (string) file_get_contents(self::$sandbox . '/app/Modules/Metadata/Language/es/Metadata.php');
+        $langFr = (string) file_get_contents(self::$sandbox . '/app/Modules/Metadata/Language/fr/Metadata.php');
+
+        $this->assertStringContainsString("components/form/text", $create);
+        $this->assertStringContainsString("'placeholder' => 'Metadata.field_title_placeholder'", $create);
+        $this->assertStringContainsString("'help' => 'Metadata.field_title_help'", $create);
+        $this->assertStringContainsString("'placeholder' => 'Metadata.field_summary_placeholder'", $create);
+        $this->assertStringContainsString("'help' => 'Metadata.field_summary_help'", $create);
+        $this->assertStringContainsString("'placeholder' => 'Metadata.field_published_at_placeholder'", $create);
+        $this->assertStringContainsString("'help' => 'Metadata.field_published_at_help'", $create);
+
+        $this->assertStringContainsString("'field_title' => 'Headline'", $langEn);
+        $this->assertStringContainsString("'field_title_placeholder' => 'Enter headline'", $langEn);
+        $this->assertStringContainsString("'field_title_help' => 'Primary headline shown in listings.'", $langEn);
+        $this->assertStringContainsString("'field_summary' => 'Summary'", $langEn);
+        $this->assertStringContainsString("'field_summary_help' => 'Short summary for cards.'", $langEn);
+        $this->assertStringContainsString("'field_published_at_placeholder' => 'Select Publish At'", $langEn);
+        $this->assertStringContainsString("'field_published_at_help' => 'Select Publish At.'", $langEn);
+
+        $this->assertStringContainsString("'field_title' => 'Titular'", $langEs);
+        $this->assertStringContainsString("'field_title_placeholder' => 'Ingresa titular'", $langEs);
+        $this->assertStringContainsString("'field_title_help' => 'Titular principal mostrado en listados.'", $langEs);
+        $this->assertStringContainsString("'field_summary' => 'Summary'", $langEs);
+        $this->assertStringContainsString("'field_summary_help' => 'Short summary for cards.'", $langEs);
+        $this->assertStringContainsString("'field_published_at_placeholder' => 'Select Publish At'", $langEs);
+        $this->assertStringContainsString("'field_published_at_help' => 'Select Publish At.'", $langEs);
+
+        $this->assertStringContainsString("'field_title' => 'Gros titre'", $langFr);
+        $this->assertStringContainsString("'field_title_placeholder' => 'Enter headline'", $langFr);
+        $this->assertStringContainsString("'field_title_help' => 'Titre principal affiché dans les listes.'", $langFr);
+        $this->assertStringContainsString("'field_summary' => 'Summary'", $langFr);
+        $this->assertStringContainsString("'field_summary_help' => 'Short summary for cards.'", $langFr);
+        $this->assertStringContainsString("'field_published_at_placeholder' => 'Select Publish At'", $langFr);
+        $this->assertStringContainsString("'field_published_at_help' => 'Select Publish At.'", $langFr);
+
+        self::runScript('bin/remove-module.sh Guide Metadata');
+        @unlink($templateFile);
+    }
+
+    public function testValidateTemplateAcceptsCleanI18nFields(): void
+    {
+        $templateFile = self::$sandbox . '/clean-template.json';
+        file_put_contents(
+            $templateFile,
+            json_encode([
+                'name' => 'Clean',
+                'slug' => 'clean-template',
+                'version' => '1.0.0',
+                'entities' => [
+                    [
+                        'name' => 'Guide',
+                        'resource' => 'guides',
+                        'api_path' => '/guides',
+                        'fields' => [
+                            [
+                                'name' => 'title',
+                                'type' => 'string',
+                                'label' => 'Title',
+                                'help' => 'Public title',
+                                'i18n' => [
+                                    'es' => [
+                                        'label' => 'Título',
+                                        'help' => 'Título público',
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+                'permissions' => ['guides.read'],
+                'admin_modules' => [
+                    [
+                        'resource' => 'Guide',
+                        'module' => 'Guide',
+                        'api_path' => '/guides',
+                        'service' => 'hub',
+                        'fields' => 'title:string:required',
+                    ],
+                ],
+                'admin_sidebar' => [
+                    [
+                        'module' => 'Guide',
+                        'label' => 'Guide.sidebar_label',
+                        'icon' => 'book',
+                        'permission' => 'guides.read',
+                        'items' => ['Guide'],
+                    ],
+                ],
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+        );
+
+        $output = [];
+        $code = 0;
+        $validator = dirname(self::$repoRoot) . '/ci4-kickstart/bin/validate-template.php';
+        exec(
+            'php ' . escapeshellarg($validator) . ' ' . escapeshellarg($templateFile) . ' 2>&1',
+            $output,
+            $code
+        );
+
+        $this->assertSame(0, $code);
+        $this->assertStringContainsString('OK: Manifest file clean-template.json is valid!', implode("\n", $output));
+        @unlink($templateFile);
+    }
+
+    public function testValidateTemplateRejectsLegacyFieldKeys(): void
+    {
+        $templateFile = self::$sandbox . '/legacy-template.json';
+        file_put_contents(
+            $templateFile,
+            json_encode([
+                'name' => 'Legacy',
+                'slug' => 'legacy-template',
+                'version' => '1.0.0',
+                'entities' => [
+                    [
+                        'name' => 'Guide',
+                        'resource' => 'guides',
+                        'api_path' => '/guides',
+                        'fields' => [
+                            [
+                                'name' => 'title',
+                                'type' => 'string',
+                                'label' => 'Title',
+                                'title_es' => 'Título',
+                            ],
+                        ],
+                    ],
+                ],
+                'permissions' => ['guides.read'],
+                'admin_modules' => [
+                    [
+                        'resource' => 'Guide',
+                        'module' => 'Guide',
+                        'api_path' => '/guides',
+                        'service' => 'hub',
+                        'fields' => 'title:string:required',
+                    ],
+                ],
+                'admin_sidebar' => [
+                    [
+                        'module' => 'Guide',
+                        'label' => 'Guide.sidebar_label',
+                        'icon' => 'book',
+                        'permission' => 'guides.read',
+                        'items' => ['Guide'],
+                    ],
+                ],
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+        );
+
+        $output = [];
+        $code = 0;
+        $validator = dirname(self::$repoRoot) . '/ci4-kickstart/bin/validate-template.php';
+        exec(
+            'php ' . escapeshellarg($validator) . ' ' . escapeshellarg($templateFile) . ' 2>&1',
+            $output,
+            $code
+        );
+
+        $this->assertNotSame(0, $code);
+        $this->assertStringContainsString("must not use legacy key 'title_es'", implode("\n", $output));
+        @unlink($templateFile);
+    }
+
+    public function testValidateTemplateRejectsMalformedLocaleKeys(): void
+    {
+        $templateFile = self::$sandbox . '/bad-locale-template.json';
+        file_put_contents(
+            $templateFile,
+            json_encode([
+                'name' => 'BadLocale',
+                'slug' => 'bad-locale-template',
+                'version' => '1.0.0',
+                'entities' => [
+                    [
+                        'name' => 'Guide',
+                        'resource' => 'guides',
+                        'api_path' => '/guides',
+                        'fields' => [
+                            [
+                                'name' => 'title',
+                                'type' => 'string',
+                                'label' => 'Title',
+                                'i18n' => [
+                                    'en_US' => [
+                                        'label' => 'Title',
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+                'permissions' => ['guides.read'],
+                'admin_modules' => [
+                    [
+                        'resource' => 'Guide',
+                        'module' => 'Guide',
+                        'api_path' => '/guides',
+                        'service' => 'hub',
+                        'fields' => 'title:string:required',
+                    ],
+                ],
+                'admin_sidebar' => [
+                    [
+                        'module' => 'Guide',
+                        'label' => 'Guide.sidebar_label',
+                        'icon' => 'book',
+                        'permission' => 'guides.read',
+                        'items' => ['Guide'],
+                    ],
+                ],
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+        );
+
+        $output = [];
+        $code = 0;
+        $validator = dirname(self::$repoRoot) . '/ci4-kickstart/bin/validate-template.php';
+        exec(
+            'php ' . escapeshellarg($validator) . ' ' . escapeshellarg($templateFile) . ' 2>&1',
+            $output,
+            $code
+        );
+
+        $this->assertNotSame(0, $code);
+        $this->assertStringContainsString('uses an invalid locale key', implode("\n", $output));
+        @unlink($templateFile);
+    }
+
     public function testRegisterSidebarIsIdempotentAndUsesModuleFallbackLabels(): void
     {
         $sidebarFile = self::$sandbox . '/app/Views/layouts/partials/sidebar.php';
@@ -329,14 +625,18 @@ class ScaffoldingScriptsTest extends CIUnitTestCase
         $this->assertStringContainsString('BetaController', $routes);
     }
 
-    private static function runScript(string $command): string
+    private static function runScript(string $command, array $env = []): string
     {
         $cwd = getcwd();
         chdir(self::$sandbox);
         $output = [];
         $code = 0;
+        $envPrefix = '';
+        foreach ($env as $key => $value) {
+            $envPrefix .= $key . '=' . escapeshellarg((string) $value) . ' ';
+        }
         // 2>&1 captures both stdout and stderr — useful when the script fails.
-        exec("bash {$command} 2>&1", $output, $code);
+        exec($envPrefix . "bash {$command} 2>&1", $output, $code);
         chdir((string) $cwd);
 
         $stdout = implode("\n", $output);
