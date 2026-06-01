@@ -447,6 +447,27 @@ def default_help(field_type: str, label: str, locale: str) -> str:
     return ''
 
 
+def default_boolean_state(field_name: str, label: str, locale: str, is_on: bool) -> str:
+    seed = f"{field_name} {label}".lower()
+    if 'active' in seed:
+        if locale == 'es':
+            return 'Activo' if is_on else 'Inactivo'
+        return 'Active' if is_on else 'Inactive'
+    if 'publish' in seed:
+        if locale == 'es':
+            return 'Publicado' if is_on else 'No publicado'
+        return 'Published' if is_on else 'Unpublished'
+    if 'visible' in seed:
+        return 'Visible' if is_on else ('Oculto' if locale == 'es' else 'Hidden')
+    if 'enable' in seed:
+        if locale == 'es':
+            return 'Habilitado' if is_on else 'Deshabilitado'
+        return 'Enabled' if is_on else 'Disabled'
+    if locale == 'es':
+        return 'Sí' if is_on else 'No'
+    return 'Yes' if is_on else 'No'
+
+
 def load_template_fields(path: str, resource_name: str):
     if not path or not os.path.isfile(path):
         return {}
@@ -608,6 +629,9 @@ for f in fields:
             lang_fields[locale].append("    'field_{}_placeholder' => '{}',".format(name, php_escape(placeholder)))
         if help_text:
             lang_fields[locale].append("    'field_{}_help' => '{}',".format(name, php_escape(help_text)))
+        if ftype == 'boolean':
+            lang_fields[locale].append("    'field_{}_on' => '{}',".format(name, php_escape(default_boolean_state(name, label, locale, True))))
+            lang_fields[locale].append("    'field_{}_off' => '{}',".format(name, php_escape(default_boolean_state(name, label, locale, False))))
     
     header = """                        <th class="<?= esc(table_th_class()) ?>" :aria-sort="sortAria('{name}')">
                             <button type="button" class="inline-flex items-center gap-1 hover:text-gray-700" @click="toggleSort('{name}')" aria-label="<?= esc(lang('TableA11y.sort_by', [lang('{module}.field_{name}')])) ?>">
@@ -703,8 +727,8 @@ for f in fields:
             'name' => '{name}',
             'label' => '{module}.field_{name}',
             'value' => $item['{name}'] ?? false,
-            'on_label' => 'App.yes',
-            'off_label' => 'App.no',
+            'on_label' => '{module}.field_{name}_on',
+            'off_label' => '{module}.field_{name}_off',
             'help' => '{module}.field_{name}_help',
             'errors' => $errors ?? []
         ]) ?>"""
@@ -1124,26 +1148,40 @@ else
         echo -e "${YELLOW}Registering PSR-4 namespace for new module ${MODULE}...${NC}"
 
         if python3 - "$AUTOLOAD_FILE" "$MODULE" <<'PYEOF'
-import sys, re
+import sys
 
 autoload_file = sys.argv[1]
 module = sys.argv[2]
 
-with open(autoload_file) as f:
-    content = f.read()
+with open(autoload_file, encoding='utf-8') as f:
+    lines = f.readlines()
 
-new_entry = f"        'App\\\\Modules\\\\{module}'  => APPPATH . 'Modules/{module}',"
+entry = f"        'App\\Modules\\{module}'  => APPPATH . 'Modules/{module}',\n"
+psr4_open = False
+insert_at = None
 
-# Insert immediately before the line that closes the $psr4 array.
-# That line is "    ];" and is followed by a blank line + "    /**" (Class Map comment).
-pattern = r'(    \];\n\n    /\*\*\n     \* -{10,}\n     \* Class Map)'
-new_content = re.sub(pattern, new_entry + '\n' + r'\1', content, count=1)
+for index, line in enumerate(lines):
+    if "public $psr4 = [" in line:
+        psr4_open = True
+        continue
 
-if new_content == content:
+    if not psr4_open:
+        continue
+
+    if line.strip() == '];':
+        insert_at = index
+        break
+
+if insert_at is None:
     sys.exit(1)
 
-with open(autoload_file, 'w') as f:
-    f.write(new_content)
+if any(entry.strip() == line.strip() for line in lines):
+    sys.exit(0)
+
+lines.insert(insert_at, entry)
+
+with open(autoload_file, 'w', encoding='utf-8') as f:
+    f.writelines(lines)
 PYEOF
         then
             echo -e "${GREEN}✓ UPDATED: app/Config/Autoload.php (PSR-4 entry for ${MODULE})${NC}"
@@ -1154,6 +1192,33 @@ PYEOF
         fi
     fi
 fi
+
+# ─── Sidebar registration ──────────────────────────────────────────────────────
+
+register_sidebar_from_template() {
+    local template_json="${CI4_TEMPLATE_JSON:-}"
+
+    if [[ -z "$template_json" || ! -f "$template_json" ]]; then
+        return 0
+    fi
+
+    if [[ "$DRY_RUN" == true ]]; then
+        echo -e "  ${YELLOW}[dry-run] Would register sidebar entries from $(basename "$template_json")${NC}"
+        return 0
+    fi
+
+    if [[ ! -x "bin/register-sidebar.sh" ]]; then
+        echo -e "${YELLOW}⚠ Sidebar registrar not found — add sidebar entries manually if the template defines admin_sidebar.${NC}"
+        return 0
+    fi
+
+    echo -e "${YELLOW}Registering sidebar entries from $(basename "$template_json")...${NC}"
+    if bash bin/register-sidebar.sh "$template_json"; then
+        echo -e "${GREEN}✓ UPDATED: app/Views/layouts/partials/sidebar.php (sidebar entries from $(basename "$template_json"))${NC}"
+    else
+        echo -e "${YELLOW}⚠ Sidebar auto-registration failed. Add sidebar entries manually if the template defines admin_sidebar.${NC}"
+    fi
+}
 
 # ─── Directory structure ───────────────────────────────────────────────────────
 
@@ -2172,6 +2237,8 @@ if [[ "$DRY_RUN" != true ]]; then
     fi
 fi
 
+register_sidebar_from_template
+
 # ─── Summary ───────────────────────────────────────────────────────────────────
 
 echo ""
@@ -2185,7 +2252,8 @@ echo -e "${BLUE}═════════════════════�
 echo ""
 echo "Next steps:"
 if [[ "$IS_NEW_MODULE" == true ]]; then
-echo "  1. Add sidebar entry:  app/Views/layouts/partials/sidebar.php"
+echo "  1. Sidebar entry is auto-registered when CI4_TEMPLATE_JSON defines admin_sidebar."
+echo "     If no template contract is available, add it manually in app/Views/layouts/partials/sidebar.php"
 fi
 echo "  2. Customize form fields in:"
 echo "       ${MODULE_DIR}/Requests/${STORE_REQUEST}.php  (validation rules)"

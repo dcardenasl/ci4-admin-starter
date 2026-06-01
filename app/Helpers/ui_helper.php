@@ -268,6 +268,7 @@ if (! function_exists('ui_icon')) {
             'folder-open'     => 'folder-open',
             'image'           => 'image',
             'layers'          => 'layers',
+            'help-circle'     => 'circle-help',
             'triangle-alert'  => 'triangle-alert',
             'cart'            => 'shopping-cart',
             'warehouse'       => 'warehouse',
