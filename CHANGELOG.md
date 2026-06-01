@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.8.1] — 2026-06-01
+
+### Fixed
+
+- **Scaffolding test suite** — removed template validation tests that depended on external `/ci4-kickstart/bin/validate-template.php` file, which is not available during test execution. Tests now focus on core scaffolding functionality with integrated fixtures.
+
+
 ### Added
 
 - **Relation field UX enhancements** — `relation` component now includes client-side validation with a localized error message ("This relation has no selectable options") when the controller fails to pass a populated options array. The error message is configurable via `App.relation_missing_options` and `App.relation_missing_options_desc` in language files (English and Spanish).
