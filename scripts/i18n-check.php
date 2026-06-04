@@ -73,7 +73,12 @@ function buildCatalog(string $localeRoot, array $locales, string $context, array
 
         foreach ($languageFiles as $file) {
             $basename = basename($file, '.php');
-            $data = require $file;
+            try {
+                $data = require $file;
+            } catch (\Throwable $e) {
+                $errors[] = "[{$context}] ParseError in {$locale}/{$basename}.php: {$e->getMessage()}";
+                continue;
+            }
             if (! is_array($data)) {
                 $errors[] = "[{$context}] Language file does not return array: {$file}";
                 continue;
