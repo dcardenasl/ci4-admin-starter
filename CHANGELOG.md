@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Empty state views** — replaced plain `<p>` text in all legacy index views (`users`, `api_keys`, `audit`, `iam/roles`, `iam/permissions`, `iam/applications`, `files/list_section`, `files/trash`, `admin/universal`) with the `components/display/empty_state` component. Views with a create action now include an action button; read-only views use a context-appropriate icon and the global `App.no_results` / `App.no_results_desc` strings.
+
 ## [2.8.1] — 2026-06-01
 
 ### Fixed
