@@ -399,6 +399,20 @@ else
     ok "Añadido apiClient.appName al .env"
 fi
 
+# apiClient.appKey (auto-provisioned by ci4-kickstart via apps:bootstrap)
+if [ -n "${CI4_ADMIN_APP_KEY:-}" ]; then
+    if grep -q "^# apiClient.appKey" .env; then
+        sed_inplace ".env" "s|^# apiClient.appKey = .*|apiClient.appKey = '${CI4_ADMIN_APP_KEY}'|"
+        ok "Activado apiClient.appKey en .env"
+    elif grep -q "^apiClient.appKey" .env; then
+        sed_inplace ".env" "s|^apiClient.appKey = .*|apiClient.appKey = '${CI4_ADMIN_APP_KEY}'|"
+        ok "Actualizado apiClient.appKey en .env"
+    else
+        echo "apiClient.appKey = '${CI4_ADMIN_APP_KEY}'" >> .env
+        ok "Añadido apiClient.appKey al .env"
+    fi
+fi
+
 # =============================================================================
 # composer install (opcional)
 # =============================================================================

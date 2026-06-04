@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`install.sh` — auto-inject `apiClient.appKey`** — when ci4-kickstart passes `CI4_ADMIN_APP_KEY` after provisioning an admin application via `apps:bootstrap`, `install.sh` now writes `apiClient.appKey = '<key>'` directly into `.env`. Admin projects no longer need manual key configuration; rate limit is raised to 600 req/min automatically on kickstart-generated projects.
+
 ## [2.8.2] — 2026-06-04
 
 ### Fixed
