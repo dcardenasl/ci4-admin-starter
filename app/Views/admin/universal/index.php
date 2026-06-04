@@ -24,7 +24,7 @@
     <div class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700" x-show="error" x-text="errorMessage"></div>
 
     <template x-if="!loading && !error && rows.length === 0">
-        <p class="text-sm text-gray-500 my-6">No records found for <?= esc($title) ?>.</p>
+        <?= view('components/display/empty_state', ['icon' => 'database']) ?>
     </template>
     
     <template x-if="!loading && !error && rows.length > 0">
