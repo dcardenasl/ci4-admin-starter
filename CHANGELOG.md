@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.8.2] — 2026-06-04
+
 ### Fixed
 
 - **`i18n-check.php`** — `require` calls for language files are now wrapped in `try-catch (\Throwable)` so PHP parse errors are reported as check failures instead of causing a fatal crash (FAQ-004).
