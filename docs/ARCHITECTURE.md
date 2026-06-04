@@ -330,3 +330,62 @@ To prevent leaking sensitive information in logs, the `ApiClient` includes a `re
 - **Automatic error mapping** from API response back to form fields
 - **safeApiCall()** wraps the API call for exception handling
 - **All responses normalized** to consistent format by ApiClient
+
+---
+
+## Sidebar Navigation & Permission Gating
+
+### How the sidebar is built
+
+The sidebar (`app/Views/layouts/partials/sidebar.php`) is the single source of truth for navigation visibility. All link visibility is driven exclusively by **permission codes** — never by roles.
+
+### The `has_permission()` rule
+
+```php
+// Always check permissions, never roles:
+if (has_permission('users.read')) { /* show link */ }
+
+// NEVER do this:
+if (session('user.role') === 'admin') { /* wrong */ }
+```
+
+`has_permission(string $code)` (in `app/Helpers/auth_helper.php`) reads `session('user.permissions')` — a flat string array populated from the API's login response. The session never stores roles; only the resolved permission codes matter.
+
+### Permission codes for domain modules
+
+Domain apps (e.g., FAQ, Catalog, Tickets) register their own permission codes in the hub via `domain:sync-permissions`. These codes follow the `{resource}.{action}` pattern: `faq.read`, `catalog.write`, `tickets.delete`.
+
+When `mirror_to_hub: true` is set in the template, those codes also appear in the hub's `self` application (`application_id = 1`), which is the scope the admin's API key authenticates against. This is the mechanism that makes domain permissions available in the admin sidebar — without the mirror, `session('user.permissions')` will not contain the domain codes.
+
+### How kickstart injects sidebar entries for domain modules
+
+`register-sidebar.sh` reads `admin_sidebar[]` from the template's `template.json` and injects sidebar blocks at `<!-- [DYNAMIC_MODULES_ANCHOR] -->` in sidebar.php. Each block:
+
+1. Gates the entire section on `has_permission('{permission}')` — the section is invisible if the user lacks the permission.
+2. Adds a visual separator (`border-t`) and a section label to distinguish domain modules from hub modules.
+3. Links to the module route gated individually per resource.
+
+Example of a generated FAQ sidebar block:
+
+```php
+<!-- START Faq -->
+<?php if (has_permission('faq.read')): ?>
+    <div class="pt-3 mt-3 border-t border-gray-800 text-xs uppercase text-gray-500">
+        <?= lang('Faq.sidebar_label') ?>
+    </div>
+    <a href="<?= route_to('admin.faq.faqs') ?>" class="flex items-center gap-2 ...">
+        <?= ui_icon('help-circle') ?>
+        <span><?= lang('Faq.faqs_title') ?></span>
+    </a>
+<?php endif; ?>
+<!-- END Faq -->
+```
+
+### Sidebar ordering
+
+Current order in `sidebar.php`:
+1. Core user links (Dashboard, Profile, Files) — always visible
+2. Administration section (Users, Audit, API Keys, Metrics) — gated on individual permissions
+3. **Domain module sections** — injected by kickstart at `<!-- [DYNAMIC_MODULES_ANCHOR] -->`
+4. Divider
+5. Identity & Access (Roles, Permissions, Applications) — gated on `iam.superadmin-access`
