@@ -94,7 +94,11 @@ $csrfHash = csrf_hash();
     <div class="mt-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700" x-show="error" x-text="errorMessage"></div>
 
     <template x-if="!loading && !error && rows.length === 0">
-        <p class="mt-6 text-sm text-gray-500"><?= lang('Files.trash_empty') ?></p>
+        <?= view('components/display/empty_state', [
+            'icon'        => 'trash-2',
+            'title'       => 'Files.trash_empty',
+            'description' => 'App.no_results_desc',
+        ]) ?>
     </template>
 
     <template x-if="!loading && !error && rows.length > 0">

@@ -138,10 +138,11 @@ unset($tabsBaseQuery['page'], $tabsBaseQuery['cursor'], $tabsBaseQuery['category
     <div class="mt-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700" x-show="error" x-text="errorMessage"></div>
 
     <template x-if="!loading && !error && rows.length === 0">
-        <div class="mt-4 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4">
-            <p class="text-sm text-gray-600"><?= lang('Files.no_files') ?></p>
-            <p class="mt-1 text-xs text-gray-500"><?= lang('Files.drag_drop') ?></p>
-        </div>
+        <?= view('components/display/empty_state', [
+            'icon'        => 'upload-cloud',
+            'title'       => 'Files.no_files',
+            'description' => 'Files.drag_drop',
+        ]) ?>
     </template>
 
     <!-- TABLE VIEW -->
