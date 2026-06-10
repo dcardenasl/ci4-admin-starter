@@ -256,15 +256,56 @@ class ScaffoldingScriptsTest extends CIUnitTestCase
     {
         self::runScript('bin/make-module.sh Article Catalog /catalog/articles "name:string:required,category_id:relation:required:categories"');
 
+        $index = (string) file_get_contents(self::$sandbox . '/app/Views/catalog/articles/index.php');
         $create = (string) file_get_contents(self::$sandbox . '/app/Views/catalog/articles/create.php');
         $edit = (string) file_get_contents(self::$sandbox . '/app/Views/catalog/articles/edit.php');
+        $filters = (string) file_get_contents(self::$sandbox . '/app/Views/catalog/articles/partials/filters.php');
+        $controller = (string) file_get_contents(self::$sandbox . '/app/Modules/Catalog/Controllers/ArticleController.php');
+        $service = (string) file_get_contents(self::$sandbox . '/app/Modules/Catalog/Services/ArticleApiService.php');
 
+        $this->assertStringContainsString("'categories' => \$categories ?? []", $index);
+        $this->assertMatchesRegularExpression("/tableDataResponse\\s*\\(\\s*\\[\\s*'category_id'\\s*\\]/", $controller);
+        $this->assertStringContainsString("private function categoriesOptions(): array", $controller);
+        $this->assertStringContainsString("categories' => \$this->categoriesOptions()", $controller);
+        $this->assertStringContainsString("public function categories(array \$filters = []): array", $service);
         $this->assertStringContainsString("components/form/relation", $create);
         $this->assertStringContainsString("'options' => \$categories ?? []", $create);
         $this->assertStringContainsString("components/form/relation", $edit);
         $this->assertStringContainsString("'options' => \$categories ?? []", $edit);
+        $this->assertStringContainsString('name="category_id"', $filters);
 
         self::runScript('bin/remove-module.sh Article Catalog');
+    }
+
+    public function testMakeModuleWithCsvScaffoldsExportAndImportHooks(): void
+    {
+        self::runScript('bin/make-module.sh Report Analytics /analytics/reports "name:string:required,score:int:required" --csv');
+
+        $service = (string) file_get_contents(self::$sandbox . '/app/Modules/Analytics/Services/ReportApiService.php');
+        $interface = (string) file_get_contents(self::$sandbox . '/app/Modules/Analytics/Services/ReportApiServiceInterface.php');
+        $controller = (string) file_get_contents(self::$sandbox . '/app/Modules/Analytics/Controllers/ReportController.php');
+        $routes = (string) file_get_contents(self::$sandbox . '/app/Modules/Analytics/Config/Routes.php');
+        $index = (string) file_get_contents(self::$sandbox . '/app/Views/analytics/reports/index.php');
+        $toolbar = (string) file_get_contents(self::$sandbox . '/app/Views/analytics/reports/partials/toolbar_actions.php');
+        $csvExportButton = (string) file_get_contents(self::$sandbox . '/app/Views/components/table/export_button.php');
+        $csvImportForm = (string) file_get_contents(self::$sandbox . '/app/Views/components/form/export_import.php');
+        $csvImportPreview = (string) file_get_contents(self::$sandbox . '/app/Views/components/form/import_preview.php');
+
+        $this->assertStringContainsString('public function exportCsv(array $filters = []): array;', $interface);
+        $this->assertStringContainsString('public function importCsv(array $rows): array;', $interface);
+        $this->assertStringContainsString("public function exportCsv(): ResponseInterface", $controller);
+        $this->assertStringContainsString("public function importCsv(): RedirectResponse", $controller);
+        $this->assertStringContainsString("admin.analytics.reports.export_csv", $routes);
+        $this->assertStringContainsString("admin.analytics.reports.import_csv", $routes);
+        $this->assertStringContainsString('components/table/export_button', $index);
+        $this->assertStringContainsString('components/form/export_import', $index);
+        $this->assertStringContainsString('components/table/export_button', $toolbar);
+        $this->assertStringContainsString('csv', strtolower($csvExportButton));
+        $this->assertStringContainsString('import', strtolower($csvImportForm));
+        $this->assertStringContainsString('preview', strtolower($csvImportPreview));
+        $this->assertStringContainsString('components/form/import_preview', $csvImportForm);
+
+        self::runScript('bin/remove-module.sh Report Analytics');
     }
 
     public function testMakeModuleDerivesFieldMetadataFromTemplateJson(): void

@@ -3,7 +3,7 @@
 > Fuente de verdad para trabajo en este repo.
 > Historial de completadas: ver `TASKS_ARCHIVE.md`.
 > Cross-repo: ver `../TASKS.md`.
-> Última actualización: 2026-05-25 (ADM-008 ✅ completado · iconos y logs)
+> Última actualización: 2026-06-10 (ADM-010 ✅ completado · CSV export/import scaffold opcional; ADM-009 ✅ relation-aware)
 
 ---
 
@@ -32,6 +32,18 @@
 ---
 
 ## ✅ Completadas
+
+### [ADM-010] CSV export/import scaffold opcional para módulos admin (2026-06-10)
+
+- `bin/make-module.sh` now supports `--csv` so generated admin modules can include export/import hooks without hand-writing the boilerplate each time.
+- The scaffold emits the export route/button tied to the current index filters, plus import preview and row-level validation feedback for rejected rows.
+- Documentation was updated in `README.md` and `CLAUDE.md` to keep the scope clear: CSV is an optional extension for repetitive admin ingestion, not a replacement for domain-specific workflows.
+
+### [ADM-009] Scaffolding relation-aware end-to-end (2026-06-10)
+
+- `bin/make-module.sh` now supports basic `relation` fields end-to-end: relation-aware form components, option loaders in the generated controller/service, index filters, and relation lookups in `show` views.
+- The scaffold accepts an explicit relation path override with `categories=/catalog/categories` when the related endpoint does not follow the default derived path.
+- Coverage was extended in `tests/unit/Support/ScaffoldingScriptsTest.php` to validate the generated controller, service, views, and filter contract for relation fields.
 
 ### [FAQ-010] Reemplazar texto plano de tablas vacías con empty_state (2026-06-04)
 
