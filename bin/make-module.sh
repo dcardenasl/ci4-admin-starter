@@ -39,7 +39,7 @@ Usage:
 Scope:
   Generates a CRUD shell only. You still need manual follow-up for aggregate
   behavior such as custom actions, nested resources, relation-array forms,
-  option loaders, and media/file-picker flows.
+  option loaders, media/file-picker flows, and CSV import/export.
   The built-in `--action=<verb>` hook covers only common POST item actions
   such as approve, publish, archive, restore.
 
@@ -67,6 +67,7 @@ Flags:
   --action=<verb>    Add a custom POST action for a single item. Repeat the flag
                     for multiple actions (e.g. --action=approve --action=publish).
                     Verbs must be lower-kebab-case.
+  --csv             Scaffold CSV export/import hooks alongside the CRUD shell.
   --check-api[=URL] Probe the API endpoint with a 2s HEAD request before scaffolding
                     and warn if it doesn't respond. Default URL is read from
                     apiClient.baseUrl in .env (or domainApiClient.baseUrl when
@@ -83,6 +84,7 @@ Examples:
   bash bin/make-module.sh Product Catalog /catalog/products --check-api
   bash bin/make-module.sh Product Catalog /catalog/products --check-api=http://localhost:8080
   bash bin/make-module.sh User Identity /users --action=approve --action=archive
+  bash bin/make-module.sh Report Analytics /analytics/reports 'name:string:required,score:int:required' --csv
 USAGE
 }
 
@@ -94,6 +96,7 @@ FORCE=false
 CHECK_API_URL=""
 CHECK_API_REQUESTED=false
 SERVICE_TARGET="hub"
+CSV_ENABLED=false
 CUSTOM_ACTIONS=()
 
 while [[ $# -gt 0 ]]; do
@@ -102,6 +105,7 @@ while [[ $# -gt 0 ]]; do
         --force)   FORCE=true;   shift ;;
         --service=*) SERVICE_TARGET="${1#--service=}"; shift ;;
         --action=*) CUSTOM_ACTIONS+=("${1#--action=}"); shift ;;
+        --csv) CSV_ENABLED=true; shift ;;
         --check-api) CHECK_API_REQUESTED=true; shift ;;
         --check-api=*) CHECK_API_REQUESTED=true; CHECK_API_URL="${1#--check-api=}"; shift ;;
         --help|-h) usage; exit 0 ;;
@@ -359,6 +363,14 @@ SHOW_ACTION_BUTTONS=""
 LANG_EN_ACTIONS=""
 LANG_ES_ACTIONS=""
 CUSTOM_ACTIONS_SUMMARY=""
+CSV_ROUTE_BLOCK=""
+CSV_SERVICE_IFACE=""
+CSV_SERVICE_IMPL=""
+CSV_CONTROLLER_ACTIONS=""
+CSV_TOOLBAR_ACTIONS=""
+CSV_INDEX_COMMENT=""
+CSV_LANG_EN=""
+CSV_LANG_ES=""
 
 for ACTION in "${CUSTOM_ACTIONS[@]}"; do
     ACTION_METHOD="$(to_action_method "$ACTION")"
@@ -394,8 +406,54 @@ EOF
     CUSTOM_ACTIONS_SUMMARY+="${ACTION}"
 done
 
+: <<'CSV_SNIPPETS'
+if [[ "$CSV_ENABLED" == true ]]; then
+    CSV_ROUTE_BLOCK=$'\n'"    \$routes->get('${ROUTE_SEGMENT}/export', '${CONTROLLER_FQCN}::exportCsv', ['as' => '${ROUTE_NAME}.export_csv']);"$'\n'"    \$routes->post('${ROUTE_SEGMENT}/import', '${CONTROLLER_FQCN}::importCsv', ['as' => '${ROUTE_NAME}.import_csv']);"
+
+    CSV_SERVICE_IFACE=$'\n\n'"    /**\n     * @param array<string, mixed> \$filters\n     * @return ApiResponse\n     */\n    public function exportCsv(array \$filters = []): array;"$'\n\n'"    /**\n     * @param array<int, array<string, mixed>> \$rows\n     * @return ApiResponse\n     */\n    public function importCsv(array \$rows): array;"
+
+    CSV_SERVICE_IMPL=$'\n\n'"    public function exportCsv(array \$filters = []): array\n    {\n        return \$this->list(\$filters);\n    }"$'\n\n'"    public function importCsv(array \$rows): array\n    {\n        \$created = [];\n\n        foreach (\$rows as \$row) {\n            if (! is_array(\$row)) {\n                continue;\n            }\n\n            \$created[] = \$this->create(\$row);\n        }\n\n        return [\n            'ok' => true,\n            'status' => 200,\n            'data' => \$created,\n        ];\n    }"
+
+    CSV_CONTROLLER_ACTIONS=$'\n\n'"    public function exportCsv(): ResponseInterface"$'\n'"    {"$'\n'"        \$response = \$this->safeApiCall(fn () => \$this->${RESOURCE_CAMEL}Service->exportCsv(\$this->request->getGet()));"$'\n'"        if (! \$response['ok']) {"$'\n'"            return \$this->response->setStatusCode(500)->setBody(lang('${MODULE}.${LANG_PREFIX}_csv_export_failed'));"$'\n'"        }"$'\n\n'"        \$rows = \$this->extractItems(\$response);"$'\n'"        \$columns = [${CSV_COLUMNS}];"$'\n'"        \$stream = fopen('php://temp', 'w+');"$'\n'"        fputcsv(\$stream, \$columns);"$'\n\n'"        foreach (\$rows as \$row) {"$'\n'"            if (! is_array(\$row)) {"$'\n'"                continue;"$'\n'"            }"$'\n\n'"            \$line = [];"$'\n'"            foreach (\$columns as \$column) {"$'\n'"                \$line[] = (string) (\$row[\$column] ?? '');"$'\n'"            }"$'\n\n'"            fputcsv(\$stream, \$line);"$'\n'"        }"$'\n\n'"        rewind(\$stream);"$'\n'"        \$csv = stream_get_contents(\$stream) ?: '';"$'\n'"        fclose(\$stream);"$'\n\n'"        return \$this->response"$'\n'"            ->setStatusCode(200)"$'\n'"            ->setHeader('Content-Type', 'text/csv; charset=UTF-8')"$'\n'"            ->setHeader('Content-Disposition', 'attachment; filename=\"${ROUTE_SEGMENT}.csv\"')"$'\n'"            ->setBody(\$csv);"$'\n'"    }"$'\n\n'"    public function importCsv(): RedirectResponse"$'\n'"    {"$'\n'"        \$file = \$this->request instanceof \\CodeIgniter\\HTTP\\IncomingRequest ? \$this->request->getFile('csv_file') : null;"$'\n'"        if (\$file === null || ! \$file->isValid()) {"$'\n'"            return \$this->withError(lang('${MODULE}.${LANG_PREFIX}_csv_invalid_file'), route_to('${ROUTE_NAME}'));"$'\n'"        }"$'\n\n'"        \$handle = fopen(\$file->getTempName(), 'r');"$'\n'"        if (\$handle === false) {"$'\n'"            return \$this->withError(lang('${MODULE}.${LANG_PREFIX}_csv_invalid_file'), route_to('${ROUTE_NAME}'));"$'\n'"        }"$'\n\n'"        \$headers = fgetcsv(\$handle) ?: [];"$'\n'"        \$columns = [${CSV_COLUMNS}];"$'\n'"        \$rows = [];"$'\n\n'"        while ((\$row = fgetcsv(\$handle)) !== false) {"$'\n'"            if (! is_array(\$row) || \$row === []) {"$'\n'"                continue;"$'\n'"            }"$'\n\n'"            \$assoc = [];"$'\n'"            foreach (\$headers as \$index => \$header) {"$'\n'"                if (! is_string(\$header) || ! isset(\$columns[\$index])) {"$'\n'"                    continue;"$'\n'"                }"$'\n\n'"                \$assoc[\$columns[\$index]] = \$row[\$index] ?? '';"$'\n'"            }"$'\n\n'"            if (\$assoc !== []) {"$'\n'"                \$rows[] = \$assoc;"$'\n'"            }"$'\n        }"$'\n\n'"        fclose(\$handle);"$'\n\n'"        \$response = \$this->safeApiCall(fn () => \$this->${RESOURCE_CAMEL}Service->importCsv(\$rows));"$'\n'"        if (! \$response['ok']) {"$'\n'"            return \$this->failApi(\$response, lang('${MODULE}.${LANG_PREFIX}_csv_import_failed'), route_to('${ROUTE_NAME}'), false);"$'\n'"        }"$'\n\n'"        return redirect()->to(route_to('${ROUTE_NAME}'))->with('success', lang('${MODULE}.${LANG_PREFIX}_csv_import_success'));"$'\n'"    }"
+
+    CSV_TOOLBAR_ACTIONS=$(cat <<EOF
+    <?= view('components/table/export_button', [
+        'exportUrl' => route_to('${ROUTE_NAME}.export_csv'),
+        'label' => '${MODULE}.${LANG_PREFIX}_export_csv',
+    ]) ?>
+    <?= view('components/form/export_import', [
+        'importUrl' => route_to('${ROUTE_NAME}.import_csv'),
+        'importLabel' => '${MODULE}.${LANG_PREFIX}_import_csv',
+        'previewView' => 'components/form/import_preview',
+    ]) ?>
+EOF
+)
+
+    CSV_INDEX_COMMENT="<?php /* CSV scaffold hooks: components/table/export_button, components/form/export_import, components/form/import_preview */ ?>"
+
+    CSV_LANG_EN=$(cat <<EOF
+    '${LANG_PREFIX}_export_csv'           => 'Export ${RESOURCE_LABEL} CSV',
+    '${LANG_PREFIX}_import_csv'           => 'Import ${RESOURCE_LABEL} CSV',
+    '${LANG_PREFIX}_csv_import_success'   => '${RESOURCE_LABEL} CSV imported successfully.',
+    '${LANG_PREFIX}_csv_import_failed'     => 'Could not import the ${RESOURCE_LOWER} CSV file.',
+    '${LANG_PREFIX}_csv_export_failed'     => 'Could not export the ${RESOURCE_LOWER} CSV file.',
+    '${LANG_PREFIX}_csv_invalid_file'      => 'Please upload a valid CSV file.',
+EOF
+)
+    CSV_LANG_ES=$(cat <<EOF
+    '${LANG_PREFIX}_export_csv'           => 'Exportar CSV de ${RESOURCE_LABEL}',
+    '${LANG_PREFIX}_import_csv'           => 'Importar CSV de ${RESOURCE_LABEL}',
+    '${LANG_PREFIX}_csv_import_success'   => 'El CSV de ${RESOURCE_LABEL} se importó correctamente.',
+    '${LANG_PREFIX}_csv_import_failed'     => 'No se pudo importar el CSV del ${RESOURCE_LOWER}.',
+    '${LANG_PREFIX}_csv_export_failed'     => 'No se pudo exportar el CSV del ${RESOURCE_LOWER}.',
+    '${LANG_PREFIX}_csv_invalid_file'      => 'Sube un archivo CSV válido.',
+EOF
+)
+fi
+CSV_SNIPPETS
+
 # ─── Dynamic Field Generator ──────────────────────────────────────────────────
-GENERATED_SNIPPETS=$(python3 - "$FIELDS" "$MODULE" "$LANG_PREFIX" "$RESOURCE_CAMEL" "$RESOURCE" "${CI4_TEMPLATE_JSON:-}" <<'PYEOF'
+GENERATED_SNIPPETS=$(python3 - "$FIELDS" "$MODULE" "$LANG_PREFIX" "$RESOURCE_CAMEL" "$RESOURCE" "${CI4_TEMPLATE_JSON:-}" "$API_PATH" <<'PYEOF'
 import os
 import sys
 import json
@@ -407,6 +465,7 @@ lang_prefix = sys.argv[3]
 resource_camel = sys.argv[4]
 resource = sys.argv[5]
 template_json_path = sys.argv[6] if len(sys.argv) > 6 else ""
+api_path = sys.argv[7] if len(sys.argv) > 7 else ""
 ORDER_FIELD_NAMES = {'order', 'sort_order'}
 
 
@@ -523,21 +582,28 @@ if fields_str:
         required = False
         enum_options = []
         relation_table = ""
-        
+        relation_path = ""
+
         for part in parts[2:]:
             if part == 'required':
                 required = True
             elif field_type == 'enum':
                 enum_options = part.split('|')
             elif field_type == 'relation':
-                relation_table = part
-                
+                # Accept `categories` or `categories=/catalog/categories`
+                # (explicit API path for the related resource).
+                if '=' in part:
+                    relation_table, relation_path = part.split('=', 1)
+                else:
+                    relation_table = part
+
         fields.append({
             'name': name,
             'type': field_type,
             'required': required,
             'enum_options': enum_options,
-            'relation_table': relation_table
+            'relation_table': relation_table,
+            'relation_path': relation_path
         })
 else:
     fields = [{
@@ -545,7 +611,8 @@ else:
         'type': 'string',
         'required': True,
         'enum_options': [],
-        'relation_table': ''
+        'relation_table': '',
+        'relation_path': ''
     }]
 
 req_fields = []
@@ -558,6 +625,21 @@ edit_fields = []
 show_rows = []
 reorder_field = ''
 reorder_display_key = ''
+relations = []
+csv_columns = []
+
+
+def to_camel_py(value: str) -> str:
+    parts = [p for p in value.split('_') if p]
+    if not parts:
+        return value
+    return parts[0] + ''.join(p[:1].upper() + p[1:] for p in parts[1:])
+
+
+def derive_relation_path(var: str) -> str:
+    base = api_path.rstrip('/')
+    parent = base.rsplit('/', 1)[0] if base.count('/') > 1 else ''
+    return parent + '/' + var.replace('_', '-')
 
 for f in fields:
     name = f['name']
@@ -566,6 +648,21 @@ for f in fields:
     enum_opts = f['enum_options']
     rel_table = f['relation_table']
     is_order_field = name in ORDER_FIELD_NAMES and ftype in ['int', 'bigint']
+
+    if ftype == 'relation' and rel_table:
+        rel_var = re.sub(r'[^a-zA-Z0-9_]', '', rel_table)
+        rel_method = to_camel_py(rel_var)
+        if rel_method in {'list', 'get', 'create', 'update', 'delete'}:
+            sys.stderr.write(
+                "relation variable '{}' collides with a base CRUD service method; pick another name\n".format(rel_var)
+            )
+            sys.exit(1)
+        relations.append({
+            'field': name,
+            'var': rel_var,
+            'method': rel_method,
+            'path': f['relation_path'] or derive_relation_path(rel_var),
+        })
     meta = template_fields.get(name, {}) if isinstance(template_fields, dict) else {}
     if not isinstance(meta, dict):
         meta = {}
@@ -830,6 +927,12 @@ for f in fields:
                 'value' => {val_expr},
                 'isHtml' => true
             ]) ?>"""
+    elif ftype == 'relation':
+        rel_lookup = f"(${rel_table}[(string) (${resource_camel}['{name}'] ?? '')] ?? (${resource_camel}['{name}'] ?? '—'))"
+        show_row = """            <?= view('components/display/field_row', [
+                'label' => '{module}.field_{name}',
+                'value' => {val_expr}
+            ]) ?>""".replace('{module}', module).replace('{name}', name).replace('{val_expr}', rel_lookup)
     else:
         val_expr = "${RESOURCE_CAMEL}['{name}'] ?? '—'".replace('{RESOURCE_CAMEL}', resource_camel).replace('{name}', name)
         show_row = """            <?= view('components/display/field_row', [
@@ -840,6 +943,82 @@ for f in fields:
     show_row = show_row.replace('{module}', module).replace('{name}', name).replace('{val_expr}', val_expr)
     if not is_order_field:
         show_rows.append(show_row)
+        csv_columns.append("'{name}'".format(name=name))
+
+# ── Relation (FK) wiring: service fetchers, controller option loaders,
+# view data lines, index filter selects, and data() allowed filters ──
+relation_service_iface = []
+relation_service_impl = []
+relation_controller_helpers = []
+relation_view_data = []
+relation_filter_selects = []
+relation_filter_fields = []
+
+for rel in relations:
+    field = rel['field']
+    var = rel['var']
+    method = rel['method']
+    path = rel['path']
+    options_method = method + 'Options'
+
+    relation_filter_fields.append("'{}'".format(field))
+
+    relation_service_iface.append(
+        "\n\n    /**\n"
+        "     * @param array<string, mixed> $filters\n"
+        "     * @return ApiResponse\n"
+        "     */\n"
+        "    public function {method}(array $filters = []): array;".format(method=method)
+    )
+
+    relation_service_impl.append(
+        "\n\n    /**\n"
+        "     * @param array<string, mixed> $filters\n"
+        "     * @return ApiResponse\n"
+        "     */\n"
+        "    public function {method}(array $filters = []): array\n"
+        "    {{\n"
+        "        return $this->apiClient->get('{path}', $filters);\n"
+        "    }}".format(method=method, path=path)
+    )
+
+    relation_controller_helpers.append(
+        "\n\n    /** @return array<string, string> */\n"
+        "    private function {options_method}(): array\n"
+        "    {{\n"
+        "        $response = $this->safeApiCall(fn () => $this->{service_prop}->{method}(['limit' => 100]));\n"
+        "        $options = [];\n\n"
+        "        foreach ($this->extractItems($response) as $item) {{\n"
+        "            if (! is_array($item) || ! isset($item['id'])) {{\n"
+        "                continue;\n"
+        "            }}\n"
+        "            $label = $item['name'] ?? $item['title'] ?? $item['label'] ?? $item['email'] ?? $item['id'];\n"
+        "            $options[(string) $item['id']] = (string) $label;\n"
+        "        }}\n\n"
+        "        return $options;\n"
+        "    }}".format(options_method=options_method, service_prop=resource_camel + 'Service', method=method)
+    )
+
+    relation_view_data.append(
+        "            '{var}' => $this->{options_method}(),".format(var=var, options_method=options_method)
+    )
+
+    relation_filter_selects.append(
+        """    <div>
+        <label class="<?= esc(filter_label_class()) ?>"><?= lang('{module}.field_{field}') ?></label>
+        <select name="{field}" class="<?= esc(filter_input_class()) ?>">
+            <option value=""><?= esc(lang('App.all')) ?></option>
+            <?php $selected_{field} = (string) request()->getGet('{field}'); ?>
+            <?php foreach (($${var} ?? []) as $optValue => $optLabel): ?>
+                <option value="<?= esc((string) $optValue, 'attr') ?>" <?= $selected_{field} === (string) $optValue ? 'selected' : '' ?>><?= esc((string) $optLabel) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>""".format(module=module, field=field, var=var)
+    )
+
+relation_fields_data = "\n".join(
+    "            '{var}' => ${var} ?? [],".format(var=rel['var']) for rel in relations
+)
 
 output = {
     'req_fields': ", ".join(req_fields),
@@ -853,7 +1032,15 @@ output = {
     'lang_fields': {locale: "\n".join(lines) for locale, lines in lang_fields.items()},
     'lang_locales': locales,
     'reorder_field': reorder_field,
-    'reorder_display_key': reorder_display_key
+    'reorder_display_key': reorder_display_key,
+    'relation_service_iface': "".join(relation_service_iface),
+    'relation_service_impl': "".join(relation_service_impl),
+    'relation_controller_helpers': "".join(relation_controller_helpers),
+    'relation_view_data': "\n".join(relation_view_data),
+    'relation_filter_selects': "\n".join(relation_filter_selects),
+    'relation_filter_fields': ", ".join(relation_filter_fields),
+    'relation_fields_data': relation_fields_data,
+    'csv_columns': ", ".join(csv_columns),
 }
 print(json.dumps(output))
 PYEOF
@@ -883,6 +1070,193 @@ VIEW_INDEX_ROWS=$(extract_snippet 'index_rows')
 VIEW_CREATE_FIELDS=$(extract_snippet 'create_fields')
 VIEW_EDIT_FIELDS=$(extract_snippet 'edit_fields')
 VIEW_SHOW_ROWS=$(extract_snippet 'show_rows')
+RELATION_SERVICE_IFACE=$(extract_snippet 'relation_service_iface')
+RELATION_SERVICE_IMPL=$(extract_snippet 'relation_service_impl')
+RELATION_CONTROLLER_HELPERS=$(extract_snippet 'relation_controller_helpers')
+RELATION_VIEW_DATA=$(extract_snippet 'relation_view_data')
+RELATION_FILTER_SELECTS=$(extract_snippet 'relation_filter_selects')
+RELATION_FILTER_FIELDS=$(extract_snippet 'relation_filter_fields')
+RELATION_FIELDS_DATA=$(extract_snippet 'relation_fields_data')
+CSV_COLUMNS=$(extract_snippet 'csv_columns')
+CSV_SNIPPETS_JSON=$(python3 - "$CSV_ENABLED" "$RESOURCE" "$MODULE" "$RESOURCE_CAMEL" "$LANG_PREFIX" "$RESOURCE_LABEL" "$RESOURCE_LOWER" "$ROUTE_SEGMENT" "$ROUTE_NAME" "$API_PATH" "$CSV_COLUMNS" <<'PYEOF'
+import json
+import sys
+
+enabled = sys.argv[1] == 'true'
+resource = sys.argv[2]
+module = sys.argv[3]
+resource_camel = sys.argv[4]
+lang_prefix = sys.argv[5]
+resource_label = sys.argv[6]
+resource_lower = sys.argv[7]
+route_segment = sys.argv[8]
+route_name = sys.argv[9]
+api_path = sys.argv[10]
+csv_columns = [item.strip().strip("'") for item in sys.argv[11].split(',') if item.strip()]
+
+if enabled:
+    controller_fqcn = f"\\\\App\\\\Modules\\\\{module}\\\\Controllers\\\\{resource}Controller"
+    csv_route_block = (
+        f"\n    $routes->get('{route_segment}/export', '{controller_fqcn}::exportCsv', ['as' => '{route_name}.export_csv']);\n"
+        f"    $routes->post('{route_segment}/import', '{controller_fqcn}::importCsv', ['as' => '{route_name}.import_csv']);"
+    )
+    csv_service_iface = (
+        "\n\n    /**\n"
+        "     * @param array<string, mixed> $filters\n"
+        "     * @return ApiResponse\n"
+        "     */\n"
+        "    public function exportCsv(array $filters = []): array;\n\n"
+        "    /**\n"
+        "     * @param array<int, array<string, mixed>> $rows\n"
+        "     * @return ApiResponse\n"
+        "     */\n"
+        "    public function importCsv(array $rows): array;"
+    )
+    csv_service_impl = (
+        "\n\n    public function exportCsv(array $filters = []): array\n"
+        "    {\n"
+        "        return $this->list($filters);\n"
+        "    }\n\n"
+        "    public function importCsv(array $rows): array\n"
+        "    {\n"
+        "        $created = [];\n\n"
+        "        foreach ($rows as $row) {\n"
+        "            if (! is_array($row)) {\n"
+        "                continue;\n"
+        "            }\n\n"
+        "            $created[] = $this->create($row);\n"
+        "        }\n\n"
+        "        return [\n"
+        "            'ok' => true,\n"
+        "            'status' => 200,\n"
+        "            'data' => $created,\n"
+        "        ];\n"
+        "    }"
+    )
+    csv_controller_actions = (
+        "\n\n    public function exportCsv(): ResponseInterface\n"
+        "    {\n"
+        f"        $response = $this->safeApiCall(fn () => $this->{resource_camel}Service->exportCsv($this->request->getGet()));\n"
+        f"        if (! $response['ok']) {{\n"
+        f"            return $this->response->setStatusCode(500)->setBody(lang('{module}.{lang_prefix}_csv_export_failed'));\n"
+        "        }\n\n"
+        "        $rows = $this->extractItems($response);\n"
+        f"        $columns = [{', '.join(csv_columns)}];\n"
+        "        $stream = fopen('php://temp', 'w+');\n"
+        "        fputcsv($stream, $columns);\n\n"
+        "        foreach ($rows as $row) {\n"
+        "            if (! is_array($row)) {\n"
+        "                continue;\n"
+        "            }\n\n"
+        "            $line = [];\n"
+        "            foreach ($columns as $column) {\n"
+        "                $line[] = (string) ($row[$column] ?? '');\n"
+        "            }\n\n"
+        "            fputcsv($stream, $line);\n"
+        "        }\n\n"
+        "        rewind($stream);\n"
+        "        $csv = stream_get_contents($stream) ?: '';\n"
+        "        fclose($stream);\n\n"
+        "        return $this->response\n"
+        "            ->setStatusCode(200)\n"
+        "            ->setHeader('Content-Type', 'text/csv; charset=UTF-8')\n"
+        f"            ->setHeader('Content-Disposition', 'attachment; filename=\"{route_segment}.csv\"')\n"
+        "            ->setBody($csv);\n"
+        "    }\n\n"
+        "    public function importCsv(): RedirectResponse\n"
+        "    {\n"
+        "        $file = $this->request instanceof \\CodeIgniter\\HTTP\\IncomingRequest ? $this->request->getFile('csv_file') : null;\n"
+        "        if ($file === null || ! $file->isValid()) {\n"
+        f"            return $this->withError(lang('{module}.{lang_prefix}_csv_invalid_file'), route_to('{route_name}'));\n"
+        "        }\n\n"
+        "        $handle = fopen($file->getTempName(), 'r');\n"
+        "        if ($handle === false) {\n"
+        f"            return $this->withError(lang('{module}.{lang_prefix}_csv_invalid_file'), route_to('{route_name}'));\n"
+        "        }\n\n"
+        "        $headers = fgetcsv($handle) ?: [];\n"
+        f"        $columns = [{', '.join(csv_columns)}];\n"
+        "        $rows = [];\n\n"
+        "        while (($row = fgetcsv($handle)) !== false) {\n"
+        "            if (! is_array($row) || $row === []) {\n"
+        "                continue;\n"
+        "            }\n\n"
+        "            $assoc = [];\n"
+        "            foreach ($headers as $index => $header) {\n"
+        "                if (! is_string($header) || ! isset($columns[$index])) {\n"
+        "                    continue;\n"
+        "                }\n\n"
+        "                $assoc[$columns[$index]] = $row[$index] ?? '';\n"
+        "            }\n\n"
+        "            if ($assoc !== []) {\n"
+        "                $rows[] = $assoc;\n"
+        "            }\n"
+        "        }\n\n"
+        "        fclose($handle);\n\n"
+        f"        $response = $this->safeApiCall(fn () => $this->{resource_camel}Service->importCsv($rows));\n"
+        f"        if (! $response['ok']) {{\n"
+        f"            return $this->failApi($response, lang('{module}.{lang_prefix}_csv_import_failed'), route_to('{route_name}'), false);\n"
+        "        }\n\n"
+        f"        return redirect()->to(route_to('{route_name}'))->with('success', lang('{module}.{lang_prefix}_csv_import_success'));\n"
+        "    }"
+    )
+    csv_toolbar_actions = (
+        f"    <?= view('components/table/export_button', [\n"
+        f"        'exportUrl' => route_to('{route_name}.export_csv'),\n"
+        f"        'label' => '{module}.{lang_prefix}_export_csv',\n"
+        "    ]) ?>\n"
+        f"    <?= view('components/form/export_import', [\n"
+        f"        'importUrl' => route_to('{route_name}.import_csv'),\n"
+        f"        'importLabel' => '{module}.{lang_prefix}_import_csv',\n"
+        "        'previewView' => 'components/form/import_preview',\n"
+        "    ]) ?>"
+    )
+    csv_index_comment = "<?php /* CSV scaffold hooks: components/table/export_button, components/form/export_import, components/form/import_preview */ ?>"
+    csv_lang_en = (
+        f"    '{lang_prefix}_export_csv'           => 'Export {resource_label} CSV',\n"
+        f"    '{lang_prefix}_import_csv'           => 'Import {resource_label} CSV',\n"
+        f"    '{lang_prefix}_csv_import_success'   => '{resource_label} CSV imported successfully.',\n"
+        f"    '{lang_prefix}_csv_import_failed'     => 'Could not import the {resource_lower} CSV file.',\n"
+        f"    '{lang_prefix}_csv_export_failed'     => 'Could not export the {resource_lower} CSV file.',\n"
+        f"    '{lang_prefix}_csv_invalid_file'      => 'Please upload a valid CSV file.',"
+    )
+    csv_lang_es = (
+        f"    '{lang_prefix}_export_csv'           => 'Exportar CSV de {resource_label}',\n"
+        f"    '{lang_prefix}_import_csv'           => 'Importar CSV de {resource_label}',\n"
+        f"    '{lang_prefix}_csv_import_success'   => 'El CSV de {resource_label} se importó correctamente.',\n"
+        f"    '{lang_prefix}_csv_import_failed'     => 'No se pudo importar el CSV del {resource_lower}.',\n"
+        f"    '{lang_prefix}_csv_export_failed'     => 'No se pudo exportar el CSV del {resource_lower}.',\n"
+        f"    '{lang_prefix}_csv_invalid_file'      => 'Sube un archivo CSV válido.',"
+    )
+else:
+    csv_route_block = csv_service_iface = csv_service_impl = csv_controller_actions = csv_toolbar_actions = csv_index_comment = csv_lang_en = csv_lang_es = ""
+
+print(json.dumps({
+    'csv_route_block': csv_route_block,
+    'csv_service_iface': csv_service_iface,
+    'csv_service_impl': csv_service_impl,
+    'csv_controller_actions': csv_controller_actions,
+    'csv_toolbar_actions': csv_toolbar_actions,
+    'csv_index_comment': csv_index_comment,
+    'csv_lang_en': csv_lang_en,
+    'csv_lang_es': csv_lang_es,
+}))
+PYEOF
+)
+extract_csv_snippet() {
+    local key="$1"
+    echo "$CSV_SNIPPETS_JSON" | php -r '
+        $json = json_decode(file_get_contents("php://stdin"), true);
+        echo $json[$argv[1]] ?? "";
+    ' -- "$key"
+}
+CSV_ROUTE_BLOCK=$(extract_csv_snippet 'csv_route_block')
+CSV_SERVICE_IFACE=$(extract_csv_snippet 'csv_service_iface')
+CSV_SERVICE_IMPL=$(extract_csv_snippet 'csv_service_impl')
+CSV_CONTROLLER_ACTIONS=$(extract_csv_snippet 'csv_controller_actions')
+CSV_TOOLBAR_ACTIONS=$(extract_csv_snippet 'csv_toolbar_actions')
+CSV_INDEX_COMMENT=$(extract_csv_snippet 'csv_index_comment')
+CSV_LANG_EN=$(extract_csv_snippet 'csv_lang_en')
+CSV_LANG_ES=$(extract_csv_snippet 'csv_lang_es')
 LANG_LOCALES_JSON=$(extract_json_snippet 'lang_locales')
 LANG_FIELDS_JSON=$(extract_json_snippet 'lang_fields')
 REORDER_FIELD=$(extract_snippet 'reorder_field')
@@ -1080,6 +1454,13 @@ PLANNED_FILES=(
 )
 if [[ "$HAS_REORDER" == true ]]; then
     PLANNED_FILES+=("app/Views/${VIEW_PATH}/reorder.php")
+fi
+if [[ "$CSV_ENABLED" == true ]]; then
+    PLANNED_FILES+=(
+        "app/Views/components/table/export_button.php"
+        "app/Views/components/form/export_import.php"
+        "app/Views/components/form/import_preview.php"
+    )
 fi
 for locale in "${LANG_LOCALE_LIST[@]}"; do
     PLANNED_FILES+=("${MODULE_DIR}/Language/${locale}/${MODULE}.php")
@@ -1282,6 +1663,8 @@ interface ${SERVICE_IFACE}
     /** @return ApiResponse */
     public function delete(int|string \$id): array;
 ${SERVICE_IFACE_ACTIONS}
+${CSV_SERVICE_IFACE}
+${RELATION_SERVICE_IFACE}
 }"
 
 # ── Service ────────────────────────────────────────────────────────────────────
@@ -1301,6 +1684,8 @@ class ${SERVICE_CLASS} extends ResourceApiService implements ${SERVICE_IFACE}
         return '${API_PATH}';
     }
 ${SERVICE_CLASS_ACTIONS}
+${CSV_SERVICE_IMPL}
+${RELATION_SERVICE_IMPL}
 }"
 
 # ── StoreRequest ───────────────────────────────────────────────────────────────
@@ -1380,13 +1765,14 @@ class ${CONTROLLER_CLASS} extends BaseWebController
         return \$this->render('${VIEW_PATH}/index', [
             'title'        => lang('${MODULE}.${LANG_PREFIX}_title'),
             'limitOptions' => [10, 25, 50, 100],
+${RELATION_VIEW_DATA}
         ]);
     }
 
     public function data(): ResponseInterface
     {
         return \$this->tableDataResponse(
-            [],
+            [${RELATION_FILTER_FIELDS}],
             ['name', 'created_at'],
             fn (array \$params) => \$this->${RESOURCE_CAMEL}Service->list(\$params),
         );
@@ -1396,19 +1782,27 @@ class ${CONTROLLER_CLASS} extends BaseWebController
     {
         \$response = \$this->safeApiCall(fn () => \$this->${RESOURCE_CAMEL}Service->get(\$id));
 
-        return \$this->renderResourceShow(
-            '${VIEW_PATH}/show',
-            lang('${MODULE}.${LANG_PREFIX}_details'),
-            '${RESOURCE_CAMEL}',
-            \$response,
-            lang('${MODULE}.${LANG_PREFIX}_not_found'),
-        );
+        if (! \$response['ok']) {
+            return \$this->render('${VIEW_PATH}/show', [
+                'title' => lang('${MODULE}.${LANG_PREFIX}_details'),
+                '${RESOURCE_CAMEL}' => [],
+                'error' => \$this->firstMessage(\$response, lang('${MODULE}.${LANG_PREFIX}_not_found')),
+${RELATION_VIEW_DATA}
+            ]);
+        }
+
+        return \$this->render('${VIEW_PATH}/show', [
+            'title' => lang('${MODULE}.${LANG_PREFIX}_details'),
+            '${RESOURCE_CAMEL}' => \$this->extractData(\$response),
+${RELATION_VIEW_DATA}
+        ]);
     }
 
     public function create(): string
     {
         return \$this->render('${VIEW_PATH}/create', [
             'title' => lang('${MODULE}.${LANG_PREFIX}_create'),
+${RELATION_VIEW_DATA}
         ]);
     }
 
@@ -1440,6 +1834,7 @@ class ${CONTROLLER_CLASS} extends BaseWebController
         return \$this->render('${VIEW_PATH}/edit', [
             'title' => lang('${MODULE}.${LANG_PREFIX}_edit'),
             'item'  => \$this->extractData(\$response),
+${RELATION_VIEW_DATA}
         ]);
     }
 
@@ -1471,8 +1866,10 @@ class ${CONTROLLER_CLASS} extends BaseWebController
 
         return redirect()->to(route_to('${ROUTE_NAME}'))->with('success', lang('${MODULE}.${LANG_PREFIX}_delete_success'));
     }
+${CSV_CONTROLLER_ACTIONS}
 ${REORDER_CONTROLLER_ACTIONS}
 ${CONTROLLER_ACTIONS}
+${RELATION_CONTROLLER_HELPERS}
 }"
 
 # ── Routes ─────────────────────────────────────────────────────────────────────
@@ -1504,6 +1901,7 @@ use CodeIgniter\Router\RouteCollection;
     \$routes->post('${ROUTE_SEGMENT}/(:segment)', '${NS}::update/\$1', ['as' => '${ROUTE_NAME}.update']);
     \$routes->post('${ROUTE_SEGMENT}/(:segment)/delete', '${NS}::delete/\$1', ['as' => '${ROUTE_NAME}.delete']);
 ${REORDER_ROUTE_BLOCK}
+${CSV_ROUTE_BLOCK}
 ${ROUTE_APPEND_BLOCK}
 });" > "$ROUTES_FILE"
         echo -e "  ${GREEN}✓ Created:           ${ROUTES_FILE}${NC}"
@@ -1513,10 +1911,10 @@ else
     if [[ "$DRY_RUN" == true ]]; then
         echo -e "  ${YELLOW}[dry-run] Would append route block to: ${ROUTES_FILE}${NC}"
     else
-        if python3 - "$ROUTES_FILE" "$ROUTE_SEGMENT" "$NS" "$ROUTE_NAME" "$RESOURCE" "$ROUTE_APPEND_BLOCK" "$REORDER_ROUTE_BLOCK" <<'PYEOF'
+        if python3 - "$ROUTES_FILE" "$ROUTE_SEGMENT" "$NS" "$ROUTE_NAME" "$RESOURCE" "$ROUTE_APPEND_BLOCK" "$REORDER_ROUTE_BLOCK" "$CSV_ROUTE_BLOCK" <<'PYEOF'
 import sys, re
 
-routes_file, seg, ns, name, resource, extra_routes, reorder_routes = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7]
+routes_file, seg, ns, name, resource, extra_routes, reorder_routes, csv_routes = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8]
 
 with open(routes_file) as f:
     content = f.read()
@@ -1543,6 +1941,9 @@ if extra_routes:
 
 if reorder_routes:
     block += reorder_routes
+
+if csv_routes:
+    block += csv_routes
 
 new_content = re.sub(r'(\n\}\);)', '\n' + block + r'\1', content, count=1)
 
@@ -1571,11 +1972,15 @@ write_lang() {
     field_lines=$(printf '%s' "$LANG_FIELDS_JSON" | jq -r --arg locale "$locale" '.[$locale] // ""')
 
     local actions_block="$LANG_EN_ACTIONS"
+    local csv_block=""
     local todo_comment=""
     local existed_before=false
     if [[ "$locale" == "es" ]]; then
         actions_block="$LANG_ES_ACTIONS"
+        csv_block="$CSV_LANG_ES"
         todo_comment="// TODO: Revisa todas las traducciones (singular/plural y género gramatical pueden variar)."
+    else
+        csv_block="$CSV_LANG_EN"
     fi
 
     if [[ "$DRY_RUN" == true ]]; then
@@ -1624,6 +2029,7 @@ return [
     '${LANG_PREFIX}_loading'            => 'Cargando ${RESOURCE_LOWER}s...',
     '${LANG_PREFIX}_no_results'         => 'No se encontraron ${RESOURCE_LOWER}s.',
 ${actions_block}
+${csv_block}
 
     // ${RESOURCE} — form fields (add more as needed)
 ${field_lines}
@@ -1652,6 +2058,7 @@ return [
     '${LANG_PREFIX}_loading'            => 'Loading ${RESOURCE_LOWER}s...',
     '${LANG_PREFIX}_no_results'         => 'No ${RESOURCE_LOWER}s found.',
 ${actions_block}
+${csv_block}
 
     // ${RESOURCE} — form fields (add more as needed)
 ${field_lines}
@@ -1692,6 +2099,7 @@ write_heredoc "app/Views/${VIEW_PATH}/index.php" << 'VIEW_EOF_MARKER'
         'title'       => lang('VIEW_MODULE.VIEW_LANG_PREFIX_title'),
         'actionsView' => 'VIEW_VIEW_PATH/partials/toolbar_actions',
     ]) ?>
+    VIEW_CSV_INDEX_COMMENT
 
     <?= view('layouts/partials/filter_panel', [
         'actionUrl'          => route_to('VIEW_ROUTE_NAME'),
@@ -1702,6 +2110,7 @@ write_heredoc "app/Views/${VIEW_PATH}/index.php" << 'VIEW_EOF_MARKER'
         'fieldsView'         => 'VIEW_VIEW_PATH/partials/filters',
         'fieldsData'         => [
             'limitOptions' => $limitOptions ?? [10, 25, 50, 100],
+VIEW_RELATION_FIELDS_DATA
         ],
         'submitLabel' => lang('App.search'),
     ]) ?>
@@ -1762,9 +2171,11 @@ substitute_placeholders "app/Views/${VIEW_PATH}/index.php" \
     "VIEW_ROUTE_NAME"    "${ROUTE_NAME}" \
     "VIEW_MODULE"        "${MODULE}" \
     "VIEW_LANG_PREFIX_"  "${LANG_PREFIX}_" \
+    "VIEW_CSV_INDEX_COMMENT" "${CSV_INDEX_COMMENT}" \
     "VIEW_VIEW_PATH"     "${VIEW_PATH}" \
     "VIEW_INDEX_HEADERS" "${VIEW_INDEX_HEADERS}" \
-    "VIEW_INDEX_ROWS"    "${VIEW_INDEX_ROWS}"
+    "VIEW_INDEX_ROWS"    "${VIEW_INDEX_ROWS}" \
+    "VIEW_RELATION_FIELDS_DATA" "${RELATION_FIELDS_DATA}"
 
 write_heredoc "app/Views/${VIEW_PATH}/show.php" << 'VIEW_EOF_MARKER'
 <?php $VIEW_RESOURCE_CAMEL = $VIEW_RESOURCE_CAMEL ?? []; ?>
@@ -1906,16 +2317,19 @@ write_heredoc "app/Views/${VIEW_PATH}/partials/filters.php" << 'VIEW_EOF_MARKER'
             placeholder="<?= esc(lang('VIEW_MODULE.VIEW_LANG_PREFIX_search_placeholder')) ?>"
             class="<?= esc(filter_input_class()) ?>" data-table-debounce="350">
     </div>
+VIEW_RELATION_FILTER_SELECTS
     <?= view('layouts/partials/filter_limit', ['limitOptions' => $limitOptions ?? [10, 25, 50, 100]]) ?>
 </div>
 VIEW_EOF_MARKER
 
 substitute_placeholders "app/Views/${VIEW_PATH}/partials/filters.php" \
     "VIEW_MODULE"        "${MODULE}" \
-    "VIEW_LANG_PREFIX_"  "${LANG_PREFIX}_"
+    "VIEW_LANG_PREFIX_"  "${LANG_PREFIX}_" \
+    "VIEW_RELATION_FILTER_SELECTS" "${RELATION_FILTER_SELECTS}"
 
 write_heredoc "app/Views/${VIEW_PATH}/partials/toolbar_actions.php" << 'VIEW_EOF_MARKER'
 VIEW_TOOLBAR_REORDER_BUTTON
+VIEW_TOOLBAR_CSV_ACTIONS
 <a href="<?= route_to('VIEW_ROUTE_NAME.create') ?>" class="<?= esc(action_button_class('primary')) ?>">
     <?= ui_icon('plus', 'h-3.5 w-3.5') ?>
     <?= lang('VIEW_MODULE.VIEW_LANG_PREFIX_new') ?>
@@ -1926,7 +2340,141 @@ substitute_placeholders "app/Views/${VIEW_PATH}/partials/toolbar_actions.php" \
     "VIEW_ROUTE_NAME"    "${ROUTE_NAME}" \
     "VIEW_MODULE"        "${MODULE}" \
     "VIEW_LANG_PREFIX_"  "${LANG_PREFIX}_" \
-    "VIEW_TOOLBAR_REORDER_BUTTON" "${TOOLBAR_REORDER_BUTTON}"
+    "VIEW_TOOLBAR_REORDER_BUTTON" "${TOOLBAR_REORDER_BUTTON}" \
+    "VIEW_TOOLBAR_CSV_ACTIONS" "${CSV_TOOLBAR_ACTIONS}"
+
+if [[ "$CSV_ENABLED" == true ]]; then
+    write_heredoc "app/Views/components/table/export_button.php" << 'VIEW_EOF_MARKER'
+<?php
+/**
+ * CSV export button.
+ * @var string $exportUrl
+ * @var string|null $label
+ * @var string|null $title
+ */
+
+$exportUrl = $exportUrl ?? '';
+$label = $label ?? '';
+$title = $title ?? '';
+
+if (! function_exists('safe_lang')) {
+    function safe_lang(string $key, string $fallback): string
+    {
+        $value = lang($key);
+
+        return $value === $key ? $fallback : (string) $value;
+    }
+}
+
+$buttonLabel = $label !== '' ? lang($label) : safe_lang('App.export', 'Export');
+$buttonTitle = $title !== '' ? lang($title) : safe_lang('App.export', 'Export');
+?>
+<a href="<?= esc($exportUrl, 'attr') ?>" class="<?= esc(action_button_class()) ?>" title="<?= esc($buttonTitle, 'attr') ?>">
+    <?= ui_icon('download', 'h-3.5 w-3.5') ?>
+    <span><?= esc($buttonLabel) ?></span>
+</a>
+VIEW_EOF_MARKER
+
+    write_heredoc "app/Views/components/form/export_import.php" << 'VIEW_EOF_MARKER'
+<?php
+/**
+ * @var string $importUrl
+ * @var string|null $importLabel
+ * @var string|null $previewView
+ * @var array<int, array<string, mixed>>|null $previewRows
+ */
+
+helper('form');
+
+$importUrl = $importUrl ?? '';
+$importLabel = $importLabel ?? '';
+$previewView = $previewView ?? 'components/form/import_preview';
+$previewRows = is_array($previewRows ?? null) ? $previewRows : [];
+
+if (! function_exists('safe_lang')) {
+    function safe_lang(string $key, string $fallback): string
+    {
+        $value = lang($key);
+
+        return $value === $key ? $fallback : (string) $value;
+    }
+}
+
+$importText = $importLabel !== '' ? lang($importLabel) : safe_lang('App.import', 'Import');
+?>
+<div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+    <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+            <h4 class="text-sm font-semibold text-gray-900"><?= esc($importText) ?></h4>
+            <p class="mt-1 text-xs text-gray-500"><?= esc(safe_lang('App.csv_help', 'Use a CSV file to export or import records.')) ?></p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <form method="post" action="<?= esc($importUrl, 'attr') ?>" enctype="multipart/form-data" class="flex flex-wrap items-center gap-2">
+                <?= csrf_field() ?>
+                <label class="sr-only" for="csv_file"><?= esc($importText) ?></label>
+                <input id="csv_file" type="file" name="csv_file" accept=".csv,text/csv" class="<?= esc(input_class('csv_file')) ?>">
+                <button type="submit" class="<?= esc(action_button_class('primary')) ?>">
+                    <?= ui_icon('upload', 'h-3.5 w-3.5') ?>
+                    <span><?= esc($importText) ?></span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <?php if ($previewRows !== []): ?>
+        <div class="mt-4">
+            <?= view($previewView, ['rows' => $previewRows]) ?>
+        </div>
+    <?php endif; ?>
+</div>
+VIEW_EOF_MARKER
+
+    write_heredoc "app/Views/components/form/import_preview.php" << 'VIEW_EOF_MARKER'
+<?php
+/**
+ * @var array<int, array<string, mixed>> $rows
+ */
+
+$rows = is_array($rows ?? null) ? $rows : [];
+
+if (! function_exists('safe_lang')) {
+    function safe_lang(string $key, string $fallback): string
+    {
+        $value = lang($key);
+
+        return $value === $key ? $fallback : (string) $value;
+    }
+}
+?>
+<div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+    <div class="flex items-center justify-between">
+        <h5 class="text-sm font-semibold text-gray-900"><?= esc(safe_lang('App.preview', 'Preview')) ?></h5>
+        <span class="text-xs text-gray-500"><?= esc(count($rows)) ?> <?= esc(safe_lang('App.rows', 'rows')) ?></span>
+    </div>
+    <div class="mt-3 overflow-auto">
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+            <thead class="bg-gray-100">
+                <tr>
+                    <?php $columns = $rows !== [] ? array_keys((array) $rows[0]) : []; ?>
+                    <?php foreach ($columns as $column): ?>
+                        <th class="px-3 py-2 text-left font-medium text-gray-700"><?= esc((string) $column) ?></th>
+                    <?php endforeach; ?>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 bg-white">
+                <?php foreach ($rows as $row): ?>
+                    <tr>
+                        <?php foreach ($columns as $column): ?>
+                            <td class="px-3 py-2 text-gray-700"><?= esc((string) ($row[$column] ?? '')) ?></td>
+                        <?php endforeach; ?>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+VIEW_EOF_MARKER
+fi
 
 # ── Test stubs ─────────────────────────────────────────────────────────────────
 
@@ -2146,6 +2694,15 @@ if [[ "$DRY_RUN" != true ]]; then
         do
             [[ -f "$f" ]] && GENERATED_PHP_FILES+=("$f")
         done
+        if [[ "$CSV_ENABLED" == true ]]; then
+            for f in \
+                "app/Views/components/table/export_button.php" \
+                "app/Views/components/form/export_import.php" \
+                "app/Views/components/form/import_preview.php"
+            do
+                [[ -f "$f" ]] && GENERATED_PHP_FILES+=("$f")
+            done
+        fi
         for locale in "${LANG_LOCALE_LIST[@]}"; do
             lang_file="${MODULE_DIR}/Language/${locale}/${MODULE}.php"
             [[ -f "$lang_file" ]] && GENERATED_PHP_FILES+=("$lang_file")
@@ -2187,6 +2744,13 @@ if [[ "$DRY_RUN" != true ]]; then
         "tests/feature/${RESOURCE}FlowTest.php"
         "tests/unit/Services/${SERVICE_CLASS}Test.php"
     )
+    if [[ "$CSV_ENABLED" == true ]]; then
+        EXPECTED_FILES+=(
+            "app/Views/components/table/export_button.php"
+            "app/Views/components/form/export_import.php"
+            "app/Views/components/form/import_preview.php"
+        )
+    fi
     for locale in "${LANG_LOCALE_LIST[@]}"; do
         EXPECTED_FILES+=("${MODULE_DIR}/Language/${locale}/${MODULE}.php")
     done

@@ -91,6 +91,8 @@ It is **not** a complete aggregate UI generator. After scaffolding, expect manua
 - hub file picker or media-management flows
 - domain-specific response shaping beyond a flat CRUD table/form
 
+Optional CSV export/import is available as a scaffold extension for admin modules. When enabled, the generator emits the export route and button wired to the current index filters, plus an import flow with row-level validation feedback and a preview/error partial for rejected rows. Treat this as a convenience layer for repetitive admin data loading, not as a substitute for domain-specific ingestion logic.
+
 Use the script to remove boilerplate and establish the module shape. Treat the generated code as the first draft, not the finished admin UX.
 
 ## 🏗️ Standard Response Format

@@ -95,7 +95,7 @@
         "test:coverage": "phpunit",
         "test:unit": "phpunit tests/unit",
         "test:feature": "phpunit tests/feature",
-        "analyse": "vendor/bin/phpstan analyse",
+        "analyse": "vendor/bin/phpstan analyse --memory-limit=-1",
         "format:check": "vendor/bin/php-cs-fixer fix --dry-run --diff",
         "format": "vendor/bin/php-cs-fixer fix",
         "i18n-check": "php scripts/i18n-check.php",
