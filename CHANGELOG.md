@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.10.0] — 2026-06-10
+
 ### Added
 
 - **`bin/make-module.sh --csv`** — new optional flag that scaffolds CSV export and import wiring alongside the CRUD shell: adds `exportCsv` and `importCsv` routes, service-interface methods, controller actions (streaming download + file-based upload with per-row validation), and language keys for success/error/invalid-file states.
