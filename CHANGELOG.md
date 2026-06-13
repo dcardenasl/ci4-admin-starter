@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.11.1] — 2026-06-13
+
+### Changed
+
+- Bump `lint-staged` from 17.0.5 to 17.0.7
+- Bump `lucide` from 1.16.0 to 1.17.0
+- Bump `eslint` from 10.4.0 to 10.4.1
+
 ## [2.11.0] — 2026-06-12
 
 ### Added
