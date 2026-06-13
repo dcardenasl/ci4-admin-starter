@@ -28,13 +28,15 @@ class RolePermissionsController extends BaseWebController
     {
         $response = $this->safeApiCall(fn () => $this->matrixService->matrix());
         $matrix = $this->extractData($response);
+        $tab = $this->request->getGet('tab');
+        $activeTab = is_string($tab) ? $tab : '';
 
         return $this->render('iam/role_permissions/index', [
             'title'       => lang('Iam.role_permissions_title'),
             'applications'=> $matrix['applications'] ?? [],
             'roles'       => $matrix['roles'] ?? [],
             'assignments' => $matrix['assignments'] ?? [],
-            'activeTab'   => (string) ($this->request->getGet('tab') ?? ''),
+            'activeTab'   => $activeTab,
             'error'       => ($response['ok'] ?? false) ? null : $this->firstMessage($response, lang('Iam.role_permissions_load_failed')),
         ]);
     }
