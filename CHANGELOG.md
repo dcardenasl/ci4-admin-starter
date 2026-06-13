@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.11.0] — 2026-06-12
+
+### Added
+
+- **Role permission matrix editor** (`/admin/iam/role-permissions`) — admin UI for managing which permissions are assigned to which roles. Powered by `RolePermissionsController` and `RoleMatrixApiService`, which fetch the matrix from the hub's new `GET /api/v1/iam/role-permissions` endpoint. Render a table with rows = roles, columns = permissions (grouped by application), and toggle cells to attach/detach. Includes client-side debounced updates and server-side batch handling of permission attachments/detachments.
+- **`PermissionsSessionRefresher` library** — utilities for refreshing the `session('user.permissions')` array after role changes, ensuring the admin doesn't see stale permission states. Called automatically after permission changes via `RolePermissionsController` and integrated into workflow handlers.
+
+### Changed
+
+- **Role create/edit forms** — simplified `RoleStoreRequest` and `RoleUpdateRequest` by removing the permissions-from-form handling (now driven by the matrix UI instead). Role CRUD forms now focus on role metadata (name, description, is_system toggle).
+- **Role views** — `create.php`, `edit.php`, and `show.php` trimmed to remove inline permission selection. Permissions are managed entirely in the separate role-permissions editor (`/admin/iam/role-permissions`) reached from role detail sidebar or admin menu.
+
 ## [2.10.0] — 2026-06-10
 
 ### Added

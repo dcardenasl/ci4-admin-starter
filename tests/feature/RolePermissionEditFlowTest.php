@@ -4,17 +4,16 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Modules\Iam\Services\ApplicationApiService;
 use App\Modules\Iam\Services\PermissionApiService;
 use App\Modules\Iam\Services\RoleApiService;
+use App\Modules\Iam\Services\RoleMatrixApiService;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\FeatureTestTrait;
 use Config\Services;
 
 /**
- * Verifies the inline-permission-editor UX on Roles create/edit, mirroring the
- * Users → role_ids[] pattern. The role-detail (show) page must be read-only:
- * no attach/detach forms.
+ * Verifies that Roles create/edit manage only role metadata, while the
+ * dedicated Roles x Permissions matrix owns permission assignment.
  *
  * @internal
  */
@@ -49,7 +48,7 @@ final class RolePermissionEditFlowTest extends CIUnitTestCase
         parent::tearDown();
     }
 
-    public function testStoreForwardsPermissionIdsAtomically(): void
+    public function testStoreDoesNotRequirePermissionIds(): void
     {
         $roleMock = $this->createMock(RoleApiService::class);
         $roleMock->expects($this->once())
@@ -57,7 +56,7 @@ final class RolePermissionEditFlowTest extends CIUnitTestCase
             ->with($this->callback(function (array $payload): bool {
                 return ($payload['code'] ?? '') === 'editor'
                     && ($payload['name'] ?? '') === 'Editor'
-                    && ($payload['permission_ids'] ?? null) === [10, 20];
+                    && ! array_key_exists('permission_ids', $payload);
             }))
             ->willReturn([
                 'ok' => true, 'status' => 201, 'data' => ['id' => 'uuid-new'],
@@ -71,20 +70,20 @@ final class RolePermissionEditFlowTest extends CIUnitTestCase
             'code'           => 'editor',
             'name'           => 'Editor',
             'description'    => '',
-            'permission_ids' => ['10', '20', '', '0', 'abc'],
         ]);
 
         $result->assertRedirectTo(site_url('admin/iam/roles'));
     }
 
-    public function testUpdateForwardsPermissionIdsAtomically(): void
+    public function testUpdateDoesNotRequirePermissionIds(): void
     {
         $roleMock = $this->createMock(RoleApiService::class);
         $roleMock->expects($this->once())
             ->method('update')
             ->with('uuid-1', $this->callback(function (array $payload): bool {
-                return array_key_exists('permission_ids', $payload)
-                    && $payload['permission_ids'] === [5, 7];
+                return ($payload['code'] ?? '') === 'editor'
+                    && ($payload['name'] ?? '') === 'Editor'
+                    && ! array_key_exists('permission_ids', $payload);
             }))
             ->willReturn([
                 'ok' => true, 'status' => 200, 'data' => ['id' => 'uuid-1'],
@@ -98,7 +97,6 @@ final class RolePermissionEditFlowTest extends CIUnitTestCase
             'code'           => 'editor',
             'name'           => 'Editor',
             'description'    => '',
-            'permission_ids' => ['5', '7'],
         ]);
 
         $result->assertRedirectTo(site_url('admin/iam/roles'));
@@ -130,7 +128,7 @@ final class RolePermissionEditFlowTest extends CIUnitTestCase
         $result->assertRedirectTo(site_url('admin/iam/roles'));
     }
 
-    public function testEditViewPreMarksAssignedPermissions(): void
+    public function testEditViewLinksToDedicatedPermissionMatrix(): void
     {
         $roleMock = $this->createMock(RoleApiService::class);
         $roleMock->method('get')->with('uuid-3')->willReturn([
@@ -139,64 +137,16 @@ final class RolePermissionEditFlowTest extends CIUnitTestCase
             'data'        => ['id' => 'uuid-3', 'code' => 'qa', 'name' => 'QA', 'description' => '', 'is_system' => false],
             'raw'         => '', 'headers' => [], 'messages' => [], 'fieldErrors' => [],
         ]);
-        $roleMock->method('listPermissions')->with('uuid-3')->willReturn([
-            'ok'     => true,
-            'status' => 200,
-            'data'   => [
-                ['id' => 11, 'code' => 'users.read', 'description' => ''],
-                ['id' => 22, 'code' => 'users.write', 'description' => ''],
-            ],
-            'raw' => '', 'headers' => [], 'messages' => [], 'fieldErrors' => [],
-        ]);
-
-        $permMock = $this->createMock(PermissionApiService::class);
-        $permMock->method('list')->willReturn([
-            'ok'     => true,
-            'status' => 200,
-            'data'   => [
-                ['id' => 11, 'code' => 'users.read', 'description' => ''],
-                ['id' => 22, 'code' => 'users.write', 'description' => ''],
-                ['id' => 33, 'code' => 'audit.read', 'description' => ''],
-            ],
-            'raw' => '', 'headers' => [], 'messages' => [], 'fieldErrors' => [],
-        ]);
-
-        $appMock = $this->createMock(ApplicationApiService::class);
-        $appMock->method('list')->willReturn([
-            'ok' => true, 'status' => 200,
-            'data' => ['data' => [], 'meta' => ['total' => 0, 'per_page' => 100]],
-            'raw' => '', 'headers' => [], 'messages' => [], 'fieldErrors' => [],
-        ]);
 
         Services::injectMock('roleApiService', $roleMock);
-        Services::injectMock('permissionApiService', $permMock);
-        Services::injectMock('applicationApiService', $appMock);
 
         $result = $this->withSession(self::ADMIN_SESSION)->get('/admin/iam/roles/uuid-3/edit');
 
         $result->assertStatus(200);
         $body = (string) $result->getBody();
 
-        // Assigned ids are pre-checked.
-        $this->assertMatchesRegularExpression(
-            '/<input type="checkbox" name="permission_ids\[\]" value="11"\s+checked/',
-            $body,
-            'Assigned permission #11 should be pre-checked.'
-        );
-        $this->assertMatchesRegularExpression(
-            '/<input type="checkbox" name="permission_ids\[\]" value="22"\s+checked/',
-            $body,
-            'Assigned permission #22 should be pre-checked.'
-        );
-        // Unassigned permission #33 must be present (the form lists it) but
-        // not pre-checked. The simplest invariant: there must NOT be a
-        // 'value="33"\s+checked' substring on the page.
-        $this->assertDoesNotMatchRegularExpression(
-            '/value="33"\s+checked/',
-            $body,
-            'Unassigned permission #33 must render unchecked.'
-        );
-        $this->assertStringContainsString('value="33"', $body, 'Permission #33 must be listed.');
+        $this->assertStringNotContainsString('name="permission_ids[]"', $body);
+        $this->assertStringContainsString('/admin/iam/role-permissions?tab=uuid-3', $body);
     }
 
     public function testShowPageIsReadOnly(): void
@@ -237,5 +187,50 @@ final class RolePermissionEditFlowTest extends CIUnitTestCase
             $body,
             'show.php must not render any per-permission detach form.'
         );
+    }
+
+    public function testRolePermissionsMatrixRendersGroupedBulkControls(): void
+    {
+        $matrixMock = $this->createMock(RoleMatrixApiService::class);
+        $matrixMock->method('matrix')->willReturn([
+            'ok'     => true,
+            'status' => 200,
+            'data'   => [
+                'roles' => [
+                    ['id' => 99, 'code' => 'editor', 'name' => 'Editor', 'description' => '', 'is_system' => 0],
+                ],
+                'applications' => [
+                    [
+                        'id'          => 7,
+                        'code'        => 'catalog',
+                        'name'        => 'Catalog',
+                        'permissions' => [
+                            ['id' => 10, 'code' => 'catalog.product.read', 'resource' => 'product', 'action' => 'read', 'description' => 'Read products'],
+                            ['id' => 11, 'code' => 'catalog.product.write', 'resource' => 'product', 'action' => 'write', 'description' => 'Write products'],
+                        ],
+                    ],
+                ],
+                'assignments' => [
+                    99 => [10],
+                ],
+            ],
+            'raw' => '', 'headers' => [], 'messages' => [], 'fieldErrors' => [],
+        ]);
+
+        Services::injectMock('roleMatrixApiService', $matrixMock);
+
+        $result = $this->withSession(self::ADMIN_SESSION)->get('/admin/iam/role-permissions?tab=99');
+
+        $result->assertStatus(200);
+        $body = (string) $result->getBody();
+
+        $this->assertStringContainsString('data-role-id="99"', $body);
+        $this->assertStringContainsString('data-app-id="7"', $body);
+        $this->assertStringContainsString('data-resource="product"', $body);
+        $this->assertStringContainsString('catalog.product.read', $body);
+        $this->assertStringContainsString(lang('Iam.permissions_select_all'), $body);
+        $this->assertStringContainsString(lang('Iam.permissions_clear_all'), $body);
+        $this->assertStringContainsString(lang('Iam.permissions_select_group'), $body);
+        $this->assertStringContainsString(lang('Iam.permissions_clear_group'), $body);
     }
 }

@@ -7,9 +7,7 @@ namespace App\Modules\Iam\Controllers;
 use App\Controllers\BaseWebController;
 use App\Modules\Iam\Requests\RoleStoreRequest;
 use App\Modules\Iam\Requests\RoleUpdateRequest;
-use App\Modules\Iam\Services\PermissionApiServiceInterface;
 use App\Modules\Iam\Services\RoleApiServiceInterface;
-use App\Modules\Iam\Support\IamLookups;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -18,15 +16,11 @@ use Psr\Log\LoggerInterface;
 class RoleController extends BaseWebController
 {
     protected RoleApiServiceInterface $roleService;
-    protected PermissionApiServiceInterface $permissionService;
-    protected IamLookups $lookups;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger): void
     {
         parent::initController($request, $response, $logger);
-        $this->roleService       = service('roleApiService');
-        $this->permissionService = service('permissionApiService');
-        $this->lookups           = new IamLookups();
+        $this->roleService = service('roleApiService');
     }
 
     public function index(): string
@@ -60,30 +54,22 @@ class RoleController extends BaseWebController
             ]);
         }
 
-        $assignedResponse       = $this->safeApiCall(fn () => $this->roleService->listPermissions($id));
-        $allPermissionsResponse = $this->safeApiCall(fn () => $this->permissionService->list(['limit' => 200]));
-
+        $assignedResponse = $this->safeApiCall(fn () => $this->roleService->listPermissions($id));
         $assignedPermissions = $this->extractItems($assignedResponse);
-        $allPermissions      = $this->extractItems($allPermissionsResponse);
-        $assignedIds         = array_map(static fn (array $p): int => (int) ($p['id'] ?? 0), $assignedPermissions);
 
         $role = $this->extractData($response);
 
         return $this->render('iam/roles/show', [
-            'title'                 => lang('Iam.roles_details'),
-            'role'                  => $role,
-            'allPermissions'        => $allPermissions,
-            'assignedPermissionIds' => $assignedIds,
+            'title'               => lang('Iam.roles_details'),
+            'role'                => $role,
+            'assignedPermissions' => $assignedPermissions,
         ]);
     }
 
     public function create(): string
     {
         return $this->render('iam/roles/create', [
-            'title'                 => lang('Iam.roles_create'),
-            'applications'          => $this->lookups->applications(),
-            'allPermissions'        => $this->loadAllPermissions(),
-            'assignedPermissionIds' => [],
+            'title' => lang('Iam.roles_create'),
         ]);
     }
 
@@ -102,6 +88,8 @@ class RoleController extends BaseWebController
             return $this->failApi($response, lang('Iam.roles_create_failed'));
         }
 
+        service('permissionsSessionRefresher')->forceRefresh();
+
         return redirect()->to(route_to('admin.iam.roles'))->with('success', lang('Iam.roles_create_success'));
     }
 
@@ -112,27 +100,10 @@ class RoleController extends BaseWebController
             return $this->withError(lang('Iam.roles_not_found'), route_to('admin.iam.roles'));
         }
 
-        $assignedResponse = $this->safeApiCall(fn () => $this->roleService->listPermissions($id));
-        $assignedItems    = $this->extractItems($assignedResponse);
-        $assignedIds      = array_map(static fn (array $p): int => (int) ($p['id'] ?? 0), $assignedItems);
-
         return $this->render('iam/roles/edit', [
-            'title'                 => lang('Iam.roles_edit'),
-            'item'                  => $this->extractData($response),
-            'applications'          => $this->lookups->applications(),
-            'allPermissions'        => $this->loadAllPermissions(),
-            'assignedPermissionIds' => $assignedIds,
+            'title' => lang('Iam.roles_edit'),
+            'item'  => $this->extractData($response),
         ]);
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function loadAllPermissions(): array
-    {
-        $response = $this->safeApiCall(fn () => $this->permissionService->list(['limit' => 200]));
-
-        return $this->extractItems($response);
     }
 
     public function update(string $id): RedirectResponse
@@ -149,6 +120,8 @@ class RoleController extends BaseWebController
         if (! $response['ok']) {
             return $this->failApi($response, lang('Iam.roles_update_failed'));
         }
+
+        service('permissionsSessionRefresher')->forceRefresh();
 
         return redirect()->to(route_to('admin.iam.roles'))->with('success', lang('Iam.roles_update_success'));
     }
@@ -180,6 +153,8 @@ class RoleController extends BaseWebController
             return $this->failApi($response, lang('Iam.permissions_attach_failed'), route_to('admin.iam.roles.show', $id), false);
         }
 
+        service('permissionsSessionRefresher')->forceRefresh();
+
         return redirect()->to(route_to('admin.iam.roles.show', $id))
             ->with('success', lang('Iam.permissions_attach_success'));
     }
@@ -191,6 +166,8 @@ class RoleController extends BaseWebController
         if (! $response['ok']) {
             return $this->failApi($response, lang('Iam.permissions_detach_failed'), route_to('admin.iam.roles.show', $id), false);
         }
+
+        service('permissionsSessionRefresher')->forceRefresh();
 
         return redirect()->to(route_to('admin.iam.roles.show', $id))
             ->with('success', lang('Iam.permissions_detach_success'));
