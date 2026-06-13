@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.11.0] — 2026-06-12
+
 ### Added
 
 - **Role permission matrix editor** (`/admin/iam/role-permissions`) — admin UI for managing which permissions are assigned to which roles. Powered by `RolePermissionsController` and `RoleMatrixApiService`, which fetch the matrix from the hub's new `GET /api/v1/iam/role-permissions` endpoint. Render a table with rows = roles, columns = permissions (grouped by application), and toggle cells to attach/detach. Includes client-side debounced updates and server-side batch handling of permission attachments/detachments.
