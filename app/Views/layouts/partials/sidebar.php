@@ -1,4 +1,4 @@
-<aside id="app-sidebar" class="bg-gray-900 text-gray-200 w-72 fixed inset-y-0 left-0 z-40 transform transition-transform duration-200 md:translate-x-0"
+<aside id="app-sidebar" class="bg-gray-900 text-gray-200 w-72 h-full fixed inset-y-0 left-0 z-40 flex flex-col overflow-x-hidden transform transition-transform duration-200 md:translate-x-0"
     :class="{ '-translate-x-full': !sidebarOpen, 'translate-x-0': sidebarOpen }">
     <div class="h-16 px-4 border-b border-gray-800 flex items-center justify-between">
         <span class="text-sm uppercase tracking-widest text-gray-400"><?= lang('App.menu') ?></span>
@@ -7,7 +7,7 @@
         </button>
     </div>
 
-    <nav class="p-3 space-y-1">
+    <nav class="flex-1 min-h-0 overflow-y-auto p-3 space-y-1">
         <a href="<?= route_to('dashboard') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('dashboard') ?>">
             <?= ui_icon('dashboard') ?>
             <span><?= lang('App.dashboard') ?></span>
@@ -58,6 +58,10 @@
             <a href="<?= route_to('admin.iam.roles') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/iam/roles*') ?>">
                 <?= ui_icon('shield') ?>
                 <span><?= lang('App.roles') ?></span>
+            </a>
+            <a href="<?= route_to('admin.iam.role_permissions') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/iam/role-permissions*') ?>">
+                <?= ui_icon('lock') ?>
+                <span><?= lang('Iam.role_permissions_title') ?></span>
             </a>
             <a href="<?= route_to('admin.iam.permissions') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/iam/permissions*') ?>">
                 <?= ui_icon('lock') ?>

@@ -45,6 +45,8 @@ class AdminFilter implements FilterInterface
             return redirect()->to(site_url('dashboard'))->with('error', lang('Auth.noPermission'));
         }
 
+        service('permissionsSessionRefresher')->refreshIfStale(60);
+
         return null;
     }
 

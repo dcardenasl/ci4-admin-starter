@@ -1,9 +1,6 @@
 <?php
 $role = $role ?? [];
-$allPermissions = $allPermissions ?? [];
-$assignedPermissionIds = $assignedPermissionIds ?? [];
-$assignedSet = array_flip(array_map('intval', $assignedPermissionIds));
-$assignedItems = array_values(array_filter($allPermissions, static fn (array $p): bool => isset($assignedSet[(int) ($p['id'] ?? 0)])));
+$assignedItems = $assignedPermissions ?? [];
 
 $canModify = can_modify_role($role);
 ?>
@@ -46,19 +43,6 @@ $canModify = can_modify_role($role);
                 <dt class="text-gray-500"><?= lang('Iam.field_name') ?></dt>
                 <dd class="mt-1 text-gray-900"><?= esc((string) ($role['name'] ?? '-')) ?></dd>
             </div>
-            <div>
-                <dt class="text-gray-500"><?= lang('Iam.field_application') ?></dt>
-                <dd class="mt-1 text-gray-900">
-                    <?php if (! empty($role['application_name'])): ?>
-                        <?= esc((string) $role['application_name']) ?>
-                        <span class="text-gray-500 text-xs">(#<?= (int) $role['application_id'] ?>)</span>
-                    <?php elseif (! empty($role['application_id'])): ?>
-                        #<?= (int) $role['application_id'] ?>
-                    <?php else: ?>
-                        <span class="text-gray-500"><?= esc(lang('Iam.role_global_label')) ?></span>
-                    <?php endif; ?>
-                </dd>
-            </div>
             <?php if (! empty($role['is_system'])): ?>
                 <div>
                     <dt class="text-gray-500"><?= esc(lang('App.warning')) ?></dt>
@@ -82,7 +66,7 @@ $canModify = can_modify_role($role);
         <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-gray-900"><?= lang('Iam.permissions_assigned') ?></h3>
             <?php if ($canModify): ?>
-                <a href="<?= route_to('admin.iam.roles.edit', $itemId) ?>" class="text-sm text-brand-600 hover:text-brand-700"><?= esc(lang('Iam.permissions_edit_link')) ?></a>
+                <a href="<?= route_to('admin.iam.role_permissions') ?>?tab=<?= urlencode($itemId) ?>" class="text-sm text-brand-600 hover:text-brand-700"><?= esc(lang('Iam.permissions_edit_link')) ?></a>
             <?php endif; ?>
         </div>
 

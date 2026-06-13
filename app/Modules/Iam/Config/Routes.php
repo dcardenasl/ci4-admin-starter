@@ -24,6 +24,8 @@ $routes->group('admin/iam', ['filter' => ['auth', 'superadmin']], static functio
     // Role ↔ Permission relations
     $routes->post('roles/(:segment)/permissions/attach', '\\App\\Modules\\Iam\\Controllers\\RoleController::attachPermissions/$1', ['as' => 'admin.iam.roles.permissions.attach']);
     $routes->post('roles/(:segment)/permissions/(:segment)/detach', '\\App\\Modules\\Iam\\Controllers\\RoleController::detachPermission/$1/$2', ['as' => 'admin.iam.roles.permissions.detach']);
+    $routes->get('role-permissions', '\\App\\Modules\\Iam\\Controllers\\RolePermissionsController::index', ['as' => 'admin.iam.role_permissions']);
+    $routes->post('role-permissions/(:segment)', '\\App\\Modules\\Iam\\Controllers\\RolePermissionsController::save/$1', ['as' => 'admin.iam.role_permissions.save']);
 
     // Permission
     $routes->get('permissions', '\App\Modules\Iam\Controllers\PermissionController::index', ['as' => 'admin.iam.permissions']);
