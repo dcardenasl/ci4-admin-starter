@@ -33,7 +33,7 @@ class RolePermissionsController extends BaseWebController
 
         return $this->render('iam/role_permissions/index', [
             'title'       => lang('Iam.role_permissions_title'),
-            'applications'=> $matrix['applications'] ?? [],
+            'applications' => $matrix['applications'] ?? [],
             'roles'       => $matrix['roles'] ?? [],
             'assignments' => $matrix['assignments'] ?? [],
             'activeTab'   => $activeTab,
