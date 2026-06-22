@@ -15,7 +15,7 @@
     },
     "dependencies": {
         "alpinejs": "^3.14.9",
-        "lucide": "^1.17.0"
+        "lucide": "^1.21.0"
     },
     "devDependencies": {
         "@eslint/js": "^10.0.1",
