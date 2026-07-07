@@ -11,7 +11,7 @@ $isHtml = $isHtml ?? false;
     <dt class="text-sm font-medium text-gray-500">
         <?= lang($label) ?>
     </dt>
-    <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0 font-medium">
+    <dd class="mt-1 min-w-0 break-words text-sm text-gray-900 sm:col-span-2 sm:mt-0 font-medium">
         <?php if ($isHtml): ?>
             <?= $value ?>
         <?php else: ?>
