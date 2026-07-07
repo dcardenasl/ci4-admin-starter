@@ -5,6 +5,11 @@ declare(strict_types=1);
 namespace App\Libraries;
 
 /**
+ * Client-side wrapper normalized from the canonical API envelope.
+ *
+ * The backend contract remains `status` / `message` / `data` / `errors`;
+ * this wrapper derives `messages` and `fieldErrors` for controller UX.
+ *
  * @phpstan-type ApiResponse array{
  *   ok: bool,
  *   status: int,

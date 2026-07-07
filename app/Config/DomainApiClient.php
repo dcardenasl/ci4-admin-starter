@@ -12,7 +12,7 @@ namespace Config;
  */
 class DomainApiClient extends ApiClient
 {
-    public string $baseUrl = 'http://localhost:8090';
+    public string $baseUrl = '';
 
     public function __construct()
     {
@@ -22,9 +22,16 @@ class DomainApiClient extends ApiClient
         \CodeIgniter\Config\BaseConfig::__construct();
 
         $baseUrl = env('domainApiClient.baseUrl') ?: env('DOMAIN_API_BASE_URL');
-        if (is_string($baseUrl) && trim($baseUrl) !== '') {
-            $this->baseUrl = $baseUrl;
+        if (! is_string($baseUrl) || trim($baseUrl) === '') {
+            throw new \LogicException(
+                lang('Config.missingDomainApiBaseUrl') ?? (
+                    'Missing DOMAIN_API_BASE_URL in .env. '
+                    . 'Set domainApiClient.baseUrl or DOMAIN_API_BASE_URL to your domain API server URL. '
+                    . 'Example: DOMAIN_API_BASE_URL=http://localhost:8090'
+                )
+            );
         }
+        $this->baseUrl = $baseUrl;
 
         $timeout = env('domainApiClient.timeout') ?: env('DOMAIN_API_TIMEOUT');
         if ($timeout !== false && $timeout !== null && $timeout !== '') {
