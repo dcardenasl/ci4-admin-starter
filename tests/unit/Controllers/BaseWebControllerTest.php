@@ -98,6 +98,13 @@ final class BaseWebControllerTest extends CIUnitTestCase
         $this->assertSame([], $this->ctrl->callExtractItems(['data' => 'not-an-array']));
     }
 
+    public function testExtractItemsReturnsEmptyArrayWhenOkIsFalse(): void
+    {
+        $response = ['ok' => false, 'data' => [['id' => 1]]];
+
+        $this->assertSame([], $this->ctrl->callExtractItems($response));
+    }
+
     // ─── extractData() ───────────────────────────────────────────────────────
 
     public function testExtractDataReturnsSingleObjectPayload(): void
@@ -120,6 +127,13 @@ final class BaseWebControllerTest extends CIUnitTestCase
     public function testExtractDataReturnsEmptyArrayOnMissingData(): void
     {
         $this->assertSame([], $this->ctrl->callExtractData([]));
+    }
+
+    public function testExtractDataReturnsEmptyArrayWhenOkIsFalse(): void
+    {
+        $response = ['ok' => false, 'data' => ['id' => 99]];
+
+        $this->assertSame([], $this->ctrl->callExtractData($response));
     }
 
     // ─── localizeApiMessage() ────────────────────────────────────────────────
@@ -215,5 +229,16 @@ final class BaseWebControllerTest extends CIUnitTestCase
 
         $this->assertStringNotContainsString('ApiErrors.', $result);
         $this->assertNotSame('email_already_registered', $result, 'Should be localized');
+    }
+
+    public function testFirstMessageReadsCanonicalApiErrorEnvelope(): void
+    {
+        $message = $this->ctrl->callFirstMessage(['message' => 'message text'], 'fallback');
+        $general = $this->ctrl->callFirstMessage(['errors' => ['general' => 'general text']], 'fallback');
+        $legacy = $this->ctrl->callFirstMessage(['detail' => 'detail text', 'title' => 'title text'], 'fallback');
+
+        $this->assertSame('message text', $message);
+        $this->assertSame('general text', $general);
+        $this->assertSame('fallback', $legacy);
     }
 }

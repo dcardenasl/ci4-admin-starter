@@ -17,6 +17,43 @@ use Config\Services;
  */
 final class ApiClientTest extends CIUnitTestCase
 {
+    private array $envBackup = [];
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->backupEnv([
+            'apiClient.baseUrl',
+            'API_BASE_URL',
+            'apiClient.timeout',
+            'API_TIMEOUT',
+            'apiClient.connectTimeout',
+            'API_CONNECT_TIMEOUT',
+            'apiClient.apiPrefix',
+            'API_PREFIX',
+            'apiClient.appName',
+            'APP_NAME',
+            'apiClient.appKey',
+            'API_APP_KEY',
+            'apiClient.healthPaths',
+            'API_HEALTH_PATHS',
+            'apiClient.logRequests',
+            'API_LOG_REQUESTS',
+        ]);
+
+        $this->setEnv('apiClient.baseUrl', 'http://localhost:8080');
+        $this->setEnv('API_BASE_URL', 'http://localhost:8080');
+    }
+
+    protected function tearDown(): void
+    {
+        $this->restoreEnv();
+        session()->destroy();
+        Services::reset();
+        parent::tearDown();
+    }
+
     public function testClassImplementsInterface(): void
     {
         $reflection = new \ReflectionClass(ApiClient::class);
@@ -53,7 +90,18 @@ final class ApiClientTest extends CIUnitTestCase
 
     public function testConfigReadsEnvVariables(): void
     {
+        $this->setEnv('apiClient.baseUrl', 'http://api.example');
+        $this->setEnv('apiClient.timeout', '20');
+        $this->setEnv('apiClient.connectTimeout', '9');
+        $this->setEnv('apiClient.apiPrefix', 'custom/v2');
+        $this->setEnv('apiClient.appName', 'Custom API');
         $config = new ApiClientConfig();
+        $this->assertSame('http://api.example', $config->baseUrl);
+        $this->assertSame(20, $config->timeout);
+        $this->assertSame(9, $config->connectTimeout);
+        $this->assertSame('/custom/v2', $config->apiPrefix);
+        $this->assertSame('Custom API', $config->appName);
+
         $this->assertIsString($config->baseUrl);
         $this->assertIsInt($config->timeout);
         $this->assertIsInt($config->connectTimeout);
@@ -66,7 +114,7 @@ final class ApiClientTest extends CIUnitTestCase
         session()->set('locale', 'es');
 
         $client = new ApiClient(new ApiClientConfig());
-        $headers = $this->invokeMethod($client, 'baseHeaders');
+        $headers = $this->invokeProtectedMethod($client, 'baseHeaders');
 
         $this->assertSame('application/json', $headers['Accept']);
         $this->assertSame('en', $headers['Accept-Language']);
@@ -78,7 +126,7 @@ final class ApiClientTest extends CIUnitTestCase
         session()->set('locale', 'es');
 
         $client = new ApiClient(new ApiClientConfig());
-        $headers = $this->invokeMethod($client, 'baseHeaders');
+        $headers = $this->invokeProtectedMethod($client, 'baseHeaders');
 
         $this->assertSame('es', $headers['Accept-Language']);
     }
@@ -89,7 +137,7 @@ final class ApiClientTest extends CIUnitTestCase
         session()->set('locale', 'pt');
 
         $client = new ApiClient(new ApiClientConfig());
-        $headers = $this->invokeMethod($client, 'baseHeaders');
+        $headers = $this->invokeProtectedMethod($client, 'baseHeaders');
 
         $this->assertSame(config('App')->defaultLocale, $headers['Accept-Language']);
     }
@@ -101,11 +149,39 @@ final class ApiClientTest extends CIUnitTestCase
         $config->appKey = 'test-key';
 
         $client = new ApiClient($config);
-        $headers = $this->invokeMethod($client, 'baseHeaders');
+        $headers = $this->invokeProtectedMethod($client, 'baseHeaders');
 
         $this->assertSame('es', $headers['Accept-Language']);
         $this->assertSame('test-key', $headers['X-App-Key']);
         $this->assertArrayNotHasKey('X-API-Key', $headers);
+    }
+
+    public function testExtractMessagesOnlyReadsCanonicalApiErrorEnvelope(): void
+    {
+        $client = new ApiClient(new ApiClientConfig());
+
+        $message = $this->invokeProtectedMethod($client, 'extractMessages', [['message' => 'message text'], 422]);
+        $general = $this->invokeProtectedMethod($client, 'extractMessages', [['errors' => ['general' => 'general text']], 422]);
+        $legacy  = $this->invokeProtectedMethod($client, 'extractMessages', [['detail' => 'detail text', 'title' => 'title text', 'messages' => ['array text']], 422]);
+
+        $this->assertSame(['message text'], $message);
+        $this->assertSame(['general text'], $general);
+        $this->assertSame([], $legacy);
+    }
+
+    public function testExtractFieldErrorsOnlyReadsCanonicalErrorsMap(): void
+    {
+        $client = new ApiClient(new ApiClientConfig());
+
+        $errors = $this->invokeProtectedMethod($client, 'extractFieldErrors', [[
+            'fieldErrors' => ['legacy' => 'ignored legacy field'],
+            'errors' => ['email' => 'invalid email', 'name' => ['required'], 'general' => 'ignored'],
+        ]]);
+
+        $this->assertSame([
+            'email' => 'invalid email',
+            'name'  => 'required',
+        ], $errors);
     }
 
     // ─── Method Contracts ────────────────────────────────────────────
@@ -487,24 +563,19 @@ final class ApiClientTest extends CIUnitTestCase
         $this->assertNull(session()->get(SessionKeys::USER->value));
     }
 
-    protected function tearDown(): void
-    {
-        session()->destroy();
-        Services::reset();
-        parent::tearDown();
-    }
-
     /**
      * @return array<string, string>
      */
-    private function invokeMethod(object $object, string $method): array
+    /**
+     * @return array<string, string>|list<string>|mixed
+     */
+    private function invokeProtectedMethod(object $object, string $method, array $args = []): mixed
     {
         $reflection = new \ReflectionClass($object);
         $reflectionMethod = $reflection->getMethod($method);
         $reflectionMethod->setAccessible(true);
 
-        /** @var array<string, string> $result */
-        $result = $reflectionMethod->invoke($object);
+        $result = $reflectionMethod->invokeArgs($object, $args);
 
         return $result;
     }
@@ -515,6 +586,50 @@ final class ApiClientTest extends CIUnitTestCase
         $reflectionProperty = $reflection->getProperty($property);
         $reflectionProperty->setAccessible(true);
         $reflectionProperty->setValue($object, $value);
+    }
+
+    /**
+     * @param array<int, string> $keys
+     */
+    private function backupEnv(array $keys): void
+    {
+        foreach ($keys as $key) {
+            $this->envBackup[$key] = [
+                'env' => $_ENV[$key] ?? null,
+                'server' => $_SERVER[$key] ?? null,
+                'putenv' => getenv($key) === false ? null : getenv($key),
+            ];
+        }
+    }
+
+    private function restoreEnv(): void
+    {
+        foreach ($this->envBackup as $key => $values) {
+            if ($values['env'] === null) {
+                unset($_ENV[$key]);
+            } else {
+                $_ENV[$key] = $values['env'];
+            }
+
+            if ($values['server'] === null) {
+                unset($_SERVER[$key]);
+            } else {
+                $_SERVER[$key] = $values['server'];
+            }
+
+            if ($values['putenv'] === null) {
+                putenv($key);
+            } else {
+                putenv($key . '=' . $values['putenv']);
+            }
+        }
+    }
+
+    private function setEnv(string $key, string $value): void
+    {
+        $_ENV[$key] = $value;
+        $_SERVER[$key] = $value;
+        putenv($key . '=' . $value);
     }
 
     private function createMockHttp(Response $response): \CodeIgniter\HTTP\CURLRequest
