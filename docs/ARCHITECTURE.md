@@ -68,7 +68,7 @@ This project is a **Server-Rendered Frontend (SRF)**. Unlike a traditional SPA (
 │                     └───────────────────────────────────────┘            │
 └─────────────────────────────────┬──────────────────────────────────────┘
                                  │ JSON Response
-                                 │ {ok, data, messages, errors}
+                                 │ {status, message, data, errors}
                                  ▼
                             ┌──────────────┐
                             │  Database    │
@@ -162,8 +162,8 @@ Every call returns a consistent array structure:
 - `ok` (bool): `true` for 2xx status codes.
 - `status` (int): HTTP status code.
 - `data` (array): The main payload from the API.
-- `messages` (array): General success or error messages.
-- `fieldErrors` (array): Validation errors mapped to form field names.
+- `messages` (array): Derived wrapper messages for controller UX.
+- `fieldErrors` (array): Derived wrapper field errors for controller UX.
 - `raw` (string): The original JSON body.
 
 ### 3. Localization Synchronization

@@ -17,6 +17,7 @@ return [
     'permissions'     => 'Permisos',
     'memberships'     => 'Membresías',
     'confirm_delete'  => '¿Seguro que quieres eliminar este elemento?',
+    'confirm_delete_named' => '¿Seguro que quieres eliminar "{0}"?',
     'confirm_remove'  => '¿Seguro que quieres quitar este elemento?',
     'profile'         => 'Perfil',
     'logout'          => 'Cerrar sesión',

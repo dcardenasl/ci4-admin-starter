@@ -69,7 +69,7 @@ Este proyecto es un **Frontend Renderizado en Servidor (SRF)**. A diferencia de 
 │         └──────────→                                                    │
 └─────────────────────────────────┬──────────────────────────────────────┘
                                  │ Respuesta JSON
-                                 │ {ok, data, messages, errors}
+                                 │ {status, message, data, errors}
                                  ▼
                             ┌──────────────┐
                             │  Base de     │
@@ -164,8 +164,8 @@ Cada llamada devuelve una estructura de array consistente:
 - `ok` (bool): `true` para códigos de estado 2xx.
 - `status` (int): Código de estado HTTP.
 - `data` (array): El payload principal de la API.
-- `messages` (array): Mensajes generales de éxito o error.
-- `fieldErrors` (array): Errores de validación mapeados a nombres de campos de formulario.
+- `messages` (array): Mensajes derivados del wrapper para UX del controlador.
+- `fieldErrors` (array): Errores derivados del wrapper para UX del controlador.
 - `raw` (string): El cuerpo JSON original.
 
 ### 3. Sincronización de Localización

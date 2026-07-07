@@ -475,7 +475,7 @@ See [API Compatibility Guide](./API-COMPATIBILITY.md) for complete specification
 Yes, but you'll need to adapt the Services. The frontend expects:
 
 1. **JWT authentication** with access + refresh tokens
-2. **Standard JSON response format** with `data`, `messages`, `errors` fields
+2. **Standard JSON response format** with canonical `status`, `message`, `data`, `errors` fields
 3. **Consistent error handling** with field-level errors for validation
 4. **Optional** `X-App-Key` header support for rate limiting
 

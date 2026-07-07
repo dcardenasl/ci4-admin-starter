@@ -103,15 +103,14 @@ Las validaciones frontend son para UX. Las del backend protegen la integridad de
 El `ApiClient` normaliza TODAS las respuestas a:
 ```php
 [
-    'ok' => true/false,
-    'status' => 200/422/500,
-    'data' => [...],
-    'fieldErrors' => ['email' => 'Ya existe'],
-    'messages' => ['Error message']
+    'status' => 'error',
+    'message' => 'Error message',
+    'errors' => ['email' => 'Ya existe'],
+    'code' => 422
 ]
 ```
 
-Los Controladores usan `failApi()` para manejar errores graciosamente.
+Los Controladores usan `failApi()` para manejar errores graciosamente y derivar `messages` / `fieldErrors` del wrapper interno cuando hace falta.
 
 ---
 

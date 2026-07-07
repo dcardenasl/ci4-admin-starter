@@ -17,6 +17,7 @@ return [
     'permissions'     => 'Permissions',
     'memberships'     => 'Memberships',
     'confirm_delete'  => 'Are you sure you want to delete this item?',
+    'confirm_delete_named' => 'Are you sure you want to delete "{0}"?',
     'confirm_remove'  => 'Are you sure you want to remove this item?',
     'profile'         => 'Profile',
     'logout'          => 'Log out',

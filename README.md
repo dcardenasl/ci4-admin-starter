@@ -68,7 +68,7 @@ This template is designed to work seamlessly with [ci4-api-starter](https://gith
 
 - **API Prefix:** `/api/v1`
 - **Authentication:** Bearer JWT with automatic refresh token handling
-- **Response Format:** Standard JSON envelope with data, messages, and field errors
+- **Response Format:** Canonical JSON envelope with `status`, `message`, `data`, and `errors`
 - **Headers:** Automatic `X-App-Key` injection for elevated rate limiting (optional)
 
 See **[API Compatibility Guide](./docs/API-COMPATIBILITY.md)** for the complete contract.
@@ -104,8 +104,8 @@ The `ApiClient` normalizes all API responses to this structure:
     'ok'          => bool,           // true for 2xx, false otherwise
     'status'      => int,            // HTTP status code
     'data'        => array,          // Main payload
-    'messages'    => array,          // [success|error messages]
-    'fieldErrors' => array,          // Field-level validation errors
+    'messages'    => array,          // Derived wrapper messages for controller UX
+    'fieldErrors' => array,          // Derived wrapper field errors for controller UX
     'raw'         => string,         // Original JSON body
 ]
 ```

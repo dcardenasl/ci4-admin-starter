@@ -57,7 +57,7 @@ Esta plantilla está diseñada para trabajar sin interrupciones con [ci4-api-sta
 
 - **Prefijo API:** `/api/v1`
 - **Autenticación:** Bearer JWT con manejo automático de token de refresco
-- **Formato de Respuesta:** Envolvente JSON estándar con datos, mensajes y errores de campo
+- **Formato de Respuesta:** Envolvente JSON canónica con `status`, `message`, `data` y `errors`
 - **Encabezados:** Inyección automática `X-App-Key` para límite de velocidad elevado (opcional)
 
 Ver **[Guía de Compatibilidad API](./API-COMPATIBILITY.md)** para el contrato completo.
@@ -71,8 +71,8 @@ El `ApiClient` normaliza todas las respuestas de la API a esta estructura:
     'ok'          => bool,           // true para 2xx, false en otro caso
     'status'      => int,            // Código de estado HTTP
     'data'        => array,          // Payload principal
-    'messages'    => array,          // [mensajes de éxito|error]
-    'fieldErrors' => array,          // Errores de validación a nivel de campo
+    'messages'    => array,          // Mensajes derivados del wrapper para UX del controlador
+    'fieldErrors' => array,          // Errores derivados del wrapper para UX del controlador
     'raw'         => string,         // Cuerpo JSON original
 ]
 ```
