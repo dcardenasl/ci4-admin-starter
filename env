@@ -73,7 +73,7 @@
 # API CLIENT
 #--------------------------------------------------------------------
 
-# apiClient.baseUrl = 'http://localhost:8080'
+# apiClient.baseUrl = 'http://localhost:8180'
 # apiClient.appName = 'API Client'
 # apiClient.apiPrefix = '/api/v1'
 # apiClient.logRequests = false
@@ -84,7 +84,7 @@
 # apiClient.appKey = apk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 #
 # Optional: Override the webapp base URL (used in email links, password reset redirects)
-# WEBAPP_BASE_URL = 'http://localhost:8082'
+# WEBAPP_BASE_URL = 'http://localhost:8182'
 
 #--------------------------------------------------------------------
 # DOMAIN API CLIENT (optional — only when admin talks to a ci4-domain-starter)
@@ -93,7 +93,7 @@
 # scaffolded with `bash bin/make-module.sh ... --service=domain` will route
 # their HTTP calls here instead of `apiClient.baseUrl`.
 #
-# domainApiClient.baseUrl = 'http://localhost:8090'
+# domainApiClient.baseUrl = 'http://localhost:8190'
 # domainApiClient.apiPrefix = '/api/v1'
 # domainApiClient.appName = 'Domain Client'
 # domainApiClient.logRequests = false
@@ -105,7 +105,7 @@
 # Leave bffApiClient.baseUrl empty (default) to disable BFF health monitoring.
 # Set it to show a BFF health card on the admin dashboard.
 #
-# bffApiClient.baseUrl = 'http://localhost:8088'
+# bffApiClient.baseUrl = 'http://localhost:8188'
 # bffApiClient.apiPrefix = '/api/v1'
 # bffApiClient.appName = 'BFF Gateway'
 # bffApiClient.logRequests = false

@@ -29,11 +29,11 @@ Para configuración inicial, ver **[GUÍA INICIO RÁPIDO](./QUICK-START.md)** pa
 bash install.sh
 
 # 2. Iniciar servidores de desarrollo (dos terminales)
-php spark serve --port 8082    # Terminal 1
+php spark serve --port 8182    # Terminal 1
 npm run dev:css                # Terminal 2
 
 # 3. Abrir en navegador
-# http://localhost:8082
+# http://localhost:8182
 ```
 
 ## 📚 Documentación
@@ -142,10 +142,10 @@ Editar `.env` con tu configuración:
 ```dotenv
 # Aplicación
 CI_ENVIRONMENT = development
-app.baseURL = 'http://localhost:8082/'
+app.baseURL = 'http://localhost:8182/'
 
 # API Backend
-apiClient.baseUrl = 'http://localhost:8080'
+apiClient.baseUrl = 'http://localhost:8180'
 apiClient.apiPrefix = '/api/v1'
 
 # Opcional: Google OAuth (para botón "Iniciar sesión con Google")
@@ -167,8 +167,8 @@ Iniciar ambos servidores en ventanas de terminal separadas:
 
 **Terminal 1 — Servidor de Desarrollo PHP:**
 ```bash
-php spark serve --port 8082
-# Aplicación disponible en http://localhost:8082
+php spark serve --port 8182
+# Aplicación disponible en http://localhost:8182
 ```
 
 **Terminal 2 — Observador de CSS de Tailwind:**

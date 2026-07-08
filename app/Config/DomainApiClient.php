@@ -6,7 +6,7 @@ namespace Config;
 
 /**
  * Configuration for the secondary HTTP client that talks to a domain-starter
- * app (port 8090 by default). Mirrors {@see ApiClient} but reads a distinct
+ * app (port 8190 by default). Mirrors {@see ApiClient} but reads a distinct
  * set of environment variables so a single admin instance can drive both the
  * hub (ApiClient) and one domain backend (DomainApiClient) in parallel.
  */
@@ -27,7 +27,7 @@ class DomainApiClient extends ApiClient
                 lang('Config.missingDomainApiBaseUrl') ?? (
                     'Missing DOMAIN_API_BASE_URL in .env. '
                     . 'Set domainApiClient.baseUrl or DOMAIN_API_BASE_URL to your domain API server URL. '
-                    . 'Example: DOMAIN_API_BASE_URL=http://localhost:8090'
+                    . 'Example: DOMAIN_API_BASE_URL=http://localhost:8190'
                 )
             );
         }

@@ -4,15 +4,15 @@ Soluciones para problemas comunes en **CI4 Admin Starter**.
 
 ## Problemas de Configuración Inicial
 
-### "Connection refused" o "localhost:8080 no responde"
+### "Connection refused" o "localhost:8180 no responde"
 
 **Problema:** La API del backend no está accesible.
 
 **Solución:**
-1. Asegúrate de que la API está ejecutándose: `php spark serve --port 8080` en proyecto backend
-2. Verifica `apiClient.baseUrl` en `.env` (sin trailing slash): `http://localhost:8080`
+1. Asegúrate de que la API está ejecutándose: `php spark serve --port 8180` en proyecto backend
+2. Verifica `apiClient.baseUrl` en `.env` (sin trailing slash): `http://localhost:8180`
 3. Reinicia servidor PHP
-4. Verifica conectividad: `curl http://localhost:8080/api/v1/health`
+4. Verifica conectividad: `curl http://localhost:8180/api/v1/health`
 
 ### "Errores CORS" o "Solicitud bloqueada"
 

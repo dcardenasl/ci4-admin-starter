@@ -231,8 +231,8 @@ rsync -a --exclude=vendor --exclude=node_modules --exclude=.git \
 cd /tmp/ci4-audit/audit-kit-admin
 cp env .env
 sed -i '' 's|^# CI_ENVIRONMENT.*|CI_ENVIRONMENT = development|' .env
-sed -i '' "s|^# app.baseURL.*|app.baseURL = 'http://localhost:8082/'|" .env
-sed -i '' "s|^# apiClient.baseUrl.*|apiClient.baseUrl = 'http://localhost:8080'|" .env
+sed -i '' "s|^# app.baseURL.*|app.baseURL = 'http://localhost:8182/'|" .env
+sed -i '' "s|^# apiClient.baseUrl.*|apiClient.baseUrl = 'http://localhost:8180'|" .env
 mkdir -p writable/{cache,logs,session,uploads,debugbar} && chmod -R 0777 writable
 composer install --no-interaction
 git init -q && git add -A && git commit -q -m baseline

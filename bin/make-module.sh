@@ -62,8 +62,8 @@ Flags:
   --force           Overwrite existing files (skipped by default)
   --service=hub|domain
                     Which backend the new service should target. Default is 'hub'
-                    (apiClient, port 8080). Pass 'domain' to wire the service
-                    against domainApiClient (port 8090 — a ci4-domain-starter app).
+                    (apiClient, port 8180). Pass 'domain' to wire the service
+                    against domainApiClient (port 8190 — a ci4-domain-starter app).
   --action=<verb>    Add a custom POST action for a single item. Repeat the flag
                     for multiple actions (e.g. --action=approve --action=publish).
                     Verbs must be lower-kebab-case.
@@ -82,7 +82,7 @@ Examples:
   bash bin/make-module.sh SchoolCategory Education /education/school-categories school-categories 'name:string:required,active:boolean'
   bash bin/make-module.sh Product Catalog /catalog/products --dry-run
   bash bin/make-module.sh Product Catalog /catalog/products --check-api
-  bash bin/make-module.sh Product Catalog /catalog/products --check-api=http://localhost:8080
+  bash bin/make-module.sh Product Catalog /catalog/products --check-api=http://localhost:8180
   bash bin/make-module.sh User Identity /users --action=approve --action=archive
   bash bin/make-module.sh Report Analytics /analytics/reports 'name:string:required,score:int:required' --csv
 USAGE
@@ -2864,7 +2864,7 @@ for locale in "${LANG_LOCALE_LIST[@]}"; do
     echo "       ${MODULE_DIR}/Language/${locale}/${MODULE}.php"
 done
 echo "  4. Restart the dev server (routes are not hot-reloaded):"
-echo "       pkill -f 'spark serve'; php spark serve --port 8082 &"
+echo "       pkill -f 'spark serve'; php spark serve --port 8182 &"
 echo "  5. Run tests for the new module:"
 echo "       vendor/bin/phpunit tests/unit/Services/${SERVICE_CLASS}Test.php"
 echo "       vendor/bin/phpunit tests/feature/${RESOURCE}FlowTest.php"

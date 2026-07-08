@@ -93,8 +93,8 @@ When tasked with creating or modifying a module or feature:
 
 - **Tech Stack:** CodeIgniter 4 (PHP 8.1+), server-rendered views, Tailwind CSS, Alpine.js, JWT authentication
 - **Current Status:** Fully implemented with all core modules active (Auth, Dashboard, Profile, Files, Users, Audit, API Keys, Metrics)
-- **External Dependency:** Consumes `ci4-api-starter` API running on port 8080
-- **Development Ports:** Admin app runs on port 8082
+- **External Dependency:** Consumes `ci4-api-starter` API running on port 8180
+- **Development Ports:** Admin app runs on port 8182
 - **Language Support:** English (`en`) and Spanish (`es`) with LocaleFilter-based switching
 
 ## Update your agent memory

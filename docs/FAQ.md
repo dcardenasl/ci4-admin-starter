@@ -316,7 +316,7 @@ For integration testing against a real backend:
 
 ```php
 // In phpunit.xml, set:
-<env name="API_URL" value="http://localhost:8080"/>
+<env name="API_URL" value="http://localhost:8180"/>
 
 // In test:
 public function testLoginWithRealAPI() {
@@ -392,7 +392,7 @@ Use `.env` files with environment variables:
 ```dotenv
 # .env.local (never commit)
 CI_ENVIRONMENT = development
-apiClient.baseUrl = http://localhost:8080
+apiClient.baseUrl = http://localhost:8180
 apiClient.appKey = apk_dev_key_only
 
 # Production (via CI/CD or server config)
@@ -413,7 +413,7 @@ The project includes a health check endpoint:
 
 ```bash
 # Check API connectivity
-curl http://localhost:8082/health
+curl http://localhost:8182/health
 
 # Returns JSON status:
 {

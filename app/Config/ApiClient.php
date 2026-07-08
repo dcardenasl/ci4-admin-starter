@@ -39,7 +39,7 @@ class ApiClient extends BaseConfig
                 lang('Config.missingApiBaseUrl') ?? (
                     'Missing API_BASE_URL in .env. '
                     . 'Set apiClient.baseUrl or API_BASE_URL to your API server URL. '
-                    . 'Example: API_BASE_URL=http://localhost:8080'
+                    . 'Example: API_BASE_URL=http://localhost:8180'
                 )
             );
         }

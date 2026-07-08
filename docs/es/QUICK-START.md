@@ -10,7 +10,7 @@ Antes de comenzar, asegúrate de tener:
 - **Composer 2.x** instalado
 - **Node.js 16+** y npm instalados
 - **Git** (para clonar el repositorio)
-- Una instancia ejecutándose de **[ci4-api-starter](https://github.com/dcardenasl/ci4-api-starter)** en `http://localhost:8080` (o actualizar la URL en `.env`)
+- Una instancia ejecutándose de **[ci4-api-starter](https://github.com/dcardenasl/ci4-api-starter)** en `http://localhost:8180` (o actualizar la URL en `.env`)
 
 Verifica tus versiones:
 ```bash
@@ -45,8 +45,8 @@ El script hará:
 | Prompt | Ejemplo |
 |--------|---------|
 | Environment (dev/prod) | `development` |
-| Application Base URL | `http://localhost:8082/` |
-| Backend API Base URL | `http://localhost:8080/` |
+| Application Base URL | `http://localhost:8182/` |
+| Backend API Base URL | `http://localhost:8180/` |
 | API Prefix | `/api/v1` |
 | ¿Instalar dependencias de Composer? | `y` |
 | ¿Instalar dependencias de npm? | `y` |
@@ -70,8 +70,8 @@ Luego edita `.env`:
 
 ```dotenv
 CI_ENVIRONMENT = development
-app.baseURL = 'http://localhost:8082/'
-apiClient.baseUrl = 'http://localhost:8080'
+app.baseURL = 'http://localhost:8182/'
+apiClient.baseUrl = 'http://localhost:8180'
 apiClient.apiPrefix = '/api/v1'
 ```
 
@@ -81,14 +81,14 @@ Abre **dos ventanas de terminal** en tu directorio de proyecto.
 
 **Terminal 1 — Servidor de Desarrollo PHP:**
 ```bash
-php spark serve --port 8082
+php spark serve --port 8182
 ```
 
 Deberías ver:
 ```
 CodeIgniter v4.x.x Command Line Tool - Server Edition
 ...
-Server running on http://localhost:8082
+Server running on http://localhost:8182
 ```
 
 **Terminal 2 — Observador de CSS de Tailwind:**
@@ -106,9 +106,9 @@ Ambos deben estar ejecutándose durante el desarrollo.
 
 ## Paso 5: Abrir en Navegador
 
-Navega a: **`http://localhost:8082`**
+Navega a: **`http://localhost:8182`**
 
-Deberías ver la página de inicio de sesión. Si la API del backend está ejecutándose en `http://localhost:8080`, puedes:
+Deberías ver la página de inicio de sesión. Si la API del backend está ejecutándose en `http://localhost:8180`, puedes:
 
 1. **Crear una nueva cuenta** (si el registro está habilitado)
 2. **Iniciar sesión** con credenciales de prueba del backend
@@ -137,10 +137,10 @@ Antes de usar la aplicación, verifica:
 
 ### Error "Connection refused"
 
-**Problema:** `Connection to http://localhost:8080 refused`
+**Problema:** `Connection to http://localhost:8180 refused`
 
 **Solución:**
-1. Asegúrate de que la API del backend está ejecutándose: `php spark serve --port 8080` en el proyecto del backend
+1. Asegúrate de que la API del backend está ejecutándose: `php spark serve --port 8180` en el proyecto del backend
 2. Verifica que `apiClient.baseUrl` en `.env` coincide con el puerto del backend
 3. Reinicia el servidor de desarrollo PHP
 
@@ -163,8 +163,8 @@ Antes de usar la aplicación, verifica:
 # Usa un puerto diferente
 php spark serve --port 8083
 
-# O mata el proceso que usa el puerto 8082
-lsof -i :8082  # Encuentra el ID del proceso
+# O mata el proceso que usa el puerto 8182
+lsof -i :8182  # Encuentra el ID del proceso
 kill -9 <PID>  # Mátalo
 ```
 
@@ -238,8 +238,8 @@ npm run build:css         # Construcción CSS de producción
 | Variable | Propósito | Requerida | Por Defecto |
 |----------|-----------|-----------|-------------|
 | `CI_ENVIRONMENT` | Entorno de la app | Sí | `development` |
-| `app.baseURL` | URL pública del frontend | Sí | `http://localhost:8082/` |
-| `apiClient.baseUrl` | URL de la API del backend | Sí | `http://localhost:8080` |
+| `app.baseURL` | URL pública del frontend | Sí | `http://localhost:8182/` |
+| `apiClient.baseUrl` | URL de la API del backend | Sí | `http://localhost:8180` |
 | `apiClient.apiPrefix` | Prefijo de API | No | `/api/v1` |
 | `GOOGLE_CLIENT_ID` | ID de cliente de Google OAuth | No | — |
 | `FILE_MAX_SIZE` | Tamaño máximo de carga (bytes) | No | `10485760` (10 MB) |

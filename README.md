@@ -11,9 +11,9 @@ This is a **server-rendered frontend** (SRF) that provides a complete administra
 ```mermaid
 flowchart LR
     Browser["Browser"]
-    Admin["CI4 Admin Starter<br/>(this repo) :8082"]
+    Admin["CI4 Admin Starter<br/>(this repo) :8182"]
     Session[("PHP Session<br/>access_token<br/>refresh_token<br/>user.permissions[]")]
-    API["ci4-api-starter<br/>(backend) :8080"]
+    API["ci4-api-starter<br/>(backend) :8180"]
 
     Browser -->|"HTML / form POST<br/>CSRF protected"| Admin
     Admin --- Session
@@ -40,11 +40,11 @@ For first-time setup, see **[QUICK-START.md](./docs/QUICK-START.md)** for step-b
 bash install.sh
 
 # 2. Start development servers (two terminals)
-php spark serve --port 8082    # Terminal 1
+php spark serve --port 8182    # Terminal 1
 npm run dev:css                # Terminal 2
 
 # 3. Open in browser
-# http://localhost:8082
+# http://localhost:8182
 ```
 
 ## 📚 Documentation
@@ -175,10 +175,10 @@ Edit `.env` with your configuration:
 ```dotenv
 # Application
 CI_ENVIRONMENT = development
-app.baseURL = 'http://localhost:8082/'
+app.baseURL = 'http://localhost:8182/'
 
 # Backend API
-apiClient.baseUrl = 'http://localhost:8080'
+apiClient.baseUrl = 'http://localhost:8180'
 apiClient.apiPrefix = '/api/v1'
 
 # Optional: Google OAuth (for "Login with Google" button)
@@ -200,8 +200,8 @@ Start both servers in separate terminal windows:
 
 **Terminal 1 — PHP Development Server:**
 ```bash
-php spark serve --port 8082
-# Application available at http://localhost:8082
+php spark serve --port 8182
+# Application available at http://localhost:8182
 ```
 
 **Terminal 2 — Tailwind CSS Watcher:**

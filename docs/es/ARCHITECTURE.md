@@ -18,7 +18,7 @@ Este proyecto es un **Frontend Renderizado en Servidor (SRF)**. A diferencia de 
                                  │ Solicitud/Respuesta HTTP (+ Cookie de Sesión)
                                  ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                  CI4 Admin Starter (Puerto 8082)                        │
+│                  CI4 Admin Starter (Puerto 8182)                        │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌────────────┐  │
 │  │   Rutas      │  │ Controladores│  │  Servicios   │  │ ApiClient  │  │
 │  │              │→ │              │→ │              │→ │            │  │
@@ -52,7 +52,7 @@ Este proyecto es un **Frontend Renderizado en Servidor (SRF)**. A diferencia de 
                                  │ Authorization: Bearer <token>
                                  ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│            CI4 API Starter (Backend) (Puerto 8080)                       │
+│            CI4 API Starter (Backend) (Puerto 8180)                       │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌────────────┐  │
 │  │   Rutas      │  │ Controladores│  │  Servicios   │  │ Middleware │  │
 │  │              │→ │              │→ │              │→ │            │  │
@@ -80,11 +80,11 @@ Este proyecto es un **Frontend Renderizado en Servidor (SRF)**. A diferencia de 
 
 ### Flujo de Solicitud/Respuesta
 
-1. **Usuario realiza solicitud** → Navegador envía solicitud HTTP a Admin (puerto 8082)
+1. **Usuario realiza solicitud** → Navegador envía solicitud HTTP a Admin (puerto 8182)
 2. **Enrutador distribuye** → `app/Config/Routes.php` enruta al Controlador apropiado
 3. **Validación** → Controlador instancia `FormRequest` y valida entrada
 4. **Capa de servicios** → Controlador llama método de Servicio apropiado
-5. **Comunicación API** → Servicio usa `ApiClient` para enviar solicitud HTTP a Backend (puerto 8080)
+5. **Comunicación API** → Servicio usa `ApiClient` para enviar solicitud HTTP a Backend (puerto 8180)
 6. **Procesamiento backend** → API Backend valida, procesa lógica de negocio, consulta base de datos
 7. **Normalización de respuesta** → `ApiClient` normaliza respuesta JSON a formato estándar
 8. **Renderizado de vista** → Controlador renderiza plantilla PHP con datos de respuesta

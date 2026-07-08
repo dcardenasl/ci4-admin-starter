@@ -42,8 +42,8 @@ final class ApiClientTest extends CIUnitTestCase
             'API_LOG_REQUESTS',
         ]);
 
-        $this->setEnv('apiClient.baseUrl', 'http://localhost:8080');
-        $this->setEnv('API_BASE_URL', 'http://localhost:8080');
+        $this->setEnv('apiClient.baseUrl', 'http://localhost:8180');
+        $this->setEnv('API_BASE_URL', 'http://localhost:8180');
     }
 
     protected function tearDown(): void
@@ -81,7 +81,7 @@ final class ApiClientTest extends CIUnitTestCase
     public function testConfigDefaultValues(): void
     {
         $config = new ApiClientConfig();
-        $this->assertSame('http://localhost:8080', $config->baseUrl);
+        $this->assertSame('http://localhost:8180', $config->baseUrl);
         $this->assertSame(15, $config->timeout);
         $this->assertSame(5, $config->connectTimeout);
         $this->assertSame('/api/v1', $config->apiPrefix);

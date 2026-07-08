@@ -42,8 +42,8 @@ final class DomainApiClientTest extends CIUnitTestCase
             'DOMAIN_API_LOG_REQUESTS',
         ]);
 
-        $this->setEnv('domainApiClient.baseUrl', 'http://localhost:8090');
-        $this->setEnv('DOMAIN_API_BASE_URL', 'http://localhost:8090');
+        $this->setEnv('domainApiClient.baseUrl', 'http://localhost:8190');
+        $this->setEnv('DOMAIN_API_BASE_URL', 'http://localhost:8190');
     }
 
     protected function tearDown(): void
@@ -71,10 +71,10 @@ final class DomainApiClientTest extends CIUnitTestCase
         $this->assertTrue($reflection->isSubclassOf(ApiClientInterface::class));
     }
 
-    public function testConfigDefaultBaseUrlPointsToPort8090(): void
+    public function testConfigDefaultBaseUrlPointsToPort8190(): void
     {
         $config = new DomainApiClientConfig();
-        $this->assertSame('http://localhost:8090', $config->baseUrl);
+        $this->assertSame('http://localhost:8190', $config->baseUrl);
     }
 
     public function testConfigInheritsApiClientDefaults(): void
@@ -108,7 +108,7 @@ final class DomainApiClientTest extends CIUnitTestCase
         $this->setEnv('apiClient.baseUrl', 'http://hub.example');
 
         $config = new DomainApiClientConfig();
-        $this->assertSame('http://localhost:8090', $config->baseUrl);
+        $this->assertSame('http://localhost:8190', $config->baseUrl);
     }
 
     public function testServicesFactoryReturnsDomainApiClientInterface(): void

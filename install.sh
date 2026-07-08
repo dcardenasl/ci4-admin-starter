@@ -163,10 +163,10 @@ validate_url "$API_GITHUB_URL" "URL GitHub del API"
 if [ -n "${CI4_API_BASE_URL:-}" ]; then
   API_BASE_URL="$CI4_API_BASE_URL"
 elif [ "$YES_MODE" = "true" ] || [ "${CI4_CONFIRM:-}" = "y" ]; then
-  API_BASE_URL="http://localhost:8080"
+  API_BASE_URL="http://localhost:8180"
 else
-  read -r -p "$(echo -e "  ${BOLD}URL base del API${RESET} (reemplaza 'http://localhost:8080') [http://localhost:8080]: ")" INPUT_API_BASE_URL
-  API_BASE_URL="${INPUT_API_BASE_URL:-http://localhost:8080}"
+  read -r -p "$(echo -e "  ${BOLD}URL base del API${RESET} (reemplaza 'http://localhost:8180') [http://localhost:8180]: ")" INPUT_API_BASE_URL
+  API_BASE_URL="${INPUT_API_BASE_URL:-http://localhost:8180}"
 fi
 validate_url "$API_BASE_URL" "URL base del API"
 
@@ -183,10 +183,10 @@ require_non_empty "$APP_NAME" "Nombre del panel admin"
 if [ -n "${CI4_ADMIN_PORT:-}" ]; then
   ADMIN_PORT="$CI4_ADMIN_PORT"
 elif [ "$YES_MODE" = "true" ] || [ "${CI4_CONFIRM:-}" = "y" ]; then
-  ADMIN_PORT="8082"
+  ADMIN_PORT="8182"
 else
-  read -r -p "$(echo -e "  ${BOLD}Puerto del panel admin${RESET} (reemplaza '8082') [8082]: ")" INPUT_ADMIN_PORT
-  ADMIN_PORT="${INPUT_ADMIN_PORT:-8082}"
+  read -r -p "$(echo -e "  ${BOLD}Puerto del panel admin${RESET} (reemplaza '8182') [8182]: ")" INPUT_ADMIN_PORT
+  ADMIN_PORT="${INPUT_ADMIN_PORT:-8182}"
 fi
 validate_port "$ADMIN_PORT"
 
@@ -218,9 +218,9 @@ echo ""
 echo -e "  ${BOLD}Nombre repo API:${RESET}   ci4-api-starter  →  ${GREEN}${API_NAME}${RESET}"
 echo -e "  ${BOLD}URL GitHub API:${RESET}    https://github.com/dcardenasl/ci4-api-starter"
 echo -e "                     →  ${GREEN}${API_GITHUB_URL}${RESET}"
-echo -e "  ${BOLD}URL base API:${RESET}      http://localhost:8080  →  ${GREEN}${API_BASE_URL}${RESET}"
+echo -e "  ${BOLD}URL base API:${RESET}      http://localhost:8180  →  ${GREEN}${API_BASE_URL}${RESET}"
 echo -e "  ${BOLD}Nombre de app:${RESET}     API Client  →  ${GREEN}${APP_NAME}${RESET}"
-echo -e "  ${BOLD}Puerto admin:${RESET}      8082  →  ${GREEN}${ADMIN_PORT}${RESET}"
+echo -e "  ${BOLD}Puerto admin:${RESET}      8182  →  ${GREEN}${ADMIN_PORT}${RESET}"
 _rc_lower="$(printf '%s' "$RUN_COMPOSER" | tr '[:upper:]' '[:lower:]')"
 echo -e "  ${BOLD}composer install:${RESET}  $([ "$_rc_lower" != "n" ] && echo "Sí" || echo "No")"
 _rs_lower="$(printf '%s' "$REMOVE_SELF" | tr '[:upper:]' '[:lower:]')"
@@ -247,13 +247,13 @@ R_GITHUB_NEW="$(escape_replacement "${API_GITHUB_URL}")"
 P_API_NAME_OLD="$(escape_pattern 'ci4-api-starter')"
 R_API_NAME_NEW="$(escape_replacement "${API_NAME}")"
 
-P_BASE_URL_OLD="$(escape_pattern 'http://localhost:8080')"
+P_BASE_URL_OLD="$(escape_pattern 'http://localhost:8180')"
 R_BASE_URL_NEW="$(escape_replacement "${API_BASE_URL}")"
 
 P_APP_NAME_OLD="$(escape_pattern 'API Client')"
 R_APP_NAME_NEW="$(escape_replacement "${APP_NAME}")"
 
-P_PORT_OLD="8082"
+P_PORT_OLD="8182"
 R_PORT_NEW="${ADMIN_PORT}"
 
 # composer.json: path ../ci4-api-starter/ -> ../{API_NAME}/
@@ -261,7 +261,7 @@ P_COMPOSER_PATH_OLD="$(escape_pattern "../ci4-api-starter/")"
 R_COMPOSER_PATH_NEW="$(escape_replacement "../${API_NAME}/")"
 
 # app/Config/ApiClient.php: PHP class defaults
-P_PHP_BASE_URL="$(escape_pattern "public string \$baseUrl = 'http://localhost:8080';")"
+P_PHP_BASE_URL="$(escape_pattern "public string \$baseUrl = 'http://localhost:8180';")"
 R_PHP_BASE_URL="$(escape_replacement "public string \$baseUrl = '${API_BASE_URL}';")"
 
 P_PHP_APP_NAME="$(escape_pattern "public string \$appName = 'API Client';")"
