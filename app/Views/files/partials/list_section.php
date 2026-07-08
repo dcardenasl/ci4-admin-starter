@@ -35,6 +35,7 @@ $currentCategory = (string) request()->getGet('category');
     }, remoteTable({
         apiUrl: '<?= site_url('files/data') ?>',
         pageUrl: '<?= route_to('files') ?>',
+        defaultSort: '-uploaded_at',
         routes: {
             downloadBase: '<?= route_to('files') ?>',
             deleteBase: '<?= route_to('files') ?>'
@@ -119,7 +120,7 @@ unset($tabsBaseQuery['page'], $tabsBaseQuery['cursor'], $tabsBaseQuery['category
             </button>
         </div>
         <form method="post" action="<?= route_to('files.bulk') ?>"
-              @submit="return confirm('<?= esc(lang('Files.bulk_confirm_delete')) ?>')">
+              @submit.prevent="$store.confirm.show('<?= esc(lang('Files.bulk_confirm_delete'), 'js') ?>', () => $el.submit())">
             <input type="hidden" :name="csrf.name" :value="csrf.hash">
             <input type="hidden" name="action" value="delete">
             <template x-for="id in selectedIds" :key="id">
@@ -214,7 +215,7 @@ unset($tabsBaseQuery['page'], $tabsBaseQuery['cursor'], $tabsBaseQuery['category
                                     <a :href="fileDownloadUrl(row.id)" class="<?= esc(action_button_class()) ?>" :title="'<?= esc(lang('App.download')) ?>'">
                                         <?= ui_icon('download', 'h-3.5 w-3.5') ?>
                                     </a>
-                                    <form method="post" :action="fileDeleteUrl(row.id)" @submit="return confirm(confirmDelete)">
+                                    <form method="post" :action="fileDeleteUrl(row.id)" @submit.prevent="$store.confirm.show(confirmDelete, () => $el.submit())">
                                         <input type="hidden" :name="csrf.name" :value="csrf.hash">
                                         <button type="submit" class="<?= esc(action_button_class('danger')) ?>" :title="'<?= esc(lang('App.delete')) ?>'">
                                             <?= ui_icon('trash', 'h-3.5 w-3.5') ?>

@@ -4,6 +4,7 @@
     x-data="remoteTable({
         apiUrl: '<?= route_to('admin.iam.roles.data') ?>',
         pageUrl: '<?= route_to('admin.iam.roles') ?>',
+        defaultSort: '-created_at',
         routes: {
             showBase: '<?= route_to('admin.iam.roles') ?>',
             editBase: '<?= route_to('admin.iam.roles') ?>'

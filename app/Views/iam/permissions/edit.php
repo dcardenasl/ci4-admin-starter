@@ -6,7 +6,7 @@ $selectedApp  = (int) old('application_id', (int) ($item['application_id'] ?? 0)
 ?>
 <div class="mb-4 flex items-center justify-between">
     <a href="<?= route_to('admin.iam.permissions') ?>" class="text-sm text-brand-600 hover:text-brand-700">&larr; <?= esc(lang('App.back')) ?></a>
-    <form method="post" action="<?= route_to('admin.iam.permissions.delete', (string) ($item['id'] ?? '')) ?>" onsubmit="return confirm('<?= esc(lang('App.confirm_delete')) ?>');">
+    <form method="post" action="<?= route_to('admin.iam.permissions.delete', (string) ($item['id'] ?? '')) ?>" x-data @submit.prevent="$store.confirm.show('<?= esc(confirm_delete_message($item['code'] ?? $item['resource'] ?? null), 'js') ?>', () => $el.submit())">
         <?= csrf_field() ?>
         <button type="submit" class="<?= esc(action_button_class('danger')) ?>">
             <?= ui_icon('trash', 'h-3.5 w-3.5') ?>

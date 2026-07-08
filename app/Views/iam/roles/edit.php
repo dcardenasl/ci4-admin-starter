@@ -6,7 +6,7 @@ $itemId   = (string) ($item['id'] ?? '');
 <div class="mb-4 flex items-center justify-between">
     <a href="<?= route_to('admin.iam.roles') ?>" class="text-sm text-brand-600 hover:text-brand-700">&larr; <?= esc(lang('App.back')) ?></a>
     <?php if (! $isSystem): ?>
-        <form method="post" action="<?= route_to('admin.iam.roles.delete', (string) ($item['id'] ?? '')) ?>" onsubmit="return confirm('<?= esc(lang('App.confirm_delete')) ?>');">
+        <form method="post" action="<?= route_to('admin.iam.roles.delete', (string) ($item['id'] ?? '')) ?>" x-data @submit.prevent="$store.confirm.show('<?= esc(confirm_delete_message($item['name'] ?? $item['code'] ?? null), 'js') ?>', () => $el.submit())">
             <?= csrf_field() ?>
             <button type="submit" class="<?= esc(action_button_class('danger')) ?>">
                 <?= ui_icon('trash', 'h-3.5 w-3.5') ?>
