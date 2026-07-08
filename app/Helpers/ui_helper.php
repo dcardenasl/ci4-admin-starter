@@ -328,6 +328,7 @@ if (! function_exists('ui_icon')) {
             'tag'             => 'tag',
             'ticket'          => 'ticket',
             'store'           => 'store',
+            'chevron-up'      => 'chevron-up',
             'chevron-down'    => 'chevron-down',
             'chevron-right'   => 'chevron-right',
             'external-link'   => 'external-link',

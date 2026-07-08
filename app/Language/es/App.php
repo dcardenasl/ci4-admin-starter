@@ -43,6 +43,8 @@ return [
     'yes'             => 'Sí',
     'no'              => 'No',
     'loading'         => 'Cargando...',
+    'loading_refreshing' => 'Actualizando resultados...',
+    'details'         => 'Detalles',
     'error'           => 'Error',
     'success'         => 'Éxito',
     'warning'         => 'Advertencia',
@@ -96,4 +98,5 @@ return [
     'back_to_dashboard' => 'Volver al Escritorio',
     'components_title'  => 'Librería de Componentes',
     'visible_help'      => 'Visible dentro de los motores de búsqueda de la plataforma.',
+    'unsaved_changes'   => 'Tienes cambios sin guardar.',
 ];

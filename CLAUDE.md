@@ -32,6 +32,7 @@ Browser → CI4 Admin Starter (port 8082) → ci4-api-starter API (port 8080)
 - **Styling:** Tailwind CSS — built locally via `npm run build:css` (output: `public/assets/css/app.css`)
 - **Icons:** Lucide Icons — vendored locally to `public/assets/vendor/lucide.min.js` via `npm run build:vendor`
 - **Interactivity:** Alpine.js — vendored locally to `public/assets/vendor/alpine.min.js` via `npm run build:vendor`. The layout transparently falls back to the pinned CDN URLs when a vendored copy is missing (e.g. on a fresh clone before `npm install`).
+- **App JS:** Written as ES modules under `src/js/` (`stores/`, `components/`, `utils/`) and bundled by esbuild into `public/assets/js/app.js` via `npm run build:js` (or `npm run dev:js` to watch). **`public/assets/js/app.js` is a generated build artifact — never edit it directly**, edit the source modules in `src/js/` and rebuild.
 - **Authentication:** JWT tokens stored in PHP sessions (server-side only)
 - **HTTP Client:** Custom ApiClient library with automatic token refresh
 - **i18n:** CodeIgniter 4 Language files (`en` / `es`)
@@ -84,12 +85,17 @@ php spark serve --port 8082
 npm run dev:css
 ```
 
+**Terminal 3: Watch and rebuild app JS** (only needed when touching `src/js/`)
+```bash
+npm run dev:js
+```
+
 Application will be available at: `http://localhost:8082`
 
 **Notes:**
-- Both terminal sessions should run in parallel during development
-- CSS must be built via `npm run build:css` (Tailwind) and vendor JS via `npm run build:vendor` (Alpine + Lucide). Use `npm run build:all` for both. In CI / on first clone, run `npm ci && npm run build:all`.
-- Production builds use `npm run build:css` to generate minified CSS (see DEPLOYMENT.md)
+- Terminal sessions should run in parallel during development
+- CSS must be built via `npm run build:css` (Tailwind), app JS via `npm run build:js` (esbuild, bundles `src/js/app.js` → `public/assets/js/app.js`), and vendor JS via `npm run build:vendor` (Alpine + Lucide). Use `npm run build:all` for all three. In CI / on first clone, run `npm ci && npm run build:all`.
+- Production builds use `npm run build:css` / `npm run build:js` to generate minified CSS/JS (see DEPLOYMENT.md)
 
 ### Testing
 ```bash
@@ -126,11 +132,10 @@ composer quality
 
 **JavaScript:**
 ```bash
-# Lint JavaScript files
+# Lint the src/js/ ES module tree (public/assets/js/app.js is a generated
+# artifact and is excluded from linting — see eslint.config.js `ignores`)
 npm run lint:js
-
-# Lint all JS files (not just app.js)
-npm run lint:all
+npm run lint:all   # same as lint:js; kept for compatibility
 ```
 
 **Composer scripts:**
@@ -295,7 +300,7 @@ app/Views/
 - `.form-input`
 - `.card`
 
-**Alpine.js** for client-side interactivity (stores in `public/assets/js/app.js`):
+**Alpine.js** for client-side interactivity (stores/components in `src/js/stores/` and `src/js/components/`, bundled to `public/assets/js/app.js`):
 - Sidebar toggle, dropdowns, modals
 - Toast notifications (auto-dismiss)
 - Drag-and-drop file uploads

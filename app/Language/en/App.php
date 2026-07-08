@@ -43,6 +43,8 @@ return [
     'yes'             => 'Yes',
     'no'              => 'No',
     'loading'         => 'Loading...',
+    'loading_refreshing' => 'Refreshing results...',
+    'details'         => 'Details',
     'error'           => 'Error',
     'success'         => 'Success',
     'warning'         => 'Warning',
@@ -96,4 +98,5 @@ return [
     'back_to_dashboard' => 'Back to Dashboard',
     'components_title'  => 'Component Library',
     'visible_help'      => 'Visible inside platform search engines.',
+    'unsaved_changes'   => 'You have unsaved changes.',
 ];
