@@ -2179,9 +2179,6 @@ substitute_placeholders "app/Views/${VIEW_PATH}/index.php" \
 
 write_heredoc "app/Views/${VIEW_PATH}/show.php" << 'VIEW_EOF_MARKER'
 <?php $VIEW_RESOURCE_CAMEL = $VIEW_RESOURCE_CAMEL ?? []; ?>
-<div class="mb-4">
-    <a href="<?= route_to('VIEW_ROUTE_NAME') ?>" class="text-sm text-brand-600 hover:text-brand-700">&larr; <?= lang('VIEW_MODULE.VIEW_LANG_PREFIX_title') ?></a>
-</div>
 
 <?php if (! empty($error)): ?>
     <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
@@ -2190,30 +2187,50 @@ write_heredoc "app/Views/${VIEW_PATH}/show.php" << 'VIEW_EOF_MARKER'
 <?php elseif (! empty($VIEW_RESOURCE_CAMEL)): ?>
     <?php $itemId = (string) ($VIEW_RESOURCE_CAMEL['id'] ?? ''); ?>
 
-    <section class="bg-white border border-gray-200 rounded-xl shadow-sm p-5 max-w-3xl">
-        <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-gray-900"><?= lang('VIEW_MODULE.VIEW_LANG_PREFIX_details') ?></h3>
-            <div class="flex items-center gap-2">
-                <a href="<?= route_to('VIEW_ROUTE_NAME.edit', $itemId) ?>" class="<?= esc(action_button_class()) ?>"><?= lang('App.edit') ?></a>
-VIEW_SHOW_ACTION_BUTTONS
-                <form method="post" action="<?= route_to('VIEW_ROUTE_NAME.delete', $itemId) ?>" onsubmit="return confirm('<?= esc(lang('App.confirm_delete')) ?>');">
-                    <?= csrf_field() ?>
-                    <button type="submit" class="<?= esc(action_button_class('danger')) ?>">
-                        <?= ui_icon('trash', 'h-3.5 w-3.5') ?>
-                        <?= esc(lang('App.delete')) ?>
-                    </button>
-                </form>
-            </div>
-        </div>
+    <?= view('components/display/admin_page_header', [
+        'backUrl' => route_to('VIEW_ROUTE_NAME'),
+        'backLabel' => 'VIEW_MODULE.VIEW_LANG_PREFIX_title',
+        'eyebrow' => 'VIEW_MODULE.VIEW_LANG_PREFIX_details',
+        'title' => (string) ($VIEW_RESOURCE_CAMEL['name'] ?? $VIEW_RESOURCE_CAMEL['title'] ?? $VIEW_RESOURCE_CAMEL['id'] ?? lang('VIEW_MODULE.VIEW_LANG_PREFIX_details')),
+    ]) ?>
 
-        <dl class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm">
+    <?php ob_start(); ?>
+    <section class="bg-white border border-gray-200 rounded-xl shadow-sm">
+        <div class="border-b border-gray-100 px-5 py-4">
+            <h3 class="text-sm font-semibold uppercase tracking-wider text-gray-700"><?= esc(lang('VIEW_MODULE.VIEW_LANG_PREFIX_details')) ?></h3>
+        </div>
+        <dl class="divide-y divide-gray-100">
 VIEW_SHOW_ROWS
-            <div>
-                <dt class="text-gray-500"><?= lang('TableColumns.created_at') ?></dt>
-                <dd class="mt-1 text-gray-900"><?= esc((string) ($VIEW_RESOURCE_CAMEL['created_at'] ?? '-')) ?></dd>
-            </div>
+            <?= view('components/display/field_row', [
+                'label' => 'TableColumns.created_at',
+                'value' => $VIEW_RESOURCE_CAMEL['created_at'] ?? '—',
+            ]) ?>
         </dl>
     </section>
+    <?php $mainContent = ob_get_clean(); ?>
+
+    <?php ob_start(); ?>
+    <a href="<?= route_to('VIEW_ROUTE_NAME.edit', $itemId) ?>" class="<?= esc(action_button_class('primary')) ?>"><?= lang('App.edit') ?></a>
+VIEW_SHOW_ACTION_BUTTONS
+    <?php $actionsContent = ob_get_clean(); ?>
+
+    <?php ob_start(); ?>
+    <form method="post" action="<?= route_to('VIEW_ROUTE_NAME.delete', $itemId) ?>" x-data @submit.prevent="$store.confirm.show('<?= esc(confirm_delete_message($VIEW_RESOURCE_CAMEL['name'] ?? $VIEW_RESOURCE_CAMEL['title'] ?? $VIEW_RESOURCE_CAMEL['id'] ?? null), 'js') ?>', () => $el.submit())">
+        <?= csrf_field() ?>
+        <button type="submit" class="<?= esc(action_button_class('danger')) ?>">
+            <?= ui_icon('trash', 'h-3.5 w-3.5') ?>
+            <?= esc(lang('App.delete')) ?>
+        </button>
+    </form>
+    <?php $dangerContent = ob_get_clean(); ?>
+
+    <?= view('components/display/admin_resource_layout', [
+        'main' => $mainContent,
+        'aside' => view('components/display/admin_actions_panel', [
+            'content' => $actionsContent,
+            'dangerContent' => $dangerContent,
+        ]),
+    ]) ?>
 <?php endif; ?>
 VIEW_EOF_MARKER
 
@@ -2226,24 +2243,33 @@ substitute_placeholders "app/Views/${VIEW_PATH}/show.php" \
     "VIEW_SHOW_ROWS"       "${VIEW_SHOW_ROWS}"
 
 write_heredoc "app/Views/${VIEW_PATH}/create.php" << 'VIEW_EOF_MARKER'
-<div class="mb-4">
-    <a href="<?= route_to('VIEW_ROUTE_NAME') ?>" class="text-sm text-brand-600 hover:text-brand-700">&larr; <?= esc(lang('App.back')) ?></a>
-</div>
+<?= view('components/display/admin_page_header', [
+    'backUrl' => route_to('VIEW_ROUTE_NAME'),
+    'backLabel' => 'App.back',
+    'eyebrow' => 'VIEW_MODULE.VIEW_LANG_PREFIX_title',
+    'title' => 'VIEW_MODULE.VIEW_LANG_PREFIX_create',
+]) ?>
 
-<section class="bg-white border border-gray-200 rounded-xl shadow-sm p-5 max-w-3xl">
-    <h3 class="text-lg font-semibold text-gray-900"><?= esc(lang('VIEW_MODULE.VIEW_LANG_PREFIX_create')) ?></h3>
+<form method="post" action="<?= route_to('VIEW_ROUTE_NAME.store') ?>" class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+    <?= csrf_field() ?>
 
-    <form method="post" action="<?= route_to('VIEW_ROUTE_NAME.store') ?>" class="mt-4 space-y-4">
-        <?= csrf_field() ?>
+    <div class="lg:col-span-2">
+        <section class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+            <h3 class="text-lg font-semibold text-gray-900"><?= esc(lang('VIEW_MODULE.VIEW_LANG_PREFIX_create')) ?></h3>
+            <div class="mt-4 space-y-4">
 
 VIEW_CREATE_FIELDS
+            </div>
+        </section>
+    </div>
 
-        <div class="flex items-center gap-3 pt-2">
-            <button type="submit" class="<?= esc(action_button_class('primary')) ?>"><?= esc(lang('App.create')) ?></button>
-            <a href="<?= route_to('VIEW_ROUTE_NAME') ?>" class="<?= esc(action_button_class()) ?>"><?= esc(lang('App.cancel')) ?></a>
-        </div>
-    </form>
-</section>
+    <aside class="space-y-6">
+        <?= view('components/display/admin_actions_panel', [
+            'content' => '<button type="submit" class="' . esc(action_button_class('primary'), 'attr') . '">' . esc(lang('App.create')) . '</button>'
+                . '<a href="' . esc(route_to('VIEW_ROUTE_NAME'), 'attr') . '" class="' . esc(action_button_class(), 'attr') . '">' . esc(lang('App.cancel')) . '</a>',
+        ]) ?>
+    </aside>
+</form>
 VIEW_EOF_MARKER
 
 substitute_placeholders "app/Views/${VIEW_PATH}/create.php" \
@@ -2254,31 +2280,39 @@ substitute_placeholders "app/Views/${VIEW_PATH}/create.php" \
 
 write_heredoc "app/Views/${VIEW_PATH}/edit.php" << 'VIEW_EOF_MARKER'
 <?php $item = $item ?? []; ?>
-<div class="mb-4 flex items-center justify-between">
-    <a href="<?= route_to('VIEW_ROUTE_NAME') ?>" class="text-sm text-brand-600 hover:text-brand-700">&larr; <?= esc(lang('App.back')) ?></a>
-    <form method="post" action="<?= route_to('VIEW_ROUTE_NAME.delete', (string) ($item['id'] ?? '')) ?>" onsubmit="return confirm('<?= esc(lang('App.confirm_delete')) ?>');">
-        <?= csrf_field() ?>
-        <button type="submit" class="<?= esc(action_button_class('danger')) ?>">
-            <?= ui_icon('trash', 'h-3.5 w-3.5') ?>
-            <?= esc(lang('App.delete')) ?>
-        </button>
-    </form>
-</div>
+<?= view('components/display/admin_page_header', [
+    'backUrl' => route_to('VIEW_ROUTE_NAME'),
+    'backLabel' => 'App.back',
+    'eyebrow' => 'VIEW_MODULE.VIEW_LANG_PREFIX_title',
+    'title' => 'VIEW_MODULE.VIEW_LANG_PREFIX_edit',
+]) ?>
 
-<section class="bg-white border border-gray-200 rounded-xl shadow-sm p-5 max-w-3xl">
-    <h3 class="text-lg font-semibold text-gray-900"><?= esc(lang('VIEW_MODULE.VIEW_LANG_PREFIX_edit')) ?></h3>
+<form id="delete-item-form" method="post" action="<?= route_to('VIEW_ROUTE_NAME.delete', (string) ($item['id'] ?? '')) ?>" x-data @submit.prevent="$store.confirm.show('<?= esc(confirm_delete_message($item['name'] ?? $item['title'] ?? $item['id'] ?? null), 'js') ?>', () => $el.submit())">
+    <?= csrf_field() ?>
+</form>
 
-    <form method="post" action="<?= route_to('VIEW_ROUTE_NAME.update', (string) ($item['id'] ?? '')) ?>" class="mt-4 space-y-4">
-        <?= csrf_field() ?>
+<form method="post" action="<?= route_to('VIEW_ROUTE_NAME.update', (string) ($item['id'] ?? '')) ?>" class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+    <?= csrf_field() ?>
+
+    <div class="lg:col-span-2">
+        <section class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+            <h3 class="text-lg font-semibold text-gray-900"><?= esc(lang('VIEW_MODULE.VIEW_LANG_PREFIX_edit')) ?></h3>
+            <div class="mt-4 space-y-4">
 
 VIEW_EDIT_FIELDS
+            </div>
+        </section>
+    </div>
 
-        <div class="flex items-center gap-3 pt-2">
-            <button type="submit" class="<?= esc(action_button_class('primary')) ?>"><?= esc(lang('App.update')) ?></button>
-            <a href="<?= route_to('VIEW_ROUTE_NAME') ?>" class="<?= esc(action_button_class()) ?>"><?= esc(lang('App.cancel')) ?></a>
-        </div>
-    </form>
-</section>
+    <aside class="space-y-6">
+        <?= view('components/display/admin_actions_panel', [
+            'content' => '<button type="submit" class="' . esc(action_button_class('primary'), 'attr') . '">' . esc(lang('App.update')) . '</button>'
+                . '<a href="' . esc(route_to('VIEW_ROUTE_NAME'), 'attr') . '" class="' . esc(action_button_class(), 'attr') . '">' . esc(lang('App.cancel')) . '</a>',
+            'dangerContent' => '<button type="submit" form="delete-item-form" class="' . esc(action_button_class('danger'), 'attr') . '">'
+                . ui_icon('trash', 'h-3.5 w-3.5') . esc(lang('App.delete')) . '</button>',
+        ]) ?>
+    </aside>
+</form>
 VIEW_EOF_MARKER
 
 substitute_placeholders "app/Views/${VIEW_PATH}/edit.php" \

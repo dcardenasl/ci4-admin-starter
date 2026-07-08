@@ -7,10 +7,12 @@
     "scripts": {
         "dev:css": "tailwindcss -i ./src/css/app.css -o ./public/assets/css/app.css --watch",
         "build:css": "tailwindcss -i ./src/css/app.css -o ./public/assets/css/app.css --minify",
+        "dev:js": "node_modules/.bin/esbuild src/js/app.js --bundle --outfile=public/assets/js/app.js --format=iife --global-name=_app --watch",
+        "build:js": "node_modules/.bin/esbuild src/js/app.js --bundle --outfile=public/assets/js/app.js --format=iife --global-name=_app --minify",
         "build:vendor": "node scripts/build-vendor.js",
-        "build:all": "npm run build:css && npm run build:vendor",
-        "lint:js": "eslint public/assets/js/app.js",
-        "lint:all": "eslint 'public/assets/js/**/*.js'",
+        "build:all": "npm run build:css && npm run build:js && npm run build:vendor",
+        "lint:js": "eslint 'src/js/**/*.js'",
+        "lint:all": "eslint 'src/js/**/*.js'",
         "prepare": "husky"
     },
     "dependencies": {
@@ -20,14 +22,18 @@
     "devDependencies": {
         "@eslint/js": "^10.0.1",
         "@tailwindcss/cli": "^4.3.2",
+        "esbuild": "^0.28.1",
         "eslint": "^10.6.0",
         "husky": "^9.1.7",
         "lint-staged": "^17.0.8",
         "tailwindcss": "^4.3.2"
     },
     "lint-staged": {
-        "public/assets/js/**/*.js": [
+        "src/js/**/*.js": [
             "eslint --fix"
         ]
+    },
+    "pnpm": {
+        "onlyBuiltDependencies": ["esbuild"]
     }
 }
