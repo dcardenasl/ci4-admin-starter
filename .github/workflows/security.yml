@@ -21,11 +21,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: latest
-
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -37,7 +32,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'pnpm'
+          cache: 'npm'
 
       - name: Cache Composer packages
         uses: actions/cache@v4
@@ -51,13 +46,13 @@ jobs:
         run: composer install --prefer-dist --no-progress --no-interaction
 
       - name: Install npm dependencies
-        run: pnpm install
+        run: npm ci --ignore-scripts
 
       - name: Check for PHP security vulnerabilities
         run: composer audit --abandoned=ignore
 
       - name: Check for npm security vulnerabilities
-        run: pnpm audit --audit-level=high
+        run: npm audit --audit-level=high
 
       - name: Check outdated PHP dependencies
         continue-on-error: true
