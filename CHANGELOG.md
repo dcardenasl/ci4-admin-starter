@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.12.0] — 2026-07-09
 
+### Fixed
+
+- **Duplicate `App` language keys** — `audit` and `status` were each defined twice in `App.php` (once as a simple string, once as a nested array), so the array definition silently won and any direct `lang('App.audit')` / `lang('App.status')` call returned an array instead of a string, causing an `Array to string conversion` error when rendered in views (sidebar nav label, `form_section` / `admin_meta_panel` component tests). Renamed the string entries to `audit_nav` and `status_label`.
+
 ### Added
 
 - **Debug toolbar API calls collector** — new debug-only collector in the debug toolbar that tracks all HTTP calls made by `ApiClient` and `DomainApiClient` during request processing. Displays request method, URL, status code, and latency for troubleshooting API communication.
