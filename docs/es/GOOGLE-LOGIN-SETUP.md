@@ -24,7 +24,7 @@ Por eso:
 5. Crear credencial: **OAuth Client ID**.
 6. Tipo de aplicación: **Web application**.
 7. En **Authorized JavaScript origins** agregar:
-   - Local admin: `http://localhost:8082`
+   - Local admin: `http://localhost:8182`
    - Producción admin: `https://admin.tudominio.com` (ajusta a tu dominio real)
 8. Guardar y copiar el **Client ID** (`...apps.googleusercontent.com`).
 
@@ -34,8 +34,8 @@ En `.env` del admin:
 
 ```dotenv
 GOOGLE_CLIENT_ID='tu-client-id.apps.googleusercontent.com'
-app.baseURL='http://localhost:8082/'
-apiClient.baseUrl='http://localhost:8080'
+app.baseURL='http://localhost:8182/'
+apiClient.baseUrl='http://localhost:8180'
 ```
 
 Notas:
@@ -56,16 +56,16 @@ Debe ser **exactamente el mismo Client ID** que usa el admin.
 Además, asegurar CORS para el origen del admin:
 
 ```dotenv
-CORS_ALLOWED_ORIGINS='http://localhost:8082,https://admin.tudominio.com'
+CORS_ALLOWED_ORIGINS='http://localhost:8182,https://admin.tudominio.com'
 ```
 
 ## 5) Checklist Local
 
-1. Admin corriendo en `http://localhost:8082`.
-2. API corriendo en `http://localhost:8080`.
+1. Admin corriendo en `http://localhost:8182`.
+2. API corriendo en `http://localhost:8180`.
 3. Mismo `GOOGLE_CLIENT_ID` en ambos `.env`.
-4. Origen `http://localhost:8082` cargado en Google Cloud.
-5. CORS del API permite `http://localhost:8082`.
+4. Origen `http://localhost:8182` cargado en Google Cloud.
+5. CORS del API permite `http://localhost:8182`.
 6. En `/login`, aparece botón Google.
 7. Al autenticar:
    - `200`: crea sesión y entra a dashboard.

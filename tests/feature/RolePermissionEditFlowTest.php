@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Modules\Auth\Services\AuthApiService;
 use App\Modules\Iam\Services\PermissionApiService;
 use App\Modules\Iam\Services\RoleApiService;
 use App\Modules\Iam\Services\RoleMatrixApiService;
@@ -39,6 +40,17 @@ final class RolePermissionEditFlowTest extends CIUnitTestCase
         // clear it to keep tests hermetic (otherwise prior runs/CI cold cache
         // can change behaviour).
         service('cache')->delete('iam_lookups_apps_v1');
+
+        // RoleController::store()/update() call PermissionsSessionRefresher::forceRefresh()
+        // after a successful save, which hits AuthApiService::me() over HTTP. Mock it so
+        // these tests don't depend on a real hub server being reachable.
+        $authService = $this->createMock(AuthApiService::class);
+        $authService->method('me')->willReturn([
+            'ok' => true, 'status' => 200,
+            'data' => ['data' => self::ADMIN_SESSION['user']],
+            'raw' => '', 'headers' => [], 'messages' => [], 'fieldErrors' => [],
+        ]);
+        Services::injectMock('authApiService', $authService);
     }
 
     protected function tearDown(): void

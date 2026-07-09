@@ -23,7 +23,7 @@ $canModify = can_modify_role($role);
                     <a href="<?= route_to('admin.iam.roles.edit', $itemId) ?>" class="<?= esc(action_button_class()) ?>"><?= lang('App.edit') ?></a>
                 <?php endif; ?>
                 <?php if (empty($role['is_system']) || is_superadmin()): ?>
-                    <form method="post" action="<?= route_to('admin.iam.roles.delete', $itemId) ?>" onsubmit="return confirm('<?= esc(lang('App.confirm_delete')) ?>');">
+                    <form method="post" action="<?= route_to('admin.iam.roles.delete', $itemId) ?>" x-data @submit.prevent="$store.confirm.show('<?= esc(confirm_delete_message($role['name'] ?? $role['code'] ?? null), 'js') ?>', () => $el.submit())">
                         <?= csrf_field() ?>
                         <button type="submit" class="<?= esc(action_button_class('danger')) ?>">
                             <?= ui_icon('trash', 'h-3.5 w-3.5') ?>

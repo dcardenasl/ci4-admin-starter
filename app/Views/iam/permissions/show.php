@@ -16,7 +16,7 @@
             <div class="flex items-center gap-2">
                 <?php if (is_superadmin()): ?>
                     <a href="<?= route_to('admin.iam.permissions.edit', $itemId) ?>" class="<?= esc(action_button_class()) ?>"><?= lang('App.edit') ?></a>
-                    <form method="post" action="<?= route_to('admin.iam.permissions.delete', $itemId) ?>" onsubmit="return confirm('<?= esc(lang('App.confirm_delete')) ?>');">
+                    <form method="post" action="<?= route_to('admin.iam.permissions.delete', $itemId) ?>" x-data @submit.prevent="$store.confirm.show('<?= esc(confirm_delete_message($permission['code'] ?? $permission['resource'] ?? null), 'js') ?>', () => $el.submit())">
                         <?= csrf_field() ?>
                         <button type="submit" class="<?= esc(action_button_class('danger')) ?>">
                             <?= ui_icon('trash', 'h-3.5 w-3.5') ?>

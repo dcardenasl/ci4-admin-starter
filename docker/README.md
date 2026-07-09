@@ -11,12 +11,12 @@ docker network create ci4-platform
 Then bring up each stack in its own directory:
 
 ```bash
-# Terminal 1 — API hub (port 8080)
+# Terminal 1 — API hub (port 8180)
 cd ../ci4-api-starter
 cp .env.docker.example .env.docker   # adjust DB credentials
 docker compose up -d
 
-# Terminal 2 — Admin (port 8082)
+# Terminal 2 — Admin (port 8182)
 cd ../ci4-admin-starter
 cp .env.docker.example .env          # uses ci4-api-app:80 as API target
 docker compose up -d
@@ -30,8 +30,8 @@ docker compose exec app curl -s http://ci4-api-app:80/health
 ```
 
 The admin reaches the API via the container hostname `ci4-api-app` thanks to
-the shared `ci4-platform` network. Browser URLs stay on `localhost:8080`
-(API) and `localhost:8082` (admin) because each stack publishes its own
+the shared `ci4-platform` network. Browser URLs stay on `localhost:8180`
+(API) and `localhost:8182` (admin) because each stack publishes its own
 external port.
 
 ## Optional: ci4-domain-starter

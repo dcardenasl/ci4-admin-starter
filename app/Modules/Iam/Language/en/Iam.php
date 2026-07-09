@@ -86,6 +86,8 @@ return [
     'permissions_edit_link'                 => 'Edit',
     'permission_locked_tooltip'             => 'You do not currently hold this permission.',
     'role_permissions_title'                => 'Roles × Permissions',
+    'role_permissions_hint'                 => 'Check the permissions this role should have, then save to apply changes.',
+    'role_permissions_selected_label'       => 'permissions selected',
     'role_permissions_load_failed'          => 'Could not load the role permission matrix.',
     'role_permissions_save_success'         => 'Role permissions updated successfully.',
     'role_permissions_save_failed'          => 'Could not update role permissions.',

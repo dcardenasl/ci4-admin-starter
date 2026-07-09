@@ -18,7 +18,7 @@ This project is a **Server-Rendered Frontend (SRF)**. Unlike a traditional SPA (
                                  │ HTTP Request/Response (+ Session Cookie)
                                  ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                    CI4 Admin Starter (Port 8082)                         │
+│                    CI4 Admin Starter (Port 8182)                         │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌────────────┐  │
 │  │   Routes     │  │ Controllers  │  │   Services   │  │ ApiClient  │  │
 │  │              │→ │              │→ │              │→ │            │  │
@@ -52,7 +52,7 @@ This project is a **Server-Rendered Frontend (SRF)**. Unlike a traditional SPA (
                                  │ Authorization: Bearer <token>
                                  ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│              CI4 API Starter (Backend) (Port 8080)                       │
+│              CI4 API Starter (Backend) (Port 8180)                       │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌────────────┐  │
 │  │   Routes     │  │ Controllers  │  │   Services   │  │ Middleware │  │
 │  │              │→ │              │→ │              │→ │            │  │
@@ -68,7 +68,7 @@ This project is a **Server-Rendered Frontend (SRF)**. Unlike a traditional SPA (
 │                     └───────────────────────────────────────┘            │
 └─────────────────────────────────┬──────────────────────────────────────┘
                                  │ JSON Response
-                                 │ {ok, data, messages, errors}
+                                 │ {status, message, data, errors}
                                  ▼
                             ┌──────────────┐
                             │  Database    │
@@ -78,11 +78,11 @@ This project is a **Server-Rendered Frontend (SRF)**. Unlike a traditional SPA (
 
 ### Request/Response Flow
 
-1. **User makes request** → Browser sends HTTP request to Admin (port 8082)
+1. **User makes request** → Browser sends HTTP request to Admin (port 8182)
 2. **Router dispatches** → `app/Config/Routes.php` routes to appropriate Controller
 3. **Validation** → Controller instantiates `FormRequest` and validates input
 4. **Service layer** → Controller calls appropriate Service method
-5. **API communication** → Service uses `ApiClient` to send HTTP request to Backend (port 8080)
+5. **API communication** → Service uses `ApiClient` to send HTTP request to Backend (port 8180)
 6. **Backend processing** → Backend API validates, processes business logic, queries database
 7. **Response normalization** → `ApiClient` normalizes JSON response to standard format
 8. **View rendering** → Controller renders PHP template with response data
@@ -162,8 +162,8 @@ Every call returns a consistent array structure:
 - `ok` (bool): `true` for 2xx status codes.
 - `status` (int): HTTP status code.
 - `data` (array): The main payload from the API.
-- `messages` (array): General success or error messages.
-- `fieldErrors` (array): Validation errors mapped to form field names.
+- `messages` (array): Derived wrapper messages for controller UX.
+- `fieldErrors` (array): Derived wrapper field errors for controller UX.
 - `raw` (string): The original JSON body.
 
 ### 3. Localization Synchronization

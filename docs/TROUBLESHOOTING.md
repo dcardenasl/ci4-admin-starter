@@ -58,7 +58,7 @@ nano .env  # Edit as needed
 
 ## Development Server Issues
 
-### "Port 8082 already in use" or "Address already in use"
+### "Port 8182 already in use" or "Address already in use"
 
 **Problem:** Another process is using the port.
 
@@ -67,7 +67,7 @@ nano .env  # Edit as needed
 **macOS/Linux:**
 ```bash
 # Find what's using the port
-lsof -i :8082
+lsof -i :8182
 
 # Kill the process (replace 12345 with PID from above)
 kill -9 12345
@@ -79,7 +79,7 @@ php spark serve --port 8083
 **Windows (PowerShell):**
 ```powershell
 # Find process using port
-Get-Process -Id (Get-NetTCPConnection -LocalPort 8082).OwningProcess
+Get-Process -Id (Get-NetTCPConnection -LocalPort 8182).OwningProcess
 
 # Kill it by PID
 Stop-Process -Id 12345 -Force
@@ -88,7 +88,7 @@ Stop-Process -Id 12345 -Force
 php spark serve --port 8083
 ```
 
-### "Connection refused" when accessing http://localhost:8082
+### "Connection refused" when accessing http://localhost:8182
 
 **Problem:** Server is not responding.
 
@@ -96,11 +96,11 @@ php spark serve --port 8083
 1. Check the PHP server is still running:
    ```bash
    # In the terminal, you should see:
-   # Server running on http://localhost:8082
+   # Server running on http://localhost:8182
    ```
-2. If not running, start it: `php spark serve --port 8082`
+2. If not running, start it: `php spark serve --port 8182`
 3. Check if it's a firewall issue:
-   - Try `curl http://localhost:8082` from another terminal
+   - Try `curl http://localhost:8182` from another terminal
    - If curl works but browser doesn't, check browser cache
 4. Hard refresh browser: `Cmd+Shift+R` (Mac) or `Ctrl+Shift+R` (Windows/Linux)
 
@@ -212,15 +212,15 @@ sudo apt-get install php-phar
    ```bash
    # Start backend API (in separate project)
    cd ../ci4-api-starter
-   php spark serve --port 8080
+   php spark serve --port 8180
    ```
 
 2. **Wrong API URL in `.env`:**
    ```bash
    # Check in .env
-   apiClient.baseUrl = 'http://localhost:8080'  # Should match backend port
+   apiClient.baseUrl = 'http://localhost:8180'  # Should match backend port
    ```
-   - Restart frontend server after changing: `php spark serve --port 8082`
+   - Restart frontend server after changing: `php spark serve --port 8182`
 
 3. **Invalid API key:**
    ```bash
@@ -234,7 +234,7 @@ sudo apt-get install php-phar
 
 4. **CORS issues:**
    - Check backend allows requests from frontend URL
-   - Frontend URL: `http://localhost:8082`
+   - Frontend URL: `http://localhost:8182`
    - Backend should have CORS headers configured
 
 5. **Session/Token expired:**
@@ -248,7 +248,7 @@ sudo apt-get install php-phar
 **Solution:**
 1. Check backend is running and healthy:
    ```bash
-   curl http://localhost:8080/api/v1/health
+   curl http://localhost:8180/api/v1/health
    # Should return JSON response
    ```
 
@@ -276,8 +276,8 @@ sudo apt-get install php-phar
 3. Check `app/Config/ApiClient.php` timeout settings
 4. Ensure `apiClient.baseUrl` doesn't have trailing slash:
    ```
-   ❌ Wrong:  apiClient.baseUrl = 'http://localhost:8080/'
-   ✅ Correct: apiClient.baseUrl = 'http://localhost:8080'
+   ❌ Wrong:  apiClient.baseUrl = 'http://localhost:8180/'
+   ✅ Correct: apiClient.baseUrl = 'http://localhost:8180'
    ```
 
 ---
@@ -322,7 +322,7 @@ sudo apt-get install php-phar
 
 2. Verify backend login endpoint works:
    ```bash
-   curl -X POST http://localhost:8080/api/v1/auth/login \
+   curl -X POST http://localhost:8180/api/v1/auth/login \
      -H "Content-Type: application/json" \
      -d '{"email":"test@example.com","password":"password"}'
    ```
@@ -505,7 +505,7 @@ sudo apt-get install php-phar
 
 4. Test upload endpoint directly:
    ```bash
-   curl -F "file=@/path/to/test.pdf" http://localhost:8082/files/upload
+   curl -F "file=@/path/to/test.pdf" http://localhost:8182/files/upload
    ```
 
 ---
@@ -531,7 +531,7 @@ sudo apt-get install php-phar
 
 4. Check API response time:
    ```bash
-   curl -w "\nTotal time: %{time_total}s\n" http://localhost:8080/api/v1/users
+   curl -w "\nTotal time: %{time_total}s\n" http://localhost:8180/api/v1/users
    ```
 
 5. Monitor resources:
@@ -645,4 +645,4 @@ echo config('ApiClient')->baseUrl;
 1. Backend API not running or misconfigured
 2. CSS/JavaScript not built (run `npm run build:css`)
 3. Session/permission issues (check `writable/` directory)
-4. Port conflicts (another service using 8082 or 8080)
+4. Port conflicts (another service using 8182 or 8180)

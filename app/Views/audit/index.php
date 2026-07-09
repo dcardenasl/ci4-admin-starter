@@ -3,6 +3,7 @@
         apiUrl: '<?= route_to('admin.audit.data') ?>',
         pageUrl: '<?= route_to('admin.audit') ?>',
         mode: 'audit',
+        defaultSort: '-created_at',
         routes: {
             showBase: '<?= route_to('admin.audit') ?>'
         },

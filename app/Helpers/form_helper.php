@@ -3,12 +3,55 @@
 declare(strict_types=1);
 
 if (! function_exists('get_field_error')) {
+    /**
+     * @return list<string>
+     */
+    function normalize_field_error_keys(string $field): array
+    {
+        $keys = [$field];
+
+        $dotKey = preg_replace('/\[(.*?)\]/', '.$1', $field);
+        if (is_string($dotKey)) {
+            $dotKey = trim(preg_replace('/\.+/', '.', $dotKey) ?? $dotKey, '.');
+            if ($dotKey !== '' && $dotKey !== $field) {
+                $keys[] = $dotKey;
+            }
+        }
+
+        $normalizedDot = $dotKey ?? $field;
+        if ($normalizedDot !== '') {
+            $parts = explode('.', $normalizedDot);
+            $bracketKey = array_shift($parts);
+            foreach ($parts as $part) {
+                $bracketKey .= '[' . $part . ']';
+            }
+
+            if ($bracketKey !== '' && $bracketKey !== $field) {
+                $keys[] = $bracketKey;
+            }
+        }
+
+        return array_values(array_unique(array_filter($keys, static fn (string $key): bool => $key !== '')));
+    }
+
     function get_field_error(string $field): string
     {
         $fieldErrors = session('fieldErrors');
 
         if (is_array($fieldErrors) && isset($fieldErrors[$field]) && is_scalar($fieldErrors[$field])) {
             return (string) $fieldErrors[$field];
+        }
+
+        if (is_array($fieldErrors)) {
+            foreach (normalize_field_error_keys($field) as $candidate) {
+                if ($candidate === $field) {
+                    continue;
+                }
+
+                if (isset($fieldErrors[$candidate]) && is_scalar($fieldErrors[$candidate])) {
+                    return (string) $fieldErrors[$candidate];
+                }
+            }
         }
 
         return '';
@@ -106,5 +149,32 @@ if (! function_exists('render_field_error')) {
         return '<p id="' . esc($id, 'attr') . '" role="alert" class="mt-1 text-sm text-red-600">'
             . esc($message)
             . '</p>';
+    }
+}
+
+if (! function_exists('render_extra_attrs')) {
+    /**
+     * Render additional HTML attributes passed by form components.
+     *
+     * @param array<string, scalar|null> $attributes
+     */
+    function render_extra_attrs(array $attributes = []): string
+    {
+        $rendered = [];
+
+        foreach ($attributes as $name => $value) {
+            if ($value === null || $value === false) {
+                continue;
+            }
+
+            if ($value === true) {
+                $rendered[] = esc((string) $name, 'attr');
+                continue;
+            }
+
+            $rendered[] = esc((string) $name, 'attr') . '="' . esc((string) $value, 'attr') . '"';
+        }
+
+        return implode(' ', $rendered);
     }
 }

@@ -38,7 +38,7 @@ Regla practica:
 
 - Mockea `ApiClientInterface` o la interfaz del servicio, no clases concretas si existe contrato.
 - Mantén los fixtures pequeños y pegados al caso de prueba; evita payloads enormes que oculten la intención.
-- Verifica shape de respuesta (`ok`, `status`, `data`, `messages`, `fieldErrors`) cuando pruebes servicios/API client.
+- Verifica shape de respuesta del wrapper (`ok`, `status`, `data`, `messages`, `fieldErrors`) cuando pruebes servicios/API client, pero recuerda que el API canónico habla `status`, `message`, `data`, `errors`.
 - En controllers, usa stubs del servicio para forzar ramas de exito, validacion y error de API.
 - No mockees detalles internos de CodeIgniter salvo que el framework sea precisamente lo que se quiere aislar.
 

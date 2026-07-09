@@ -6,7 +6,7 @@ namespace Config;
 
 /**
  * Configuration for the HTTP client that talks to a ci4-bff-starter gateway
- * (port 8088 by default). Mirrors {@see DomainApiClient} but reads a distinct
+ * (port 8188 by default). Mirrors {@see DomainApiClient} but reads a distinct
  * set of environment variables so a single admin instance can monitor hub,
  * domain, and BFF health independently.
  *

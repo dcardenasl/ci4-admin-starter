@@ -51,7 +51,12 @@ if ($metadataRows === []) {
 }
 ?>
 
-<div class="mt-4" x-data="adminMetadataField({ rows: <?= esc(json_encode($metadataRows, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT), 'attr') ?> })" x-init="init()">
+<div class="mt-4" x-data="adminMetadataField({
+    rows: <?= esc(json_encode($metadataRows, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT), 'attr') ?>,
+    jsonPastePrompt: <?= esc(json_encode(lang('Labels.json_paste_prompt'), JSON_THROW_ON_ERROR), 'attr') ?>,
+    jsonInvalidFormat: <?= esc(json_encode(lang('Labels.json_invalid_format'), JSON_THROW_ON_ERROR), 'attr') ?>,
+    jsonSyntaxError: <?= esc(json_encode(lang('Labels.json_syntax_error'), JSON_THROW_ON_ERROR), 'attr') ?>
+})" x-init="init()">
     <input type="hidden" id="<?= esc($name, 'attr') ?>" name="<?= esc($name, 'attr') ?>" :value="json">
     
     <div class="flex items-center justify-between gap-3">

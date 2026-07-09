@@ -14,7 +14,7 @@ Standardize web validations in a dedicated layer to:
 - Frontend validates syntax/UI: `required`, format, length, simple enums.
 - Backend validates business logic: uniqueness, state, permissions, domain invariants.
 - User-facing messages must use `lang('...')`.
-- Form errors are exposed as `fieldErrors` in the session.
+- Form errors are exposed as `fieldErrors` in the session, derived from the canonical API `errors` map.
 
 ## Architecture
 
@@ -133,7 +133,7 @@ Key rules:
 
 - `uploaded[file]` + `max_size[file,X]` (where `X` is calculated from the effective limit).
 - Effective limit: `min(FILE_MAX_SIZE, upload_max_filesize, post_max_size)`.
-- Support for AJAX validation with JSON response (`ok: false, fieldErrors: [...]`).
+- Support for AJAX validation with JSON response (`ok: false` plus session `fieldErrors` derived from API `errors`).
 
 Key normalization:
 
@@ -160,7 +160,7 @@ Unit tests:
 
 Feature tests:
 
-- Validate redirects and `fieldErrors` in session.
+- Validate redirects and derived `fieldErrors` in session.
 - Validate that payload sent to API service preserves expected contract.
 - Test form submission with valid and invalid data.
 

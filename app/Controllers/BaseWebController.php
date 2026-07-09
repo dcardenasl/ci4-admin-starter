@@ -111,6 +111,18 @@ abstract class BaseWebController extends BaseController
         bool $withInput = true,
         array $allowedFieldErrors = [],
     ): RedirectResponse {
+        if (ENVIRONMENT === 'development') {
+            $devStatus = $response['status'] ?? 0;
+            $devRaw    = $response['raw'] ?? '';
+            log_message('debug', "[DEV] failApi — HTTP {$devStatus}\n{$devRaw}");
+            session()->setFlashdata('devApiError', [
+                'status'   => $devStatus,
+                'body'     => $devRaw,
+                'messages' => $response['messages'] ?? [],
+                'errors'   => $response['fieldErrors'] ?? [],
+            ]);
+        }
+
         $fieldErrors = $this->getFieldErrors($response);
 
         if ($allowedFieldErrors !== []) {
@@ -192,10 +204,21 @@ abstract class BaseWebController extends BaseController
      */
     protected function firstMessage(array $response, string $fallback): string
     {
+        if (isset($response['message']) && is_scalar($response['message'])) {
+            $message = $this->localizeApiMessage((string) $response['message']);
+            if ($message !== '') {
+                return $message;
+            }
+        }
+
         $messages = $response['messages'] ?? [];
 
         if (is_array($messages) && isset($messages[0])) {
             return $this->localizeApiMessage((string) $messages[0]);
+        }
+
+        if (isset($response['errors']['general']) && is_scalar($response['errors']['general'])) {
+            return $this->localizeApiMessage((string) $response['errors']['general']);
         }
 
         return $fallback;
@@ -231,6 +254,10 @@ abstract class BaseWebController extends BaseController
      */
     protected function extractItems(array $response): array
     {
+        if (isset($response['ok']) && ! $response['ok']) {
+            return [];
+        }
+
         $payload = $response['data'] ?? [];
 
         // In paginated responses: { data: { data: [...], meta: {...} } }
@@ -251,6 +278,10 @@ abstract class BaseWebController extends BaseController
      */
     protected function extractData(array $response): array
     {
+        if (isset($response['ok']) && ! $response['ok']) {
+            return [];
+        }
+
         $payload = $response['data'] ?? [];
 
         // Avoid returning the nested 'data' array if the payload is a pagination wrapper,

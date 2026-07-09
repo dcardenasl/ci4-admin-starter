@@ -44,6 +44,7 @@ class Toolbar extends BaseConfig
         Files::class,
         Routes::class,
         Events::class,
+        \App\Debug\ApiCallsCollector::class,
     ];
 
     /**

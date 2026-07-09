@@ -3,15 +3,16 @@ const js = require('@eslint/js');
 module.exports = [
     js.configs.recommended,
     {
-        files: ['public/assets/js/app.js'],
+        files: ['src/js/**/*.js'],
         languageOptions: {
             ecmaVersion: 'latest',
-            sourceType: 'script',
+            sourceType: 'module',
             globals: {
                 Alpine: 'readonly',
                 CustomEvent: 'readonly',
                 Date: 'readonly',
                 FormData: 'readonly',
+                HTMLButtonElement: 'readonly',
                 HTMLFormElement: 'readonly',
                 HTMLElement: 'readonly',
                 HTMLInputElement: 'readonly',
@@ -39,5 +40,9 @@ module.exports = [
         rules: {
             'no-shadow': 'error',
         },
+    },
+    {
+        // Ignore generated output — linting the source is sufficient
+        ignores: ['public/assets/js/app.js'],
     },
 ];

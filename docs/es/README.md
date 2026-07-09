@@ -29,11 +29,11 @@ Para configuración inicial, ver **[GUÍA INICIO RÁPIDO](./QUICK-START.md)** pa
 bash install.sh
 
 # 2. Iniciar servidores de desarrollo (dos terminales)
-php spark serve --port 8082    # Terminal 1
+php spark serve --port 8182    # Terminal 1
 npm run dev:css                # Terminal 2
 
 # 3. Abrir en navegador
-# http://localhost:8082
+# http://localhost:8182
 ```
 
 ## 📚 Documentación
@@ -57,7 +57,7 @@ Esta plantilla está diseñada para trabajar sin interrupciones con [ci4-api-sta
 
 - **Prefijo API:** `/api/v1`
 - **Autenticación:** Bearer JWT con manejo automático de token de refresco
-- **Formato de Respuesta:** Envolvente JSON estándar con datos, mensajes y errores de campo
+- **Formato de Respuesta:** Envolvente JSON canónica con `status`, `message`, `data` y `errors`
 - **Encabezados:** Inyección automática `X-App-Key` para límite de velocidad elevado (opcional)
 
 Ver **[Guía de Compatibilidad API](./API-COMPATIBILITY.md)** para el contrato completo.
@@ -71,8 +71,8 @@ El `ApiClient` normaliza todas las respuestas de la API a esta estructura:
     'ok'          => bool,           // true para 2xx, false en otro caso
     'status'      => int,            // Código de estado HTTP
     'data'        => array,          // Payload principal
-    'messages'    => array,          // [mensajes de éxito|error]
-    'fieldErrors' => array,          // Errores de validación a nivel de campo
+    'messages'    => array,          // Mensajes derivados del wrapper para UX del controlador
+    'fieldErrors' => array,          // Errores derivados del wrapper para UX del controlador
     'raw'         => string,         // Cuerpo JSON original
 ]
 ```
@@ -142,10 +142,10 @@ Editar `.env` con tu configuración:
 ```dotenv
 # Aplicación
 CI_ENVIRONMENT = development
-app.baseURL = 'http://localhost:8082/'
+app.baseURL = 'http://localhost:8182/'
 
 # API Backend
-apiClient.baseUrl = 'http://localhost:8080'
+apiClient.baseUrl = 'http://localhost:8180'
 apiClient.apiPrefix = '/api/v1'
 
 # Opcional: Google OAuth (para botón "Iniciar sesión con Google")
@@ -167,8 +167,8 @@ Iniciar ambos servidores en ventanas de terminal separadas:
 
 **Terminal 1 — Servidor de Desarrollo PHP:**
 ```bash
-php spark serve --port 8082
-# Aplicación disponible en http://localhost:8082
+php spark serve --port 8182
+# Aplicación disponible en http://localhost:8182
 ```
 
 **Terminal 2 — Observador de CSS de Tailwind:**

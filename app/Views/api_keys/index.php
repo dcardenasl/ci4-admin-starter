@@ -3,6 +3,7 @@
         apiUrl: '<?= route_to('admin.api_keys.data') ?>',
         pageUrl: '<?= route_to('admin.api_keys') ?>',
         mode: 'api_keys',
+        defaultSort: '-created_at',
         routes: {
             showBase: '<?= route_to('admin.api_keys') ?>',
             editBase: '<?= route_to('admin.api_keys') ?>'

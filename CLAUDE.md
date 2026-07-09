@@ -20,7 +20,7 @@ For cross-repo context (current milestone, blocked tasks), read `../TASKS.md`.
 
 **Architecture flow:**
 ```
-Browser → CI4 Admin Starter (port 8082) → ci4-api-starter API (port 8080)
+Browser → CI4 Admin Starter (port 8182) → ci4-api-starter API (port 8180)
 ```
 
 **Current state:** Fully implemented. All modules are active: authentication, dashboard, profile, file management, and admin panel (users, audit logs, API keys, metrics). See `docs/INDEX.md` for detailed architectural documentation.
@@ -32,6 +32,7 @@ Browser → CI4 Admin Starter (port 8082) → ci4-api-starter API (port 8080)
 - **Styling:** Tailwind CSS — built locally via `npm run build:css` (output: `public/assets/css/app.css`)
 - **Icons:** Lucide Icons — vendored locally to `public/assets/vendor/lucide.min.js` via `npm run build:vendor`
 - **Interactivity:** Alpine.js — vendored locally to `public/assets/vendor/alpine.min.js` via `npm run build:vendor`. The layout transparently falls back to the pinned CDN URLs when a vendored copy is missing (e.g. on a fresh clone before `npm install`).
+- **App JS:** Written as ES modules under `src/js/` (`stores/`, `components/`, `utils/`) and bundled by esbuild into `public/assets/js/app.js` via `npm run build:js` (or `npm run dev:js` to watch). **`public/assets/js/app.js` is a generated build artifact — never edit it directly**, edit the source modules in `src/js/` and rebuild.
 - **Authentication:** JWT tokens stored in PHP sessions (server-side only)
 - **HTTP Client:** Custom ApiClient library with automatic token refresh
 - **i18n:** CodeIgniter 4 Language files (`en` / `es`)
@@ -65,8 +66,8 @@ cp env .env
 
 # Edit .env to configure:
 # - CI_ENVIRONMENT = development
-# - app.baseURL = 'http://localhost:8082/'
-# - apiClient.baseUrl = 'http://localhost:8080'
+# - app.baseURL = 'http://localhost:8182/'
+# - apiClient.baseUrl = 'http://localhost:8180'
 # - apiClient.appKey = apk_... (optional, see API App Key section)
 ```
 
@@ -75,7 +76,7 @@ cp env .env
 **Terminal 1: Start PHP development server**
 ```bash
 # Start on specific port (recommended for this project)
-php spark serve --port 8082
+php spark serve --port 8182
 ```
 
 **Terminal 2: Watch and rebuild CSS**
@@ -84,12 +85,17 @@ php spark serve --port 8082
 npm run dev:css
 ```
 
-Application will be available at: `http://localhost:8082`
+**Terminal 3: Watch and rebuild app JS** (only needed when touching `src/js/`)
+```bash
+npm run dev:js
+```
+
+Application will be available at: `http://localhost:8182`
 
 **Notes:**
-- Both terminal sessions should run in parallel during development
-- CSS must be built via `npm run build:css` (Tailwind) and vendor JS via `npm run build:vendor` (Alpine + Lucide). Use `npm run build:all` for both. In CI / on first clone, run `npm ci && npm run build:all`.
-- Production builds use `npm run build:css` to generate minified CSS (see DEPLOYMENT.md)
+- Terminal sessions should run in parallel during development
+- CSS must be built via `npm run build:css` (Tailwind), app JS via `npm run build:js` (esbuild, bundles `src/js/app.js` → `public/assets/js/app.js`), and vendor JS via `npm run build:vendor` (Alpine + Lucide). Use `npm run build:all` for all three. In CI / on first clone, run `npm ci && npm run build:all`.
+- Production builds use `npm run build:css` / `npm run build:js` to generate minified CSS/JS (see DEPLOYMENT.md)
 
 ### Testing
 ```bash
@@ -126,11 +132,10 @@ composer quality
 
 **JavaScript:**
 ```bash
-# Lint JavaScript files
+# Lint the src/js/ ES module tree (public/assets/js/app.js is a generated
+# artifact and is excluded from linting — see eslint.config.js `ignores`)
 npm run lint:js
-
-# Lint all JS files (not just app.js)
-npm run lint:all
+npm run lint:all   # same as lint:js; kept for compatibility
 ```
 
 **Composer scripts:**
@@ -162,7 +167,7 @@ The `app/Libraries/ApiClient.php` class is the heart of all API communication. I
 
 When the admin drives both a hub (`ci4-api-starter`) and a domain app (`ci4-domain-starter`) in parallel — e.g. SubscriptionKit, where hub owns auth/users/IAM and a domain app owns projects/subscribers — wire the domain modules to `App\Libraries\DomainApiClient` instead of `ApiClient`.
 
-- **Config:** `app/Config/DomainApiClient.php` reads `domainApiClient.*` / `DOMAIN_API_*` env vars (default base URL `http://localhost:8090`). Extends `Config\ApiClient`, so the contract and PHPStan types stay aligned.
+- **Config:** `app/Config/DomainApiClient.php` reads `domainApiClient.*` / `DOMAIN_API_*` env vars (default base URL `http://localhost:8190`). Extends `Config\ApiClient`, so the contract and PHPStan types stay aligned.
 - **Library:** `App\Libraries\DomainApiClient extends ApiClient implements DomainApiClientInterface`. Inherits all refresh / header / upload logic from `ApiClient`.
 - **Service factory:** `Services::domainApiClient()` is the parallel of `Services::apiClient()`. Returns `DomainApiClientInterface`.
 - **Scaffolding:** `bash bin/make-module.sh <Resource> <Module> /path --service=domain` generates a module wired to `static::domainApiClient()`. Default remains `--service=hub`.
@@ -295,7 +300,7 @@ app/Views/
 - `.form-input`
 - `.card`
 
-**Alpine.js** for client-side interactivity (stores in `public/assets/js/app.js`):
+**Alpine.js** for client-side interactivity (stores/components in `src/js/stores/` and `src/js/components/`, bundled to `public/assets/js/app.js`):
 - Sidebar toggle, dropdowns, modals
 - Toast notifications (auto-dismiss)
 - Drag-and-drop file uploads
@@ -402,7 +407,7 @@ This app consumes **ci4-api-starter** (https://github.com/dcardenasl/ci4-api-sta
 - REST API endpoints for auth, users, files, audit logs, metrics, and API keys
 - JWT-based authentication (access + refresh tokens)
 - Optional `X-App-Key` header for app-level rate limiting (600 req/min vs 60 req/min)
-- Runs on `http://localhost:8080` by default
+- Runs on `http://localhost:8180` by default
 
 ## Testing Strategy
 

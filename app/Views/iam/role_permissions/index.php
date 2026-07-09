@@ -25,6 +25,9 @@ $activeTab = $activeTab !== '' ? $activeTab : (string) ($roles[0]['id'] ?? '');
                     input.checked = checked;
                 }
             });
+            // Programmatic checkbox toggles don't fire a native 'change' event;
+            // dispatch one so the enclosing form's dirty-tracking picks it up.
+            scope.dispatchEvent(new Event('change', { bubbles: true }));
         }
     }" class="space-y-4">
         <div class="flex flex-wrap gap-2 border-b border-gray-200">
@@ -42,7 +45,16 @@ $activeTab = $activeTab !== '' ? $activeTab : (string) ($roles[0]['id'] ?? '');
         <?php foreach ($roles as $role): ?>
             <?php $roleId = (string) ($role['id'] ?? ''); ?>
             <?php $assigned = array_map('strval', $assignments[(int) $roleId] ?? $assignments[$roleId] ?? []); ?>
-            <form method="post" action="<?= route_to('admin.iam.role_permissions.save', $roleId) ?>" x-show="tab === '<?= esc($roleId) ?>'" data-role-id="<?= esc($roleId) ?>" class="space-y-4">
+            <form method="post" action="<?= route_to('admin.iam.role_permissions.save', $roleId) ?>" x-show="tab === '<?= esc($roleId) ?>'" data-role-id="<?= esc($roleId) ?>"
+                x-data="{
+                    isDirty: false,
+                    selectedCount: <?= count($assigned) ?>,
+                    updateCount() {
+                        this.selectedCount = Array.from(this.$el.querySelectorAll('input[name=\'permission_ids[]\']:checked')).length;
+                    }
+                }"
+                @change="isDirty = true; updateCount()"
+                class="space-y-4">
                 <?= csrf_field() ?>
                 <input type="hidden" name="permission_ids[]" value="">
 
@@ -54,6 +66,10 @@ $activeTab = $activeTab !== '' ? $activeTab : (string) ($roles[0]['id'] ?? '');
                     <button type="button" class="<?= esc(action_button_class()) ?>" @click="setWithin($el.closest('form'), false)">
                         <?= esc(lang('Iam.permissions_clear_all')) ?>
                     </button>
+                    <span class="ml-auto text-xs text-gray-500"><?= esc(lang('Iam.role_permissions_hint')) ?></span>
+                    <span class="shrink-0 rounded-full border border-gray-200 bg-white px-2 py-1 text-xs font-semibold tabular-nums text-gray-700">
+                        <span x-text="selectedCount"></span> <?= esc(lang('Iam.role_permissions_selected_label')) ?>
+                    </span>
                 </div>
 
                 <?php foreach ($applications as $application): ?>
@@ -130,7 +146,14 @@ $activeTab = $activeTab !== '' ? $activeTab : (string) ($roles[0]['id'] ?? '');
                     </section>
                 <?php endforeach; ?>
 
-                <button type="submit" class="<?= esc(action_button_class('primary')) ?>"><?= esc(lang('App.save')) ?></button>
+                <div class="flex items-center gap-3">
+                    <button type="submit" class="<?= esc(action_button_class('primary')) ?>"><?= esc(lang('App.save')) ?></button>
+                    <span x-show="isDirty" x-cloak
+                        class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                        <?= ui_icon('triangle-alert', 'h-3.5 w-3.5') ?>
+                        <?= esc(lang('App.unsaved_changes')) ?>
+                    </span>
+                </div>
             </form>
         <?php endforeach; ?>
     </div>

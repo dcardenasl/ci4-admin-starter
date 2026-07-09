@@ -3,6 +3,7 @@
         apiUrl: '<?= route_to('admin.users.data') ?>',
         pageUrl: '<?= route_to('admin.users') ?>',
         mode: 'users',
+        defaultSort: '-created_at',
         routes: {
             showBase: '<?= route_to('admin.users') ?>',
             editBase: '<?= route_to('admin.users') ?>'

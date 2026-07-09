@@ -86,6 +86,8 @@ return [
     'permissions_edit_link'                 => 'Editar',
     'permission_locked_tooltip'             => 'Actualmente no tienes este permiso.',
     'role_permissions_title'                => 'Roles × Permisos',
+    'role_permissions_hint'                 => 'Marca los permisos que debe tener este rol y guarda para aplicar los cambios.',
+    'role_permissions_selected_label'       => 'permisos seleccionados',
     'role_permissions_load_failed'          => 'No se pudo cargar la matriz de roles y permisos.',
     'role_permissions_save_success'         => 'Permisos del rol actualizados correctamente.',
     'role_permissions_save_failed'          => 'No se pudieron actualizar los permisos del rol.',

@@ -18,6 +18,11 @@ final class ComponentsTest extends CIUnitTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // The renderer service persists data across view() calls with the default
+        // saveData=true behavior; several display components nest a view() call to
+        // components/display/form_section. Without a reset, one test method's saved
+        // data can leak into the next test's rendering of the same shared template.
+        $this->resetServices();
         helper(['form', 'url']);
     }
 
@@ -82,7 +87,7 @@ final class ComponentsTest extends CIUnitTestCase
     {
         $html = view('components/form/select', [
             'name' => 'status',
-            'label' => 'App.status',
+            'label' => 'App.status_label',
             'value' => 'draft',
             'options' => [
                 'draft' => 'Draft State',
@@ -201,5 +206,106 @@ final class ComponentsTest extends CIUnitTestCase
         ], ['saveData' => false]);
 
         $this->assertStringContainsString('<title>' . lang('App.components_title') . '</title>', $html);
+    }
+
+    public function testAdminPageHeaderRendersBackLinkEyebrowAndBadge(): void
+    {
+        $html = view('components/display/admin_page_header', [
+            'backUrl' => '/dummy',
+            'backLabel' => 'App.back',
+            'eyebrow' => 'App.details',
+            'title' => 'App.name',
+            'subtitle' => 'Some subtitle',
+            'badge' => '<span class="badge">Active</span>',
+        ], ['saveData' => false]);
+
+        $this->assertStringContainsString('href="/dummy"', $html);
+        $this->assertStringContainsString(lang('App.back'), $html);
+        $this->assertStringContainsString(lang('App.details'), $html);
+        $this->assertStringContainsString(lang('App.name'), $html);
+        $this->assertStringContainsString('Some subtitle', $html);
+        $this->assertStringContainsString('<span class="badge">Active</span>', $html);
+    }
+
+    public function testAdminResourceLayoutRendersMainAndOptionalAside(): void
+    {
+        $mainOnly = view('components/display/admin_resource_layout', [
+            'main' => '<p>Main content</p>',
+        ], ['saveData' => false]);
+
+        $this->assertStringContainsString('Main content', $mainOnly);
+        $this->assertStringNotContainsString('<aside', $mainOnly);
+
+        $withAside = view('components/display/admin_resource_layout', [
+            'main' => '<p>Main content</p>',
+            'aside' => '<p>Aside content</p>',
+        ], ['saveData' => false]);
+
+        $this->assertStringContainsString('<aside', $withAside);
+        $this->assertStringContainsString('Aside content', $withAside);
+    }
+
+    public function testFormSectionRendersTitleDescriptionBadgeAndContent(): void
+    {
+        $html = view('components/display/form_section', [
+            'title' => 'App.details',
+            'description' => 'App.no_results_desc',
+            'badge' => 'App.status_label',
+            'content' => '<p>Body</p>',
+        ], ['saveData' => false]);
+
+        $this->assertStringContainsString(lang('App.details'), $html);
+        $this->assertStringContainsString(lang('App.no_results_desc'), $html);
+        $this->assertStringContainsString(lang('App.status_label'), $html);
+        $this->assertStringContainsString('<p>Body</p>', $html);
+    }
+
+    public function testAdminActionsPanelRendersContentAndDangerZone(): void
+    {
+        $html = view('components/display/admin_actions_panel', [
+            'content' => '<button>Edit</button>',
+            'dangerContent' => '<button>Delete</button>',
+        ], ['saveData' => false]);
+
+        $this->assertStringContainsString('<button>Edit</button>', $html);
+        $this->assertStringContainsString('<button>Delete</button>', $html);
+        $this->assertStringContainsString(lang('App.actions'), $html);
+    }
+
+    public function testAdminMetaPanelRendersItemsAsDefinitionList(): void
+    {
+        $html = view('components/display/admin_meta_panel', [
+            'title' => 'App.details',
+            'items' => [
+                ['label' => 'App.name', 'value' => 'Alpha'],
+                ['label' => 'App.status_label', 'value' => 'active', 'isHtml' => false],
+            ],
+        ], ['saveData' => false]);
+
+        $this->assertStringContainsString('<dl', $html);
+        $this->assertStringContainsString(lang('App.name'), $html);
+        $this->assertStringContainsString('Alpha', $html);
+        $this->assertStringContainsString(lang('App.status_label'), $html);
+        $this->assertStringContainsString('active', $html);
+    }
+
+    public function testLoadingStateRendersDefaultCopyAndSpinnerIcon(): void
+    {
+        $html = view('components/display/loading_state', [], ['saveData' => false]);
+
+        $this->assertStringContainsString(lang('App.loading'), $html);
+        $this->assertStringContainsString(lang('App.loading_refreshing'), $html);
+        $this->assertStringContainsString('data-lucide="loader"', $html);
+        $this->assertStringContainsString('animate-spin', $html);
+    }
+
+    public function testSubmittingOverlayRendersMessageBehindAlpineShowGuard(): void
+    {
+        $html = view('components/form/submitting_overlay', [
+            'message' => 'Saving changes…',
+        ], ['saveData' => false]);
+
+        $this->assertStringContainsString('x-show="submitting"', $html);
+        $this->assertStringContainsString('Saving changes…', $html);
     }
 }

@@ -61,6 +61,18 @@ if (! function_exists('filter_panel_class')) {
     }
 }
 
+if (! function_exists('confirm_delete_message')) {
+    function confirm_delete_message(?string $itemLabel = null): string
+    {
+        $label = trim((string) $itemLabel);
+        if ($label === '') {
+            return lang('App.confirm_delete');
+        }
+
+        return lang('App.confirm_delete_named', [$label]);
+    }
+}
+
 if (! function_exists('filter_submit_button_class')) {
     function filter_submit_button_class(bool $fullWidth = false): string
     {
@@ -147,6 +159,34 @@ if (! function_exists('has_active_filters')) {
         }
 
         return false;
+    }
+}
+
+if (! function_exists('section_heading_class')) {
+    /**
+     * Consistent page-section heading. Use for H2/H3 inside cards or
+     * section dividers — always `text-lg font-semibold text-gray-900`.
+     */
+    function section_heading_class(): string
+    {
+        return 'text-lg font-semibold text-gray-900';
+    }
+}
+
+if (! function_exists('card_class')) {
+    /**
+     * Surface card wrapper — mirrors the `.card` CSS component class.
+     * Optional $padding follows: 'sm' = p-4, 'md' = p-5 (default), 'none' = no padding.
+     */
+    function card_class(string $padding = 'md'): string
+    {
+        $pad = match ($padding) {
+            'sm'   => ' p-4',
+            'none' => '',
+            default => ' p-5',
+        };
+
+        return 'bg-white border border-gray-200 rounded-xl shadow-sm' . $pad;
     }
 }
 
@@ -269,6 +309,7 @@ if (! function_exists('ui_icon')) {
             'image'           => 'image',
             'layers'          => 'layers',
             'help-circle'     => 'circle-help',
+            'info'            => 'info',
             'alert-circle'    => 'circle-alert',
             'triangle-alert'  => 'triangle-alert',
             'cart'            => 'shopping-cart',
@@ -287,6 +328,11 @@ if (! function_exists('ui_icon')) {
             'tag'             => 'tag',
             'ticket'          => 'ticket',
             'store'           => 'store',
+            'chevron-up'      => 'chevron-up',
+            'chevron-down'    => 'chevron-down',
+            'chevron-right'   => 'chevron-right',
+            'external-link'   => 'external-link',
+            'copy'            => 'copy',
         ];
 
         if (! isset($icons[$name])) {

@@ -5,17 +5,20 @@ declare(strict_types=1);
 namespace App\Libraries;
 
 use App\Modules\Auth\Services\AuthApiServiceInterface;
+use App\Support\SessionKeys;
 
-class PermissionsSessionRefresher
+final class PermissionsSessionRefresher
 {
-    public function __construct(private readonly AuthApiServiceInterface $auth)
+    private const SESSION_REFRESHED_AT = 'permissions_refreshed_at';
+
+    public function __construct(private readonly AuthApiServiceInterface $authService)
     {
     }
 
     public function refreshIfStale(int $ttlSeconds = 60): void
     {
-        $lastRefresh = (int) (session('permissions_refreshed_at') ?? 0);
-        if ($lastRefresh > 0 && time() - $lastRefresh < $ttlSeconds) {
+        $lastRefresh = session(self::SESSION_REFRESHED_AT);
+        if (is_int($lastRefresh) && $lastRefresh > time() - $ttlSeconds) {
             return;
         }
 
@@ -24,19 +27,17 @@ class PermissionsSessionRefresher
 
     public function forceRefresh(): void
     {
-        $response = $this->auth->me();
+        $response = $this->authService->me();
         if (! ($response['ok'] ?? false)) {
             return;
         }
 
-        $data = $response['data'] ?? [];
-        if (is_array($data) && isset($data['data']) && is_array($data['data'])) {
-            $data = $data['data'];
+        $data = $response['data']['data'] ?? $response['data'] ?? [];
+        if (! is_array($data) || $data === []) {
+            return;
         }
 
-        if ($data !== []) {
-            session()->set('user', $data);
-            session()->set('permissions_refreshed_at', time());
-        }
+        session()->set(SessionKeys::USER->value, $data);
+        session()->set(self::SESSION_REFRESHED_AT, time());
     }
 }

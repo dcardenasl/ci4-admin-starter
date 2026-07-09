@@ -42,15 +42,15 @@ cp env .env
 
 **Required `.env` settings:**
 - `CI_ENVIRONMENT = development`
-- `app.baseURL = 'http://localhost:8082/'`
-- `apiClient.baseUrl = 'http://localhost:8080'` (Address of the backend API)
+- `app.baseURL = 'http://localhost:8182/'`
+- `apiClient.baseUrl = 'http://localhost:8180'` (Address of the backend API)
 
 ### Running the Project
 ```bash
 # Start development server
-php spark serve --port 8082
+php spark serve --port 8182
 ```
-The application will be available at `http://localhost:8082`.
+The application will be available at `http://localhost:8182`.
 
 ---
 

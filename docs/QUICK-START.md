@@ -10,7 +10,7 @@ Before starting, ensure you have:
 - **Composer 2.x** installed
 - **Node.js 16+** and npm installed
 - **Git** (to clone the repository)
-- A running instance of **[ci4-api-starter](https://github.com/dcardenasl/ci4-api-starter)** on `http://localhost:8080` (or update the URL in `.env`)
+- A running instance of **[ci4-api-starter](https://github.com/dcardenasl/ci4-api-starter)** on `http://localhost:8180` (or update the URL in `.env`)
 
 Check your versions:
 ```bash
@@ -45,8 +45,8 @@ The script will:
 | Prompt | Example |
 |--------|---------|
 | Environment (dev/prod) | `development` |
-| Application Base URL | `http://localhost:8082/` |
-| Backend API Base URL | `http://localhost:8080/` |
+| Application Base URL | `http://localhost:8182/` |
+| Backend API Base URL | `http://localhost:8180/` |
 | API Prefix | `/api/v1` |
 | Install Composer deps? | `y` |
 | Install npm deps? | `y` |
@@ -70,8 +70,8 @@ Then edit `.env`:
 
 ```dotenv
 CI_ENVIRONMENT = development
-app.baseURL = 'http://localhost:8082/'
-apiClient.baseUrl = 'http://localhost:8080'
+app.baseURL = 'http://localhost:8182/'
+apiClient.baseUrl = 'http://localhost:8180'
 apiClient.apiPrefix = '/api/v1'
 ```
 
@@ -81,14 +81,14 @@ Open **two terminal windows** in your project directory.
 
 **Terminal 1 — PHP Development Server:**
 ```bash
-php spark serve --port 8082
+php spark serve --port 8182
 ```
 
 You should see:
 ```
 CodeIgniter v4.x.x Command Line Tool - Server Edition
 ...
-Server running on http://localhost:8082
+Server running on http://localhost:8182
 ```
 
 **Terminal 2 — Tailwind CSS Watcher:**
@@ -106,9 +106,9 @@ Both must be running during development.
 
 ## Step 5: Open in Browser
 
-Navigate to: **`http://localhost:8082`**
+Navigate to: **`http://localhost:8182`**
 
-You should see the login page. If the backend API is running on `http://localhost:8080`, you can:
+You should see the login page. If the backend API is running on `http://localhost:8180`, you can:
 
 1. **Create a new account** (if registration is enabled)
 2. **Login** with test credentials from the backend
@@ -137,10 +137,10 @@ Before using the application, verify:
 
 ### "Connection refused" Error
 
-**Issue:** `Connection to http://localhost:8080 refused`
+**Issue:** `Connection to http://localhost:8180 refused`
 
 **Solution:**
-1. Ensure backend API is running: `php spark serve --port 8080` in the backend project
+1. Ensure backend API is running: `php spark serve --port 8180` in the backend project
 2. Check `apiClient.baseUrl` in `.env` matches the backend port
 3. Restart the PHP development server
 
@@ -163,8 +163,8 @@ Before using the application, verify:
 # Use a different port
 php spark serve --port 8083
 
-# Or kill the process using port 8082
-lsof -i :8082  # Find process ID
+# Or kill the process using port 8182
+lsof -i :8182  # Find process ID
 kill -9 <PID>  # Kill it
 ```
 
@@ -238,8 +238,8 @@ npm run build:css         # Production CSS build
 | Variable | Purpose | Required | Default |
 |----------|---------|----------|---------|
 | `CI_ENVIRONMENT` | App environment | Yes | `development` |
-| `app.baseURL` | Frontend public URL | Yes | `http://localhost:8082/` |
-| `apiClient.baseUrl` | Backend API URL | Yes | `http://localhost:8080` |
+| `app.baseURL` | Frontend public URL | Yes | `http://localhost:8182/` |
+| `apiClient.baseUrl` | Backend API URL | Yes | `http://localhost:8180` |
 | `apiClient.apiPrefix` | API prefix | No | `/api/v1` |
 | `GOOGLE_CLIENT_ID` | Google OAuth client ID | No | — |
 | `FILE_MAX_SIZE` | Max upload size (bytes) | No | `10485760` (10 MB) |

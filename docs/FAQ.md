@@ -316,7 +316,7 @@ For integration testing against a real backend:
 
 ```php
 // In phpunit.xml, set:
-<env name="API_URL" value="http://localhost:8080"/>
+<env name="API_URL" value="http://localhost:8180"/>
 
 // In test:
 public function testLoginWithRealAPI() {
@@ -392,7 +392,7 @@ Use `.env` files with environment variables:
 ```dotenv
 # .env.local (never commit)
 CI_ENVIRONMENT = development
-apiClient.baseUrl = http://localhost:8080
+apiClient.baseUrl = http://localhost:8180
 apiClient.appKey = apk_dev_key_only
 
 # Production (via CI/CD or server config)
@@ -413,7 +413,7 @@ The project includes a health check endpoint:
 
 ```bash
 # Check API connectivity
-curl http://localhost:8082/health
+curl http://localhost:8182/health
 
 # Returns JSON status:
 {
@@ -475,7 +475,7 @@ See [API Compatibility Guide](./API-COMPATIBILITY.md) for complete specification
 Yes, but you'll need to adapt the Services. The frontend expects:
 
 1. **JWT authentication** with access + refresh tokens
-2. **Standard JSON response format** with `data`, `messages`, `errors` fields
+2. **Standard JSON response format** with canonical `status`, `message`, `data`, `errors` fields
 3. **Consistent error handling** with field-level errors for validation
 4. **Optional** `X-App-Key` header support for rate limiting
 

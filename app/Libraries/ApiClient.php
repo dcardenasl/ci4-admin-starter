@@ -46,6 +46,9 @@ class ApiClient implements ApiClientInterface
     /** @param array<string, mixed> $query */
     public function get(string $path, array $query = []): array
     {
+        if (isset($query['limit']) && ! isset($query['per_page'])) {
+            $query['per_page'] = $query['limit'];
+        }
         return $this->request('GET', $path, ['query' => $query], true);
     }
 
@@ -81,6 +84,9 @@ class ApiClient implements ApiClientInterface
     /** @param array<string, mixed> $query */
     public function publicGet(string $path, array $query = []): array
     {
+        if (isset($query['limit']) && ! isset($query['per_page'])) {
+            $query['per_page'] = $query['limit'];
+        }
         return $this->request('GET', $path, ['query' => $query], false);
     }
 
@@ -195,15 +201,28 @@ class ApiClient implements ApiClientInterface
             ));
         }
 
-        return [
+        $result = [
             'ok'          => $status >= 200 && $status < 300,
             'status'      => $status,
             'data'        => is_array($payload) ? $payload : [],
             'raw'         => $body,
             'headers'     => $this->extractResponseHeaders($response),
-            'messages'    => $this->extractMessages($payload, $status),
+            'messages'    => $this->extractMessages($payload),
             'fieldErrors' => $this->extractFieldErrors($payload),
         ];
+
+        if (ENVIRONMENT === 'development') {
+            \App\Debug\ApiCallsCollector::collect([
+                'method'    => $method,
+                'url'       => rtrim($this->config->baseUrl, '/') . $uri,
+                'status'    => $status,
+                'latency'   => $latency,
+                'requestId' => RequestIdHolder::get() ?? '',
+                'body'      => $body,
+            ]);
+        }
+
+        return $result;
     }
 
     public function attemptTokenRefresh(): bool
@@ -446,19 +465,14 @@ class ApiClient implements ApiClientInterface
     /**
      * @return list<string>
      */
-    protected function extractMessages(mixed $payload, int $status): array
+    protected function extractMessages(mixed $payload): array
     {
         if (! is_array($payload)) {
-            return $status >= 400 ? ['Request failed.'] : [];
+            return [];
         }
 
         if (isset($payload['message']) && is_scalar($payload['message'])) {
             return [(string) $payload['message']];
-        }
-
-        if (isset($payload['messages']) && is_array($payload['messages'])) {
-            $messages = array_values(array_filter($payload['messages'], 'is_scalar'));
-            return array_map('strval', $messages);
         }
 
         if (isset($payload['errors']['general']) && is_scalar($payload['errors']['general'])) {
@@ -475,15 +489,13 @@ class ApiClient implements ApiClientInterface
             return [];
         }
 
-        $errors = $payload['errors'] ?? [];
+        $fieldErrors = [];
 
-        if (! is_array($errors)) {
+        if (! isset($payload['errors']) || ! is_array($payload['errors'])) {
             return [];
         }
 
-        $fieldErrors = [];
-
-        foreach ($errors as $key => $value) {
+        foreach ($payload['errors'] as $key => $value) {
             if (! is_string($key) || $key === 'general') {
                 continue;
             }
