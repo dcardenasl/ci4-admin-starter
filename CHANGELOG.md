@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Duplicate `App` language keys** — `audit` and `status` were each defined twice in `App.php` (once as a simple string, once as a nested array), so the array definition silently won and any direct `lang('App.audit')` / `lang('App.status')` call returned an array instead of a string, causing an `Array to string conversion` error when rendered in views (sidebar nav label, `form_section` / `admin_meta_panel` component tests). Renamed the string entries to `audit_nav` and `status_label`.
+- **`RolePermissionEditFlowTest`** — mocked `authApiService` so the role create/update flow tests no longer depend on a reachable hub server for the post-save `PermissionsSessionRefresher::forceRefresh()` call.
 
 ### Added
 
