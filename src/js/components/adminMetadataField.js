@@ -5,6 +5,11 @@ export const adminMetadataField = (config = {}) => ({
         : [{ key: '', value: '' }],
     json: '{}',
     duplicates: [],
+    messages: {
+        pastePrompt: config.jsonPastePrompt || 'Paste JSON object here:',
+        invalidFormat: config.jsonInvalidFormat || 'Invalid JSON: Must be an object.',
+        syntaxError: config.jsonSyntaxError || 'Invalid JSON syntax: {error}',
+    },
 
     init() {
         this.sync();
@@ -25,13 +30,13 @@ export const adminMetadataField = (config = {}) => ({
     },
 
     importJson() {
-        const raw = prompt('Paste JSON object here:');
+        const raw = prompt(this.messages.pastePrompt);
         if (!raw) return;
 
         try {
             const parsed = JSON.parse(raw);
             if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-                alert('Invalid JSON: Must be an object.');
+                alert(this.messages.invalidFormat);
                 return;
             }
 
@@ -45,7 +50,7 @@ export const adminMetadataField = (config = {}) => ({
                 this.sync();
             }
         } catch (e) {
-            alert('Invalid JSON syntax: ' + e.message);
+            alert(this.messages.syntaxError.replace('{error}', e.message));
         }
     },
 

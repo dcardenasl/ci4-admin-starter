@@ -53,7 +53,8 @@ document.addEventListener('alpine:init', () => {
 document.addEventListener('DOMContentLoaded', () => {
     bootLucideIcons();
     bootSlugFields();
-    bootSessionExpiryWatcher();
+    const config = window.__componentConfig || {};
+    bootSessionExpiryWatcher({ expiringMessage: config.sessionExpiringMessage });
 });
 
 window.addEventListener('load', () => {

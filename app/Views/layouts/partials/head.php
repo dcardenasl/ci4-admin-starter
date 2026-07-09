@@ -152,6 +152,10 @@ $paginationLabelsJson = json_encode([
         'of' => lang('App.pagination.of'),
     ]
 ]);
+
+$componentConfigJson = json_encode([
+    'sessionExpiringMessage' => lang('Labels.session_expiring_soon'),
+], JSON_THROW_ON_ERROR);
 ?>
 <script <?= csp_script_nonce() ?>>
   window.uiLabels = <?= $uiLabelsJson ?>;
@@ -160,6 +164,7 @@ $paginationLabelsJson = json_encode([
   window.auditResultLabels = <?= $auditResultLabelsJson ?>;
   window.auditSeverityLabels = <?= $auditSeverityLabelsJson ?>;
   window.paginationLabels = <?= $paginationLabelsJson ?>;
+  window.__componentConfig = <?= $componentConfigJson ?>;
 </script>
 <?php // tailwind.config script removed as we now use compiled CSS?>
 <?php if (isset($extraHead)) {
