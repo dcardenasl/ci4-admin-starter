@@ -32,8 +32,5 @@
         "src/js/**/*.js": [
             "eslint --fix"
         ]
-    },
-    "pnpm": {
-        "onlyBuiltDependencies": ["esbuild"]
     }
 }
