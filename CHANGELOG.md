@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.12.0] — 2026-07-09
+
+### Added
+
+- **Debug toolbar API calls collector** — new debug-only collector in the debug toolbar that tracks all HTTP calls made by `ApiClient` and `DomainApiClient` during request processing. Displays request method, URL, status code, and latency for troubleshooting API communication.
+- **Admin panel layout and form components** — new reusable Blade components for common admin UI patterns: form sections with labels, loading state indicators, field wrappers, and validation error displays. Built on Tailwind utilities with Alpine.js interactivity.
+- **Form section and loading state display components** — dedicated components for organizing forms (section headers, field groups) and showing loading states (spinners, skeleton screens) for async operations.
+
+### Changed
+
+- **ApiClient and DomainApiClient configuration** — enhanced configuration validation to verify required settings (base URL, API prefix) at boot time. Improved error messages guide misconfiguration fixes.
+- **Form and UI helpers** — added comprehensive helpers for field rendering (`field_errors()`, `field_input()`), table utilities (`table_header()`, `table_cell()`), and form layout functions to reduce boilerplate in views.
+- **Security headers filter** — added new filter for injecting standard security headers (`X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, etc.) into every response.
+- **Flash messages component** — improved styling and accessibility of flash message display with better icon handling and close buttons.
+- **Admin views** — refactored all admin module views to use new component layout system. Improves consistency and reduces view file sizes.
+- **I18n labels and localization** — enhanced localization system to inject UI labels from language files into JavaScript globals, enabling client-side rendering to respect app locale. Updated all components to use injected labels instead of hardcoded English strings.
+- **Externalized component labels** — hardcoded labels in `adminMetadataField` and `sessionWatcher` components now read from `lang()` files, enabling translation without code changes.
+- **ESLint configuration** — updated ESLint config to current standards and added component-level tests for JavaScript modules.
+- **Default ports** — updated documentation and configuration defaults: admin on 8182, API on 8180, for consistency with platform conventions.
+
+### Tests
+
+- **ApiClient and DomainApiClient tests** — expanded coverage for configuration validation, error handling, and automatic token refresh flows.
+- **BaseWebController tests** — added tests for common controller patterns (flash redirects, table state resolution, API error handling).
+
 ## [2.11.1] — 2026-06-13
 
 ### Changed
