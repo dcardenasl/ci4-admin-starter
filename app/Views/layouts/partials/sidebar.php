@@ -36,7 +36,7 @@
             <?php if (has_permission('audit.read')): ?>
                 <a href="<?= route_to('admin.audit') ?>" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 <?= active_nav('admin/audit*') ?>">
                     <?= ui_icon('audit') ?>
-                    <span><?= lang('App.audit') ?></span>
+                    <span><?= lang('App.audit_nav') ?></span>
                 </a>
             <?php endif; ?>
             <?php if (has_permission('apikeys.read')): ?>

@@ -87,7 +87,7 @@ final class ComponentsTest extends CIUnitTestCase
     {
         $html = view('components/form/select', [
             'name' => 'status',
-            'label' => 'App.status',
+            'label' => 'App.status_label',
             'value' => 'draft',
             'options' => [
                 'draft' => 'Draft State',
@@ -250,13 +250,13 @@ final class ComponentsTest extends CIUnitTestCase
         $html = view('components/display/form_section', [
             'title' => 'App.details',
             'description' => 'App.no_results_desc',
-            'badge' => 'App.status',
+            'badge' => 'App.status_label',
             'content' => '<p>Body</p>',
         ], ['saveData' => false]);
 
         $this->assertStringContainsString(lang('App.details'), $html);
         $this->assertStringContainsString(lang('App.no_results_desc'), $html);
-        $this->assertStringContainsString(lang('App.status'), $html);
+        $this->assertStringContainsString(lang('App.status_label'), $html);
         $this->assertStringContainsString('<p>Body</p>', $html);
     }
 
@@ -278,14 +278,14 @@ final class ComponentsTest extends CIUnitTestCase
             'title' => 'App.details',
             'items' => [
                 ['label' => 'App.name', 'value' => 'Alpha'],
-                ['label' => 'App.status', 'value' => 'active', 'isHtml' => false],
+                ['label' => 'App.status_label', 'value' => 'active', 'isHtml' => false],
             ],
         ], ['saveData' => false]);
 
         $this->assertStringContainsString('<dl', $html);
         $this->assertStringContainsString(lang('App.name'), $html);
         $this->assertStringContainsString('Alpha', $html);
-        $this->assertStringContainsString(lang('App.status'), $html);
+        $this->assertStringContainsString(lang('App.status_label'), $html);
         $this->assertStringContainsString('active', $html);
     }
 
