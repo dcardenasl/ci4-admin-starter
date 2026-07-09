@@ -3,6 +3,10 @@
 declare(strict_types=1);
 
 return [
+    'confirmAction'   => 'Confirm action',
+    'confirm'         => 'Confirm',
+    'requestFailed'   => 'Request failed (HTTP {status}).',
+    'loadRetry'       => 'Could not load the information. Please try again.',
     'menu'            => 'Menu',
     'panel'           => 'Admin Panel',
     'administration'  => 'Administration',
@@ -99,4 +103,42 @@ return [
     'components_title'  => 'Component Library',
     'visible_help'      => 'Visible inside platform search engines.',
     'unsaved_changes'   => 'You have unsaved changes.',
+    'status' => [
+        'active' => 'Active',
+        'pending' => 'Pending',
+        'pending_approval' => 'Pending approval',
+        'suspended' => 'Suspended',
+        'approved' => 'Approved',
+        'rejected' => 'Rejected',
+        'processing' => 'Processing',
+        'success' => 'Success',
+        'failed' => 'Failed',
+    ],
+    'audit' => [
+        'action' => [
+            'create' => 'Create',
+            'update' => 'Update',
+            'delete' => 'Delete',
+            'login' => 'Login',
+            'login_success' => 'Login Success',
+            'login_failure' => 'Login Failure',
+            'logout' => 'Logout',
+            'approve' => 'Approve',
+        ],
+        'result' => [
+            'success' => 'Success',
+            'failure' => 'Failure',
+            'denied' => 'Denied',
+        ],
+        'severity' => [
+            'info' => 'Info',
+            'warning' => 'Warning',
+            'critical' => 'Critical',
+        ],
+    ],
+    'pagination' => [
+        'visibleResults' => 'Visible results',
+        'showing' => 'Showing',
+        'of' => 'of',
+    ],
 ];

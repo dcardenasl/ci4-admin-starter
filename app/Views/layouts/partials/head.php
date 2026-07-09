@@ -48,6 +48,119 @@ $lucideLocal = file_exists(FCPATH . 'assets/vendor/lucide.min.js');
         --font-mono: "JetBrains Mono", ui-monospace, monospace;
     }
 </style>
+<?php
+// Inject UI labels from lang() files into JavaScript globals
+// so labels.js can read from window.uiLabels, statusLabels, etc.
+$uiLabelsJson = json_encode([
+    'es' => [
+        'confirmAction' => lang('App.confirmAction'),
+        'confirm' => lang('App.confirm'),
+        'requestFailed' => lang('App.requestFailed'),
+        'loadRetry' => lang('App.loadRetry'),
+    ],
+    'en' => [
+        'confirmAction' => lang('App.confirmAction'),
+        'confirm' => lang('App.confirm'),
+        'requestFailed' => lang('App.requestFailed'),
+        'loadRetry' => lang('App.loadRetry'),
+    ]
+]);
+
+$statusLabelsJson = json_encode([
+    'es' => [
+        'active' => lang('App.status.active'),
+        'pending' => lang('App.status.pending'),
+        'pending_approval' => lang('App.status.pending_approval'),
+        'suspended' => lang('App.status.suspended'),
+        'approved' => lang('App.status.approved'),
+        'rejected' => lang('App.status.rejected'),
+        'processing' => lang('App.status.processing'),
+        'success' => lang('App.status.success'),
+        'failed' => lang('App.status.failed'),
+    ],
+    'en' => [
+        'active' => lang('App.status.active'),
+        'pending' => lang('App.status.pending'),
+        'pending_approval' => lang('App.status.pending_approval'),
+        'suspended' => lang('App.status.suspended'),
+        'approved' => lang('App.status.approved'),
+        'rejected' => lang('App.status.rejected'),
+        'processing' => lang('App.status.processing'),
+        'success' => lang('App.status.success'),
+        'failed' => lang('App.status.failed'),
+    ]
+]);
+
+$auditActionLabelsJson = json_encode([
+    'es' => [
+        'create' => lang('App.audit.action.create'),
+        'update' => lang('App.audit.action.update'),
+        'delete' => lang('App.audit.action.delete'),
+        'login' => lang('App.audit.action.login'),
+        'login_success' => lang('App.audit.action.login_success'),
+        'login_failure' => lang('App.audit.action.login_failure'),
+        'logout' => lang('App.audit.action.logout'),
+        'approve' => lang('App.audit.action.approve'),
+    ],
+    'en' => [
+        'create' => lang('App.audit.action.create'),
+        'update' => lang('App.audit.action.update'),
+        'delete' => lang('App.audit.action.delete'),
+        'login' => lang('App.audit.action.login'),
+        'login_success' => lang('App.audit.action.login_success'),
+        'login_failure' => lang('App.audit.action.login_failure'),
+        'logout' => lang('App.audit.action.logout'),
+        'approve' => lang('App.audit.action.approve'),
+    ]
+]);
+
+$auditResultLabelsJson = json_encode([
+    'es' => [
+        'success' => lang('App.audit.result.success'),
+        'failure' => lang('App.audit.result.failure'),
+        'denied' => lang('App.audit.result.denied'),
+    ],
+    'en' => [
+        'success' => lang('App.audit.result.success'),
+        'failure' => lang('App.audit.result.failure'),
+        'denied' => lang('App.audit.result.denied'),
+    ]
+]);
+
+$auditSeverityLabelsJson = json_encode([
+    'es' => [
+        'info' => lang('App.audit.severity.info'),
+        'warning' => lang('App.audit.severity.warning'),
+        'critical' => lang('App.audit.severity.critical'),
+    ],
+    'en' => [
+        'info' => lang('App.audit.severity.info'),
+        'warning' => lang('App.audit.severity.warning'),
+        'critical' => lang('App.audit.severity.critical'),
+    ]
+]);
+
+$paginationLabelsJson = json_encode([
+    'es' => [
+        'visibleResults' => lang('App.pagination.visibleResults'),
+        'showing' => lang('App.pagination.showing'),
+        'of' => lang('App.pagination.of'),
+    ],
+    'en' => [
+        'visibleResults' => lang('App.pagination.visibleResults'),
+        'showing' => lang('App.pagination.showing'),
+        'of' => lang('App.pagination.of'),
+    ]
+]);
+?>
+<script <?= csp_script_nonce() ?>>
+  window.uiLabels = <?= $uiLabelsJson ?>;
+  window.statusLabels = <?= $statusLabelsJson ?>;
+  window.auditActionLabels = <?= $auditActionLabelsJson ?>;
+  window.auditResultLabels = <?= $auditResultLabelsJson ?>;
+  window.auditSeverityLabels = <?= $auditSeverityLabelsJson ?>;
+  window.paginationLabels = <?= $paginationLabelsJson ?>;
+</script>
 <?php // tailwind.config script removed as we now use compiled CSS?>
 <?php if (isset($extraHead)) {
     echo $extraHead;

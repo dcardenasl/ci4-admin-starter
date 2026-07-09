@@ -2,7 +2,7 @@ export const localePrefix = () => String(document.documentElement?.lang || 'es')
 export const localeTag = () => (localePrefix() === 'en' ? 'en-US' : 'es-ES');
 export const focusableSelector = 'a[href], button:not([disabled]), textarea, input:not([type="hidden"]):not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-export const uiLabels = {
+const defaultUiLabels = {
     es: {
         confirmAction: 'Confirmar acción',
         confirm: 'Confirmar',
@@ -17,7 +17,7 @@ export const uiLabels = {
     }
 };
 
-const statusLabels = {
+const defaultStatusLabels = {
     es: {
         active: 'Activo',
         pending: 'Pendiente',
@@ -42,7 +42,7 @@ const statusLabels = {
     }
 };
 
-const auditActionLabels = {
+const defaultAuditActionLabels = {
     es: {
         create: 'Crear',
         update: 'Actualizar',
@@ -65,7 +65,7 @@ const auditActionLabels = {
     }
 };
 
-const auditResultLabels = {
+const defaultAuditResultLabels = {
     es: {
         success: 'Exito',
         failure: 'Fallo',
@@ -78,7 +78,7 @@ const auditResultLabels = {
     }
 };
 
-const auditSeverityLabels = {
+const defaultAuditSeverityLabels = {
     es: {
         info: 'Info',
         warning: 'Advertencia',
@@ -91,7 +91,7 @@ const auditSeverityLabels = {
     }
 };
 
-export const paginationLabels = {
+const defaultPaginationLabels = {
     es: {
         visibleResults: 'Resultados visibles',
         showing: 'Mostrando',
@@ -103,6 +103,13 @@ export const paginationLabels = {
         of: 'of'
     }
 };
+
+export const uiLabels = window.uiLabels || defaultUiLabels;
+const statusLabels = window.statusLabels || defaultStatusLabels;
+const auditActionLabels = window.auditActionLabels || defaultAuditActionLabels;
+const auditResultLabels = window.auditResultLabels || defaultAuditResultLabels;
+const auditSeverityLabels = window.auditSeverityLabels || defaultAuditSeverityLabels;
+export const paginationLabels = window.paginationLabels || defaultPaginationLabels;
 
 /**
  * Returns the localised display label for a status value.

@@ -3,6 +3,10 @@
 declare(strict_types=1);
 
 return [
+    'confirmAction'   => 'Confirmar acción',
+    'confirm'         => 'Confirmar',
+    'requestFailed'   => 'La solicitud falló (HTTP {status}).',
+    'loadRetry'       => 'No se pudo cargar la información. Intenta nuevamente.',
     'menu'            => 'Menú',
     'panel'           => 'Panel de Administración',
     'administration'  => 'Administración',
@@ -99,4 +103,42 @@ return [
     'components_title'  => 'Librería de Componentes',
     'visible_help'      => 'Visible dentro de los motores de búsqueda de la plataforma.',
     'unsaved_changes'   => 'Tienes cambios sin guardar.',
+    'status' => [
+        'active' => 'Activo',
+        'pending' => 'Pendiente',
+        'pending_approval' => 'Pendiente de aprobación',
+        'suspended' => 'Suspendido',
+        'approved' => 'Aprobado',
+        'rejected' => 'Rechazado',
+        'processing' => 'Procesando',
+        'success' => 'Exitoso',
+        'failed' => 'Fallido',
+    ],
+    'audit' => [
+        'action' => [
+            'create' => 'Crear',
+            'update' => 'Actualizar',
+            'delete' => 'Eliminar',
+            'login' => 'Iniciar sesión',
+            'login_success' => 'Inicio de sesión exitoso',
+            'login_failure' => 'Inicio de sesión fallido',
+            'logout' => 'Cerrar sesión',
+            'approve' => 'Aprobar',
+        ],
+        'result' => [
+            'success' => 'Éxito',
+            'failure' => 'Fallo',
+            'denied' => 'Denegado',
+        ],
+        'severity' => [
+            'info' => 'Información',
+            'warning' => 'Advertencia',
+            'critical' => 'Crítico',
+        ],
+    ],
+    'pagination' => [
+        'visibleResults' => 'Resultados visibles',
+        'showing' => 'Mostrando',
+        'of' => 'de',
+    ],
 ];
