@@ -133,11 +133,81 @@ var _app = (() => {
     });
   };
 
+  // src/js/components/submitGuard.js
+  var OVERLAY_ID = "global-submit-guard-overlay";
+  var SAFETY_TIMEOUT_MS = 15e3;
+  function isMutatingForm(form) {
+    if (!(form instanceof HTMLFormElement)) {
+      return false;
+    }
+    if (form.hasAttribute("data-no-submit-guard")) {
+      return false;
+    }
+    const method = (form.getAttribute("method") || "get").toLowerCase();
+    return method !== "get";
+  }
+  function showOverlay() {
+    if (document.getElementById(OVERLAY_ID)) {
+      return;
+    }
+    const overlay = document.createElement("div");
+    overlay.id = OVERLAY_ID;
+    overlay.className = "fixed inset-0 z-40 cursor-not-allowed bg-black/30";
+    overlay.setAttribute("aria-hidden", "true");
+    document.body.appendChild(overlay);
+  }
+  function hideOverlay() {
+    document.getElementById(OVERLAY_ID)?.remove();
+  }
+  function disableSubmitControls(form) {
+    const controls = form.querySelectorAll(
+      'button[type="submit"], input[type="submit"], button:not([type])'
+    );
+    controls.forEach((control) => {
+      if (control instanceof HTMLButtonElement || control instanceof HTMLInputElement) {
+        control.disabled = true;
+        control.dataset.submitGuardDisabled = "1";
+      }
+    });
+  }
+  function releaseGuardedControls() {
+    document.querySelectorAll('[data-submit-guard-disabled="1"]').forEach((control) => {
+      if (control instanceof HTMLButtonElement || control instanceof HTMLInputElement) {
+        control.disabled = false;
+      }
+      control.removeAttribute("data-submit-guard-disabled");
+    });
+  }
+  function bootGlobalSubmitGuard() {
+    if (document.documentElement.dataset.submitGuardBooted === "1") {
+      return;
+    }
+    document.documentElement.dataset.submitGuardBooted = "1";
+    document.addEventListener("submit", (event) => {
+      const form = event.target;
+      if (!isMutatingForm(form) || event.defaultPrevented) {
+        return;
+      }
+      disableSubmitControls(form);
+      showOverlay();
+      setTimeout(() => {
+        hideOverlay();
+        releaseGuardedControls();
+      }, SAFETY_TIMEOUT_MS);
+    });
+    window.addEventListener("pageshow", (event) => {
+      if (event.persisted) {
+        hideOverlay();
+        releaseGuardedControls();
+      }
+    });
+  }
+
   // src/js/utils/labels.js
   var localePrefix = () => String(document.documentElement?.lang || "es").toLowerCase().startsWith("en") ? "en" : "es";
   var localeTag = () => localePrefix() === "en" ? "en-US" : "es-ES";
   var focusableSelector = 'a[href], button:not([disabled]), textarea, input:not([type="hidden"]):not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
-  var uiLabels = {
+  var defaultUiLabels = {
     es: {
       confirmAction: "Confirmar acci\xF3n",
       confirm: "Confirmar",
@@ -151,7 +221,7 @@ var _app = (() => {
       loadRetry: "Could not load the information. Please try again."
     }
   };
-  var statusLabels = {
+  var defaultStatusLabels = {
     es: {
       active: "Activo",
       pending: "Pendiente",
@@ -175,7 +245,7 @@ var _app = (() => {
       failed: "Failed"
     }
   };
-  var auditActionLabels = {
+  var defaultAuditActionLabels = {
     es: {
       create: "Crear",
       update: "Actualizar",
@@ -197,7 +267,7 @@ var _app = (() => {
       approve: "Approve"
     }
   };
-  var auditResultLabels = {
+  var defaultAuditResultLabels = {
     es: {
       success: "Exito",
       failure: "Fallo",
@@ -209,7 +279,7 @@ var _app = (() => {
       denied: "Denied"
     }
   };
-  var auditSeverityLabels = {
+  var defaultAuditSeverityLabels = {
     es: {
       info: "Info",
       warning: "Advertencia",
@@ -221,7 +291,7 @@ var _app = (() => {
       critical: "Critical"
     }
   };
-  var paginationLabels = {
+  var defaultPaginationLabels = {
     es: {
       visibleResults: "Resultados visibles",
       showing: "Mostrando",
@@ -233,6 +303,12 @@ var _app = (() => {
       of: "of"
     }
   };
+  var uiLabels = window.uiLabels || defaultUiLabels;
+  var statusLabels = window.statusLabels || defaultStatusLabels;
+  var auditActionLabels = window.auditActionLabels || defaultAuditActionLabels;
+  var auditResultLabels = window.auditResultLabels || defaultAuditResultLabels;
+  var auditSeverityLabels = window.auditSeverityLabels || defaultAuditSeverityLabels;
+  var paginationLabels = window.paginationLabels || defaultPaginationLabels;
   var statusLabel = (status) => {
     const value = String(status || "").trim();
     if (value === "") {
@@ -1350,6 +1426,11 @@ var _app = (() => {
     rows: Array.isArray(config.rows) && config.rows.length > 0 ? config.rows : [{ key: "", value: "" }],
     json: "{}",
     duplicates: [],
+    messages: {
+      pastePrompt: config.jsonPastePrompt || "Paste JSON object here:",
+      invalidFormat: config.jsonInvalidFormat || "Invalid JSON: Must be an object.",
+      syntaxError: config.jsonSyntaxError || "Invalid JSON syntax: {error}"
+    },
     init() {
       this.sync();
     },
@@ -1366,12 +1447,12 @@ var _app = (() => {
       this.sync();
     },
     importJson() {
-      const raw = prompt("Paste JSON object here:");
+      const raw = prompt(this.messages.pastePrompt);
       if (!raw) return;
       try {
         const parsed = JSON.parse(raw);
         if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-          alert("Invalid JSON: Must be an object.");
+          alert(this.messages.invalidFormat);
           return;
         }
         const newRows = Object.entries(parsed).map(([key, value]) => ({
@@ -1383,7 +1464,7 @@ var _app = (() => {
           this.sync();
         }
       } catch (e) {
-        alert("Invalid JSON syntax: " + e.message);
+        alert(this.messages.syntaxError.replace("{error}", e.message));
       }
     },
     sync() {
@@ -1514,7 +1595,7 @@ var _app = (() => {
   });
 
   // src/js/components/sessionWatcher.js
-  var bootSessionExpiryWatcher = () => {
+  var bootSessionExpiryWatcher = (config = {}) => {
     const meta = document.querySelector('meta[name="session-expires-at"]');
     if (!(meta instanceof HTMLMetaElement)) {
       return;
@@ -1525,13 +1606,15 @@ var _app = (() => {
     }
     const WARN_BEFORE_SECONDS = 60;
     let warned = false;
+    const expiringMessage = config.expiringMessage || "Token expires in ~{seconds}s. Save your work.";
     const tick = () => {
       const remaining = expiresAt - Math.floor(Date.now() / 1e3);
       if (!warned && remaining > 0 && remaining <= WARN_BEFORE_SECONDS) {
         warned = true;
-        console.warn(`[session] Token expires in ~${remaining}s. Save your work.`);
+        const message = `[session] ${expiringMessage.replace("{seconds}", remaining)}`;
+        console.warn(message);
         window.dispatchEvent(new CustomEvent("session:expiring-soon", {
-          detail: { remainingSeconds: remaining }
+          detail: { remainingSeconds: remaining, message }
         }));
       }
       if (remaining <= 0) {
@@ -1578,7 +1661,9 @@ var _app = (() => {
   document.addEventListener("DOMContentLoaded", () => {
     bootLucideIcons();
     bootSlugFields();
-    bootSessionExpiryWatcher();
+    bootGlobalSubmitGuard();
+    const config = window.__componentConfig || {};
+    bootSessionExpiryWatcher({ expiringMessage: config.sessionExpiringMessage });
   });
   window.addEventListener("load", () => {
     bootLucideIcons();

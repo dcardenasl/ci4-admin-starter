@@ -17,6 +17,8 @@
 import { bootLucideIcons } from './utils/lucide.js';
 import { bootSlugFields } from './utils/slug.js';
 
+import { bootGlobalSubmitGuard } from './components/submitGuard.js';
+
 import { confirmStore } from './stores/confirm.store.js';
 import { toastStore } from './stores/toast.store.js';
 import { filePickerStore } from './stores/filePicker.store.js';
@@ -53,6 +55,7 @@ document.addEventListener('alpine:init', () => {
 document.addEventListener('DOMContentLoaded', () => {
     bootLucideIcons();
     bootSlugFields();
+    bootGlobalSubmitGuard();
     const config = window.__componentConfig || {};
     bootSessionExpiryWatcher({ expiringMessage: config.sessionExpiringMessage });
 });
