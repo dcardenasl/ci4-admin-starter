@@ -112,3 +112,8 @@
 
 # Maximum file upload size in bytes (applies to frontend validation + server rules)
 # FILE_MAX_SIZE = 10485760
+
+# RateLimitFilter defaults (per-user or per-IP request budget). GET/HEAD/OPTIONS
+# never consume this budget — only writes (POST/PUT/PATCH/DELETE) do.
+# ADMIN_RATE_LIMIT_REQUESTS = 200
+# ADMIN_RATE_LIMIT_WINDOW = 60

@@ -115,16 +115,40 @@ final class RateLimitFilterTest extends CIUnitTestCase
         $this->assertArrayHasKey('messages', $body);
     }
 
+    public function testExemptsGetRequestsFromTheThrottleBudget(): void
+    {
+        $filter  = new RateLimitFilter();
+        $request = $this->makeRequest('GET');
+
+        // Pre-fill at the limit — a GET must still pass through untouched.
+        $key = 'ratelimit_ip_' . md5('127.0.0.1');
+        cache()->save($key, 200, 60);
+
+        $result = $filter->before($request);
+
+        $this->assertNull($result, 'GET requests must never be throttled');
+        $this->assertSame(200, (int) cache($key), 'GET requests must not touch the shared throttle counter');
+    }
+
+    public function testExemptsHeadAndOptionsRequestsFromTheThrottleBudget(): void
+    {
+        $filter = new RateLimitFilter();
+
+        $this->assertNull($filter->before($this->makeRequest('HEAD')));
+        $this->assertNull($filter->before($this->makeRequest('OPTIONS')));
+    }
+
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
-    private function makeRequest(): IncomingRequest
+    private function makeRequest(string $method = 'POST'): IncomingRequest
     {
         $mock = $this->getMockBuilder(IncomingRequest::class)
             ->disableOriginalConstructor()
-            ->onlyMethods(['getIPAddress'])
+            ->onlyMethods(['getIPAddress', 'getMethod'])
             ->getMock();
 
         $mock->method('getIPAddress')->willReturn('127.0.0.1');
+        $mock->method('getMethod')->willReturn($method);
 
         return $mock;
     }
