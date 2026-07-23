@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`ApiClient`** — only retry `GET`/`HEAD` requests on 5xx responses; write requests (`POST`/`PUT`/`DELETE`) now fail within the configured timeout instead of being retried, which could multiply latency past `max_execution_time` while a user was saving a form.
+- **`PermissionsSessionRefresher`** — `forceRefresh()` now catches Hub timeouts/connection errors and keeps the stale session permissions instead of letting the exception propagate and crash whatever page triggered the refresh (e.g. `AdminFilter` on every gated request).
+- **`pagecache` filter** — removed from `app/Config/Filters.php`; CodeIgniter's page cache could serve a stale or cross-user-cached HTML response after data changed or between sessions.
+
 ## [2.12.0] — 2026-07-09
 
 ### Fixed
