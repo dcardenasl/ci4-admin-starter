@@ -2115,8 +2115,10 @@ VIEW_RELATION_FIELDS_DATA
         'submitLabel' => lang('App.search'),
     ]) ?>
 
-    <div class="mt-6 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600" x-show="loading">
-        <?= lang('VIEW_MODULE.VIEW_LANG_PREFIX_loading') ?>
+    <div class="mt-6" x-show="loading">
+        <?= view('components/display/loading_state', [
+            'title' => 'VIEW_MODULE.VIEW_LANG_PREFIX_loading',
+        ]) ?>
     </div>
     <div class="mt-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700" x-show="error" x-text="errorMessage"></div>
 
@@ -2195,18 +2197,20 @@ write_heredoc "app/Views/${VIEW_PATH}/show.php" << 'VIEW_EOF_MARKER'
     ]) ?>
 
     <?php ob_start(); ?>
-    <section class="bg-white border border-gray-200 rounded-xl shadow-sm">
-        <div class="border-b border-gray-100 px-5 py-4">
-            <h3 class="text-sm font-semibold uppercase tracking-wider text-gray-700"><?= esc(lang('VIEW_MODULE.VIEW_LANG_PREFIX_details')) ?></h3>
-        </div>
-        <dl class="divide-y divide-gray-100">
+    <dl class="divide-y divide-gray-100">
 VIEW_SHOW_ROWS
-            <?= view('components/display/field_row', [
-                'label' => 'TableColumns.created_at',
-                'value' => $VIEW_RESOURCE_CAMEL['created_at'] ?? '—',
-            ]) ?>
-        </dl>
-    </section>
+        <?= view('components/display/field_row', [
+            'label' => 'TableColumns.created_at',
+            'value' => $VIEW_RESOURCE_CAMEL['created_at'] ?? '—',
+        ]) ?>
+    </dl>
+    <?php $detailRows = ob_get_clean(); ?>
+
+    <?php ob_start(); ?>
+    <?= view('components/display/admin_meta_panel', [
+        'title' => 'VIEW_MODULE.VIEW_LANG_PREFIX_details',
+        'content' => $detailRows,
+    ]) ?>
     <?php $mainContent = ob_get_clean(); ?>
 
     <?php ob_start(); ?>
@@ -2254,13 +2258,14 @@ write_heredoc "app/Views/${VIEW_PATH}/create.php" << 'VIEW_EOF_MARKER'
     <?= csrf_field() ?>
 
     <div class="lg:col-span-2">
-        <section class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
-            <h3 class="text-lg font-semibold text-gray-900"><?= esc(lang('VIEW_MODULE.VIEW_LANG_PREFIX_create')) ?></h3>
-            <div class="mt-4 space-y-4">
-
+        <?php ob_start(); ?>
 VIEW_CREATE_FIELDS
-            </div>
-        </section>
+        <?php $createFields = ob_get_clean(); ?>
+        <?= view('components/display/form_section', [
+            'title' => 'VIEW_MODULE.VIEW_LANG_PREFIX_create',
+            'bodyClass' => 'space-y-4',
+            'content' => $createFields,
+        ]) ?>
     </div>
 
     <aside class="space-y-6">
@@ -2295,13 +2300,14 @@ write_heredoc "app/Views/${VIEW_PATH}/edit.php" << 'VIEW_EOF_MARKER'
     <?= csrf_field() ?>
 
     <div class="lg:col-span-2">
-        <section class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
-            <h3 class="text-lg font-semibold text-gray-900"><?= esc(lang('VIEW_MODULE.VIEW_LANG_PREFIX_edit')) ?></h3>
-            <div class="mt-4 space-y-4">
-
+        <?php ob_start(); ?>
 VIEW_EDIT_FIELDS
-            </div>
-        </section>
+        <?php $editFields = ob_get_clean(); ?>
+        <?= view('components/display/form_section', [
+            'title' => 'VIEW_MODULE.VIEW_LANG_PREFIX_edit',
+            'bodyClass' => 'space-y-4',
+            'content' => $editFields,
+        ]) ?>
     </div>
 
     <aside class="space-y-6">
