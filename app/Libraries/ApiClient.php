@@ -157,7 +157,10 @@ class ApiClient implements ApiClientInterface
         }
 
         // Retry up to 2 times on 5xx errors with exponential backoff (250ms, 500ms).
-        $maxRetries = 2;
+        // Only safe/idempotent methods are retried — retrying a write (POST/PUT/DELETE)
+        // on a slow 5xx can multiply latency past max_execution_time while a user is
+        // saving a form, and risks double-submitting a non-idempotent request.
+        $maxRetries = in_array($method, ['GET', 'HEAD'], true) ? 2 : 0;
         $attempt    = 0;
         do {
             if ($attempt > 0) {

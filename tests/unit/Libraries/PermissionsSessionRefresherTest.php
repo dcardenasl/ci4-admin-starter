@@ -44,4 +44,20 @@ final class PermissionsSessionRefresherTest extends CIUnitTestCase
 
         $this->assertSame(['cms.pages.read'], session('user.permissions'));
     }
+
+    public function testForceRefreshDegradesGracefullyWhenHubIsUnavailable(): void
+    {
+        session()->set(SessionKeys::USER->value, ['id' => 5, 'permissions' => ['stale.permission']]);
+
+        $auth = $this->createMock(AuthApiServiceInterface::class);
+        $auth->expects($this->once())
+            ->method('me')
+            ->willThrowException(new \RuntimeException('Connection timed out'));
+
+        (new PermissionsSessionRefresher($auth))->forceRefresh();
+
+        // The stale session is kept as-is instead of the exception propagating
+        // and crashing whatever page (e.g. AdminFilter) triggered the refresh.
+        $this->assertSame(['id' => 5, 'permissions' => ['stale.permission']], session(SessionKeys::USER->value));
+    }
 }

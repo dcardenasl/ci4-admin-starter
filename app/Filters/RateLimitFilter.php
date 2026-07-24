@@ -6,6 +6,7 @@ namespace App\Filters;
 
 use App\Support\SessionKeys;
 use CodeIgniter\Filters\FilterInterface;
+use CodeIgniter\HTTP\IncomingRequest;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 
@@ -13,22 +14,34 @@ use CodeIgniter\HTTP\ResponseInterface;
  * RateLimitFilter — per-user (or per-IP for guests) request throttle.
  *
  * Applied to all authenticated routes to prevent API abuse.
- * Defaults: 200 requests per 60 seconds per user.
+ * Defaults: 200 requests per 60 seconds per user (overridable via
+ * `ADMIN_RATE_LIMIT_REQUESTS`/`ADMIN_RATE_LIMIT_WINDOW`, see Config\RateLimit).
  *
  * Override via route arguments:
  *   $routes->get('...', [...], ['filter' => 'ratelimit:100,30']);
  *   // => 100 requests per 30 seconds
+ *
+ * Safe reads (GET/HEAD/OPTIONS) never consume the shared budget — a single
+ * admin page load fires several of these at once (data table + filters +
+ * dashboard widgets), and throttling them alongside writes means normal
+ * navigation can trip the limit on its own.
  */
 class RateLimitFilter implements FilterInterface
 {
-    private const DEFAULT_MAX_REQUESTS = 200;
-    private const DEFAULT_WINDOW_SECONDS = 60;
+    private const EXEMPT_METHODS = ['GET', 'HEAD', 'OPTIONS'];
 
     /**
      * @param list<string>|null $arguments [maxRequests, windowSeconds]
      */
     public function before(RequestInterface $request, $arguments = null): ResponseInterface|null
     {
+        if (
+            $request instanceof IncomingRequest
+            && in_array(strtoupper($request->getMethod()), self::EXEMPT_METHODS, true)
+        ) {
+            return null;
+        }
+
         [$max, $window] = $this->parseArguments($arguments);
 
         $key  = $this->resolveKey($request);
@@ -78,8 +91,9 @@ class RateLimitFilter implements FilterInterface
      */
     private function parseArguments(?array $arguments): array
     {
-        $max    = self::DEFAULT_MAX_REQUESTS;
-        $window = self::DEFAULT_WINDOW_SECONDS;
+        $config = config('RateLimit');
+        $max    = $config->maxRequests;
+        $window = $config->windowSeconds;
 
         if (isset($arguments[0]) && is_numeric($arguments[0])) {
             $max = max(1, (int) $arguments[0]);

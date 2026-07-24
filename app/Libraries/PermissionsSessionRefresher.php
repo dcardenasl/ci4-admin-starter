@@ -27,7 +27,20 @@ final class PermissionsSessionRefresher
 
     public function forceRefresh(): void
     {
-        $response = $this->authService->me();
+        try {
+            $response = $this->authService->me();
+        } catch (\Throwable $e) {
+            // A Hub timeout/connection error here must not crash whatever page
+            // triggered the refresh (e.g. AdminFilter on every gated request) —
+            // degrade by keeping the stale session permissions and log for
+            // visibility instead of propagating the exception.
+            log_message('warning', 'PermissionsSessionRefresher: Hub unavailable, keeping stale session permissions. {message}', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return;
+        }
+
         if (! ($response['ok'] ?? false)) {
             return;
         }
