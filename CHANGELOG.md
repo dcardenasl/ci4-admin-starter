@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`bin/make-module.sh`** — scaffolded `create.php`/`edit.php` now wrap their fields in the reusable `form_section` component instead of a hand-rolled `<section>`; scaffolded `show.php` wraps its detail `<dl>` in `admin_meta_panel`; scaffolded `index.php` uses the `loading_state` component instead of a plain-text loading message. Reduces the boilerplate every new admin module has to carry and keeps generated views consistent with the rest of the design system.
 
+### Removed
+
+- **`components/form/submitting_overlay.php`** — dead code: no view ever rendered it and no page defined the `submitting` Alpine variable its `x-show` guard depended on. Superseded by the global submit guard (`bootGlobalSubmitGuard()`, added in v2.13.0), which blocks double-submits on every mutating form automatically with zero per-view wiring.
+
 ## [2.13.0] — 2026-07-24
 
 ### Added
