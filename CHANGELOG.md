@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.13.0] — 2026-07-24
+
 ### Added
 
 - **Global submit guard** (`bootGlobalSubmitGuard()`, `src/js/components/submitGuard.js`) — a single document-level listener disables a form's submit controls and shows a blocking overlay for the duration of any mutating (non-`GET`) submission, preventing a double-click or an impatient second click from firing a duplicate POST/PUT/PATCH/DELETE. Zero per-view wiring required; opt out per form with `data-no-submit-guard`.
