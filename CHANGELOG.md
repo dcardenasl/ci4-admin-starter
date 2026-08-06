@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.14.0] — 2026-08-06
+
 ### Changed
 
 - **`bin/make-module.sh`** — scaffolded `create.php`/`edit.php` now wrap their fields in the reusable `form_section` component instead of a hand-rolled `<section>`; scaffolded `show.php` wraps its detail `<dl>` in `admin_meta_panel`; scaffolded `index.php` uses the `loading_state` component instead of a plain-text loading message. Reduces the boilerplate every new admin module has to carry and keeps generated views consistent with the rest of the design system.
