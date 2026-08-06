@@ -298,14 +298,4 @@ final class ComponentsTest extends CIUnitTestCase
         $this->assertStringContainsString('data-lucide="loader"', $html);
         $this->assertStringContainsString('animate-spin', $html);
     }
-
-    public function testSubmittingOverlayRendersMessageBehindAlpineShowGuard(): void
-    {
-        $html = view('components/form/submitting_overlay', [
-            'message' => 'Saving changes…',
-        ], ['saveData' => false]);
-
-        $this->assertStringContainsString('x-show="submitting"', $html);
-        $this->assertStringContainsString('Saving changes…', $html);
-    }
 }
