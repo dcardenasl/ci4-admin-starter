@@ -5,7 +5,7 @@
  * Auto-register a module service in app/Config/Services.php.
  *
  * Usage:
- *   php bin/register-service.php <Module> <ServiceClass> <ServiceInterface> <ServiceKey> [--client=hub|domain]
+ *   php bin/register-service.php <Module> <ServiceClass> <ServiceInterface> <ServiceKey> [--client=hub|domain|event-domain]
  */
 
 declare(strict_types=1);
@@ -31,18 +31,22 @@ foreach (array_slice($argv, 1) as $arg) {
 }
 
 if (count($positional) < 4) {
-    echo "Usage: php bin/register-service.php <Module> <ServiceClass> <ServiceInterface> <ServiceKey> [--client=hub|domain]\n";
+    echo "Usage: php bin/register-service.php <Module> <ServiceClass> <ServiceInterface> <ServiceKey> [--client=hub|domain|event-domain]\n";
     exit(1);
 }
 
-if (! in_array($client, ['hub', 'domain'], true)) {
-    fwrite(STDERR, "ERROR: --client must be 'hub' or 'domain', got '{$client}'\n");
+if (! in_array($client, ['hub', 'domain', 'event-domain'], true)) {
+    fwrite(STDERR, "ERROR: --client must be 'hub', 'domain' or 'event-domain', got '{$client}'\n");
     exit(1);
 }
 
 [$module, $serviceClass, $serviceInterface, $serviceKey] = $positional;
 
-$clientFactory = $client === 'domain' ? 'domainApiClient' : 'apiClient';
+$clientFactory = match ($client) {
+    'domain' => 'domainApiClient',
+    'event-domain' => 'eventDomainApiClient',
+    default => 'apiClient',
+};
 
 $servicesFile = __DIR__ . '/../app/Config/Services.php';
 
@@ -57,7 +61,7 @@ $expectedFqcn = "App\\Modules\\{$module}\\Services\\{$serviceInterface}";
 
 // Idempotency: skip only when an existing factory points to the SAME FQCN.
 if (preg_match(
-    '/public\s+static\s+function\s+' . preg_quote($serviceKey, '/') . '\s*\([^)]*\)\s*:\s*([\\\\A-Za-z0-9_]+)\s*\{[^}]*?return new[^(]+\(static::(apiClient|domainApiClient)\(\)\)/s',
+    '/public\s+static\s+function\s+' . preg_quote($serviceKey, '/') . '\s*\([^)]*\)\s*:\s*([\\\\A-Za-z0-9_]+)\s*\{[^}]*?return new[^(]+\(static::(apiClient|domainApiClient|eventDomainApiClient)\(\)\)/s',
     $content,
     $m,
 ) === 1) {

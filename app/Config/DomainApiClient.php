@@ -12,6 +12,14 @@ namespace Config;
  */
 class DomainApiClient extends ApiClient
 {
+    protected string $configPrefix = 'domainApiClient';
+
+    protected string $envPrefix = 'DOMAIN_API';
+
+    protected string $backendLabel = 'domain API';
+
+    protected string $exampleBaseUrl = 'http://localhost:8190';
+
     public string $baseUrl = '';
 
     public function __construct()
@@ -21,45 +29,46 @@ class DomainApiClient extends ApiClient
         // `domainApiClient.*` / `DOMAIN_API_*` namespace instead.
         \CodeIgniter\Config\BaseConfig::__construct();
 
-        $baseUrl = env('domainApiClient.baseUrl') ?: env('DOMAIN_API_BASE_URL');
+        $baseUrl = env($this->configPrefix . '.baseUrl') ?: env($this->envPrefix . '_BASE_URL');
         if (! is_string($baseUrl) || trim($baseUrl) === '') {
             throw new \LogicException(
                 lang('Config.missingDomainApiBaseUrl') ?? (
-                    'Missing DOMAIN_API_BASE_URL in .env. '
-                    . 'Set domainApiClient.baseUrl or DOMAIN_API_BASE_URL to your domain API server URL. '
-                    . 'Example: DOMAIN_API_BASE_URL=http://localhost:8190'
+                    'Missing ' . $this->envPrefix . '_BASE_URL in .env. '
+                    . 'Set ' . $this->configPrefix . '.baseUrl or ' . $this->envPrefix . '_BASE_URL to your '
+                    . $this->backendLabel . ' server URL. '
+                    . 'Example: ' . $this->envPrefix . '_BASE_URL=' . $this->exampleBaseUrl
                 )
             );
         }
         $this->baseUrl = $baseUrl;
 
-        $timeout = env('domainApiClient.timeout') ?: env('DOMAIN_API_TIMEOUT');
+        $timeout = env($this->configPrefix . '.timeout') ?: env($this->envPrefix . '_TIMEOUT');
         if ($timeout !== false && $timeout !== null && $timeout !== '') {
             $this->timeout = (int) $timeout;
         }
 
-        $connectTimeout = env('domainApiClient.connectTimeout') ?: env('DOMAIN_API_CONNECT_TIMEOUT');
+        $connectTimeout = env($this->configPrefix . '.connectTimeout') ?: env($this->envPrefix . '_CONNECT_TIMEOUT');
         if ($connectTimeout !== false && $connectTimeout !== null && $connectTimeout !== '') {
             $this->connectTimeout = (int) $connectTimeout;
         }
 
-        $apiPrefix = env('domainApiClient.apiPrefix') ?: env('DOMAIN_API_PREFIX');
+        $apiPrefix = env($this->configPrefix . '.apiPrefix') ?: env($this->envPrefix . '_PREFIX');
         if (is_string($apiPrefix) && trim($apiPrefix) !== '') {
             $normalizedPrefix = '/' . trim($apiPrefix, '/');
             $this->apiPrefix = $normalizedPrefix === '/' ? '/api/v1' : $normalizedPrefix;
         }
 
-        $appName = env('domainApiClient.appName') ?: env('DOMAIN_API_APP_NAME');
+        $appName = env($this->configPrefix . '.appName') ?: env($this->envPrefix . '_APP_NAME');
         if (is_string($appName) && trim($appName) !== '') {
             $this->appName = $appName;
         }
 
-        $appKey = env('domainApiClient.appKey') ?: env('DOMAIN_API_APP_KEY');
+        $appKey = env($this->configPrefix . '.appKey') ?: env($this->envPrefix . '_APP_KEY');
         if (is_string($appKey) && trim($appKey) !== '') {
             $this->appKey = $appKey;
         }
 
-        $val = env('domainApiClient.healthPaths') ?: env('DOMAIN_API_HEALTH_PATHS');
+        $val = env($this->configPrefix . '.healthPaths') ?: env($this->envPrefix . '_HEALTH_PATHS');
         if ($val) {
             $paths = array_values(array_filter(array_map('trim', explode(',', (string) $val))));
             if ($paths !== []) {
@@ -67,7 +76,7 @@ class DomainApiClient extends ApiClient
             }
         }
 
-        $logRequests = env('domainApiClient.logRequests') ?: env('DOMAIN_API_LOG_REQUESTS');
+        $logRequests = env($this->configPrefix . '.logRequests') ?: env($this->envPrefix . '_LOG_REQUESTS');
         if ($logRequests !== null && $logRequests !== '') {
             $this->logRequests = filter_var($logRequests, FILTER_VALIDATE_BOOLEAN);
         }

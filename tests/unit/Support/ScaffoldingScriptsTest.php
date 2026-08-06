@@ -175,6 +175,18 @@ class ScaffoldingScriptsTest extends CIUnitTestCase
         $this->assertStringNotContainsString('static::apiClient()', $output);
     }
 
+    public function testMakeModuleWithServiceEventDomainEmitsEventDomainApiClientFactory(): void
+    {
+        $output = self::runScript(
+            'bin/make-module.sh EventType Events /events/types --service=event-domain --dry-run'
+        );
+
+        $this->assertStringContainsString('--client=event-domain', $output);
+        $this->assertStringContainsString('static::eventDomainApiClient()', $output);
+        $this->assertStringNotContainsString('static::domainApiClient()', $output);
+        $this->assertStringNotContainsString('static::apiClient()', $output);
+    }
+
     public function testMakeModuleDefaultServiceWiresHubApiClient(): void
     {
         $output = self::runScript('bin/make-module.sh Catalog Marketplace /catalog --dry-run');
