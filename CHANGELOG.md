@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.15.0] — 2026-08-06
+
+### Added
+
+- **`EventDomainApiClient`** — a second, independently-configured domain client (`eventDomainApiClient.*` / `EVENT_DOMAIN_API_*`, default `http://localhost:8193`) for stacks with a separate event-domain app alongside the primary domain app. `bin/make-module.sh` and `bin/register-service.php` accept `--service=event-domain` / `--client=event-domain` to scaffold modules wired to it.
+
 ## [2.14.0] — 2026-08-06
 
 ### Changed

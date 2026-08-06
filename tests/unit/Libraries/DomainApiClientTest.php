@@ -8,8 +8,11 @@ use App\Libraries\ApiClient;
 use App\Libraries\ApiClientInterface;
 use App\Libraries\DomainApiClient;
 use App\Libraries\DomainApiClientInterface;
+use App\Libraries\EventDomainApiClient;
+use App\Libraries\EventDomainApiClientInterface;
 use CodeIgniter\Test\CIUnitTestCase;
 use Config\DomainApiClient as DomainApiClientConfig;
+use Config\EventDomainApiClient as EventDomainApiClientConfig;
 use Config\Services;
 
 /**
@@ -40,10 +43,14 @@ final class DomainApiClientTest extends CIUnitTestCase
             'DOMAIN_API_HEALTH_PATHS',
             'domainApiClient.logRequests',
             'DOMAIN_API_LOG_REQUESTS',
+            'eventDomainApiClient.baseUrl',
+            'EVENT_DOMAIN_API_BASE_URL',
         ]);
 
         $this->setEnv('domainApiClient.baseUrl', 'http://localhost:8190');
         $this->setEnv('DOMAIN_API_BASE_URL', 'http://localhost:8190');
+        $this->setEnv('eventDomainApiClient.baseUrl', 'http://localhost:8193');
+        $this->setEnv('EVENT_DOMAIN_API_BASE_URL', 'http://localhost:8193');
     }
 
     protected function tearDown(): void
@@ -127,6 +134,23 @@ final class DomainApiClientTest extends CIUnitTestCase
         $this->assertInstanceOf(DomainApiClientInterface::class, $domain);
         // Domain client must satisfy ApiClientInterface so existing services accept it.
         $this->assertInstanceOf(ApiClientInterface::class, $domain);
+    }
+
+    public function testEventDomainClientUsesItsOwnConfigNamespace(): void
+    {
+        $config = new EventDomainApiClientConfig();
+
+        $this->assertSame('http://localhost:8193', $config->baseUrl);
+        $this->assertNotSame((new DomainApiClientConfig())->baseUrl, $config->baseUrl);
+    }
+
+    public function testServicesFactoryReturnsEventDomainApiClientInterface(): void
+    {
+        $instance = Services::eventDomainApiClient(false);
+
+        $this->assertInstanceOf(EventDomainApiClientInterface::class, $instance);
+        $this->assertInstanceOf(EventDomainApiClient::class, $instance);
+        $this->assertInstanceOf(ApiClientInterface::class, $instance);
     }
 
     /**

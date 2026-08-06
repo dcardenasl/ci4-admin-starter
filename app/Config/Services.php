@@ -10,6 +10,8 @@ use App\Libraries\BffApiClient;
 use App\Libraries\BffApiClientInterface;
 use App\Libraries\DomainApiClient;
 use App\Libraries\DomainApiClientInterface;
+use App\Libraries\EventDomainApiClient;
+use App\Libraries\EventDomainApiClientInterface;
 use App\Libraries\PermissionsSessionRefresher;
 use App\Modules\ApiKeys\Services\ApiKeyApiService;
 use App\Modules\ApiKeys\Services\ApiKeyApiServiceInterface;
@@ -92,6 +94,16 @@ class Services extends BaseService
         }
 
         return new DomainApiClient(config('DomainApiClient'));
+    }
+
+    public static function eventDomainApiClient(bool $getShared = true): EventDomainApiClientInterface
+    {
+        if ($getShared) {
+            /** @var EventDomainApiClientInterface */
+            return static::getSharedInstance('eventDomainApiClient');
+        }
+
+        return new EventDomainApiClient(config('EventDomainApiClient'));
     }
 
     public static function bffApiClient(bool $getShared = true): BffApiClientInterface

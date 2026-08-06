@@ -3,7 +3,7 @@
 > Fuente de verdad para trabajo en este repo.
 > Historial de completadas: ver `TASKS_ARCHIVE.md`.
 > Cross-repo: ver `../TASKS.md`.
-> Última actualización: 2026-06-10 (ADM-010 ✅ completado · CSV export/import scaffold opcional; ADM-009 ✅ relation-aware)
+> Última actualización: 2026-08-05 (ADM-011 ✅ completado · soporte event-domain)
 
 ---
 
@@ -32,6 +32,12 @@
 ---
 
 ## ✅ Completadas
+
+### [ADM-011] Cliente Admin dedicado para event-domain (2026-08-05)
+
+- Añadidos `EventDomainApiClient`, su configuración y factory `Services::eventDomainApiClient()` con namespace de entorno independiente.
+- `make-module.sh` y `register-service.php` aceptan `--service=event-domain` y generan wiring contra el cliente dedicado.
+- Añadidas pruebas unitarias, variables `.env.example`/`env` y documentación para stacks con un segundo domain app de eventos.
 
 ### [ADM-010] CSV export/import scaffold opcional para módulos admin (2026-06-10)
 
@@ -74,7 +80,7 @@
 
 - **Módulos en `app/Modules/{Nombre}/`:** Controllers + Services + Requests + Language + Config/Routes.php. Views en `app/Views/{nombre}/`.
 - **Services extienden `BaseApiService`:** toda comunicación con la API pasa por `ApiClient` (hub) o `DomainApiClient` (domain apps). Nunca llamadas HTTP directas.
-- **Dos clientes HTTP:** `apiClient` (factory `Services::apiClient()`, config `Config\ApiClient`, target hub `:8180`) y `domainApiClient` (factory `Services::domainApiClient()`, config `Config\DomainApiClient`, target domain `:8190`). Scaffolding selector: `bash bin/make-module.sh ... --service=hub|domain` (default `hub`).
+- **Clientes HTTP:** `apiClient` (factory `Services::apiClient()`, config `Config\ApiClient`, target hub `:8180`), `domainApiClient` (factory `Services::domainApiClient()`, config `Config\DomainApiClient`, target domain `:8190`) y `eventDomainApiClient` (factory `Services::eventDomainApiClient()`, config `Config\EventDomainApiClient`, target event-domain `:8193`). Scaffolding selector: `bash bin/make-module.sh ... --service=hub|domain|event-domain` (default `hub`).
 - **`make-module.sh` genera un shell, no un aggregate listo para producción:** úsalo para establecer estructura, wiring y tests base. Si el módulo necesita acciones custom, nested resources, dropdowns dependientes, relation arrays o media/file-picker flows, la extensión manual sigue siendo obligatoria.
 - **Hook mínimo soportado:** `make-module.sh --action=<verb>` añade wiring completo para acciones POST por item. Úsalo para workflows simples sobre un recurso ya existente; no reemplaza módulos aggregate con read models, loaders auxiliares o nested resources.
 - **Tokens solo en sesión PHP:** nunca localStorage, nunca en JS. `ApiClient` inyecta el header automáticamente.

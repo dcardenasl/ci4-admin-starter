@@ -99,6 +99,14 @@
 # domainApiClient.logRequests = false
 # domainApiClient.appKey = 'apk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 
+# Optional second domain backend. Modules scaffolded with
+# `bash bin/make-module.sh ... --service=event-domain` route here.
+# eventDomainApiClient.baseUrl = 'http://localhost:8193'
+# eventDomainApiClient.apiPrefix = '/api/v1'
+# eventDomainApiClient.appName = 'Event Domain Client'
+# eventDomainApiClient.logRequests = false
+# eventDomainApiClient.appKey = 'apk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+
 #--------------------------------------------------------------------
 # BFF API CLIENT (optional — only when a ci4-bff-starter is part of the stack)
 #--------------------------------------------------------------------
