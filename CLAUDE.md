@@ -165,16 +165,17 @@ The `app/Libraries/ApiClient.php` class is the heart of all API communication. I
 
 ### DomainApiClient: Secondary client for domain-starter backends
 
-When the admin drives both a hub (`ci4-api-starter`) and a domain app (`ci4-domain-starter`) in parallel — e.g. SubscriptionKit, where hub owns auth/users/IAM and a domain app owns projects/subscribers — wire the domain modules to `App\Libraries\DomainApiClient` instead of `ApiClient`.
+When the admin drives a hub (`ci4-api-starter`) and one or more domain apps in parallel — e.g. SubscriptionKit, where hub owns auth/users/IAM and a domain app owns projects/subscribers — wire domain-owned modules to the matching domain client instead of `ApiClient`.
 
 - **Config:** `app/Config/DomainApiClient.php` reads `domainApiClient.*` / `DOMAIN_API_*` env vars (default base URL `http://localhost:8190`). Extends `Config\ApiClient`, so the contract and PHPStan types stay aligned.
 - **Library:** `App\Libraries\DomainApiClient extends ApiClient implements DomainApiClientInterface`. Inherits all refresh / header / upload logic from `ApiClient`.
 - **Service factory:** `Services::domainApiClient()` is the parallel of `Services::apiClient()`. Returns `DomainApiClientInterface`.
-- **Scaffolding:** `bash bin/make-module.sh <Resource> <Module> /path --service=domain` generates a module wired to `static::domainApiClient()`. Default remains `--service=hub`.
+- **Event-domain client:** `App\Libraries\EventDomainApiClient` and `Services::eventDomainApiClient()` target a separate event domain through `EVENT_DOMAIN_API_*` / `eventDomainApiClient.*` settings.
+- **Scaffolding:** `bash bin/make-module.sh <Resource> <Module> /path --service=domain` wires to `static::domainApiClient()`; `--service=event-domain` wires to `static::eventDomainApiClient()`. Default remains `--service=hub`.
 - **Custom item actions:** `make-module.sh` accepts repeatable `--action=<verb>` flags and scaffolds the common POST-per-item wiring end-to-end: service-interface method, service implementation, controller action, route, show-page button, and language keys. Keep verbs lower-kebab-case (`approve`, `publish`, `archive-item`).
 - **CSV scaffold extension:** `make-module.sh --csv` emits optional export/import wiring for admin modules: export routes/buttons respect the current index filters, and the import flow includes per-row validation plus preview/error partials. Use it for repetitive admin data loads, but keep aggregate-specific ingestion rules manual.
 - **Scaffold scope:** `make-module.sh` gives you a CRUD shell only: base controller/service/requests/routes/views/tests. It does not generate aggregate-grade UI behavior such as custom actions, nested child collections, hub file pickers, or workflow-specific buttons. It does now support basic `relation` fields end-to-end: relation-aware form controls, option loaders, index filters, and relation lookups in `show` views, but more complex aggregate workflows still need manual follow-up.
-- **When to use which:** modules that surface entities **owned by the hub** (Users, Roles, Permissions, Files, Audit, ApiKeys, Metrics, IAM Applications) → `apiClient`. Modules that surface entities **owned by a domain app** (Subscriptions, Projects, Campaigns…) → `domainApiClient`. Never mix in the same module.
+- **When to use which:** modules that surface entities **owned by the hub** (Users, Roles, Permissions, Files, Audit, ApiKeys, Metrics, IAM Applications) → `apiClient`. Modules owned by the primary domain app (Subscriptions, Projects, Campaigns…) → `domainApiClient`. Modules owned by a separate event domain → `eventDomainApiClient`. Never mix clients in the same module.
 - **Services type-hint stays `ApiClientInterface`:** `BaseApiService` and `ResourceApiService` accept the parent interface. `DomainApiClientInterface` exists only so the factory in `Services.php` can distinguish at the DI layer; PHPStan flags a service that was wired to the wrong factory only via the factory's return type, not the service constructor.
 
 **Auto-refresh flow:**
